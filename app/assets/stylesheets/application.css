@@ -8,3 +8,106 @@
  *
  * Consider organizing styles into separate files for maintainability.
  */
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+body {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #111;
+  color: #d1d5db;
+  font-family: "Geist Mono", monospace;
+}
+
+main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 800px;
+  padding-top: 2rem;
+  box-sizing: border-box;
+}
+
+nav {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
+  font-size: 0.9rem;
+  gap: 1.5rem;
+}
+
+footer {
+  width: 100%;
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+footer img:hover {
+  filter: brightness(1.2);
+  transform: scale(1.1);
+  transition: 0.2s;
+}
+
+h1, h2, h3 {
+  color: #ffff;
+}
+
+h3 {
+  margin-bottom: 0px;
+}
+
+section {
+  margin-bottom: 4rem;
+}
+
+article {
+  margin-bottom: 2rem;
+}
+
+a {
+  text-decoration: none;
+  color: #ffff;
+}
+
+a:hover h3{
+  color: #e63946;
+}
+
+
+li:hover a {
+  color: inherit;
+  text-decoration: none;
+}
+
+li:hover {
+  color: #e63946;
+}
+
+.highlight-red {
+  color: red;
+  margin: 0px 5px 0px 0px;
+}
+
+.navbar-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+  margin-top: auto;
+}
+
+.navbar-link:hover {
+  color: #e63946;
+}
+
+.navbar-title {
+  font-size: 1.5rem;
+}
+
