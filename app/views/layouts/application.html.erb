@@ -22,10 +22,8 @@
   </head>
 
   <body>
+    <%= render "layouts/header" %>
     <main>
-      <% if authenticated? %>
-        <%= render "layouts/navbar" %>
-      <% end %>
       <%= yield %>
     </main>
     <%= render "layouts/footer" %>

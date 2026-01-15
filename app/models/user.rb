@@ -7,7 +7,7 @@ class User < ApplicationRecord
       name:     profile["name"],
       level:    profile["level"],
       gender:   profile["gender"],
-      api_key: ,
+      api_key:,
     )
     user.save!
     user

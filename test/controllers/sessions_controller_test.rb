@@ -8,7 +8,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
       "name" => @user.name,
       "api_key" => @user.api_key,
       "level" => @user.level,
-      "gender" => @user.gender,
+      "gender" => @user.gender
     }
   end
 

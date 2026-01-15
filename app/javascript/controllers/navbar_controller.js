@@ -14,9 +14,9 @@ export default class extends Controller {
     if (this.#shouldIgnore(e)) return;
 
     if (["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
-    if (e.key === "p" && window.location.pathname !== "/") window.location.href = "/";
+    if (e.key === "p" && window.location.pathname !== "/progress") window.location.href = "/progress";
     if (e.key === "f" && window.location.pathname !== "/faction") window.location.href = "/faction";
-    if (e.key === "r" && window.location.pathname !== "/ranked-war") window.location.href = "/ranked-war";
+    if (e.key === "r" && window.location.pathname !== "/ranked_war") window.location.href = "/ranked_war";
   }
 
   #shouldIgnore(event) {

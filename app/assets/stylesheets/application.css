@@ -23,6 +23,10 @@ body {
   font-family: "Geist Mono", monospace;
 }
 
+header {
+  padding-top: 2rem;
+}
+
 main {
   flex: 1;
   display: flex;

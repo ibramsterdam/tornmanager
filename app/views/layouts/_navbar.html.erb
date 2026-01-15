@@ -1,6 +1,8 @@
 <nav data-controller="navbar">
-  <%= link_to "TornManager" , root_path, class: "navbar-link navbar-title" %>
-  <%= link_to "[p] My Progress", root_path, class: "navbar-link" %>
-  <%= link_to "[f] My Faction", faction_index_path, class: "navbar-link" %>
-  <%= link_to "[r] Ranked War", ranked_war_index_path, class: "navbar-link" %>
+  <% if authenticated? %>
+    <%= link_to "TornManager", progress_index_path, class: "navbar-link navbar-title" %>
+    <%= link_to "[p] My Progress", progress_index_path, class: "navbar-link" %>
+    <%= link_to "[f] My Faction", faction_index_path, class: "navbar-link" %>
+    <%= link_to "[r] Ranked War", ranked_war_index_path, class: "navbar-link" %>
+  <% end %>
 </nav>

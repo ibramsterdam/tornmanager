@@ -1,8 +1,9 @@
 Rails.application.routes.draw do
   resource :session
-  resources :progress, only: [:index]
-  resources :faction, only: [:index]
-  resources :ranked_war, only: [:index]
+  resources :progress, only: [ :index ]
+  resources :faction, only: [ :index ]
+  resources :ranked_war, only: [ :index ]
+  resources :welcome, only: [ :index ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
@@ -13,5 +14,5 @@ Rails.application.routes.draw do
   # get "service-worker" => "rails/pwa#service_worker", as: :pwa_service_worker
 
   # Defines the root path route ("/")
-  root "progress#index"
+  root "home#index"
 end

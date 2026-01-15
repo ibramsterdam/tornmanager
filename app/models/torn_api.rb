@@ -1,11 +1,11 @@
-require 'net/http'
-require 'json'
+require "net/http"
+require "json"
 
 module TornApi
   class InvalidKeyError < StandardError; end
   class ApiError < StandardError; end
 
-  class Base 
+  class Base
     DEFAULT_PARAMS = { comment: "tornmanager" }.freeze
 
     attr_reader :api_key
@@ -22,8 +22,8 @@ module TornApi
 
       Net::HTTP.start(uri.host, uri.port, use_ssl: true) do |http|
         req = Net::HTTP::Get.new(uri)
-        req['accept'] = 'application/json'
-        req['Authorization'] = "ApiKey #{api_key}"
+        req["accept"] = "application/json"
+        req["Authorization"] = "ApiKey #{api_key}"
         resp = http.request(req)
         unless resp.code.to_i == 200
           raise ApiError, "Torn API request failed (HTTP #{resp.code})"
