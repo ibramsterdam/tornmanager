@@ -1,8 +1,22 @@
-<%= tag.div(flash[:alert], style: "color:red") if flash[:alert] %>
-<%= tag.div(flash[:notice], style: "color:green") if flash[:notice] %>
-
-<%= form_with url: session_path do |form| %>
-  <%= form.text_field :api_key, required: true, autofocus: true, autocomplete: "username", placeholder: "Enter your Api Key", value: params[:api_key] %><br>
-  <%= form.submit "Sign in" %>
-<% end %>
-<br>
+<main>
+  <section class="login-container" aria-label="Sign in">
+    <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
+      <fieldset>
+        <legend>Sign in with your API Key</legend>
+        <label for="api_key">API Key</label>
+        <%= form.text_field :api_key,
+            id: "api_key",
+            required: true,
+            autofocus: true,
+            autocomplete: "username",
+            placeholder: "Enter your Api Key",
+            value: params[:api_key],
+            class: "login-input" %>
+      </fieldset>
+      <% if flash[:alert] %>
+        <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
+      <% end %>
+      <button type="submit" class="login-submit">Sign in</button>
+    <% end %>
+  </section>
+</main>

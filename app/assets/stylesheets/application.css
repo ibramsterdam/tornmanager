@@ -111,3 +111,95 @@ li:hover {
   font-size: 1.5rem;
 }
 
+.login-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 70vh;
+  width: 100vw;
+}
+
+.login-form {
+  background: #181818;
+  padding: 2.5rem 3rem;
+  border-radius: 8px;
+  box-shadow: 0 0 20px 0 #0002;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.login-form fieldset {
+  border: none;
+  margin: 1rem 0 2.5rem 0;
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.login-form legend {
+  margin-bottom: 2rem;
+  font-size: 1.1rem;
+  color: #fff;
+  font-weight: bold;
+  letter-spacing: 0.01em;
+}
+
+.login-form label {
+  font-size: 1rem;
+  margin-bottom: .5rem;
+  color: #d1d5db;
+}
+
+.login-input {
+  padding: 0.75rem 1rem;
+  border: none;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  background: #222;
+  color: #d1d5db;
+  width: 230px;
+  font-size: 1rem;
+}
+
+.login-input:focus {
+  outline: 2px solid #e63946;
+  background: #1a1a1a;
+}
+
+.login-submit {
+  background-color: #e63946;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 0.7rem 2.2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.18s;
+  margin-top: 0.5rem;
+}
+
+.login-submit:hover, .login-submit:focus {
+  background-color: #ff6b81;
+}
+
+.flash {
+  margin-bottom: 1.25rem;
+  padding: 0.7rem 1.5rem;
+  border-radius: 4px;
+  width: 100%;
+  text-align: center;
+  font-size: 1rem;
+}
+.flash-alert {
+  background: #fff1f1;
+  color: #e63946;
+}
+.flash-notice {
+  background: #e0fbec;
+  color: #2c8e47;
+}
