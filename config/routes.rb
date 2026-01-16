@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  mount MissionControl::Jobs::Engine, at: "/jobs"
+
   resource :session
   resources :progress, only: [ :index ]
   resources :faction, only: [ :index ]

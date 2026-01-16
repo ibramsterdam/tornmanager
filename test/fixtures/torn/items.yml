@@ -1,0 +1,11 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+edvd:
+  torn_id: 366
+  market_price: 4030490
+  name: Erotic DVD
+
+drug_pack:
+  torn_id: 370,
+  market_price: 4194876
+  name: Drug Pack

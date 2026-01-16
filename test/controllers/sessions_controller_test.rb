@@ -18,8 +18,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create with valid credentials" do
-    mock_profile = @mock_profile
-    TornApi::Profile.any_instance.stubs(:fetch).returns(@mock_profile)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(@mock_profile)
     post session_path, params: { api_key: @user.api_key }
     assert cookies[:session_id]
   end

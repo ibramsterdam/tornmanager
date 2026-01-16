@@ -1,9 +1,14 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+  require "yaml"
+unless Rails.env.development?
+  puts "WARN: Seeding is just for development!"
+else
+  print "Starting Seed…\n"
+  bram = User.find_or_create_by!(torn_id: 2728237) do |user|
+    user.name = "Bram"
+    user.gender = "Male"
+    user.level = 69
+    user.api_key = Rails.application.credentials.dig(:bram, :api_key)
+  end
+
+  print "Finished!"
+end

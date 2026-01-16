@@ -9,7 +9,7 @@ class SessionsController < ApplicationController
     api_key = params[:api_key].to_s.strip
 
     begin
-      profile = TornApi::Profile.new(api_key).fetch
+      profile = TornApi::User::Profile.new(api_key).fetch
       user = User.upsert_from_torn_profile!(profile, api_key)
 
       start_new_session_for user

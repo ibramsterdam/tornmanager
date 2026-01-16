@@ -1,0 +1,24 @@
+<table>
+  <thead>
+    <tr>
+      <th>Stock Name</th>
+      <th>Increment</th>
+      <th>Market Price</th>
+      <th>Block Cost</th>
+      <th>Days to Break Even</th>
+      <th>Owned</th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @table_rows.each do |row| %>
+      <tr>
+        <td><%= row[:stock_name] %></td>
+        <td><%= row[:increment] %></td>
+        <td><%= row[:dividend_value].nil? ? 'N/A' : number_to_currency(row[:dividend_value], precision: 2) %></td>
+        <td><%= number_to_currency(row[:block_cost], precision: 2) %></td>
+        <td><%= row[:days_to_break_even].infinite? ? 'Infinity' : row[:days_to_break_even].to_i %></td>
+        <td><%= row[:owned] ? 'Yes' : 'No' %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

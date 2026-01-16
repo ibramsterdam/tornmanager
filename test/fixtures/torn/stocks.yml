@@ -1,0 +1,18 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+sym:
+  torn_id: 16
+  name: "Symbiotic Ltd."
+  acronym: "SYM"
+  current_price: 691.52
+  dividend_frequency: 7
+  dividend_requirement: 500_000
+
+prn:
+  torn_id: 18
+  name: "Performance Ribaldry"
+  acronym: "PRN"
+  current_price: 612.06
+  dividend_frequency: 7
+  dividend_requirement: 1_000_000
+

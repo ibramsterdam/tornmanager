@@ -25,6 +25,10 @@ Rails.application.configure do
     config.action_controller.perform_caching = false
   end
 
+  # Replace the default in-process and non-durable queuing backend for Active Job.
+  config.active_job.queue_adapter = :solid_queue
+  config.solid_queue.connects_to = { database: { writing: :queue } }
+
   # Change to :null_store to avoid any caching.
   config.cache_store = :memory_store
 
