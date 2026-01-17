@@ -4,7 +4,6 @@ class UpdateTornStockDividendValuesJob < ApplicationJob
   def perform(*args)
     stocks = TornApi::Torn::Stocks.new(api_key).fetch
     raise "Failed to fetch data" if stocks.blank?
-
     items = Torn::Item.money_makers.index_by(&:torn_id)
 
     stocks.each do |fetched_stock|
@@ -14,7 +13,6 @@ class UpdateTornStockDividendValuesJob < ApplicationJob
       dividend_value = calculate_dividend_value(fetched_stock.dividend_description, item_market_price)
 
       stock.update!(dividend_value:)
-      Rails.logger.info("Updated dividend_value for stock ##{fetched_stock.torn_id}: #{dividend_value}")
     end
   end
 
@@ -36,7 +34,6 @@ class UpdateTornStockDividendValuesJob < ApplicationJob
     market_data = TornApi::Market.new(api_key).fetch
     return 0 if market_data.blank?
 
-    # Calculate the average cost of points
     costs = market_data.values.map { |point_data| point_data["cost"] }
     return 0 if costs.empty?
 
