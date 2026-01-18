@@ -3,11 +3,10 @@ class StockDividendJob < ApplicationJob
 
   def perform(*args)
     stocks = TornApi::Torn::Stocks.new(api_key).fetch
-    raise "Failed to fetch data" if stocks.blank?
     items = Torn::Item.money_makers.index_by(&:torn_id)
 
     stocks.each do |fetched_stock|
-      stock = ::Torn::Stock.find_by(torn_id: fetched_stock.torn_id)
+      stock = Torn::Stock.find_by(torn_id: fetched_stock.torn_id)
       item = items[Torn::Stock::ACRONYM_TO_TORN_ITEM_ID[stock.acronym]]
       item_market_price = item&.market_price || 0
       dividend_value = calculate_dividend_value(fetched_stock.dividend_description, item_market_price)
@@ -41,6 +40,6 @@ class StockDividendJob < ApplicationJob
   end
 
   def api_key
-    Rails.application.credentials.dig(:bram, :api_key) || (raise "API Key missing in credentials")
+    api_key ||=Rails.application.credentials.dig(:bram, :api_key)
   end
 end

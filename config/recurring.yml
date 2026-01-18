@@ -16,11 +16,11 @@ production:
   periodic_updates:
     class: StockDividendJob
     queue: default
-    schedule: every 20 seconds
+    schedule: every hour at minute 30
 development:
   periodic_updates:
     class: StockDividendJob
     queue: default
-    schedule: every 20 seconds
+    schedule: every hour at minute 30
 
 

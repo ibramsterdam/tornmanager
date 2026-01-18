@@ -7,6 +7,8 @@ sym:
   current_price: 691.52
   dividend_frequency: 7
   dividend_requirement: 500_000
+  dividend_description: "1x Drug Pack"
+  dividend_value: 4_200_194
 
 prn:
   torn_id: 18
@@ -15,4 +17,6 @@ prn:
   current_price: 612.06
   dividend_frequency: 7
   dividend_requirement: 1_000_000
+  dividend_description: "1x Erotic DVD"
+  dividend_value: 4_018_251
 
