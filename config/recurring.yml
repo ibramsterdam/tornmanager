@@ -17,6 +17,10 @@ production:
     class: StockDividendJob
     queue: default
     schedule: every 20 seconds
+  periodic_updates:
+    class: TestJob
+    queue: default
+    schedule: every 10 seconds
 development:
   periodic_updates:
     class: StockDividendJob
