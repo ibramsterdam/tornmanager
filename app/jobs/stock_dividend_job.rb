@@ -1,4 +1,4 @@
-class UpdateTornStockDividendValuesJob < ApplicationJob
+class StockDividendJob < ApplicationJob
   queue_as :default
 
   def perform(*args)
