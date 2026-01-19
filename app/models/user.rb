@@ -1,4 +1,4 @@
 class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
-  belongs_to :user, optional: true
+  belongs_to :torn_user, optional: true
 end
