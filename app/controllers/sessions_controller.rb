@@ -14,7 +14,6 @@ class SessionsController < ApplicationController
         start_new_session_for user
         redirect_to after_authentication_url
       else
-        # user = User.upsert_from_torn_profile!(profile, api_key)
         redirect_to new_session_path, alert: "Currently not accepting anyone"
       end
     rescue TornApi::InvalidKeyError
