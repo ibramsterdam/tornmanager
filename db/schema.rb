@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_19_204350) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_20_221132) do
   create_table "personal_stat_snapshots", force: :cascade do |t|
     t.integer "attacking_ammunition_hollow_point"
     t.integer "attacking_ammunition_incendiary"
@@ -232,12 +232,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_19_204350) do
 
   create_table "torn_users", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.string "gender", null: false
+    t.boolean "hof_stats_user", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id"
+    t.index ["hof_stats_user"], name: "index_torn_users_on_hof_stats_user"
     t.index ["torn_id"], name: "index_torn_users_on_torn_id", unique: true
     t.index ["user_id"], name: "index_torn_users_on_user_id"
   end

@@ -1,5 +1,5 @@
 module TornApi
-  module Torn 
+  module Torn
     class Factionhof < Base
       FACTION_ENDPOINT = "v2/torn/factionhof".freeze
       Faction = Data.define(
@@ -12,7 +12,7 @@ module TornApi
       )
       def initialize(api_key, offset: 0, limit: 100)
         super(api_key)
-        @offset = offset 
+        @offset = offset
         @limit = limit
       end
 
