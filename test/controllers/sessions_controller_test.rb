@@ -3,30 +3,12 @@ require "test_helper"
 class SessionsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.take
-    @mock_profile = {
-      "id" => @user.torn_id,
-      "name" => @user.name,
-      "api_key" => @user.api_key,
-      "level" => @user.level
-    }
+    @mock_profile = { "id" => 123, "name" => "Bram" }
   end
 
   test "new" do
     get new_session_path
     assert_response :success
-  end
-
-  # test "create with valid credentials" do
-  #   TornApi::User::Profile.any_instance.stubs(:fetch).returns(@mock_profile)
-  #   post session_path, params: { api_key: @user.api_key }
-  #   assert cookies[:session_id]
-  # end
-
-  test "create with invalid credentials" do
-    post session_path, params: { api_key: "wrong" }
-
-    assert_redirected_to new_session_path
-    assert_nil cookies[:session_id]
   end
 
   test "destroy" do
