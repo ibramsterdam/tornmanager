@@ -37,7 +37,7 @@ module TornApi
         if response["members"].present?
           parse(response["members"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response['error']&.dig('description')}"
+          raise InvalidKeyError, "Torn API authentication failed: #{response}"
         end
       end
 

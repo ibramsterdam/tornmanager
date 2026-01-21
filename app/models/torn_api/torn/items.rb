@@ -8,7 +8,7 @@ module TornApi
         if response["items"].present?
           build_items(response["items"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response['error']&.dig('description')}"
+          raise InvalidKeyError, "Torn API authentication failed: #{response}"
         end
       end
 

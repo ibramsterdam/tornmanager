@@ -25,7 +25,7 @@ module TornApi
         if response["factionhof"].present?
           parse(response["factionhof"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response['error']&.dig('description')}"
+          raise InvalidKeyError, "Torn API authentication failed: #{response}"
         end
       end
 
