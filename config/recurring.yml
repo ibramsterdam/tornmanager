@@ -15,13 +15,13 @@ production:
     class: Daily::PersonalStatsJob
     queue: default
     schedule: at 11am every day
-development:
-  daily_stock_dividend_job:
-    class: Daily::StockDividendJob
-    queue: default
-    schedule: every 20 seconds
-  daily_stats_harvest:
-    class: Daily::PersonalStatsJob
-    queue: default
-    schedule: every 20 seconds
+# development:
+#   daily_stock_dividend_job:
+#     class: Daily::StockDividendJob
+#     queue: default
+#     schedule: every 20 seconds
+#   daily_stats_harvest:
+#     class: Daily::PersonalStatsJob
+#     queue: default
+#     schedule: every 20 seconds
 
