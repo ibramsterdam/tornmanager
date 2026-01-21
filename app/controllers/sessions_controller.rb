@@ -10,7 +10,7 @@ class SessionsController < ApplicationController
 
     begin
       profile = TornApi::User::Profile.new(api_key).fetch
-      if user = User.find_by(torn_id: profile["id"])
+      if user = TornUser.find_by(torn_id: profile["id"]).user
         start_new_session_for user
         redirect_to after_authentication_url
       else

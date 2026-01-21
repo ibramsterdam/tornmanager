@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_20_221132) do
+ActiveRecord::Schema[8.1].define(version: 2026_01_21_162137) do
   create_table "personal_stat_snapshots", force: :cascade do |t|
     t.integer "attacking_ammunition_hollow_point"
     t.integer "attacking_ammunition_incendiary"
@@ -237,10 +237,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_20_221132) do
     t.string "name", null: false
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
-    t.integer "user_id"
     t.index ["hof_stats_user"], name: "index_torn_users_on_hof_stats_user"
     t.index ["torn_id"], name: "index_torn_users_on_torn_id", unique: true
-    t.index ["user_id"], name: "index_torn_users_on_user_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -254,6 +252,5 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_20_221132) do
 
   add_foreign_key "personal_stat_snapshots", "torn_users"
   add_foreign_key "sessions", "users"
-  add_foreign_key "torn_users", "users"
   add_foreign_key "users", "torn_users"
 end
