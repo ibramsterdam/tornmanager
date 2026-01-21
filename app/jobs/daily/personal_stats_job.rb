@@ -4,7 +4,7 @@ module Daily
 
     def perform(*args)
       batch_size = 60
-      delay_time = 1.second
+      delay_time = 30.minutes
 
       TornUser.find_in_batches(batch_size:) do |users|
         users.each do |torn_user|
