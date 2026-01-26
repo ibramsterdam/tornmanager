@@ -14,6 +14,7 @@ class HallOfFamersController < ApplicationController
         se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
         daily_se_average = days_tracked > 0 ? (se_gained.to_f / days_tracked).round(2) : 0
       else
+        days_tracked = 0
         daily_se_average = 0
       end
 
@@ -24,7 +25,8 @@ class HallOfFamersController < ApplicationController
         stat_enhancers_taken: latest&.items_used_stat_enhancers || 0,
         energy_drinks_used: latest&.items_used_energy_drinks || 0,
         networth: latest&.networth_total || 0,
-        daily_se_average: daily_se_average
+        daily_se_average: daily_se_average,
+        days_tracked: days_tracked
       }
     end
 

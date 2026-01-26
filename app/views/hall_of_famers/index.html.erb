@@ -16,11 +16,11 @@
   <thead>
     <tr>
       <th><%= sortable_header(sort_link("name", "Player")) %></th>
-      <th><%= sortable_header(sort_link("xanax_taken", "Xanax Taken")) %></th>
+      <th><%= sortable_header(sort_link("xanax_taken", "Xanax")) %></th>
       <th><%= sortable_header(sort_link("stat_enhancers_taken", "Stat Enhancers")) %></th>
       <th><%= sortable_header(sort_link("energy_drinks_used", "Energy Drinks")) %></th>
       <th><%= sortable_header(sort_link("networth", "Networth")) %></th>
-      <th><%= sortable_header(sort_link("daily_se_average", "Daily SE Avg")) %></th>
+      <th><%= sortable_header(sort_link("daily_se_average", "Daily SE Average")) %></th>
     </tr>
   </thead>
   <tbody>
@@ -33,7 +33,9 @@
         <td><%= number_with_delimiter(row[:stat_enhancers_taken]) %></td>
         <td><%= number_with_delimiter(row[:energy_drinks_used]) %></td>
         <td><%= number_to_currency(row[:networth], precision: 0) %></td>
-        <td><%= row[:daily_se_average] %></td>
+        <td>
+          <%= row[:daily_se_average] %> SE avg <% if row[:days_tracked] > 0 %> (past <%= row[:days_tracked] %> days)<% end %>
+        </td>
       </tr>
     <% end %>
   </tbody>
