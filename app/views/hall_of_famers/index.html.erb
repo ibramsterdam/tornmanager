@@ -1,0 +1,40 @@
+<h1>Hall of Famers</h1>
+
+<%
+  def sortable_header(sort_info)
+    if sort_info[:current]
+      arrow = sort_info[:current_direction] == "asc" ? "▲" : "▼"
+      arrow_html = "<span class='sort-arrow active'>#{arrow}</span>"
+    else
+      arrow_html = "<span class='sort-arrow'>▼</span>"
+    end
+    link_to "#{sort_info[:label]} #{arrow_html}".html_safe, hall_of_famers_path(sort: sort_info[:column], direction: sort_info[:direction]), class: "sort-link"
+  end
+%>
+
+<table>
+  <thead>
+    <tr>
+      <th><%= sortable_header(sort_link("name", "Player")) %></th>
+      <th><%= sortable_header(sort_link("xanax_taken", "Xanax Taken")) %></th>
+      <th><%= sortable_header(sort_link("stat_enhancers_taken", "Stat Enhancers")) %></th>
+      <th><%= sortable_header(sort_link("energy_drinks_used", "Energy Drinks")) %></th>
+      <th><%= sortable_header(sort_link("networth", "Networth")) %></th>
+      <th><%= sortable_header(sort_link("daily_se_average", "Daily SE Avg")) %></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% @table_rows.each do |row| %>
+      <tr>
+        <td>
+          <a href="https://www.torn.com/profiles.php?XID=<%= row[:torn_id] %>" target="_blank" class="player-link"><%= row[:name] %></a>
+        </td>
+        <td><%= number_with_delimiter(row[:xanax_taken]) %></td>
+        <td><%= number_with_delimiter(row[:stat_enhancers_taken]) %></td>
+        <td><%= number_with_delimiter(row[:energy_drinks_used]) %></td>
+        <td><%= number_to_currency(row[:networth], precision: 0) %></td>
+        <td><%= row[:daily_se_average] %></td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>

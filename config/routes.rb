@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   resources :progress, only: [ :index ]
   resources :faction, only: [ :index ]
   resources :ranked_war, only: [ :index ]
+  resources :hall_of_famers, only: [ :index ]
   resources :welcome, only: [ :index ]
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
