@@ -11,10 +11,10 @@ production:
   #   class: Daily::StockDividendJob
   #   queue: default
   #   schedule: at 11am every day
-  # daily_stats_harvest:
-  #   class: Daily::PersonalStatsJob
-  #   queue: default
-  #   schedule: at 11am every day
+  daily_stats_harvest:
+    class: Daily::PersonalStatsJob
+    queue: default
+    schedule: at 11am every day
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob
