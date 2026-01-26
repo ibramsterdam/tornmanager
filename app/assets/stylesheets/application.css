@@ -100,8 +100,8 @@ table {
   border-collapse: collapse;
   margin: 20px 0;
   font-size: 16px;
-  color: #fff; /* Text color for dark background */
   background-color: #333; /* Background for table body */
+  color: #fff; /* Text color for dark background */
 }
 
 th, td {
@@ -119,16 +119,6 @@ th {
 
 tr:nth-child(even) {
   background-color: #3a3a3a; /* Alternating row color for better readability */
-}
-
-tbody tr:hover {
-  background-color: #555;
-  cursor: pointer;
-}
-
-.highlight-red {
-  color: red;
-  margin: 0px 5px 0px 0px;
 }
 
 .navbar-link {
@@ -237,4 +227,22 @@ tbody tr:hover {
 .flash-notice {
   background: #e0fbec;
   color: #2c8e47;
+}
+
+.player-link {
+  color: #fff;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.player-link:hover {
+  color: #e63946;
+}
+
+.sort-arrow {
+  opacity: 0.3;
+}
+
+.sort-arrow.active {
+  opacity: 1;
 }
