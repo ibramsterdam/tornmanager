@@ -1,21 +1,42 @@
-<section class="login-container" aria-label="Sign in">
+<section class="login-container" aria-label="Sign in" data-controller="login">
   <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
-    <fieldset>
-      <legend>Sign in with your API Key</legend>
-      <label for="api_key">API Key</label>
+    <div class="login-header">
+      <h1 class="login-title">Sign In</h1>
+      <p class="login-subtitle">Enter your Torn API key to continue</p>
+    </div>
+    
+    <% if flash[:alert] %>
+      <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
+    <% end %>
+    
+    <div class="login-field">
+      <label for="api_key" class="login-label">API Key</label>
       <%= form.text_field :api_key,
           id: "api_key",
           required: true,
           autofocus: true,
           autocomplete: "username",
-          placeholder: "Enter your Api Key",
+          placeholder: "Enter your Torn API key",
           value: params[:api_key],
           class: "login-input" %>
-    </fieldset>
-    <% if flash[:alert] %>
-      <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
-    <% end %>
-    <button type="submit" class="login-submit">Sign in</button>
+    </div>
+    
+    <div class="login-checkbox-field">
+      <input 
+        type="checkbox" 
+        id="terms_checkbox" 
+        class="login-checkbox"
+        data-login-target="checkbox"
+        data-action="change->login#toggle" />
+      <label for="terms_checkbox" class="login-checkbox-label">
+        I agree to the <%= link_to "Privacy Policy", privacy_policy_path, class: "login-checkbox-link", target: "_blank" %> and <%= link_to "Terms of Service", terms_of_service_path, class: "login-checkbox-link", target: "_blank" %>
+      </label>
+    </div>
+    
+    <button 
+      type="submit" 
+      class="login-submit"
+      data-login-target="submit"
+      disabled>Sign In</button>
   <% end %>
 </section>
-
