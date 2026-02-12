@@ -306,6 +306,23 @@
       <li>Log all API requests for security and abuse prevention</li>
       <li>Immediately remove disabled or invalid API keys</li>
     </ul>
+    
+    <h3>API Request Identification</h3>
+    <p>
+      For transparency and accountability, all API requests made by TornManager include the comment parameter 
+      <code>tmanager</code>. This identifier appears in your API key activity logs and allows you to:
+    </p>
+    <ul>
+      <li>Monitor and audit all requests made by TornManager</li>
+      <li>Distinguish TornManager's API calls from other services</li>
+      <li>Verify the frequency and nature of API requests</li>
+      <li>Ensure compliance with rate limits and usage policies</li>
+    </ul>
+    <p>
+      You can view these logs at any time through Torn.com's 'key' → 'log' selection or by using 
+      TornManager's <%= link_to "Key Activity Log", key_log_path %> feature.
+    </p>
+    
     <p>
       Any suspected violations of these terms or Torn's policies should be reported immediately to both 
       me and Torn staff.

@@ -6,7 +6,7 @@ module TornApi
   class ApiError < StandardError; end
 
   class Base
-    DEFAULT_PARAMS = { comment: "tornmanager" }.freeze
+    DEFAULT_PARAMS = { comment: "tmanager" }.freeze
 
     attr_reader :api_key
 

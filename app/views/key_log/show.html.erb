@@ -1,0 +1,234 @@
+<div class="page-header">
+  <h1>API Key Activity Log</h1>
+  <p class="page-subtitle">Recent requests made with your API key</p>
+</div>
+
+<div class="content-wrapper">
+  <section class="content-section">
+    <div class="log-summary">
+      <p>
+        Showing <%= @log_data.log.size %> recent API requests with key: 
+        <code class="api-key-inline"><%= @api_key %></code>
+      </p>
+      <%= link_to "← Check Another Key", key_log_path, class: "back-link" %>
+    </div>
+
+    <%
+      # Calculate statistics
+      logs = @log_data.log
+      
+      # Group by minute to find peak usage
+      requests_per_minute = logs.group_by { |entry| Time.at(entry.timestamp).utc.strftime("%Y-%m-%d %H:%M") }
+      peak_minute = requests_per_minute.max_by { |minute, entries| entries.size }
+      peak_requests = peak_minute ? peak_minute.last.size : 0
+      
+      # Group by type
+      by_type = logs.group_by(&:type).transform_values(&:size).sort_by { |k, v| -v }
+      
+      # Group by selections
+      by_selections = logs.group_by(&:selections).transform_values(&:size).sort_by { |k, v| -v }.first(10)
+      
+      # Group by comment (excluding nulls)
+      by_comment = logs.reject { |e| e.comment.nil? }.group_by(&:comment).transform_values(&:size).sort_by { |k, v| -v }
+      
+      # Group by IP
+      by_ip = logs.group_by(&:ip).transform_values(&:size).sort_by { |k, v| -v }
+    %>
+
+    <div class="log-stats-grid">
+      <div class="log-stat-card">
+        <h3>Peak Usage</h3>
+        <div class="stat-value"><%= peak_requests %></div>
+        <div class="stat-label">requests/minute</div>
+        <% if peak_minute %>
+          <div class="stat-detail">at <%= peak_minute.first %> UTC</div>
+        <% end %>
+        <% if peak_requests >= 100 %>
+          <div class="stat-warning">⚠️ Rate limit exceeded!</div>
+        <% elsif peak_requests >= 90 %>
+          <div class="stat-warning">⚠️ Close to rate limit</div>
+        <% end %>
+      </div>
+
+      <div class="log-stat-card">
+        <h3>Total Requests</h3>
+        <div class="stat-value"><%= logs.size %></div>
+        <div class="stat-label">API calls</div>
+      </div>
+
+      <div class="log-stat-card">
+        <h3>Unique IPs</h3>
+        <div class="stat-value"><%= by_ip.size %></div>
+        <div class="stat-label">IP addresses</div>
+        <% if by_ip.size > 1 %>
+          <div class="stat-detail">Multiple IPs detected</div>
+        <% end %>
+      </div>
+
+      <div class="log-stat-card">
+        <h3>API Categories</h3>
+        <div class="stat-value"><%= by_type.size %></div>
+        <div class="stat-label">types used</div>
+      </div>
+    </div>
+
+    <% if peak_requests >= 100 %>
+      <div class="rate-limit-warning">
+        <h3>⚠️ Rate Limit Exceeded</h3>
+        <p>
+          <strong>Your API key exceeded Torn's rate limit of 100 requests per minute.</strong>
+        </p>
+        <p>
+          When you make 100 or more API requests in a single minute, Torn will block your IP address 
+          and you'll receive a "You are being rate limited" error message. This protection prevents 
+          server overload.
+        </p>
+        <p>What to check:</p>
+        <ul>
+          <li><strong>Multiple tools/scripts:</strong> Check if you're running multiple tools that use your API key simultaneously</li>
+          <li><strong>Polling frequency:</strong> Reduce how often your tools fetch data from Torn's API</li>
+          <li><strong>Shared IP addresses:</strong> If you're on a shared network, others may be using Torn's API on the same IP</li>
+          <li><strong>Background scripts:</strong> Look for forgotten scripts or automation still running</li>
+        </ul>
+        <p>
+          <strong>Solution:</strong> Review the "Tools/Services" and "IP Addresses" sections below to identify which 
+          tools are making the most requests. Consider spacing out API calls or reducing polling frequency to stay under 100 requests per minute.
+        </p>
+      </div>
+    <% elsif peak_requests >= 90 %>
+      <div class="rate-limit-warning">
+        <h3>⚠️ Approaching Rate Limit</h3>
+        <p>
+          <strong>You're getting close to Torn's rate limit of 100 requests per minute.</strong>
+        </p>
+        <p>
+          Your peak usage is <%= peak_requests %> requests per minute. Torn will block your IP if you reach 100 or more 
+          requests in a single minute. Review your API usage below to prevent being rate limited.
+        </p>
+      </div>
+    <% end %>
+
+    <div class="log-breakdown">
+      <div class="breakdown-section">
+        <h3>Requests by Type</h3>
+        <div class="breakdown-list">
+          <% by_type.each do |type, count| %>
+            <div class="breakdown-item">
+              <span class="breakdown-label" title="<%= type %>"><code><%= type %></code></span>
+              <span class="breakdown-bar">
+                <span class="breakdown-bar-fill" style="width: <%= (count.to_f / logs.size * 100).round(1) %>%"></span>
+              </span>
+              <span class="breakdown-count"><%= count %> (<%= (count.to_f / logs.size * 100).round(1) %>%)</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <div class="breakdown-section">
+        <h3>Top Selections</h3>
+        <div class="breakdown-list">
+          <% by_selections.each do |selection, count| %>
+            <div class="breakdown-item">
+              <span class="breakdown-label" title="<%= selection %>"><code><%= selection %></code></span>
+              <span class="breakdown-bar">
+                <span class="breakdown-bar-fill" style="width: <%= (count.to_f / logs.size * 100).round(1) %>%"></span>
+              </span>
+              <span class="breakdown-count"><%= count %> (<%= (count.to_f / logs.size * 100).round(1) %>%)</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if by_comment.any? %>
+        <div class="breakdown-section">
+          <h3>Tools/Services</h3>
+          <div class="breakdown-list">
+            <% by_comment.each do |comment, count| %>
+              <div class="breakdown-item">
+                <span class="breakdown-label" title="<%= comment %>"><%= comment %></span>
+                <span class="breakdown-bar">
+                  <span class="breakdown-bar-fill" style="width: <%= (count.to_f / logs.size * 100).round(1) %>%"></span>
+                </span>
+                <span class="breakdown-count"><%= count %> (<%= (count.to_f / logs.size * 100).round(1) %>%)</span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <div class="breakdown-section">
+        <h3>IP Addresses</h3>
+        <div class="breakdown-list">
+          <% by_ip.each do |ip, count| %>
+            <div class="breakdown-item">
+              <span class="breakdown-label" title="<%= ip %>"><%= ip %></span>
+              <span class="breakdown-bar">
+                <span class="breakdown-bar-fill" style="width: <%= (count.to_f / logs.size * 100).round(1) %>%"></span>
+              </span>
+              <span class="breakdown-count"><%= count %> (<%= (count.to_f / logs.size * 100).round(1) %>%)</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <h3>Detailed Request Log</h3>
+    <div class="log-table-wrapper">
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Timestamp</th>
+            <th>Type</th>
+            <th>Selections</th>
+            <th>ID</th>
+            <th>IP Address</th>
+            <th>Comment</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @log_data.log.each do |entry| %>
+            <tr>
+              <td><%= Time.at(entry.timestamp).utc.strftime("%Y-%m-%d %H:%M:%S") %></td>
+              <td><code><%= entry.type %></code></td>
+              <td><code><%= entry.selections %></code></td>
+              <td><%= entry.id || "-" %></td>
+              <td><%= entry.ip %></td>
+              <td><%= entry.comment || "-" %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @log_data.log.empty? %>
+      <div class="empty-state">
+        <p>No recent API activity found for this key.</p>
+      </div>
+    <% end %>
+  </section>
+
+  <section class="content-section">
+    <h2>What Am I Looking At?</h2>
+    <ul>
+      <li><strong>Peak Usage:</strong> Maximum number of requests made in any single minute</li>
+      <li><strong>Requests by Type:</strong> Distribution of API calls across different categories (user, key, faction, etc.)</li>
+      <li><strong>Top Selections:</strong> Most frequently accessed endpoints</li>
+      <li><strong>Tools/Services:</strong> Applications identified by their comment field</li>
+      <li><strong>IP Addresses:</strong> Which IPs are accessing your API key</li>
+    </ul>
+    
+    <h3>Detailed Log Fields</h3>
+    <ul>
+      <li><strong>Timestamp:</strong> When the API request was made (UTC)</li>
+      <li><strong>Type:</strong> The API category (user, key, faction, torn, etc.)</li>
+      <li><strong>Selections:</strong> Which specific data was requested</li>
+      <li><strong>ID:</strong> The target ID if applicable (e.g., user ID)</li>
+      <li><strong>IP Address:</strong> The IP address that made the request</li>
+      <li><strong>Comment:</strong> Optional comment identifying the tool/service</li>
+    </ul>
+    
+    <div class="key-log-notice">
+      <p><strong>Security Tip:</strong> If you see unfamiliar IP addresses or selections you don't recognize, consider regenerating your API key on Torn.com.</p>
+    </div>
+  </section>
+</div>
