@@ -201,5 +201,21 @@
       <li>Not providing unfair competitive advantages</li>
       <li>Not selling or monetizing user data</li>
     </ul>
+    
+    <h3>API Request Identification</h3>
+    <p>
+      All API requests made by TornManager include the comment parameter <code>tmanager</code> to identify 
+      them in your API key activity logs. This allows you to:
+    </p>
+    <ul>
+      <li>Monitor TornManager's API usage through Torn.com's key log feature</li>
+      <li>Distinguish TornManager requests from other services using your API key</li>
+      <li>Track and audit all API calls made on your behalf</li>
+      <li>Verify that only legitimate requests are being made</li>
+    </ul>
+    <p>
+      You can view all API requests at any time by visiting the 'key' → 'log' selection on Torn.com or 
+      using TornManager's <%= link_to "Key Activity Log", key_log_path %> feature.
+    </p>
   </section>
 </div>

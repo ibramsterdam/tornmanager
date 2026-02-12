@@ -1,5 +1,15 @@
 <footer>
-  <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">
-    <p>&copy; <%= Time.current.year %> Bram [2728237]</p>
-  </a>
+  <div class="footer-left">
+    <%= link_to "Key Activity Log", key_log_path, class: "footer-link" %>
+  </div>
+  <div class="footer-center">
+    <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">
+      <p>&copy; <%= Time.current.year %> Bram [2728237]</p>
+    </a>
+  </div>
+  <div class="footer-right">
+    <%= link_to "Privacy Policy", privacy_policy_path, class: "footer-link" %>
+    <span class="footer-divider">•</span>
+    <%= link_to "Terms of Service", terms_of_service_path, class: "footer-link" %>
+  </div>
 </footer>

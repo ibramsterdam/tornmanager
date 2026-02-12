@@ -17,6 +17,7 @@
       <%= link_to "TornManager", root_path, class: "navbar-link navbar-title" %>
     </div>
     <div class="navbar-center">
+      <%= link_to "Key Activity Log", key_log_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/key-log')}" %>
     </div>
     <div class="navbar-right">
       <%= link_to "Sign In", new_session_path, class: "navbar-signin" %>

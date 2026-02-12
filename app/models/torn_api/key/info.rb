@@ -1,8 +1,6 @@
 module TornApi
   module Key
-    class Info
-      BASE_URL = "https://api.torn.com/v2"
-
+    class Info < TornApi::Base
       AccessData = Data.define(
         :level,
         :type,
@@ -21,13 +19,8 @@ module TornApi
         :user
       )
 
-      def initialize(api_key)
-        @api_key = api_key
-      end
-
       def fetch
-        response = Net::HTTP.get_response(URI("#{BASE_URL}/key/info?key=#{@api_key}"))
-        data = JSON.parse(response.body)
+        data = get("v2/key/info")
 
         raise TornApi::InvalidKeyError if data["error"]
 
