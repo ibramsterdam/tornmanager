@@ -1,24 +1,49 @@
-<table>
-  <thead>
-    <tr>
-      <th>Stock Name</th>
-      <th>Increment</th>
-      <th>Market Price</th>
-      <th>Block Cost</th>
-      <th>Days to Break Even</th>
-      <th>Owned</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @table_rows.each do |row| %>
+<div class="page-header">
+  <h1>Stock Progress</h1>
+  <p class="page-subtitle">Track your dividend stock investments and break-even progress</p>
+</div>
+
+<div class="table-container">
+  <table>
+    <thead>
       <tr>
-        <td><%= row[:stock_name] %></td>
-        <td><%= row[:increment] %></td>
-        <td><%= row[:dividend_value].nil? ? 'N/A' : number_to_currency(row[:dividend_value], precision: 2) %></td>
-        <td><%= number_to_currency(row[:block_cost], precision: 2) %></td>
-        <td><%= row[:days_to_break_even].infinite? ? 'Infinity' : row[:days_to_break_even].to_i %></td>
-        <td><%= row[:owned] ? 'Yes' : 'No' %></td>
+        <th>STOCK NAME</th>
+        <th>INCREMENT</th>
+        <th>DIVIDEND VALUE</th>
+        <th>BLOCK COST</th>
+        <th>DAYS TO BREAK EVEN</th>
+        <th>OWNED</th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% @table_rows.each do |row| %>
+        <tr>
+          <td><%= row[:stock_name] %></td>
+          <td><%= row[:increment] %></td>
+          <td>
+            <% if row[:dividend_value].nil? %>
+              <span class="stat-value">N/A</span>
+            <% else %>
+              <span class="stat-value"><%= number_to_currency(row[:dividend_value], precision: 2) %></span>
+            <% end %>
+          </td>
+          <td><span class="stat-value"><%= number_to_currency(row[:block_cost], precision: 2) %></span></td>
+          <td>
+            <% if row[:days_to_break_even].infinite? %>
+              <span class="stat-value">∞</span>
+            <% else %>
+              <span class="stat-value"><%= number_with_delimiter(row[:days_to_break_even].to_i) %></span>
+            <% end %>
+          </td>
+          <td>
+            <% if row[:owned] %>
+              <span class="stat-value" style="color: #10b981;">✓ Yes</span>
+            <% else %>
+              <span class="stat-value" style="color: var(--color-text-secondary);">No</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
