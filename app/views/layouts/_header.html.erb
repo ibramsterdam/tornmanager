@@ -1,3 +1,5 @@
-<header>
-  <%= render "layouts/navbar" %>
-</header>
+<% if authenticated? %>
+  <header>
+    <%= render "layouts/navbar" %>
+  </header>
+<% end %>
