@@ -1,22 +1,21 @@
-<main>
-  <section class="login-container" aria-label="Sign in">
-    <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
-      <fieldset>
-        <legend>Sign in with your API Key</legend>
-        <label for="api_key">API Key</label>
-        <%= form.text_field :api_key,
-            id: "api_key",
-            required: true,
-            autofocus: true,
-            autocomplete: "username",
-            placeholder: "Enter your Api Key",
-            value: params[:api_key],
-            class: "login-input" %>
-      </fieldset>
-      <% if flash[:alert] %>
-        <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
-      <% end %>
-      <button type="submit" class="login-submit">Sign in</button>
+<section class="login-container" aria-label="Sign in">
+  <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
+    <fieldset>
+      <legend>Sign in with your API Key</legend>
+      <label for="api_key">API Key</label>
+      <%= form.text_field :api_key,
+          id: "api_key",
+          required: true,
+          autofocus: true,
+          autocomplete: "username",
+          placeholder: "Enter your Api Key",
+          value: params[:api_key],
+          class: "login-input" %>
+    </fieldset>
+    <% if flash[:alert] %>
+      <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
     <% end %>
-  </section>
-</main>
+    <button type="submit" class="login-submit">Sign in</button>
+  <% end %>
+</section>
+
