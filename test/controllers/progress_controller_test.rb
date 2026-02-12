@@ -29,5 +29,8 @@ class ProgressControllerTest < ActionDispatch::IntegrationTest
 
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
     get progress_index_path
+
+    assert_response :success
+    assert_select "h1", "Stock Progress"
   end
 end
