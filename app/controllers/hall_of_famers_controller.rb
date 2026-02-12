@@ -1,36 +1,66 @@
 class HallOfFamersController < ApplicationController
   allow_unauthenticated_access
 
-  SORTABLE_COLUMNS = %w[name xanax_taken stat_enhancers_taken energy_drinks_used networth daily_se_average].freeze
+  SORTABLE_COLUMNS = %w[name xanax_gained energy_drinks_gained networth_gained total_se se_gained].freeze
 
   def index
+    # Determine date range for filtering
+    all_snapshots = PersonalStatSnapshot.joins(:torn_user)
+                                       .where(torn_users: { hof_stats_user: true })
+                                       .order(:created_at)
+
+    @earliest_date = all_snapshots.first&.created_at&.to_date
+    @latest_date = all_snapshots.last&.created_at&.to_date
+
+    # Parse date parameters
+    @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
+    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
+
+    # Calculate total days for the selected range
+    @total_days_tracked = (@end_date - @start_date).to_i
+
     @table_rows = TornUser.hof_stats_users.includes(:personal_stat_snapshots).map do |torn_user|
-      snapshots = torn_user.personal_stat_snapshots.order(:created_at)
+      # Filter snapshots by date range
+      snapshots = torn_user.personal_stat_snapshots
+                           .where("DATE(created_at) >= ? AND DATE(created_at) <= ?", @start_date, @end_date)
+                           .order(:created_at)
+
       latest = snapshots.last
       first = snapshots.first
 
       if latest && first && snapshots.size > 1
-        days_tracked = (latest.created_at.to_date - first.created_at.to_date).to_i
+        # Calculate gains
+        xanax_gained = (latest.drugs_xanax || 0) - (first.drugs_xanax || 0)
         se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
-        daily_se_average = days_tracked > 0 ? (se_gained.to_f / days_tracked).round(2) : 0
+        energy_drinks_gained = (latest.items_used_energy_drinks || 0) - (first.items_used_energy_drinks || 0)
+        networth_gained = (latest.networth_total || 0) - (first.networth_total || 0)
+
+        # Calculate daily averages using the overall tracking period
+        xanax_daily = @total_days_tracked > 0 ? (xanax_gained.to_f / @total_days_tracked).round(2) : 0
+        se_daily = @total_days_tracked > 0 ? (se_gained.to_f / @total_days_tracked).round(2) : 0
+        energy_drinks_daily = @total_days_tracked > 0 ? (energy_drinks_gained.to_f / @total_days_tracked).round(2) : 0
+        networth_daily = @total_days_tracked > 0 ? (networth_gained.to_f / @total_days_tracked).round(0) : 0
       else
-        days_tracked = 0
-        daily_se_average = 0
+        xanax_gained = energy_drinks_gained = se_gained = networth_gained = 0
+        xanax_daily = se_daily = energy_drinks_daily = networth_daily = 0
       end
 
       {
         name: torn_user.name,
         torn_id: torn_user.torn_id,
-        xanax_taken: latest&.drugs_xanax || 0,
-        stat_enhancers_taken: latest&.items_used_stat_enhancers || 0,
-        energy_drinks_used: latest&.items_used_energy_drinks || 0,
-        networth: latest&.networth_total || 0,
-        daily_se_average: daily_se_average,
-        days_tracked: days_tracked
+        xanax_gained: xanax_gained,
+        xanax_daily: xanax_daily,
+        energy_drinks_gained: energy_drinks_gained,
+        energy_drinks_daily: energy_drinks_daily,
+        networth_gained: networth_gained,
+        networth_daily: networth_daily,
+        total_se: latest&.items_used_stat_enhancers || 0,
+        se_gained: se_gained,
+        se_daily: se_daily
       }
     end
 
-    @sort_column = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "stat_enhancers_taken"
+    @sort_column = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "se_gained"
     @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
 
     @table_rows = @table_rows.sort_by { |row| row[@sort_column.to_sym] || 0 }

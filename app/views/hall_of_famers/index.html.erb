@@ -1,4 +1,7 @@
-<h1>Hall of Famers</h1>
+<div class="page-header">
+  <h1>Hall of Famers</h1>
+  <p class="page-subtitle">Top players tracked for stat enhancer usage and progress</p>
+</div>
 
 <%
   def sortable_header(sort_info)
@@ -8,35 +11,98 @@
     else
       arrow_html = "<span class='sort-arrow'>▼</span>"
     end
-    link_to "#{sort_info[:label]} #{arrow_html}".html_safe, hall_of_famers_path(sort: sort_info[:column], direction: sort_info[:direction]), class: "sort-link"
+    # Preserve date filter params when sorting
+    url_params = { sort: sort_info[:column], direction: sort_info[:direction] }
+    url_params[:start_date] = params[:start_date] if params[:start_date].present?
+    url_params[:end_date] = params[:end_date] if params[:end_date].present?
+    link_to "#{sort_info[:label]} #{arrow_html}".html_safe, hall_of_famers_path(url_params), class: "sort-link"
   end
 %>
 
-<table>
-  <thead>
-    <tr>
-      <th><%= sortable_header(sort_link("name", "Player")) %></th>
-      <th><%= sortable_header(sort_link("xanax_taken", "Xanax")) %></th>
-      <th><%= sortable_header(sort_link("stat_enhancers_taken", "Stat Enhancers")) %></th>
-      <th><%= sortable_header(sort_link("energy_drinks_used", "Energy Drinks")) %></th>
-      <th><%= sortable_header(sort_link("networth", "Networth")) %></th>
-      <th><%= sortable_header(sort_link("daily_se_average", "Daily SE Average")) %></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @table_rows.each do |row| %>
-      <tr>
-        <td>
-          <a href="https://www.torn.com/profiles.php?XID=<%= row[:torn_id] %>" target="_blank" class="player-link"><%= row[:name] %></a>
-        </td>
-        <td><%= number_with_delimiter(row[:xanax_taken]) %></td>
-        <td><%= number_with_delimiter(row[:stat_enhancers_taken]) %></td>
-        <td><%= number_with_delimiter(row[:energy_drinks_used]) %></td>
-        <td><%= number_to_currency(row[:networth], precision: 0) %></td>
-        <td>
-          <%= row[:daily_se_average] %> SE avg <% if row[:days_tracked] > 0 %> (past <%= row[:days_tracked] %> days)<% end %>
-        </td>
-      </tr>
+<div class="table-container">
+  <div class="table-info">
+    <%= form_with url: hall_of_famers_path, method: :get, class: "table-filter-form" do |form| %>
+      <div class="filter-inline">
+        <span class="info-label">Tracking Period:</span>
+        
+        <div class="date-inputs-inline">
+          <%= form.date_field :start_date, 
+              value: params[:start_date] || @earliest_date,
+              min: @earliest_date,
+              max: @latest_date,
+              class: "date-input-inline" %>
+          
+          <span class="date-separator">→</span>
+          
+          <%= form.date_field :end_date, 
+              value: params[:end_date] || @latest_date,
+              min: @earliest_date,
+              max: @latest_date,
+              class: "date-input-inline" %>
+        </div>
+        
+        <span class="info-days">(<%= @total_days_tracked %> days)</span>
+        
+        <%= hidden_field_tag :sort, params[:sort] %>
+        <%= hidden_field_tag :direction, params[:direction] %>
+        
+        <button type="submit" class="filter-button-inline">Apply</button>
+        <% if params[:start_date].present? || params[:end_date].present? %>
+          <%= link_to "Reset", hall_of_famers_path, class: "filter-reset-inline" %>
+        <% end %>
+      </div>
     <% end %>
-  </tbody>
-</table>
+  </div>
+  
+  <table>
+    <thead>
+      <tr>
+        <th><%= sortable_header(sort_link("name", "PLAYER")) %></th>
+        <th><%= sortable_header(sort_link("xanax_gained", "XANAX GAINED")) %></th>
+        <th><%= sortable_header(sort_link("energy_drinks_gained", "ENERGY DRINKS")) %></th>
+        <th><%= sortable_header(sort_link("networth_gained", "NETWORTH GAINED")) %></th>
+        <th><%= sortable_header(sort_link("total_se", "TOTAL SE")) %></th>
+        <th><%= sortable_header(sort_link("se_gained", "SE GAINED")) %></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @table_rows.each do |row| %>
+        <tr>
+          <td>
+            <a href="https://www.torn.com/profiles.php?XID=<%= row[:torn_id] %>" target="_blank" class="player-link"><%= row[:name] %></a>
+          </td>
+          <td>
+            <span class="stat-value"><%= number_with_delimiter(row[:xanax_gained]) %></span>
+            <% if @total_days_tracked > 0 %>
+              <span class="stat-daily"><%= row[:xanax_daily] %>/day</span>
+            <% end %>
+          </td>
+          <td>
+            <span class="stat-value"><%= number_with_delimiter(row[:energy_drinks_gained]) %></span>
+            <% if @total_days_tracked > 0 %>
+              <span class="stat-daily"><%= row[:energy_drinks_daily] %>/day</span>
+            <% end %>
+          </td>
+          <td>
+            <span class="stat-value"><%= number_to_currency(row[:networth_gained], precision: 0) %></span>
+            <% if @total_days_tracked > 0 %>
+              <span class="stat-daily"><%= number_to_currency(row[:networth_daily], precision: 0) %>/day</span>
+            <% end %>
+          </td>
+          <td>
+            <span class="stat-value"><%= number_with_delimiter(row[:total_se]) %></span>
+            <% if @total_days_tracked > 0 %>
+              <span class="stat-daily"><%= row[:se_daily] %>/day</span>
+            <% end %>
+          </td>
+          <td>
+            <span class="stat-value"><%= number_with_delimiter(row[:se_gained]) %></span>
+            <% if @total_days_tracked > 0 %>
+              <span class="stat-daily"><%= row[:se_daily] %> taken/day</span>
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
