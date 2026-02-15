@@ -5,15 +5,28 @@
     </div>
     <div class="navbar-center">
       <%= link_to "[p] My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
-      <%= link_to "[f] My Faction", faction_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/faction')}" %>
-      <%= link_to "[r] Ranked War", ranked_war_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/ranked_war')}" %>
+      <span class="navbar-link navbar-link-disabled">[f] My Faction (Coming Soon)</span>
       <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall_of_famers')}" %>
       <% if Current.user&.admin? %>
         <%= link_to "[a] Admin", subscriptions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/subscriptions')}" %>
       <% end %>
     </div>
     <div class="navbar-right">
-      <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-signout" %>
+      <div class="navbar-user" data-controller="dropdown">
+        <% if Current.user.profile_image.present? %>
+          <img src="<%= Current.user.profile_image %>" alt="<%= Current.user.name %>" class="navbar-user-avatar" />
+        <% end %>
+        <button class="navbar-user-button" data-action="click->dropdown#toggle">
+          <span class="navbar-user-name"><%= Current.user.name %></span>
+          <svg class="navbar-user-arrow" data-dropdown-target="arrow" width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+        <div class="navbar-dropdown" data-dropdown-target="menu">
+          <span class="navbar-dropdown-item navbar-dropdown-disabled">Settings (Coming Soon)</span>
+          <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-dropdown-item navbar-dropdown-signout" %>
+        </div>
+      </div>
     </div>
   <% else %>
     <div class="navbar-left">

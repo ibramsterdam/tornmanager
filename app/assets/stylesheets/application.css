@@ -175,9 +175,9 @@ h1, h2, h3 {
 }
 
 h1 {
-  font-size: 2.5rem;
+  font-size: 2rem;
   line-height: 1.2;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
 h2 {
@@ -221,6 +221,16 @@ a:hover {
   color: #ffffff;
 }
 
+.navbar-link-disabled {
+  color: var(--gray-600);
+  cursor: not-allowed;
+  font-style: italic;
+}
+
+.navbar-link-disabled:hover {
+  color: var(--gray-600);
+}
+
 .navbar-link-active {
   color: #ffffff;
   position: relative;
@@ -245,6 +255,125 @@ a:hover {
 
 .navbar-title:hover {
   color: #ffffff;
+}
+
+.navbar-user {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+}
+
+.navbar-user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-800);
+  object-fit: cover;
+}
+
+.navbar-user-button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: transparent;
+  border: none;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  font-family: inherit;
+}
+
+.navbar-user-button:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.navbar-user-name {
+  color: var(--gray-200);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.navbar-user-arrow {
+  color: var(--gray-400);
+  transition: transform 0.2s ease, color 0.15s ease;
+}
+
+.navbar-user-arrow-open {
+  transform: rotate(180deg);
+  color: var(--gray-200);
+}
+
+.navbar-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 160px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  z-index: 1000;
+}
+
+.navbar-dropdown-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.navbar-dropdown-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  color: var(--gray-200);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: "Geist Mono", monospace;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar-dropdown-item:first-child {
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+}
+
+.navbar-dropdown-item:last-child {
+  border-radius: 0 0 var(--radius-md) var(--radius-md);
+}
+
+.navbar-dropdown-item:only-child {
+  border-radius: var(--radius-md);
+}
+
+.navbar-dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.navbar-dropdown-disabled {
+  color: var(--gray-600);
+  cursor: not-allowed;
+  font-style: italic;
+}
+
+.navbar-dropdown-disabled:hover {
+  background: transparent;
+  color: var(--gray-600);
+}
+
+.navbar-dropdown-signout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
 }
 
 .navbar-signout {
@@ -298,12 +427,12 @@ table {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   background: transparent;
 }
 
 th, td {
-  padding: var(--space-4) var(--space-3);
+  padding: var(--space-3) var(--space-3);
   text-align: left;
   border-bottom: 1px solid var(--gray-900);
 }
@@ -313,11 +442,12 @@ th {
   font-weight: 600;
   color: var(--gray-400);
   text-transform: none;
-  font-size: 0.75rem;
+  font-size: 0.6875rem;
   letter-spacing: 0.05em;
-  padding-top: var(--space-3);
-  padding-bottom: var(--space-3);
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--gray-800);
+  white-space: nowrap;
 }
 
 td {
@@ -593,12 +723,12 @@ tbody tr:hover {
 
 /* Page Headers */
 .page-header {
-  margin-bottom: var(--space-12);
+  margin-bottom: var(--space-8);
 }
 
 .page-subtitle {
   color: var(--gray-400);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   margin-top: var(--space-2);
 }
 
@@ -786,6 +916,8 @@ tbody tr:hover {
 .stat-value {
   color: var(--gray-100);
   font-weight: 500;
+  font-size: 1rem;
+  white-space: nowrap;
 }
 
 .stat-daily {
@@ -1280,7 +1412,7 @@ tbody tr:hover {
   letter-spacing: 0.05em;
 }
 
-.stat-value {
+.log-stat-value {
   font-size: 2rem;
   font-weight: 600;
   color: #ffffff;

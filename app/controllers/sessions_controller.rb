@@ -9,23 +9,21 @@ class SessionsController < ApplicationController
     api_key = params[:api_key].to_s.strip
 
     begin
-      # First, validate the key access level
       key_info = TornApi::Key::Info.new(api_key).fetch
 
       unless key_info.access.type == "Limited Access"
         return redirect_to new_session_path, alert: "Please use a Limited Access API key. Your key has #{key_info.access.type}."
       end
 
-      # Fetch profile using the validated key
-      profile = TornApi::User::Basic.new(api_key).fetch
+      profile = TornApi::User::Profile.new(api_key).fetch
 
       return redirect_to new_session_path, alert: "Could not fetch profile from Torn API." unless profile
 
-      # Find or create user by torn_id, update with latest info
       user = User.find_or_initialize_by(torn_id: profile.id)
       user.api_key = api_key
       user.name = profile.name
       user.level = profile.level
+      user.profile_image = profile.image
       user.save!
 
       start_new_session_for user

@@ -4,10 +4,22 @@ export default class extends Controller {
 
   connect() {
     document.addEventListener("keydown", this.handleKeydown)
+    this.preventSameRouteClick()
   }
 
   disconnect(){
     document.removeEventListener("keydown", this.handleKeydown)
+  }
+
+  preventSameRouteClick() {
+    const links = this.element.querySelectorAll('.navbar-link-active')
+    links.forEach(link => {
+      if (link.tagName === 'A') {
+        link.addEventListener('click', (e) => {
+          e.preventDefault()
+        })
+      }
+    })
   }
 
   handleKeydown = (e) => {

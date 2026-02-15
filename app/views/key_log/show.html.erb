@@ -38,7 +38,7 @@
     <div class="log-stats-grid">
       <div class="log-stat-card">
         <h3>Peak Usage</h3>
-        <div class="stat-value"><%= peak_requests %></div>
+        <div class="log-stat-value"><%= peak_requests %></div>
         <div class="stat-label">requests/minute</div>
         <% if peak_minute %>
           <div class="stat-detail">at <%= peak_minute.first %> UTC</div>
@@ -52,13 +52,13 @@
 
       <div class="log-stat-card">
         <h3>Total Requests</h3>
-        <div class="stat-value"><%= logs.size %></div>
+        <div class="log-stat-value"><%= logs.size %></div>
         <div class="stat-label">API calls</div>
       </div>
 
       <div class="log-stat-card">
         <h3>Unique IPs</h3>
-        <div class="stat-value"><%= by_ip.size %></div>
+        <div class="log-stat-value"><%= by_ip.size %></div>
         <div class="stat-label">IP addresses</div>
         <% if by_ip.size > 1 %>
           <div class="stat-detail">Multiple IPs detected</div>
@@ -67,7 +67,7 @@
 
       <div class="log-stat-card">
         <h3>API Categories</h3>
-        <div class="stat-value"><%= by_type.size %></div>
+        <div class="log-stat-value"><%= by_type.size %></div>
         <div class="stat-label">types used</div>
       </div>
     </div>
