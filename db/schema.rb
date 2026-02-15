@@ -10,7 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_214007) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_220232) do
+  create_table "api_calls", force: :cascade do |t|
+    t.string "api_key", null: false
+    t.datetime "created_at", null: false
+    t.string "endpoint", null: false
+    t.text "error_message"
+    t.integer "response_time"
+    t.string "selections"
+    t.string "status", null: false
+    t.integer "torn_api_timestamp"
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["created_at"], name: "index_api_calls_on_created_at"
+    t.index ["user_id", "created_at"], name: "index_api_calls_on_user_id_and_created_at"
+    t.index ["user_id"], name: "index_api_calls_on_user_id"
+  end
+
   create_table "faction_subscription_grants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "faction_id", null: false
@@ -282,6 +298,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_214007) do
     t.index ["sender_id"], name: "index_xanax_payments_on_sender_id"
   end
 
+  add_foreign_key "api_calls", "users"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"

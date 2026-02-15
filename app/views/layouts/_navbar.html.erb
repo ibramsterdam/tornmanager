@@ -6,7 +6,7 @@
     <div class="navbar-center">
       <%= link_to "[p] My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
       <span class="navbar-link navbar-link-disabled">[f] My Faction (Coming Soon)</span>
-      <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall_of_famers')}" %>
+      <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
       <% if Current.user&.admin? %>
         <%= link_to "[a] Admin", subscriptions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/subscriptions')}" %>
       <% end %>
@@ -23,10 +23,14 @@
           </svg>
         </button>
         <div class="navbar-dropdown" data-dropdown-target="menu">
+          <%= link_to "API Calls", user_api_calls_path, class: "navbar-dropdown-item" %>
           <span class="navbar-dropdown-item navbar-dropdown-disabled">Settings (Coming Soon)</span>
           <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-dropdown-item navbar-dropdown-signout" %>
         </div>
       </div>
+    </div>
+    <div class="live-api-feed" id="live-api-feed" data-turbo-permanent data-controller="api-live-feed">
+      <div class="live-api-feed-list" data-api-live-feed-target="list"></div>
     </div>
   <% else %>
     <div class="navbar-left">
