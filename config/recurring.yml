@@ -15,6 +15,10 @@ production:
     class: Daily::PersonalStatsJob
     queue: default
     schedule: at 11am every day
+  fetch_xanax_payments:
+    class: Daily::XanaxPaymentsJob
+    queue: default
+    schedule: at 12pm every day
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob

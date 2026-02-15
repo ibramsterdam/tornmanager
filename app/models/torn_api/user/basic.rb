@@ -1,9 +1,9 @@
 module TornApi
   module User
-    class Profile < Base
-      ENDPOINT = "v2/user/basic".freeze
+    class Basic < Base
+      attr_reader :torn_id
 
-      ProfileData = Data.define(
+      BasicData = Data.define(
         :id,
         :name,
         :level,
@@ -11,8 +11,21 @@ module TornApi
         :status
       )
 
+      def initialize(api_key, torn_id = nil)
+        super(api_key)
+        @torn_id = torn_id
+      end
+
+      def endpoint
+        if torn_id
+          "v2/user/#{torn_id}/basic"
+        else
+          "v2/user/basic"
+        end
+      end
+
       def fetch
-        response = get(ENDPOINT, striptags: false)
+        response = get(endpoint, striptags: true)
         if response["profile"].present?
           parse_profile(response["profile"])
         else
@@ -23,7 +36,7 @@ module TornApi
       private
 
       def parse_profile(data)
-        ProfileData.new(
+        BasicData.new(
           id: data["id"],
           name: data["name"],
           level: data["level"],

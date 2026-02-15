@@ -8,6 +8,16 @@ Rails.application.routes.draw do
   resources :hall_of_famers, only: [ :index ]
   resources :welcome, only: [ :index ]
 
+  resources :subscriptions, only: [ :index ] do
+    collection do
+      get :faction_grant
+      post :create_faction_grant
+    end
+    member do
+      patch :update_days
+    end
+  end
+
   get "privacy-policy", to: "pages#privacy_policy", as: :privacy_policy
   get "terms-of-service", to: "pages#terms_of_service", as: :terms_of_service
 

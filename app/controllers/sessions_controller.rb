@@ -17,7 +17,7 @@ class SessionsController < ApplicationController
       end
 
       # Fetch profile using the validated key
-      profile = TornApi::User::Profile.new(api_key).fetch
+      profile = TornApi::User::Basic.new(api_key).fetch
 
       return redirect_to new_session_path, alert: "Could not fetch profile from Torn API." unless profile
 

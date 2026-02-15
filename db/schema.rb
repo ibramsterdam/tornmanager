@@ -10,7 +10,19 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_163248) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_210827) do
+  create_table "faction_subscription_grants", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "faction_id", null: false
+    t.string "faction_name", null: false
+    t.datetime "granted_at", null: false
+    t.integer "granted_by_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weeks_granted", null: false
+    t.index ["faction_id"], name: "index_faction_subscription_grants_on_faction_id"
+    t.index ["granted_by_id"], name: "index_faction_subscription_grants_on_granted_by_id"
+  end
+
   create_table "personal_stat_snapshots", force: :cascade do |t|
     t.integer "attacking_ammunition_hollow_point"
     t.integer "attacking_ammunition_incendiary"
@@ -206,6 +218,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_163248) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "subscription_grants", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "faction_subscription_grant_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["faction_subscription_grant_id", "user_id"], name: "index_faction_grant_users_on_grant_and_user", unique: true
+    t.index ["faction_subscription_grant_id"], name: "index_subscription_grants_on_faction_subscription_grant_id"
+    t.index ["user_id"], name: "index_subscription_grants_on_user_id"
+  end
+
   create_table "torn_items", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "market_price"
@@ -236,14 +258,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_163248) do
     t.boolean "hof_stats_user", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
+    t.datetime "subscription_expires_at"
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
     t.index ["api_key"], name: "index_users_on_api_key", unique: true
     t.index ["hof_stats_user"], name: "index_users_on_hof_stats_user"
+    t.index ["subscription_expires_at"], name: "index_users_on_subscription_expires_at"
     t.index ["torn_id"], name: "index_users_on_torn_id", unique: true
   end
 
+  create_table "xanax_payments", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "log_id", null: false
+    t.datetime "processed_at", null: false
+    t.integer "recipient_id", null: false
+    t.integer "sender_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "weeks_granted", null: false
+    t.integer "xanax_amount", null: false
+    t.index ["log_id"], name: "index_xanax_payments_on_log_id", unique: true
+    t.index ["recipient_id"], name: "index_xanax_payments_on_recipient_id"
+    t.index ["sender_id"], name: "index_xanax_payments_on_sender_id"
+  end
+
+  add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "sessions", "users"
+  add_foreign_key "subscription_grants", "faction_subscription_grants"
+  add_foreign_key "subscription_grants", "users"
+  add_foreign_key "xanax_payments", "users", column: "recipient_id"
+  add_foreign_key "xanax_payments", "users", column: "sender_id"
 end
