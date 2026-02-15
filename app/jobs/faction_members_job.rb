@@ -10,9 +10,10 @@ class FactionMembersJob < ApplicationJob
     end
 
     all_members.each do |member|
-      TornUser.find_or_create_by(torn_id: member.id) do |user|
+      User.find_or_create_by(torn_id: member.id) do |user|
         user.name = member.name
         user.level = member.level
+        # api_key is nil until they log in
       end
     end
   end

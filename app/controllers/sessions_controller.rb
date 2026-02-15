@@ -21,20 +21,12 @@ class SessionsController < ApplicationController
 
       return redirect_to new_session_path, alert: "Could not fetch profile from Torn API." unless profile
 
-      torn_user = TornUser.find_or_create_by!(torn_id: profile.id) do |tu|
-        tu.name = profile.name
-        tu.level = profile.level
-      end
-
-      torn_user.update!(name: profile.name, level: profile.level)
-
-      # Find or create user by API key (which is unique), then associate with torn_user
-      user = User.find_or_create_by(api_key: api_key) do |u|
-        u.torn_user_id = torn_user.id
-      end
-
-      # Update the torn_user association if it changed
-      user.update!(torn_user_id: torn_user.id) if user.torn_user_id != torn_user.id
+      # Find or create user by torn_id, update with latest info
+      user = User.find_or_initialize_by(torn_id: profile.id)
+      user.api_key = api_key
+      user.name = profile.name
+      user.level = profile.level
+      user.save!
 
       start_new_session_for user
       redirect_to after_authentication_url
