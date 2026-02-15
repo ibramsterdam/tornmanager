@@ -25,7 +25,7 @@ module TornApi
       end
 
       def fetch
-        response = get(endpoint, striptags: true)
+        response = get(endpoint, { striptags: true })
         if response["profile"].present?
           parse_profile(response["profile"])
         else

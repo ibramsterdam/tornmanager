@@ -33,7 +33,7 @@ module TornApi
       end
 
       def fetch
-        response = get(endpoint, striptags: false)
+        response = get(endpoint, { striptags: false })
         if response["members"].present?
           parse(response["members"])
         else

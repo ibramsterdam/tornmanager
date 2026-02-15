@@ -7,7 +7,7 @@ module TornApi
       ENDPOINT = "v2/user/stocks".freeze
 
       def fetch
-        response = get(ENDPOINT, striptags: false)
+        response = get(ENDPOINT, { striptags: false })
         if response["stocks"].present?
           parse_user_stocks(response["stocks"])
         else

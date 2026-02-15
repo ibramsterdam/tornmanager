@@ -20,7 +20,7 @@ module TornApi
 
         # Fetch 3 batches of 100 logs (300 total)
         [ 0, 100, 200 ].each do |offset|
-          data = get("v2/key/log", limit: 100, offset: offset)
+          data = get("v2/key/log", { limit: 100, offset: offset })
 
           raise TornApi::InvalidKeyError if data["error"]
 
