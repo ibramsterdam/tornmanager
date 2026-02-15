@@ -23,7 +23,9 @@ module TornApi
     end
 
     def get(path, params = {}, retries: 0)
-      merged_params = DEFAULT_PARAMS.merge(params)
+      # Separate retries from API params
+      api_params = params.is_a?(Hash) ? params : {}
+      merged_params = DEFAULT_PARAMS.merge(api_params)
       uri = URI("#{BASE_URL}/#{path}")
       uri.query = URI.encode_www_form(merged_params)
 
@@ -37,12 +39,12 @@ module TornApi
       log_success(uri)
       body
     rescue Net::ReadTimeout, Net::OpenTimeout => e
-      handle_timeout(uri, e, retries)
+      handle_timeout(uri, api_params, e, retries)
     rescue JSON::ParserError => e
       Rails.logger.error("JSON parse error for #{uri}: #{e.message}")
       raise ApiError, "Invalid JSON response from Torn API"
     rescue Net::HTTPError, SocketError => e
-      handle_network_error(uri, e, retries)
+      handle_network_error(uri, api_params, e, retries)
     end
 
     private
@@ -100,22 +102,22 @@ module TornApi
       end
     end
 
-    def handle_timeout(uri, error, retries)
+    def handle_timeout(uri, api_params, error, retries)
       if retries < MAX_RETRIES
         Rails.logger.warn("Timeout for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
         sleep(1 * (retries + 1)) # Exponential backoff: 1s, 2s
-        get(uri.path.sub("#{BASE_URL}/", ""), parse_query(uri.query), retries: retries + 1)
+        get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
         Rails.logger.error("Timeout for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
         raise TimeoutError, "Torn API request timed out after #{MAX_RETRIES} retries"
       end
     end
 
-    def handle_network_error(uri, error, retries)
+    def handle_network_error(uri, api_params, error, retries)
       if retries < MAX_RETRIES
         Rails.logger.warn("Network error for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
         sleep(1 * (retries + 1))
-        get(uri.path.sub("#{BASE_URL}/", ""), parse_query(uri.query), retries: retries + 1)
+        get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
         Rails.logger.error("Network error for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
         raise ApiError, "Network error: #{error.message}"
