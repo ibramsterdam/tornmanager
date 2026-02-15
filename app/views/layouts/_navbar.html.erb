@@ -8,6 +8,9 @@
       <%= link_to "[f] My Faction", faction_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/faction')}" %>
       <%= link_to "[r] Ranked War", ranked_war_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/ranked_war')}" %>
       <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall_of_famers')}" %>
+      <% if Current.user&.admin? %>
+        <%= link_to "[a] Admin", subscriptions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/subscriptions')}" %>
+      <% end %>
     </div>
     <div class="navbar-right">
       <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-signout" %>

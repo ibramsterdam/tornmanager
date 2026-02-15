@@ -1,0 +1,17 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  sender: one
+  log_id: MyString
+  xanax_amount: 1
+  weeks_granted: 1
+  processed_at: 2026-02-15 18:02:55
+
+two:
+  user: two
+  sender: two
+  log_id: MyString
+  xanax_amount: 1
+  weeks_granted: 1
+  processed_at: 2026-02-15 18:02:55

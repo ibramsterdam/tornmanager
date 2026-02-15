@@ -1,0 +1,136 @@
+<% if flash[:notice] %>
+  <div class="flash flash-notice"><%= flash[:notice] %></div>
+<% end %>
+<% if flash[:alert] %>
+  <div class="flash flash-alert"><%= flash[:alert] %></div>
+<% end %>
+
+<h1>Subscription Management</h1>
+
+<%= render "faction_grant_form" %>
+
+<div class="table-container" data-controller="collapsible">
+  <h2 class="collapsible-header" data-action="click->collapsible#toggle">
+    <span data-collapsible-target="icon">▼</span>
+    Active Subscribers (<%= @active_subscribers.count %>)
+  </h2>
+  
+  <div data-collapsible-target="content">
+    <% if @active_subscribers.any? %>
+      <table>
+      <thead>
+        <tr>
+          <th>PLAYER</th>
+          <th>LEVEL</th>
+          <th>EXPIRES AT</th>
+          <th>DAYS REMAINING</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @active_subscribers.each do |user| %>
+          <tr data-controller="subscription-days" data-subscription-days-user-id-value="<%= user.id %>">
+            <td>
+              <a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a>
+            </td>
+            <td><%= user.level %></td>
+            <td data-subscription-days-target="expiresAt"><%= user.subscription_expires_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td class="days-cell">
+              <span data-subscription-days-target="display"><%= ((user.subscription_expires_at - Time.current) / 1.day).ceil %> days</span>
+              <input type="number" 
+                     data-subscription-days-target="input" 
+                     data-action="keypress->subscription-days#keypress"
+                     class="days-input" 
+                     style="display: none;" 
+                     min="0" 
+                     value="<%= ((user.subscription_expires_at - Time.current) / 1.day).ceil %>">
+              <button data-subscription-days-target="button"
+                      data-action="click->subscription-days#edit"
+                      class="edit-days-btn">Edit</button>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No active subscribers.</p>
+  <% end %>
+  </div>
+</div>
+
+<div class="table-container" data-controller="collapsible">
+  <h2 class="collapsible-header" data-action="click->collapsible#toggle">
+    <span data-collapsible-target="icon">▼</span>
+    Recent Xanax Payments
+  </h2>
+  
+  <div data-collapsible-target="content">
+    <% if @recent_payments.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>SENDER</th>
+          <th>XANAX AMOUNT</th>
+          <th>WEEKS GRANTED</th>
+          <th>PROCESSED AT</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_payments.each do |payment| %>
+          <tr>
+            <td>
+              <a href="https://www.torn.com/profiles.php?XID=<%= payment.sender.torn_id %>" target="_blank" class="player-link"><%= payment.sender.name %></a>
+            </td>
+            <td><%= payment.xanax_amount %></td>
+            <td><%= payment.weeks_granted %></td>
+            <td><%= payment.processed_at.strftime("%Y-%m-%d %H:%M") %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No payments yet.</p>
+  <% end %>
+  </div>
+</div>
+
+<div class="table-container" data-controller="collapsible">
+  <h2 class="collapsible-header" data-action="click->collapsible#toggle">
+    <span data-collapsible-target="icon">▼</span>
+    Recent Faction Grants
+  </h2>
+  
+  <div data-collapsible-target="content">
+  <% if @recent_faction_grants.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>FACTION</th>
+          <th>WEEKS GRANTED</th>
+          <th>GRANTED BY</th>
+          <th>GRANTED AT</th>
+          <th>MEMBERS</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @recent_faction_grants.each do |grant| %>
+          <tr>
+            <td>
+              <a href="https://www.torn.com/factions.php?step=profile&ID=<%= grant.faction_id %>" target="_blank" class="player-link">
+                <%= grant.faction_name %> [<%= grant.faction_id %>]
+              </a>
+            </td>
+            <td><%= grant.weeks_granted %></td>
+            <td>
+              <a href="https://www.torn.com/profiles.php?XID=<%= grant.granted_by.torn_id %>" target="_blank" class="player-link"><%= grant.granted_by.name %></a>
+            </td>
+            <td><%= grant.granted_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td><%= grant.users.count %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No faction grants yet.</p>
+  <% end %>
+  </div>
+</div>
