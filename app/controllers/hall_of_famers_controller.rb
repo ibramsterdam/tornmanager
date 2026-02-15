@@ -5,12 +5,21 @@ class HallOfFamersController < ApplicationController
 
   def index
     # Determine date range for filtering
-    all_snapshots = PersonalStatSnapshot.joins(:torn_user)
-                                       .where(torn_users: { hof_stats_user: true })
+    all_snapshots = PersonalStatSnapshot.joins(:user)
+                                       .where(users: { hof_stats_user: true })
                                        .order(:created_at)
 
     @earliest_date = all_snapshots.first&.created_at&.to_date
     @latest_date = all_snapshots.last&.created_at&.to_date
+
+    # If no snapshots exist, set defaults
+    if @earliest_date.nil? || @latest_date.nil?
+      @start_date = Date.today
+      @end_date = Date.today
+      @total_days_tracked = 0
+      @table_rows = []
+      return
+    end
 
     # Parse date parameters
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
@@ -19,11 +28,14 @@ class HallOfFamersController < ApplicationController
     # Calculate total days for the selected range
     @total_days_tracked = (@end_date - @start_date).to_i
 
-    @table_rows = TornUser.hof_stats_users.includes(:personal_stat_snapshots).map do |torn_user|
+    @table_rows = User.hof_stats_users.includes(:personal_stat_snapshots).filter_map do |user|
       # Filter snapshots by date range
-      snapshots = torn_user.personal_stat_snapshots
+      snapshots = user.personal_stat_snapshots
                            .where("DATE(created_at) >= ? AND DATE(created_at) <= ?", @start_date, @end_date)
                            .order(:created_at)
+
+      # Skip users with no snapshots
+      next if snapshots.empty?
 
       latest = snapshots.last
       first = snapshots.first
@@ -46,8 +58,8 @@ class HallOfFamersController < ApplicationController
       end
 
       {
-        name: torn_user.name,
-        torn_id: torn_user.torn_id,
+        name: user.name,
+        torn_id: user.torn_id,
         xanax_gained: xanax_gained,
         xanax_daily: xanax_daily,
         energy_drinks_gained: energy_drinks_gained,

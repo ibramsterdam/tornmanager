@@ -1,3 +1,3 @@
 class PersonalStatSnapshot < ApplicationRecord
-  belongs_to :torn_user
+  belongs_to :user
 end

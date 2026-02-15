@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_01_21_162137) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_163248) do
   create_table "personal_stat_snapshots", force: :cascade do |t|
     t.integer "attacking_ammunition_hollow_point"
     t.integer "attacking_ammunition_incendiary"
@@ -160,7 +160,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_162137) do
     t.integer "racing_races_entered"
     t.integer "racing_races_won"
     t.integer "racing_skill"
-    t.integer "torn_user_id", null: false
     t.integer "trading_bazaar_customers"
     t.bigint "trading_bazaar_profit"
     t.integer "trading_bazaar_sales"
@@ -194,7 +193,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_162137) do
     t.integer "travel_united_arab_emirates"
     t.integer "travel_united_kingdom"
     t.datetime "updated_at", null: false
-    t.index ["torn_user_id"], name: "index_personal_stat_snapshots_on_torn_user_id"
+    t.integer "user_id", null: false
+    t.index ["user_id"], name: "index_personal_stat_snapshots_on_user_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -230,27 +230,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_01_21_162137) do
     t.index ["torn_id"], name: "index_torn_stocks_on_torn_id", unique: true
   end
 
-  create_table "torn_users", force: :cascade do |t|
+  create_table "users", force: :cascade do |t|
+    t.string "api_key"
     t.datetime "created_at", null: false
     t.boolean "hof_stats_user", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["hof_stats_user"], name: "index_torn_users_on_hof_stats_user"
-    t.index ["torn_id"], name: "index_torn_users_on_torn_id", unique: true
-  end
-
-  create_table "users", force: :cascade do |t|
-    t.string "api_key", null: false
-    t.datetime "created_at", null: false
-    t.integer "torn_user_id"
-    t.datetime "updated_at", null: false
     t.index ["api_key"], name: "index_users_on_api_key", unique: true
-    t.index ["torn_user_id"], name: "index_users_on_torn_user_id"
+    t.index ["hof_stats_user"], name: "index_users_on_hof_stats_user"
+    t.index ["torn_id"], name: "index_users_on_torn_id", unique: true
   end
 
-  add_foreign_key "personal_stat_snapshots", "torn_users"
+  add_foreign_key "personal_stat_snapshots", "users"
+  add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "sessions", "users"
-  add_foreign_key "users", "torn_users"
 end
