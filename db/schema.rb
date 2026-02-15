@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_15_210827) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_15_214007) do
   create_table "faction_subscription_grants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "faction_id", null: false
@@ -258,6 +258,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_15_210827) do
     t.boolean "hof_stats_user", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
+    t.string "profile_image"
     t.datetime "subscription_expires_at"
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
