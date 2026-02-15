@@ -21,7 +21,7 @@ module TornApi
       end
 
       def fetch
-        response = get(endpoint, limit: @limit, offset: @offset, cat: "respect", striptags: false)
+        response = get(endpoint, { limit: @limit, offset: @offset, cat: "respect", striptags: false })
         if response["factionhof"].present?
           parse(response["factionhof"])
         else

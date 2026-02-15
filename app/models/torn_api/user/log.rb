@@ -12,7 +12,7 @@ module TornApi
       )
 
       def fetch_xanax_payments(limit: 100)
-        response = get(ENDPOINT, log: 4103, limit: limit)
+        response = get(ENDPOINT, { log: 4103, limit: limit })
         response["log"].present? ? parse_logs(response["log"]) : []
       end
 

@@ -4,7 +4,7 @@ module TornApi
       ENDPOINT = "v2/torn/items".freeze
 
       def fetch
-        response = get(ENDPOINT, striptags: false)
+        response = get(ENDPOINT, { striptags: false })
         if response["items"].present?
           build_items(response["items"])
         else

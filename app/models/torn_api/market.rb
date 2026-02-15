@@ -3,7 +3,7 @@ module TornApi
     ENDPOINT = "v2/market".freeze
 
     def fetch
-      response = get(ENDPOINT, striptags: false, selections: "pointsmarket")
+      response = get(ENDPOINT, { striptags: false, selections: "pointsmarket" })
       if response["pointsmarket"].present?
         response["pointsmarket"]
       else
