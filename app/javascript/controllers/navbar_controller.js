@@ -36,5 +36,6 @@ export default class extends Controller {
       event.defaultPrevented ||
       event.ctrlKey ||
       event.target.closest("input, textarea, trix-editor")
+    )
   }
 }

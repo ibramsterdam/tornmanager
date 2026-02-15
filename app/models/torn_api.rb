@@ -15,15 +15,16 @@ module TornApi
     DEFAULT_OPEN_TIMEOUT = 5
     MAX_RETRIES = 2
 
-    attr_reader :api_key
+    attr_reader :api_key, :user
 
-    def initialize(api_key)
+    def initialize(api_key, user: nil)
       raise InvalidKeyError, "No API key provided" if api_key.blank?
       @api_key = api_key
+      @user = user
     end
 
     def get(path, params = {}, retries: 0)
-      # Separate retries from API params
+      start_time = Time.current
       api_params = params.is_a?(Hash) ? params : {}
       merged_params = DEFAULT_PARAMS.merge(api_params)
       uri = URI("#{BASE_URL}/#{path}")
@@ -36,15 +37,23 @@ module TornApi
 
       check_for_errors(body)
 
+      response_time = ((Time.current - start_time) * 1000).to_i
+      log_api_call(path, merged_params, "success", response_time, body["_metadata"])
       log_success(uri)
       body
+    rescue InvalidKeyError, ApiError => e
+      response_time = ((Time.current - start_time) * 1000).to_i
+      log_api_call(path, merged_params, "error", response_time, nil, e.message)
+      raise
     rescue Net::ReadTimeout, Net::OpenTimeout => e
-      handle_timeout(uri, api_params, e, retries)
+      handle_timeout(uri, api_params, e, retries, start_time)
     rescue JSON::ParserError => e
+      response_time = ((Time.current - start_time) * 1000).to_i
+      log_api_call(path, merged_params, "error", response_time, nil, "JSON parse error: #{e.message}")
       Rails.logger.error("JSON parse error for #{uri}: #{e.message}")
       raise ApiError, "Invalid JSON response from Torn API"
     rescue Net::HTTPError, SocketError => e
-      handle_network_error(uri, api_params, e, retries)
+      handle_network_error(uri, api_params, e, retries, start_time)
     end
 
     private
@@ -102,23 +111,27 @@ module TornApi
       end
     end
 
-    def handle_timeout(uri, api_params, error, retries)
+    def handle_timeout(uri, api_params, error, retries, start_time)
       if retries < MAX_RETRIES
         Rails.logger.warn("Timeout for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
-        sleep(1 * (retries + 1)) # Exponential backoff: 1s, 2s
+        sleep(1 * (retries + 1))
         get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
+        response_time = ((Time.current - start_time) * 1000).to_i
+        log_api_call(uri.path.sub(/^\//, ""), api_params, "error", response_time, nil, "Timeout after #{MAX_RETRIES} retries")
         Rails.logger.error("Timeout for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
         raise TimeoutError, "Torn API request timed out after #{MAX_RETRIES} retries"
       end
     end
 
-    def handle_network_error(uri, api_params, error, retries)
+    def handle_network_error(uri, api_params, error, retries, start_time)
       if retries < MAX_RETRIES
         Rails.logger.warn("Network error for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
         sleep(1 * (retries + 1))
         get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
+        response_time = ((Time.current - start_time) * 1000).to_i
+        log_api_call(uri.path.sub(/^\//, ""), api_params, "error", response_time, nil, "Network error: #{error.message}")
         Rails.logger.error("Network error for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
         raise ApiError, "Network error: #{error.message}"
       end
@@ -135,6 +148,23 @@ module TornApi
 
     def log_success(uri)
       Rails.logger.debug("TornAPI success: #{uri.path}")
+    end
+
+    def log_api_call(endpoint, params, status, response_time, metadata, error_message = nil)
+      return unless user
+
+      ApiCall.create!(
+        user: user,
+        api_key: api_key,
+        endpoint: endpoint,
+        selections: params.except(:comment, :striptags).to_json,
+        response_time: response_time,
+        status: status,
+        error_message: error_message,
+        torn_api_timestamp: metadata&.dig("timestamp")
+      )
+    rescue => e
+      Rails.logger.error("Failed to log API call: #{e.message}")
     end
   end
 end

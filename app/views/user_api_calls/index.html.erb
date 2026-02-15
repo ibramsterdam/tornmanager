@@ -1,0 +1,112 @@
+<div class="page-header">
+  <h1>API Calls</h1>
+  <p class="page-subtitle">Your recent Torn API requests and response times</p>
+</div>
+
+<div class="stats-grid mb-6">
+  <div class="stat-card api-peak-card">
+    <div class="api-peak-header">
+      <span class="api-peak-title">Peak API Calls/Minute</span>
+      <% if @peak_today[:minute_start].present? %>
+        <span class="api-peak-badge">Today</span>
+      <% end %>
+    </div>
+    <% if @peak_today[:minute_start].present? %>
+      <div class="api-peak-value"><%= @peak_today[:rate] %></div>
+      <div class="api-peak-time">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 4px; opacity: 0.5;">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <%= @peak_today[:minute_start].strftime("%I:%M %p") %>
+      </div>
+    <% else %>
+      <div class="api-peak-value">0</div>
+      <div class="api-peak-empty">No calls today</div>
+    <% end %>
+  </div>
+  <div class="stat-card api-peak-card">
+    <div class="api-peak-header">
+      <span class="api-peak-title">All-Time High</span>
+    </div>
+    <% if @peak_all_time[:minute_start].present? %>
+      <div class="api-peak-value"><%= @peak_all_time[:rate] %></div>
+      <div class="api-peak-time">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="margin-right: 4px; opacity: 0.5;">
+          <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <%= @peak_all_time[:minute_start].strftime("%b %d, %Y %I:%M %p") %>
+      </div>
+    <% else %>
+      <div class="api-peak-value">0</div>
+      <div class="api-peak-empty">No calls recorded</div>
+    <% end %>
+  </div>
+</div>
+
+<% if @api_calls.empty? %>
+  <div class="table-container">
+    <p style="text-align: center; padding: 2rem; color: #6b7280;">No API calls recorded yet. Navigate to other pages to generate some activity.</p>
+  </div>
+<% else %>
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>TIMESTAMP</th>
+          <th>ENDPOINT</th>
+          <th>SELECTIONS</th>
+          <th>RESPONSE TIME</th>
+          <th>STATUS</th>
+          <th>ERROR</th>
+          <th>API KEY</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @api_calls.each do |call| %>
+          <tr>
+            <td><%= call.created_at.strftime("%b %d, %Y %I:%M:%S %p") %></td>
+            <td><%= call.endpoint %></td>
+            <td>
+              <% if call.selections.present? %>
+                <%= call.selections.is_a?(Hash) ? call.selections.to_json : call.selections %>
+              <% else %>
+                <span style="color: #6b7280;">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if call.response_time.present? %>
+                <span class="stat-value"><%= call.response_time %>ms</span>
+              <% else %>
+                <span style="color: #6b7280;">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if call.status == "success" %>
+                <span class="stat-value" style="color: #10b981;">✓ Success</span>
+              <% else %>
+                <span class="stat-value" style="color: #ef4444;">✗ Error</span>
+              <% end %>
+            </td>
+            <td>
+              <% if call.error_message.present? %>
+                <%= call.error_message %>
+              <% else %>
+                <span style="color: #6b7280;">—</span>
+              <% end %>
+            </td>
+            <td>
+              <% if call.api_key.present? %>
+                <span style="font-family: monospace; color: #6b7280;">....<%= call.api_key.last(4) %></span>
+              <% else %>
+                <span style="color: #6b7280;">—</span>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% end %>
+

@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  user: one
+  endpoint: MyString
+  selections: MyString
+  response_time: 1
+  status: MyString
+  error_message: MyText
+  torn_api_timestamp: 1
+
+two:
+  user: two
+  endpoint: MyString
+  selections: MyString
+  response_time: 1
+  status: MyString
+  error_message: MyText
+  torn_api_timestamp: 1

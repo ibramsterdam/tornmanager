@@ -15,15 +15,19 @@ class SessionsController < ApplicationController
         return redirect_to new_session_path, alert: "Please use a Limited Access API key. Your key has #{key_info.access.type}."
       end
 
-      profile = TornApi::User::Profile.new(api_key).fetch
+      user = User.find_by(api_key: api_key) || User.new
+
+      profile = TornApi::User::Profile.new(api_key, user: user).fetch
 
       return redirect_to new_session_path, alert: "Could not fetch profile from Torn API." unless profile
 
-      user = User.find_or_initialize_by(torn_id: profile.id)
-      user.api_key = api_key
-      user.name = profile.name
-      user.level = profile.level
-      user.profile_image = profile.image
+      user.assign_attributes(
+        torn_id: profile.id,
+        api_key: api_key,
+        name: profile.name,
+        level: profile.level,
+        profile_image: profile.image
+      )
       user.save!
 
       start_new_session_for user
