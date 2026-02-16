@@ -16,6 +16,8 @@ class User < ApplicationRecord
   scope :hof_stats_users, -> { where(hof_stats_user: true) }
   scope :active_subscribers, -> { where("subscription_expires_at > ?", Time.current) }
 
+  LIMITED_ACCESS_TYPES = [ "Limited Access", "Full Access", "Custom" ].freeze
+
   def subscribed?
     subscription_expires_at.present? && subscription_expires_at > Time.current
   end
@@ -27,5 +29,9 @@ class User < ApplicationRecord
 
   def admin?
     torn_id == 2728237
+  end
+
+  def has_limited_access?
+    LIMITED_ACCESS_TYPES.include?(api_access_type)
   end
 end

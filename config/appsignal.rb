@@ -4,11 +4,15 @@
 Appsignal.configure do |config|
   config.activate_if_environment("development", "production")
   config.name = "TornManager"
-  # The application's Push API key
-  # We recommend removing this line and setting this option with the
-  # APPSIGNAL_PUSH_API_KEY environment variable instead.
-  # https://docs.appsignal.com/ruby/configuration/options.html#option-push_api_key
-  config.push_api_key = Rails.application.credentials.dig(:appsignal, :api_key)
+
+  # Only load API key in non-test environments to avoid credential issues in tests
+  unless Rails.env.test?
+    # The application's Push API key
+    # We recommend removing this line and setting this option with the
+    # APPSIGNAL_PUSH_API_KEY environment variable instead.
+    # https://docs.appsignal.com/ruby/configuration/options.html#option-push_api_key
+    config.push_api_key = Rails.application.credentials.dig(:appsignal, :api_key)
+  end
 
   # Configure actions that should not be monitored by AppSignal.
   # For more information see our docs:

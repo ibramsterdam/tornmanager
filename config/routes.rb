@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   get "settings", to: "settings#index", as: :settings
   delete "settings/purge_data", to: "settings#purge_data", as: :settings_purge_data
   post "settings/refresh_subscription", to: "settings#refresh_subscription", as: :settings_refresh_subscription
+  patch "settings/update_api_key", to: "settings#update_api_key", as: :settings_update_api_key
 
   resources :subscriptions, only: [ :index ] do
     collection do

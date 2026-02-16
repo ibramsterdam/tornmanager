@@ -55,7 +55,83 @@
             <td>Nobody (your data is private)</td>
             <td>Track personal progress, statistics, and investment analysis</td>
             <td>Stored securely in encrypted database / Used only for automation</td>
+            <td>Basic Access (minimum); Limited Access (for stock features)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <h3>API Endpoints Used</h3>
+    <p>TornManager accesses the following Torn API v2 endpoints:</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+            <th>Access Level Required</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>v2/key/info</code></td>
+            <td>Verify API key validity and access level</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/key/log</code></td>
+            <td>Display your API key usage history</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/profile</code></td>
+            <td>Fetch your name, level, and profile image</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/{id}/basic</code></td>
+            <td>Fetch basic info for payment senders</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/{id}/personalstats</code></td>
+            <td>Fetch and track your personal statistics</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/stocks</code></td>
+            <td>Fetch your stock portfolio for dividend analysis</td>
             <td>Limited Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/log</code></td>
+            <td>Process Xanax subscription payments (admin only)</td>
+            <td>Limited Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}</code></td>
+            <td>Fetch faction name for subscription grants</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}/members</code></td>
+            <td>Verify faction membership for grants</td>
+            <td>Basic Access</td>
+          </tr>
+          <tr>
+            <td><code>v2/torn/stocks</code></td>
+            <td>Fetch current stock prices and dividend info</td>
+            <td>Public Only</td>
+          </tr>
+          <tr>
+            <td><code>v2/torn/factionhof</code></td>
+            <td>Display faction Hall of Fame rankings</td>
+            <td>Public Only</td>
+          </tr>
+          <tr>
+            <td><code>v2/market</code></td>
+            <td>Fetch points market prices for calculations</td>
+            <td>Basic Access</td>
           </tr>
         </tbody>
       </table>
@@ -67,7 +143,7 @@
       <li><strong>Data Sharing:</strong> Your data is completely private and never shared with other users, services, or third parties.</li>
       <li><strong>Purpose:</strong> I use your data solely to provide progress tracking, statistical analysis, and investment insights to you.</li>
       <li><strong>Key Storage:</strong> Your API key is stored securely in my encrypted database and used only for automated data fetching.</li>
-      <li><strong>Access Level:</strong> I require Limited Access level API keys, which provide access to personal statistics while limiting sensitive data exposure.</li>
+      <li><strong>Access Level:</strong> I require a minimum of Basic Access API keys for core features. Limited Access is required for stock portfolio analysis.</li>
     </ul>
   </section>
 
@@ -78,7 +154,7 @@
     <p>You are responsible for:</p>
     <ul>
       <li>Creating and managing your Torn API key</li>
-      <li>Providing an API key with appropriate access level (Limited Access recommended)</li>
+      <li>Providing an API key with appropriate access level (Basic Access minimum, Limited Access for stock features)</li>
       <li>Monitoring your API key usage through Torn.com ('key' → 'log' selection)</li>
       <li>Revoking or regenerating your key if you suspect misuse</li>
       <li>Understanding that sharing your API key with anyone gives them access to your game data</li>
@@ -101,6 +177,12 @@
     <p>
       <strong>Never share your Torn password with anyone, including me.</strong> I only require your 
       API key for authentication. Your Torn password should never be entered into any third-party service.
+    </p>
+    <p>
+      <strong>Regarding your API key:</strong> While you should never share your API key with other individuals, 
+      providing it to a trusted third-party service like TornManager is different. When you sign in with your API key, 
+      you are explicitly authorizing TornManager to access the Torn API on your behalf for the documented purposes. 
+      This is similar to authorizing any app or service to access your data.
     </p>
     <p>
       I implement industry-standard security measures to protect your API key, including:
