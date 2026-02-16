@@ -10,10 +10,15 @@ class BackfillSingleStatJob < ApplicationJob
     return Rails.logger.error("No API key found") if api_key.blank?
 
     timestamp = date.to_time.to_i
-    fetched_data = {}
+    api_stat_names = stat_mapping.keys
 
+    values = fetch_stats(user.torn_id, api_stat_names, timestamp, api_key)
+
+    return if values.nil? || values.empty?
+
+    fetched_data = {}
     stat_mapping.each do |api_stat_name, db_column|
-      value = fetch_stat(user.torn_id, api_stat_name, timestamp, api_key)
+      value = values[api_stat_name]
       fetched_data[db_column] = value if value
     end
 
@@ -32,11 +37,11 @@ class BackfillSingleStatJob < ApplicationJob
 
   private
 
-  def fetch_stat(torn_id, api_stat_name, timestamp, api_key)
+  def fetch_stats(torn_id, api_stat_names, timestamp, api_key)
     api = TornApi::User::HistoricalPersonalStat.new(api_key, torn_id)
-    api.fetch(api_stat_name, timestamp)
+    api.fetch(api_stat_names, timestamp)
   rescue TornApi::ApiError => e
-    Rails.logger.error("API error for stat #{api_stat_name}: #{e.message}")
+    Rails.logger.error("API error for stats #{api_stat_names.join(', ')}: #{e.message}")
     nil
   end
 end

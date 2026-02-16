@@ -8,14 +8,21 @@ module TornApi
         @torn_id = torn_id
       end
 
-      def fetch(stat_name, timestamp)
+      def fetch(stat_names, timestamp)
         endpoint = "v2/user/#{torn_id}/personalstats"
-        params = { stat: stat_name, timestamp: timestamp }
+        stat_param = Array(stat_names).join(",")
+        params = { stat: stat_param, timestamp: timestamp }
 
         response = get(endpoint, params)
 
         if response["personalstats"]&.any?
-          response.dig("personalstats", 0, "value")
+          if stat_names.is_a?(Array)
+            response["personalstats"].each_with_object({}) do |stat, hash|
+              hash[stat["name"]] = stat["value"]
+            end
+          else
+            response.dig("personalstats", 0, "value")
+          end
         else
           nil
         end
