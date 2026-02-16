@@ -37,7 +37,7 @@ export default class extends Controller {
     this.buttonTarget.textContent = "Saving..."
 
     try {
-      const response = await fetch(`/subscriptions/${this.userIdValue}/update_days`, {
+      const response = await fetch(`/admin/subscriptions/${this.userIdValue}/update_days`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

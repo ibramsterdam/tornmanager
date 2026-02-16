@@ -1,0 +1,206 @@
+/*
+ * Form Components
+ */
+
+/* Form Container */
+.form-container {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  max-width: 600px;
+  margin: 0 0 var(--space-8) 0;
+}
+
+/* Form Group */
+.form-group {
+  margin-bottom: var(--space-6);
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+/* Form Label */
+.form-label {
+  display: block;
+  color: var(--gray-200);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+  font-size: 0.875rem;
+}
+
+/* Form Input */
+.form-input,
+.form-select {
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-1000);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  color: var(--gray-200);
+  font-family: "Geist Mono", monospace;
+  font-size: 0.875rem;
+  transition: all 0.15s ease;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: var(--gray-600);
+  background: var(--gray-900);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.05);
+}
+
+.form-input::placeholder {
+  color: var(--gray-600);
+}
+
+/* Form Help Text */
+.form-help {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: var(--space-2);
+  margin-bottom: 0;
+}
+
+.form-hint {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+/* Form Static (read-only display) */
+.form-static {
+  color: var(--gray-400);
+  font-family: "Geist Mono", monospace;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+
+.form-actions .button {
+  flex: 1;
+}
+
+/* Simple Form */
+.simple-form {
+  max-width: 500px;
+}
+
+/* Inline Add Form */
+.inline-add-form {
+  margin-bottom: var(--space-6);
+}
+
+.inline-add-form .flash {
+  margin-bottom: var(--space-4);
+}
+
+.inline-form-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.inline-form-row .form-input {
+  max-width: 250px;
+}
+
+/* Date Input Inline (for filters) */
+.date-inputs-inline {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.date-input-inline {
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-sm);
+  background: var(--gray-1000);
+  color: var(--gray-200);
+  font-size: 0.8125rem;
+  font-family: "Geist Mono", monospace;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+  min-width: 130px;
+}
+
+.date-input-inline::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.date-input-inline::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+}
+
+.date-input-inline:hover {
+  border-color: var(--gray-700);
+}
+
+.date-input-inline:focus {
+  outline: none;
+  border-color: var(--gray-600);
+  background: var(--gray-900);
+}
+
+.date-separator {
+  color: var(--gray-600);
+  font-weight: 400;
+}
+
+/* Inline Editing Styles */
+.days-cell {
+  display: flex;
+  align-items: center;
+}
+
+.days-input {
+  width: 80px;
+  padding: var(--space-1) var(--space-2);
+  background: var(--gray-1000);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-sm);
+  color: var(--gray-200);
+  font-family: "Geist Mono", monospace;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease;
+}
+
+.days-input:focus {
+  outline: none;
+  border-color: var(--gray-500);
+  background: var(--gray-900);
+}
+
+.edit-days-btn {
+  padding: var(--space-1) var(--space-3);
+  background: var(--gray-800);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-sm);
+  color: var(--gray-300);
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin-left: var(--space-2);
+}
+
+.edit-days-btn:hover:not(:disabled) {
+  background: var(--gray-700);
+  border-color: var(--gray-600);
+  color: var(--gray-100);
+}
+
+.edit-days-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -21,6 +21,11 @@ module Authentication
       resume_session || request_authentication
     end
 
+    def require_admin
+      require_authentication
+      redirect_to root_path, alert: "Access denied." unless Current.user&.admin?
+    end
+
     def resume_session
       Current.session ||= find_session_by_cookie
     end

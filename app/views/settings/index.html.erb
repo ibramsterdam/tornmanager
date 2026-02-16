@@ -7,47 +7,7 @@
 <div class="settings-section">
   <h2>API Key</h2>
   
-  <div class="api-key-card">
-    <div class="api-key-info">
-      <div class="api-key-row">
-        <span class="api-key-label">Current Key:</span>
-        <span class="api-key-value"><%= @api_key_masked %></span>
-      </div>
-      <div class="api-key-row">
-        <span class="api-key-label">Access Level:</span>
-        <span class="api-key-access-badge <%= @has_limited_access ? 'api-key-access-good' : 'api-key-access-limited' %>">
-          <%= @api_access_type %>
-        </span>
-      </div>
-    </div>
-    
-    <% unless @has_limited_access %>
-      <div class="api-key-warning">
-        <strong>Upgrade recommended:</strong> Your current API key has limited functionality. 
-        Upgrade to "Limited Access" or higher to see which stocks you own on the Progress page.
-      </div>
-    <% end %>
-    
-    <%= form_with url: settings_update_api_key_path, method: :patch, data: { turbo: false, controller: "api-key", action: "submit->api-key#submit" } do |form| %>
-      <div class="api-key-form-inline">
-        <%= form.text_field :api_key, 
-            class: "api-key-form-input",
-            placeholder: "Enter new API key",
-            autocomplete: "off",
-            data: { api_key_target: "input", action: "input->api-key#validateInput" } %>
-        <button type="submit" 
-            class="btn-secondary"
-            disabled
-            data-api-key-target="submit">
-          Update
-        </button>
-      </div>
-      <p class="api-key-form-hint">
-        Need a new key? <%= link_to "Create one on Torn", "https://www.torn.com/preferences.php#tab=api?&step=addNewKey&title=TornManager&type=3", target: "_blank" %> (Limited Access recommended)
-      </p>
-      <div class="api-key-feedback<%= ' api-key-feedback-success' if flash[:notice] %><%= ' api-key-feedback-error' if flash[:alert] %>" data-api-key-target="feedback"><%= flash[:notice] || flash[:alert] %></div>
-    <% end %>
-  </div>
+  <%= render "api_key_card" %>
 </div>
 
 <!-- Section 2: Subscription Status -->

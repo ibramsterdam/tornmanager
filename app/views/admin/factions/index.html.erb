@@ -1,0 +1,52 @@
+<div class="page-header">
+  <h1>Manage Factions</h1>
+  <p class="page-subtitle">Configure which factions have their members' stats tracked</p>
+</div>
+
+<div class="settings-section">
+  <div class="section-header">
+    <h2>Factions</h2>
+  </div>
+
+  <%= turbo_frame_tag "add_faction" do %>
+    <%= render "form" %>
+  <% end %>
+
+  <div class="tos-table">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Torn ID</th>
+          <th>Members</th>
+          <th>Track Stats</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="factions">
+        <%= render @factions %>
+      </tbody>
+    </table>
+  </div>
+
+  <% if @factions.empty? %>
+    <div class="info-card mt-4">
+      <p>No factions added yet. Use the form above to start tracking a faction's members.</p>
+    </div>
+  <% end %>
+</div>
+
+<div class="settings-section">
+  <h2>Stats Tracking Info</h2>
+  <div class="info-card">
+    <p><strong>How it works:</strong></p>
+    <ul>
+      <li>When "Track Stats" is enabled for a faction, all members are synced from the Torn API</li>
+      <li>Daily at 10:30 AM TCT, faction membership is automatically synced</li>
+      <li>Daily at 11:00 AM TCT, personal stats are fetched for all tracked users</li>
+      <li>Users are tracked if they are a HoF stats user OR in a tracked faction</li>
+      <li>Disabling tracking does NOT delete existing stats data</li>
+    </ul>
+    <p><strong>Currently tracking:</strong> <%= User.tracked_for_stats.count %> users</p>
+  </div>
+</div>

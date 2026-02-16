@@ -53,7 +53,7 @@ class KeyLogControllerTest < ActionDispatch::IntegrationTest
     post key_log_show_path, params: { api_key: "" }
 
     assert_response :success
-    assert_select ".flash-alert", text: /Please provide an API key/
+    assert_select ".flash-notification-alert", text: /Please provide an API key/
   end
 
   test "show with invalid key redirects with error" do
@@ -62,7 +62,7 @@ class KeyLogControllerTest < ActionDispatch::IntegrationTest
     post key_log_show_path, params: { api_key: "invalid_key" }
 
     assert_response :success
-    assert_select ".flash-alert", text: /Invalid API key/
+    assert_select ".flash-notification-alert", text: /Invalid API key/
   end
 
   test "show with valid key displays log data" do
@@ -94,7 +94,7 @@ class KeyLogControllerTest < ActionDispatch::IntegrationTest
     post key_log_show_path, params: { api_key: @valid_api_key }
 
     assert_response :success
-    assert_select ".flash-alert", text: /Error fetching key log/
+    assert_select ".flash-notification-alert", text: /Error fetching key log/
   end
 
   test "GET to show redirects to index" do

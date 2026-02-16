@@ -1,12 +1,8 @@
-<section class="login-container" aria-label="Sign in" data-controller="login">
+<section class="login-container<%= ' login-container--no-animation' if flash[:alert] || flash[:notice] %>" aria-label="Sign in" data-controller="login">
   <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
     <div class="login-header">
       <h1 class="login-title">Sign In</h1>
     </div>
-    
-    <% if flash[:alert] %>
-      <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
-    <% end %>
     
     <div class="login-field">
       <label for="api_key" class="login-label">API Key</label>

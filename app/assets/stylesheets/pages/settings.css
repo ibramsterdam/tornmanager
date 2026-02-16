@@ -1,0 +1,62 @@
+/*
+ * Settings Page Styles
+ */
+
+.settings-section {
+  margin-bottom: 3rem;
+}
+
+.settings-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  color: var(--gray-100);
+}
+
+/* Settings Page Stat Cards */
+.settings-section .stat-card .stat-label {
+  color: #ffffff;
+}
+
+.settings-section .stat-card .stat-value {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--gray-100);
+  margin-bottom: 0.25rem;
+}
+
+.settings-section .stat-card .stat-description {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+  line-height: 1.4;
+}
+
+/* Danger Zone */
+.danger-zone {
+  background: rgba(239, 68, 68, 0.1);
+  border: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+}
+
+.danger-zone h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #fca5a5;
+  margin-bottom: 1rem;
+}
+
+.danger-zone ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  color: var(--gray-300);
+}
+
+.danger-zone li {
+  margin-bottom: 0.5rem;
+}
+
+.danger-zone p {
+  color: var(--gray-300);
+  margin-bottom: 0.75rem;
+}

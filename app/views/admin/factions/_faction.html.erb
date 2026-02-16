@@ -1,0 +1,22 @@
+<tr id="<%= dom_id(faction) %>">
+  <td>
+    <%= link_to faction.name, "https://www.torn.com/factions.php?step=profile&ID=#{faction.torn_id}", target: "_blank" %>
+  </td>
+  <td><%= faction.torn_id %></td>
+  <td class="member-count"><%= faction.users.count %></td>
+  <td>
+    <label class="toggle-switch">
+      <input type="checkbox" 
+             <%= "checked" if faction.track_stats %>
+             data-controller="faction-toggle"
+             data-action="change->faction-toggle#toggle"
+             data-faction-toggle-url-value="<%= toggle_tracking_admin_faction_path(faction) %>"
+             data-faction-toggle-row-value="<%= dom_id(faction) %>">
+      <span class="toggle-slider"></span>
+    </label>
+  </td>
+  <td>
+    <%= link_to "Sync", sync_members_admin_faction_path(faction), method: :post, class: "btn-small", data: { turbo_method: :post } %>
+    <%= button_to "Delete", admin_faction_path(faction), method: :delete, class: "btn-small btn-small-danger", data: { turbo_confirm: "Are you sure you want to remove '#{faction.name}'?" } %>
+  </td>
+</tr>

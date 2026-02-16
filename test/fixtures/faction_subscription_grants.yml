@@ -1,15 +1,15 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  faction_id: 1
-  faction_name: MyString
-  weeks_granted: 1
+  torn_faction_id: 12345
+  faction_name: Test Faction One
+  weeks_granted: 4
   granted_by: one
   granted_at: 2026-02-15 18:03:20
 
 two:
-  faction_id: 1
-  faction_name: MyString
-  weeks_granted: 1
+  torn_faction_id: 67890
+  faction_name: Test Faction Two
+  weeks_granted: 2
   granted_by: two
   granted_at: 2026-02-15 18:03:20

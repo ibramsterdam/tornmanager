@@ -13,18 +13,28 @@ Rails.application.routes.draw do
   get "user/api-calls", to: "user_api_calls#index", as: :user_api_calls
 
   get "settings", to: "settings#index", as: :settings
+  get "settings/api_key_card", to: "settings#api_key_card", as: :settings_api_key_card
   delete "settings/purge_data", to: "settings#purge_data", as: :settings_purge_data
   post "settings/refresh_subscription", to: "settings#refresh_subscription", as: :settings_refresh_subscription
   patch "settings/update_api_key", to: "settings#update_api_key", as: :settings_update_api_key
   get "settings/export_data", to: "settings#export_data", as: :settings_export_data
 
-  resources :subscriptions, only: [ :index ] do
-    collection do
-      get :faction_grant
-      post :create_faction_grant
+  namespace :admin do
+    get "/", to: "dashboard#index", as: :dashboard
+    resources :subscriptions, only: [ :index ] do
+      collection do
+        get :faction_grant
+        post :create_faction_grant
+      end
+      member do
+        patch :update_days
+      end
     end
-    member do
-      patch :update_days
+    resources :factions, only: [ :index, :new, :create, :destroy ] do
+      member do
+        patch :toggle_tracking
+        post :sync_members
+      end
     end
   end
 

@@ -2,7 +2,7 @@
 # Visit our documentation for a list of all available configuration options.
 # https://docs.appsignal.com/ruby/configuration/options.html
 Appsignal.configure do |config|
-  config.activate_if_environment("development", "production")
+  config.activate_if_environment("production")
   config.name = "TornManager"
 
   # Only load API key in non-test environments to avoid credential issues in tests

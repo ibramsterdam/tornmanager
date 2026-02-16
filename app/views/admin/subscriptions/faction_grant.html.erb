@@ -1,18 +1,11 @@
 <div class="page-header">
   <h1>Grant Faction Subscriptions</h1>
   <p class="page-subtitle">Grant subscriptions to all members of a faction</p>
-  <%= link_to "← Back to Subscriptions", subscriptions_path, class: "button" %>
+  <%= link_to "Back to Subscriptions", admin_subscriptions_path, class: "button" %>
 </div>
 
 <div class="form-container">
-  <% if flash[:notice] %>
-    <div class="flash flash-notice"><%= flash[:notice] %></div>
-  <% end %>
-  <% if flash[:alert] %>
-    <div class="flash flash-alert"><%= flash[:alert] %></div>
-  <% end %>
-  
-  <%= form_with url: create_faction_grant_subscriptions_path, method: :post do |form| %>
+  <%= form_with url: create_faction_grant_admin_subscriptions_path, method: :post do |form| %>
     <div class="form-group">
       <%= form.label :faction_id, "Faction ID" %>
       <%= form.number_field :faction_id, required: true, min: 1, class: "form-input" %>

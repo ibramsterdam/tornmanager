@@ -1,10 +1,3 @@
-<% if flash[:notice] %>
-  <div class="flash flash-notice"><%= flash[:notice] %></div>
-<% end %>
-<% if flash[:alert] %>
-  <div class="flash flash-alert"><%= flash[:alert] %></div>
-<% end %>
-
 <h1>Subscription Management</h1>
 
 <%= render "faction_grant_form" %>
@@ -115,8 +108,8 @@
         <% @recent_faction_grants.each do |grant| %>
           <tr>
             <td>
-              <a href="https://www.torn.com/factions.php?step=profile&ID=<%= grant.faction_id %>" target="_blank" class="player-link">
-                <%= grant.faction_name %> [<%= grant.faction_id %>]
+              <a href="https://www.torn.com/factions.php?step=profile&ID=<%= grant.torn_faction_id %>" target="_blank" class="player-link">
+                <%= grant.faction_name %> [<%= grant.torn_faction_id %>]
               </a>
             </td>
             <td><%= grant.weeks_granted %></td>
