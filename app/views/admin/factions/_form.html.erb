@@ -1,0 +1,14 @@
+<%= form_with url: admin_factions_path, class: "inline-add-form", data: { turbo_frame: "add_faction" } do |form| %>
+  <% if @error.present? %>
+    <div class="flash flash-alert"><%= @error %></div>
+  <% end %>
+  
+  <div class="inline-form-row">
+    <%= form.number_field :torn_id, 
+        placeholder: "Faction ID (e.g. 9055)", 
+        class: "form-input", 
+        required: true,
+        min: 1 %>
+    <%= form.submit "Add Faction", class: "btn-primary" %>
+  </div>
+<% end %>

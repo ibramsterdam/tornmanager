@@ -4,10 +4,6 @@
     <p class="key-log-subtitle">View what requests have been made with your API key</p>
   </div>
 
-  <% if flash[:alert] %>
-    <div role="alert" class="flash flash-alert"><%= flash[:alert] %></div>
-  <% end %>
-
   <%= form_with url: key_log_show_path, method: :post, class: "key-log-form-centered", data: { controller: "keylog", turbo: false } do |form| %>
     <div class="form-group">
       <%= form.label :api_key, "Your API Key", class: "form-label" %>

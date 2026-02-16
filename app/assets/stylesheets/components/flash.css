@@ -1,0 +1,194 @@
+/*
+ * Flash Messages & Toast Notifications
+ */
+
+/* Inline Flash Messages */
+.flash {
+  margin-bottom: var(--space-6);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  width: 100%;
+  text-align: center;
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+
+.flash-alert {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.flash-notice {
+  background: rgba(34, 197, 94, 0.1);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+/* Alert Boxes */
+.alert {
+  padding: var(--space-4) var(--space-5);
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  border: 1px solid;
+}
+
+.alert strong {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: inherit;
+}
+
+.alert a {
+  color: inherit;
+  text-decoration: underline;
+  font-weight: 600;
+}
+
+.alert a:hover {
+  opacity: 0.8;
+}
+
+.alert-info {
+  background: rgba(59, 130, 246, 0.1);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Global Flash Notifications (Toast) */
+.flash-notifications {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  z-index: 9999;
+  display: flex;
+  flex-direction: column-reverse;
+  gap: var(--space-3);
+  pointer-events: none;
+  max-width: 400px;
+}
+
+.flash-notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  font-size: 0.875rem;
+  pointer-events: auto;
+  opacity: 0;
+  transform: translateX(100%);
+  transition: none;
+}
+
+.flash-notification-visible {
+  animation: flashSlideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.flash-notification-fade-out {
+  animation: flashSlideOut 0.2s ease-in forwards;
+}
+
+@keyframes flashSlideIn {
+  0% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes flashSlideOut {
+  0% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+.flash-notification-content {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
+}
+
+.flash-notification-icon {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flash-notification-message {
+  flex: 1;
+  line-height: 1.4;
+}
+
+.flash-notification-close {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.flash-notification-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--gray-200);
+}
+
+/* Notice (success) style */
+.flash-notification-notice {
+  border-color: rgba(34, 197, 94, 0.3);
+  background: linear-gradient(135deg, var(--gray-900) 0%, rgba(34, 197, 94, 0.1) 100%);
+}
+
+.flash-notification-notice .flash-notification-icon {
+  color: #22c55e;
+}
+
+.flash-notification-notice .flash-notification-message {
+  color: #86efac;
+}
+
+/* Alert (error) style */
+.flash-notification-alert {
+  border-color: rgba(239, 68, 68, 0.3);
+  background: linear-gradient(135deg, var(--gray-900) 0%, rgba(239, 68, 68, 0.1) 100%);
+}
+
+.flash-notification-alert .flash-notification-icon {
+  color: #ef4444;
+}
+
+.flash-notification-alert .flash-notification-message {
+  color: #fca5a5;
+}
+
+@media (max-width: 480px) {
+  .flash-notifications {
+    left: var(--space-4);
+    right: var(--space-4);
+    bottom: var(--space-4);
+    max-width: none;
+  }
+}

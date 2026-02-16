@@ -27,5 +27,11 @@
       <%= yield %>
     </main>
     <%= render "layouts/footer" %>
+    
+    <div id="flash-notifications" class="flash-notifications" data-controller="flash-notifications">
+      <% flash.each do |type, message| %>
+        <%= render "layouts/flash", type: type, message: message %>
+      <% end %>
+    </div>
   </body>
 </html>

@@ -1,0 +1,4 @@
+<%= turbo_stream.append "factions", @faction %>
+<%= turbo_stream.replace "add_faction" do %>
+  <%= render "form" %>
+<% end %>

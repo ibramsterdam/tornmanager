@@ -1,4 +1,5 @@
 class User < ApplicationRecord
+  belongs_to :faction, optional: true
   has_many :sessions, dependent: :destroy
   has_many :personal_stat_snapshots, dependent: :destroy
   has_many :received_xanax_payments, class_name: "XanaxPayment", foreign_key: :recipient_id, dependent: :destroy
@@ -15,6 +16,11 @@ class User < ApplicationRecord
 
   scope :hof_stats_users, -> { where(hof_stats_user: true) }
   scope :active_subscribers, -> { where("subscription_expires_at > ?", Time.current) }
+  scope :tracked_for_stats, -> {
+    left_joins(:faction)
+      .where("hof_stats_user = ? OR factions.track_stats = ?", true, true)
+      .distinct
+  }
 
   LIMITED_ACCESS_TYPES = [ "Limited Access", "Full Access", "Custom" ].freeze
 

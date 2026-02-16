@@ -1,0 +1,92 @@
+/*
+ * Content Pages (Privacy Policy, Terms of Service)
+ */
+
+.content-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.content-section {
+  margin-bottom: var(--space-12);
+}
+
+.content-section h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin-bottom: var(--space-4);
+  margin-top: var(--space-8);
+  letter-spacing: -0.025em;
+}
+
+.content-section h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--gray-200);
+  margin-bottom: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.content-section p {
+  color: var(--gray-400);
+  line-height: 1.7;
+  margin-bottom: var(--space-4);
+}
+
+.content-section ul {
+  color: var(--gray-400);
+  line-height: 1.7;
+  margin-bottom: var(--space-4);
+  padding-left: var(--space-6);
+}
+
+.content-section li {
+  margin-bottom: var(--space-2);
+}
+
+.content-section strong {
+  color: var(--gray-200);
+  font-weight: 600;
+}
+
+.content-section a {
+  color: #ffffff;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.content-section a:hover {
+  color: var(--gray-300);
+}
+
+/* Terms of Service Table */
+.tos-table {
+  overflow-x: auto;
+  margin: var(--space-6) 0;
+}
+
+.tos-table table {
+  min-width: 100%;
+  font-size: 0.8125rem;
+}
+
+.tos-table th {
+  background: var(--gray-900);
+  color: var(--gray-300);
+  font-weight: 600;
+  padding: var(--space-3);
+  white-space: nowrap;
+}
+
+.tos-table td {
+  padding: var(--space-3);
+  color: var(--gray-400);
+}
+
+.table-note {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  font-style: italic;
+  margin-top: var(--space-2);
+}

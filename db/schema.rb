@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_16_112645) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_16_152151) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -29,14 +29,26 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_112645) do
 
   create_table "faction_subscription_grants", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "faction_id", null: false
+    t.integer "faction_id"
     t.string "faction_name", null: false
     t.datetime "granted_at", null: false
     t.integer "granted_by_id", null: false
+    t.integer "torn_faction_id", null: false
     t.datetime "updated_at", null: false
     t.integer "weeks_granted", null: false
     t.index ["faction_id"], name: "index_faction_subscription_grants_on_faction_id"
     t.index ["granted_by_id"], name: "index_faction_subscription_grants_on_granted_by_id"
+    t.index ["torn_faction_id"], name: "index_faction_subscription_grants_on_torn_faction_id"
+  end
+
+  create_table "factions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.integer "torn_id", null: false
+    t.boolean "track_stats", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["torn_id"], name: "index_factions_on_torn_id", unique: true
+    t.index ["track_stats"], name: "index_factions_on_track_stats"
   end
 
   create_table "personal_stat_snapshots", force: :cascade do |t|
@@ -272,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_112645) do
     t.string "api_access_type"
     t.string "api_key"
     t.datetime "created_at", null: false
+    t.integer "faction_id"
     t.boolean "hof_stats_user", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
@@ -280,6 +293,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_112645) do
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
     t.index ["api_key"], name: "index_users_on_api_key", unique: true
+    t.index ["faction_id"], name: "index_users_on_faction_id"
     t.index ["hof_stats_user"], name: "index_users_on_hof_stats_user"
     t.index ["subscription_expires_at"], name: "index_users_on_subscription_expires_at"
     t.index ["torn_id"], name: "index_users_on_torn_id", unique: true
@@ -300,12 +314,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_112645) do
   end
 
   add_foreign_key "api_calls", "users"
+  add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "sessions", "users"
   add_foreign_key "subscription_grants", "faction_subscription_grants"
   add_foreign_key "subscription_grants", "users"
+  add_foreign_key "users", "factions"
   add_foreign_key "xanax_payments", "users", column: "recipient_id"
   add_foreign_key "xanax_payments", "users", column: "sender_id"
 end

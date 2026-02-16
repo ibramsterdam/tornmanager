@@ -8,7 +8,7 @@
       <span class="navbar-link navbar-link-disabled">[f] My Faction (Coming Soon)</span>
       <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
       <% if Current.user&.admin? %>
-        <%= link_to "[a] Admin", subscriptions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/subscriptions')}" %>
+        <%= link_to "[a] Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
       <% end %>
     </div>
     <div class="navbar-right">

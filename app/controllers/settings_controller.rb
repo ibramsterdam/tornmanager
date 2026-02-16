@@ -15,10 +15,12 @@ class SettingsController < ApplicationController
     @can_refresh = can_refresh?
     @seconds_until_refresh = seconds_until_refresh
 
-    # API Key info
-    @api_key_masked = mask_api_key(Current.user.api_key)
-    @api_access_type = Current.user.api_access_type || "Unknown"
-    @has_limited_access = Current.user.has_limited_access?
+    load_api_key_info
+  end
+
+  def api_key_card
+    load_api_key_info
+    render partial: "api_key_card"
   end
 
   def update_api_key
@@ -180,5 +182,11 @@ class SettingsController < ApplicationController
   def mask_api_key(api_key)
     return "Not set" if api_key.blank?
     "#{api_key[0..3]}********#{api_key[-4..]}"
+  end
+
+  def load_api_key_info
+    @api_key_masked = mask_api_key(Current.user.api_key)
+    @api_access_type = Current.user.api_access_type || "Unknown"
+    @has_limited_access = Current.user.has_limited_access?
   end
 end
