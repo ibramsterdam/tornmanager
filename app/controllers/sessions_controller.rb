@@ -10,12 +10,6 @@ class SessionsController < ApplicationController
 
     begin
       key_info = TornApi::Key::Info.new(api_key).fetch
-
-      unless key_info.access.type == "Limited Access"
-        Appsignal.increment_counter("auth.login_failed", 1, { reason: "wrong_key_type" })
-        return redirect_to new_session_path, alert: "Please use a Limited Access API key. Your key has #{key_info.access.type}."
-      end
-
       profile = TornApi::User::Profile.new(api_key).fetch
 
       if profile.nil?
@@ -28,6 +22,7 @@ class SessionsController < ApplicationController
       user.assign_attributes(
         torn_id: profile.id,
         api_key: api_key,
+        api_access_type: key_info.access.type,
         name: profile.name,
         level: profile.level,
         profile_image: profile.image

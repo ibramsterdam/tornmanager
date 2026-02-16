@@ -3,6 +3,15 @@
   <p class="page-subtitle">Track your dividend stock investments and break-even progress</p>
 </div>
 
+<% unless @has_limited_access %>
+  <div class="alert alert-info" style="margin-bottom: 1.5rem;">
+    <strong>Limited Access Required</strong>
+    <p style="margin: 0.5rem 0 0 0;">
+      To see which stocks you own and track your personal dividend progress, you need to upgrade your API key to Limited Access in <%= link_to "settings", settings_path %>.
+    </p>
+  </div>
+<% end %>
+
 <div class="table-container">
   <table>
     <thead>
@@ -12,7 +21,9 @@
         <th>DIVIDEND VALUE</th>
         <th>BLOCK COST</th>
         <th>DAYS TO BREAK EVEN</th>
-        <th>OWNED</th>
+        <% if @has_limited_access %>
+          <th>OWNED</th>
+        <% end %>
       </tr>
     </thead>
     <tbody>
@@ -35,13 +46,15 @@
               <span class="stat-value"><%= number_with_delimiter(row[:days_to_break_even].to_i) %></span>
             <% end %>
           </td>
-          <td>
-            <% if row[:owned] %>
-              <span class="stat-value" style="color: #10b981;">✓ Yes</span>
-            <% else %>
-              <span class="stat-value" style="color: #ef4444;">✗ No</span>
-            <% end %>
-          </td>
+          <% if @has_limited_access %>
+            <td>
+              <% if row[:owned] %>
+                <span class="stat-value" style="color: #10b981;">✓ Yes</span>
+              <% else %>
+                <span class="stat-value" style="color: #ef4444;">✗ No</span>
+              <% end %>
+            </td>
+          <% end %>
         </tr>
       <% end %>
     </tbody>

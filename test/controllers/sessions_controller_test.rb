@@ -96,7 +96,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com/new_image.jpg", @existing_user.profile_image
   end
 
-  test "create rejects non-Limited Access API keys" do
+  test "create accepts Full Access API keys and stores access type" do
     mock_key_info = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(
         level: 4,
@@ -111,16 +111,63 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
       )
     )
 
-    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999,
+      name: "FullAccessUser",
+      level: 50,
+      image: "https://example.com/full_access.jpg"
+    )
 
-    assert_no_difference "User.count" do
-      assert_no_difference "Session.count" do
-        post session_path, params: { api_key: @valid_api_key }
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+
+    assert_difference "User.count", 1 do
+      assert_difference "Session.count", 1 do
+        post session_path, params: { api_key: @valid_api_key, terms_accepted: "1" }
       end
     end
 
-    assert_redirected_to new_session_path
-    assert_equal "Please use a Limited Access API key. Your key has Full Access.", flash[:alert]
+    assert_redirected_to root_path
+    new_user = User.find_by(torn_id: 9999999)
+    assert_equal "Full Access", new_user.api_access_type
+    assert new_user.has_limited_access?, "Full Access should count as having limited access"
+  end
+
+  test "create accepts Basic Access API keys and stores access type" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(
+        level: 1,
+        type: "Basic Access",
+        faction: false,
+        company: false
+      ),
+      user: TornApi::Key::Info::UserData.new(
+        id: 8888888,
+        faction_id: nil,
+        company_id: nil
+      )
+    )
+
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 8888888,
+      name: "BasicAccessUser",
+      level: 30,
+      image: "https://example.com/basic_access.jpg"
+    )
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+
+    assert_difference "User.count", 1 do
+      assert_difference "Session.count", 1 do
+        post session_path, params: { api_key: @valid_api_key, terms_accepted: "1" }
+      end
+    end
+
+    assert_redirected_to root_path
+    new_user = User.find_by(torn_id: 8888888)
+    assert_equal "Basic Access", new_user.api_access_type
+    assert_not new_user.has_limited_access?, "Basic Access should not count as having limited access"
   end
 
   test "create handles invalid API key error" do

@@ -14,6 +14,64 @@ class SettingsController < ApplicationController
     @last_refresh_at = session[:last_subscription_refresh_at]
     @can_refresh = can_refresh?
     @seconds_until_refresh = seconds_until_refresh
+
+    # API Key info
+    @api_key_masked = mask_api_key(Current.user.api_key)
+    @api_access_type = Current.user.api_access_type || "Unknown"
+    @has_limited_access = Current.user.has_limited_access?
+  end
+
+  def update_api_key
+    new_api_key = params[:api_key]&.strip
+
+    if new_api_key.blank?
+      render json: { success: false, message: "API key cannot be blank." }
+      return
+    end
+
+    if new_api_key == Current.user.api_key
+      render json: { success: false, message: "This is already your current API key." }
+      return
+    end
+
+    begin
+      # Validate the new API key with Torn API (track the request)
+      key_info = TornApi::Key::Info.new(new_api_key, user: Current.user).fetch
+
+      # Don't allow Full Access keys
+      if key_info.access.type == "Full Access"
+        render json: { success: false, message: "Full Access keys are not allowed. Please use a Limited Access key instead." }
+        return
+      end
+
+      # Verify the key belongs to this user (track the request)
+      profile = TornApi::User::Profile.new(new_api_key, user: Current.user).fetch
+
+      if profile.id != Current.user.torn_id
+        render json: { success: false, message: "This API key belongs to a different user." }
+        return
+      end
+
+      # Update the user's API key and access type
+      Current.user.update!(
+        api_key: new_api_key,
+        api_access_type: key_info.access.type
+      )
+
+      Appsignal.increment_counter("user.api_key_updated", 1)
+
+      render json: { success: true, message: "API key updated! Access level: #{key_info.access.type}", access_type: key_info.access.type }
+    rescue TornApi::InvalidKeyError => e
+      Rails.logger.error "Invalid API key for user #{Current.user.torn_id}: #{e.message}"
+      render json: { success: false, message: "Invalid API key." }
+    rescue TornApi::ApiError => e
+      Rails.logger.error "API error updating key for user #{Current.user.torn_id}: #{e.message}"
+      render json: { success: false, message: "Torn API error: #{e.message}" }
+    rescue => e
+      Rails.logger.error "Failed to update API key for user #{Current.user.torn_id}: #{e.class} - #{e.message}"
+      Appsignal.send_error(e)
+      render json: { success: false, message: "Failed to update API key. Please try again later." }
+    end
   end
 
   def purge_data
@@ -75,5 +133,10 @@ class SettingsController < ApplicationController
     return 0 unless session[:last_subscription_refresh_at]
     remaining = REFRESH_COOLDOWN - (Time.current - Time.at(session[:last_subscription_refresh_at]))
     [ remaining.to_i, 0 ].max
+  end
+
+  def mask_api_key(api_key)
+    return "Not set" if api_key.blank?
+    "#{api_key[0..3]}********#{api_key[-4..]}"
   end
 end

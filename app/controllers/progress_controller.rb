@@ -2,8 +2,15 @@ class ProgressController < ApplicationController
   before_action :ensure_user_authenticated
 
   def index
-    owned_stocks = TornApi::User::Stocks.new(Current.user.api_key, user: Current.user).fetch
-    @table_rows = Torn::Stock.money_rows(owned_stocks).sort_by { |row| row[:days_to_break_even].infinite? ? Float::INFINITY : row[:days_to_break_even] }
+    @has_limited_access = Current.user.has_limited_access?
+
+    if @has_limited_access
+      owned_stocks = TornApi::User::Stocks.new(Current.user.api_key, user: Current.user).fetch
+      @table_rows = Torn::Stock.money_rows(owned_stocks).sort_by { |row| row[:days_to_break_even].infinite? ? Float::INFINITY : row[:days_to_break_even] }
+    else
+      # Show all stocks without ownership info for users without Limited Access
+      @table_rows = Torn::Stock.money_rows([]).sort_by { |row| row[:days_to_break_even].infinite? ? Float::INFINITY : row[:days_to_break_even] }
+    end
   rescue TornApi::InvalidKeyError
     redirect_to new_session_path, alert: "Invalid or expired API key. Please sign in again."
   rescue TornApi::ApiError => e
