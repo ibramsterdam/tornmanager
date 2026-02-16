@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -85,6 +85,90 @@ module Admin
       redirect_to admin_factions_path, notice: "Synced #{@faction.users.count} members for '#{@faction.name}'."
     rescue => e
       redirect_to admin_factions_path, alert: "Failed to sync members: #{e.message}"
+    end
+
+    def backfill_stats
+      start_date = params[:start_date].presence || "2026-01-01"
+      end_date = params[:end_date].presence || "2026-01-20"
+
+      begin
+        start_date = Date.parse(start_date)
+        end_date = Date.parse(end_date)
+      rescue ArgumentError
+        redirect_to admin_factions_path, alert: "Invalid date format. Please use YYYY-MM-DD."
+        return
+      end
+
+      if start_date > end_date
+        redirect_to admin_factions_path, alert: "Start date must be before end date."
+        return
+      end
+
+      if end_date > Date.today
+        redirect_to admin_factions_path, alert: "End date cannot be in the future."
+        return
+      end
+
+      user_count = @faction.users.count
+      date_count = (end_date - start_date).to_i + 1
+
+      if user_count == 0
+        redirect_to admin_factions_path, alert: "Faction has no members. Please sync members first."
+        return
+      end
+
+      BackfillPersonalStatsJob.perform_later(@faction.id, start_date.to_s, end_date.to_s)
+
+      max_api_calls = user_count * date_count * 2
+      estimated_minutes = (max_api_calls / 60.0).ceil
+
+      redirect_to admin_factions_path,
+                  notice: "Backfill queued for '#{@faction.name}': #{user_count} users × #{date_count} days (up to #{max_api_calls} API calls, ~#{estimated_minutes} minutes)"
+    rescue => e
+      redirect_to admin_factions_path, alert: "Failed to queue backfill: #{e.message}"
+    end
+
+    def backfill_user_stats
+      user_id = params[:user_id].to_i
+      user = @faction.users.find_by(id: user_id)
+
+      unless user
+        redirect_to admin_factions_path, alert: "User not found in this faction."
+        return
+      end
+
+      start_date = params[:start_date].presence || "2026-01-01"
+      end_date = params[:end_date].presence || "2026-01-20"
+
+      begin
+        start_date = Date.parse(start_date)
+        end_date = Date.parse(end_date)
+      rescue ArgumentError
+        redirect_to admin_factions_path, alert: "Invalid date format. Please use YYYY-MM-DD."
+        return
+      end
+
+      if start_date > end_date
+        redirect_to admin_factions_path, alert: "Start date must be before end date."
+        return
+      end
+
+      if end_date > Date.today
+        redirect_to admin_factions_path, alert: "End date cannot be in the future."
+        return
+      end
+
+      date_count = (end_date - start_date).to_i + 1
+
+      BackfillUserStatsJob.perform_later(user.id, start_date.to_s, end_date.to_s)
+
+      max_api_calls = date_count * 2
+      estimated_minutes = (max_api_calls / 60.0).ceil
+
+      redirect_to admin_factions_path,
+                  notice: "Backfill queued for '#{user.name}': #{date_count} days (up to #{max_api_calls} API calls, ~#{estimated_minutes} minutes)"
+    rescue => e
+      redirect_to admin_factions_path, alert: "Failed to queue backfill: #{e.message}"
     end
 
     private

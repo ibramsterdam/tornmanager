@@ -38,6 +38,8 @@ Rails.application.routes.draw do
       member do
         patch :toggle_tracking
         post :sync_members
+        post :backfill_stats
+        post :backfill_user_stats
       end
     end
   end

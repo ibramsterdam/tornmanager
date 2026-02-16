@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_16_171843) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_16_200710) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -131,6 +131,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_171843) do
     t.integer "crimes_skills_shoplifting"
     t.integer "crimes_total"
     t.string "crimes_version"
+    t.date "date"
     t.integer "drugs_cannabis"
     t.integer "drugs_ecstasy"
     t.integer "drugs_ketamine"
@@ -237,6 +238,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_16_171843) do
     t.integer "travel_united_kingdom"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["user_id", "date"], name: "index_personal_stat_snapshots_on_user_id_and_date", unique: true
     t.index ["user_id"], name: "index_personal_stat_snapshots_on_user_id"
   end
 

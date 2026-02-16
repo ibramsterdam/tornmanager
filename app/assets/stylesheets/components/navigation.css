@@ -20,7 +20,7 @@ nav {
 .navbar-center {
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--space-8);
   position: absolute;
   left: 50%;
   transform: translateX(-50%);

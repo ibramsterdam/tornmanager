@@ -23,20 +23,39 @@
       else
         arrow_html = "<span class='sort-arrow'>▼</span>"
       end
-      # Preserve date filter params when sorting
+      # Preserve date filter params and faction_id when sorting
       url_params = { sort: sort_info[:column], direction: sort_info[:direction] }
       url_params[:start_date] = params[:start_date] if params[:start_date].present?
       url_params[:end_date] = params[:end_date] if params[:end_date].present?
+      url_params[:faction_id] = params[:faction_id] if params[:faction_id].present?
       link_to "#{sort_info[:label]} #{arrow_html}".html_safe, faction_index_path(url_params), class: "sort-link"
     end
   %>
 
   <div class="page-header">
-    <h1>My Faction: <%= @faction.name %></h1>
+    <h1><%= Current.user.admin? ? "Viewing Faction:" : "My Faction:" %> <%= @faction.name %></h1>
     <p class="page-subtitle">Stats tracking for <%= @faction.users.count %> members</p>
   </div>
 
   <div class="table-container">
+    <% if Current.user.admin? %>
+      <div class="table-info" style="margin-bottom: 16px;">
+        <%= form_with url: faction_index_path, method: :get, class: "table-filter-form" do |form| %>
+          <div class="filter-inline">
+            <span class="info-label">Switch Faction:</span>
+            <%= form.select :faction_id, 
+                options_from_collection_for_select(Faction.where(track_stats: true).order(:name), :id, :name, @faction.id),
+                {}, 
+                { class: "date-input-inline", style: "width: 250px;", onchange: "this.form.submit()" } %>
+            <%= hidden_field_tag :start_date, params[:start_date] if params[:start_date].present? %>
+            <%= hidden_field_tag :end_date, params[:end_date] if params[:end_date].present? %>
+            <%= hidden_field_tag :sort, params[:sort] if params[:sort].present? %>
+            <%= hidden_field_tag :direction, params[:direction] if params[:direction].present? %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    
     <div class="table-info">
       <%= form_with url: faction_index_path, method: :get, class: "table-filter-form" do |form| %>
         <div class="filter-inline">
@@ -46,7 +65,7 @@
             <%= form.date_field :start_date, 
                 value: params[:start_date] || @start_date,
                 min: @earliest_date,
-                max: @latest_date,
+                max: Date.today,
                 class: "date-input-inline" %>
             
             <span class="date-separator">→</span>
@@ -54,7 +73,7 @@
             <%= form.date_field :end_date, 
                 value: params[:end_date] || @end_date,
                 min: @earliest_date,
-                max: @latest_date,
+                max: Date.today,
                 class: "date-input-inline" %>
           </div>
           
@@ -62,10 +81,13 @@
           
           <%= hidden_field_tag :sort, params[:sort] %>
           <%= hidden_field_tag :direction, params[:direction] %>
+          <% if Current.user.admin? %>
+            <%= hidden_field_tag :faction_id, params[:faction_id] %>
+          <% end %>
           
           <button type="submit" class="filter-button-inline">Apply</button>
           <% if params[:start_date].present? || params[:end_date].present? %>
-            <%= link_to "Reset", faction_index_path, class: "filter-reset-inline" %>
+            <%= link_to "Reset", faction_index_path(faction_id: params[:faction_id]), class: "filter-reset-inline" %>
           <% end %>
         </div>
       <% end %>
@@ -111,9 +133,8 @@
             <th><%= sortable_header(sort_link("xanax_daily", "XANAX")) %><br><small>Target: <%= @faction.xanax_target %>/day</small></th>
             <th><%= sortable_header(sort_link("energy_refills_daily", "ENERGY REFILLS")) %><br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
             <th><%= sortable_header(sort_link("nerve_refills_daily", "NERVE REFILLS")) %><br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
-            <th><%= sortable_header(sort_link("merits_daily", "MERITS")) %></th>
-            <th><%= sortable_header(sort_link("missions_daily", "MISSIONS")) %></th>
-            <th><%= sortable_header(sort_link("boosters_daily", "BOOSTERS")) %></th>
+            <th><%= sortable_header(sort_link("missions_daily", "CONTRACTS")) %></th>
+            <th><%= sortable_header(sort_link("crimes_daily", "CRIMES")) %></th>
             <th><%= sortable_header(sort_link("activity_time_daily", "ACTIVITY")) %><br><small>min/day</small></th>
           </tr>
         </thead>
@@ -154,20 +175,14 @@
               </td>
               <td>
                 <div class="stat-cell">
-                  <span class="stat-value"><%= number_with_delimiter(row[:merits_gained]) %></span>
-                  <span class="stat-daily"><%= row[:merits_daily] %>/day</span>
-                </div>
-              </td>
-              <td>
-                <div class="stat-cell">
                   <span class="stat-value"><%= number_with_delimiter(row[:missions_gained]) %></span>
                   <span class="stat-daily"><%= row[:missions_daily] %>/day</span>
                 </div>
               </td>
               <td>
                 <div class="stat-cell">
-                  <span class="stat-value"><%= number_with_delimiter(row[:boosters_gained]) %></span>
-                  <span class="stat-daily"><%= row[:boosters_daily] %>/day</span>
+                  <span class="stat-value"><%= number_with_delimiter(row[:crimes_gained]) %></span>
+                  <span class="stat-daily"><%= row[:crimes_daily] %>/day</span>
                 </div>
               </td>
               <td>
