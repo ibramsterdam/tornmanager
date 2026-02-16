@@ -152,6 +152,12 @@
 <div class="settings-section">
   <h2>Data Management</h2>
   
+  <div class="info-card mb-4">
+    <h3>Export Your Data</h3>
+    <p>Download a complete copy of all your data stored by TornManager in JSON format. This includes your profile, sessions, and API call logs.</p>
+    <%= link_to "Download My Data", settings_export_data_path, class: "btn-secondary", data: { turbo: false } %>
+  </div>
+  
   <div class="danger-zone">
     <h3>⚠️ Delete Your Data</h3>
     <p>This will permanently delete:</p>

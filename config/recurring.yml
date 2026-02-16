@@ -19,6 +19,10 @@ production:
     class: Daily::XanaxPaymentsJob
     queue: default
     schedule: at 12pm every day
+  data_retention_cleanup:
+    class: Daily::DataRetentionCleanupJob
+    queue: default
+    schedule: at 2am every day
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob

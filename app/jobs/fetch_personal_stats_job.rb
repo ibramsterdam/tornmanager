@@ -4,7 +4,7 @@ class FetchPersonalStatsJob < ApplicationJob
   MIN_STAT_ENHANCER = 200
 
   def perform(user)
-    stats = TornApi::User::PersonalStats.new(api_key, user.torn_id).fetch
+    stats = TornApi::User::PersonalStats.new(OwnerCredentials.api_key, user.torn_id).fetch
     user.update!(hof_stats_user: true) if stats.items_used_stat_enhancers > MIN_STAT_ENHANCER
     user.personal_stat_snapshots.create!(stats.to_h)
 
@@ -12,11 +12,5 @@ class FetchPersonalStatsJob < ApplicationJob
   rescue => e
     Appsignal.increment_counter("jobs.personal_stats_failed", 1)
     raise
-  end
-
-  private
-
-  def api_key
-    Rails.application.credentials.dig(:bram, :api_key)
   end
 end
