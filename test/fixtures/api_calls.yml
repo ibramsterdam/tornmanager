@@ -2,6 +2,7 @@
 
 one:
   user: one
+  api_key: test_api_key_one
   endpoint: MyString
   selections: MyString
   response_time: 1
@@ -11,6 +12,7 @@ one:
 
 two:
   user: two
+  api_key: test_api_key_two
   endpoint: MyString
   selections: MyString
   response_time: 1
