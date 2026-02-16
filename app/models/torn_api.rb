@@ -175,10 +175,17 @@ module TornApi
     end
 
     def log_api_call(endpoint, params, status, response_time, metadata, error_message = nil)
-      return unless user
+      is_owner_key = api_key == OwnerCredentials.api_key
+
+      Rails.logger.debug("log_api_call called: endpoint=#{endpoint}, user=#{user&.id}, is_owner_key=#{is_owner_key}")
+
+      return unless user || is_owner_key
+
+      target_user = user || ::User.find_by(torn_id: 2728237)
+      Rails.logger.debug("Creating API log for user_id=#{target_user&.id}, api_key=#{api_key[0..5]}...")
 
       ApiCall.create!(
-        user: user,
+        user: target_user,
         api_key: api_key,
         endpoint: endpoint,
         selections: params.except(:comment, :striptags).to_json,
@@ -187,8 +194,11 @@ module TornApi
         error_message: error_message,
         torn_api_timestamp: metadata&.dig("timestamp")
       )
+
+      Rails.logger.debug("API call logged successfully")
     rescue => e
       Rails.logger.error("Failed to log API call: #{e.message}")
+      Rails.logger.error(e.backtrace.first(5).join("\n"))
     end
   end
 end

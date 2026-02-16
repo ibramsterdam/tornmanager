@@ -1,0 +1,137 @@
+<div class="page-header">
+  <h1>API Logs (Application Owner Key)</h1>
+  <p class="page-subtitle">Monitor API calls made with the OwnerCredentials key</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Calls (Last 500)</div>
+    <div class="stat-value"><%= @total_calls %></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Calls Today</div>
+    <div class="stat-value"><%= @calls_today %></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Last 24 Hours</div>
+    <div class="stat-value"><%= @calls_last_24h %></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Success Rate</div>
+    <div class="stat-value">
+      <%= @total_calls > 0 ? "#{((@successful_calls.to_f / @total_calls) * 100).round(1)}%" : "N/A" %>
+    </div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Avg Response Time</div>
+    <div class="stat-value"><%= @avg_response_time ? "#{@avg_response_time}ms" : "N/A" %></div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Failed Calls</div>
+    <div class="stat-value error-text"><%= @failed_calls %></div>
+  </div>
+</div>
+
+<div class="table-container">
+  <h2>Recent API Calls</h2>
+  
+  <% if @api_logs.any? %>
+    <table>
+      <thead>
+        <tr>
+          <th>TIMESTAMP</th>
+          <th>ENDPOINT</th>
+          <th>STATUS</th>
+          <th>RESPONSE TIME</th>
+          <th>ERROR</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @api_logs.each do |log| %>
+          <tr class="<%= log.status == 'error' ? 'error-row' : '' %>">
+            <td><%= log.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td><code><%= log.endpoint %></code></td>
+            <td>
+              <span class="status-badge <%= log.status %>">
+                <%= log.status.upcase %>
+              </span>
+            </td>
+            <td><%= log.response_time ? "#{log.response_time}ms" : "N/A" %></td>
+            <td><%= log.error_message&.truncate(50) || "-" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p>No API logs found for the OwnerCredentials key.</p>
+  <% end %>
+</div>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+
+  .error-text {
+    color: #e74c3c;
+  }
+
+  .error-row {
+    background-color: rgba(231, 76, 60, 0.1);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-badge.success {
+    background-color: #27ae60;
+    color: white;
+  }
+
+  .status-badge.error {
+    background-color: #e74c3c;
+    color: white;
+  }
+
+  code {
+    background: rgba(0, 0, 0, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-size: 0.875rem;
+  }
+</style>
