@@ -4,6 +4,9 @@ class Faction < ApplicationRecord
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
+  validates :xanax_target, presence: true, numericality: { greater_than: 0 }
+  validates :energy_refill_target, presence: true, numericality: { greater_than: 0 }
+  validates :nerve_refill_target, presence: true, numericality: { greater_than: 0 }
 
   scope :tracked, -> { where(track_stats: true) }
 

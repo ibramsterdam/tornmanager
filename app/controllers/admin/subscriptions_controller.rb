@@ -20,17 +20,17 @@ module Admin
       grant_faction_subscription
     rescue TornApi::InvalidKeyError => e
       Rails.logger.error("Invalid API key error: #{e.message}")
-      Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "invalid_key" })
+      ::Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "invalid_key" }) if defined?(::Appsignal)
       redirect_with_error("Invalid API key.")
     rescue TornApi::ApiError => e
       Rails.logger.error("Torn API error: #{e.class} - #{e.message}")
-      Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "api_error" })
+      ::Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "api_error" }) if defined?(::Appsignal)
       redirect_with_error("Torn API error: #{e.message}")
     rescue => e
       Rails.logger.error("Faction grant error: #{e.class} - #{e.message}")
       Rails.logger.error(e.backtrace.join("\n"))
-      Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "unexpected_error" })
-      Appsignal.send_error(e)
+      ::Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "unexpected_error" }) if defined?(::Appsignal)
+      ::Appsignal.send_error(e) if defined?(::Appsignal)
       redirect_with_error("An error occurred: #{e.message}")
     end
 
@@ -40,7 +40,7 @@ module Admin
 
       if days >= 0
         user.update!(subscription_expires_at: days.days.from_now)
-        Appsignal.increment_counter("subscription.days_updated", 1)
+        ::Appsignal.increment_counter("subscription.days_updated", 1) if defined?(::Appsignal)
         render json: { success: true, new_expires_at: user.subscription_expires_at.strftime("%Y-%m-%d %H:%M"), days: days }
       else
         render json: { success: false, error: "Days must be a positive number" }, status: :unprocessable_entity
@@ -65,9 +65,9 @@ module Admin
       end
 
       # Track faction grant
-      Appsignal.increment_counter("subscription.faction_grant", 1)
-      Appsignal.increment_counter("subscription.weeks_granted", weeks * members.count, { type: "faction_grant" })
-      Appsignal.increment_counter("subscription.users_granted", members.count)
+      ::Appsignal.increment_counter("subscription.faction_grant", 1) if defined?(::Appsignal)
+      ::Appsignal.increment_counter("subscription.weeks_granted", weeks * members.count, { type: "faction_grant" }) if defined?(::Appsignal)
+      ::Appsignal.increment_counter("subscription.users_granted", members.count) if defined?(::Appsignal)
 
       redirect_to admin_subscriptions_path, notice: "Successfully granted #{weeks} week(s) to #{members.count} members of #{faction_info['name']}."
     end
