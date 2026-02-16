@@ -13,154 +13,35 @@
   </section>
 
   <section class="content-section">
-    <h2>Torn API Usage & Compliance</h2>
-    <p>
-      I built TornManager in accordance with the Torn API Terms of Service. I use the Torn API to provide 
-      gameplay enhancement features while ensuring fair play and data security.
-    </p>
-    
-    <h3>API Data Usage Summary</h3>
-    <div class="tos-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Data Storage</th>
-            <th>Data Sharing</th>
-            <th>Purpose of Use</th>
-            <th>Key Storage & Sharing</th>
-            <th>Key Access Level</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Persistent - until account deletion</td>
-            <td>Nobody (data is private to you)</td>
-            <td>Track personal progress, statistics, and stock investments</td>
-            <td>Stored securely / Used only for automation</td>
-            <td>Basic Access (minimum); Limited Access (for stock features)</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    
-    <h3>API Endpoints Used</h3>
-    <p>TornManager accesses the following Torn API v2 endpoints:</p>
-    <div class="tos-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Endpoint</th>
-            <th>Purpose</th>
-            <th>Access Level Required</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>v2/key/info</code></td>
-            <td>Verify API key validity and access level</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/key/log</code></td>
-            <td>Display your API key usage history</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/user/profile</code></td>
-            <td>Fetch your name, level, and profile image</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/user/{id}/basic</code></td>
-            <td>Fetch basic info for payment senders</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/user/{id}/personalstats</code></td>
-            <td>Fetch and track your personal statistics</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/user/stocks</code></td>
-            <td>Fetch your stock portfolio for dividend analysis</td>
-            <td>Limited Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/user/log</code></td>
-            <td>Process Xanax subscription payments (admin only)</td>
-            <td>Limited Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/faction/{id}</code></td>
-            <td>Fetch faction name for subscription grants</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/faction/{id}/members</code></td>
-            <td>Verify faction membership for grants</td>
-            <td>Basic Access</td>
-          </tr>
-          <tr>
-            <td><code>v2/torn/stocks</code></td>
-            <td>Fetch current stock prices and dividend info</td>
-            <td>Public Only</td>
-          </tr>
-          <tr>
-            <td><code>v2/torn/factionhof</code></td>
-            <td>Display faction Hall of Fame rankings</td>
-            <td>Public Only</td>
-          </tr>
-          <tr>
-            <td><code>v2/market</code></td>
-            <td>Fetch points market prices for calculations</td>
-            <td>Basic Access</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </section>
-
-  <section class="content-section">
     <h2>Information I Collect</h2>
-    
-    <h3>Torn API Key</h3>
     <p>
       When you sign in, you provide your Torn API key. I securely store this key in my database and use it 
-      exclusively to fetch your game data from Torn's official API. I require a minimum of Basic Access level 
+      exclusively to fetch your personal game data from Torn's official API. I require a minimum of Public Only level 
       permissions. Limited Access is required for stock portfolio features.
     </p>
-    
-    <h3>Game Data</h3>
-    <p>
-      I collect and store data retrieved from the Torn API including:
-    </p>
-    <ul>
-      <li>Your Torn user ID, name, and level</li>
-      <li>Personal statistics (stat enhancer usage, networth, energy drinks consumed, etc.)</li>
-      <li>Stock portfolio information</li>
-      <li>Daily snapshots of your progress for historical tracking</li>
-    </ul>
-    
-    <h3>Subscription Data</h3>
-    <p>
-      I track subscription-related information including:
-    </p>
-    <ul>
-      <li>Xanax payments sent to extend your subscription</li>
-      <li>Faction grants received</li>
-      <li>Subscription expiration dates</li>
-    </ul>
-    
-    <h3>Usage Data</h3>
-    <p>
-      I automatically collect certain information when you use TornManager, including:
-    </p>
-    <ul>
-      <li>IP address</li>
-      <li>Browser type and version</li>
-      <li>Pages visited and features used</li>
-      <li>Date and time of access</li>
-    </ul>
+    <div class="data-collection-cards">
+      <div class="data-card">
+        <h4>Your API Key</h4>
+        <ul>
+          <li>Torn user ID, name, and level</li>
+          <li>Stock portfolio information</li>
+        </ul>
+      </div>
+      <div class="data-card">
+        <h4>Application</h4>
+        <ul>
+          <li>Personal statistics (stat enhancer usage, networth, energy drinks, etc.)</li>
+          <li>Daily snapshots for historical tracking</li>
+          <li>Xanax payments sent</li>
+          <li>Faction grants received</li>
+          <li>Subscription expiration dates</li>
+          <li>IP address</li>
+          <li>Browser type and version</li>
+          <li>Pages visited and features used</li>
+          <li>Date and time of access</li>
+        </ul>
+      </div>
+    </div>
   </section>
 
   <section class="content-section">
@@ -232,10 +113,158 @@
     <ul>
       <li>Never share your API key with other individuals</li>
       <li>Only provide your key to trusted, transparent third-party services like TornManager</li>
-      <li>Use a Basic Access or Limited Access key (not Full Access) when possible</li>
+      <li>Use a Public Only or Limited Access key (not Full Access) when possible</li>
       <li>Monitor your key usage at Torn.com using the 'key' → 'log' selection</li>
       <li>Revoke and regenerate your key if you suspect misuse</li>
       <li>You can pause or delete your API key at any time on Torn.com</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2>Torn API Usage & Compliance</h2>
+    <p>
+      TornManager is built in accordance with the Torn API Terms of Service. I use the Torn API to provide 
+      gameplay enhancement features while ensuring fair play and data security.
+    </p>
+
+    <h3>API Data Usage Summary</h3>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Data Storage</th>
+            <th>Data Sharing</th>
+            <th>Purpose of Use</th>
+            <th>Key Storage & Sharing</th>
+            <th>Key Access Level</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Persistent - until account deletion</td>
+            <td>Nobody (data is private to you)</td>
+            <td>Track personal progress, statistics, and stock investments</td>
+            <td>Stored securely / Used only for automation</td>
+            <td>Public Only (minimum); Limited Access (for stock features)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <h3>User API Calls</h3>
+    <p>These endpoints are called using your personal API key to access your private data:</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+            <th>Access Level Required</th>
+            <th>Required</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>v2/key/info</code></td>
+            <td>Verify API key validity and access level</td>
+            <td>Public Only</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>v2/key/log</code></td>
+            <td>Display your API key usage history</td>
+            <td>Public Only</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/profile</code></td>
+            <td>Fetch your name, level, and profile image</td>
+            <td>Public Only</td>
+            <td>Yes</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/stocks</code></td>
+            <td>Fetch your stock portfolio for dividend analysis</td>
+            <td>Limited Access</td>
+            <td>No</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Application API Calls</h3>
+    <p>These endpoints are called using the application's owner API key for public data and administrative tasks. Your personal API key is never used for these requests:</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>v2/user/{id}/personalstats</code></td>
+            <td>Fetch and track your personal statistics</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/{id}/basic</code></td>
+            <td>Fetch basic info for payment senders</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/log</code></td>
+            <td>Process Xanax subscription payments</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}</code></td>
+            <td>Fetch faction name for subscription grants</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}/members</code></td>
+            <td>Verify faction membership for grants</td>
+          </tr>
+          <tr>
+            <td><code>v2/torn/stocks</code></td>
+            <td>Fetch current stock prices and dividend info</td>
+          </tr>
+          <tr>
+            <td><code>v2/torn/factionhof</code></td>
+            <td>Display faction Hall of Fame rankings</td>
+          </tr>
+          <tr>
+            <td><code>v2/market</code></td>
+            <td>Fetch points market prices for calculations</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>API Request Identification</h3>
+    <p>
+      All API requests made by TornManager include the comment parameter <code class="highlight-pulse">tmanager</code> to identify 
+      them in your API key activity logs. This allows you to:
+    </p>
+    <ul>
+      <li>Monitor TornManager's API usage through Torn.com's key log feature</li>
+      <li>Distinguish TornManager requests from other services using your API key</li>
+      <li>Track and audit all API calls made on your behalf</li>
+      <li>Verify that only legitimate requests are being made</li>
+    </ul>
+    <p>
+      You can view all API requests at any time by visiting the 'key' → 'log' selection on Torn.com or 
+      using TornManager's <%= link_to "Key Activity Log", key_log_path %> feature.
+    </p>
+
+    <h3>Compliance Guidelines</h3>
+    <p>I follow all acceptable usage guidelines, including:</p>
+    <ul>
+      <li>Never requesting Torn passwords from users</li>
+      <li>Keeping API keys and data securely protected</li>
+      <li>Optimizing API requests to minimize server load</li>
+      <li>Respecting rate limits (100 requests per minute per user)</li>
+      <li>Providing transparent disclosure of data usage and storage</li>
+      <li>Not providing unfair competitive advantages</li>
+      <li>Not selling or monetizing user data</li>
     </ul>
   </section>
 
@@ -280,39 +309,6 @@
     </p>
     <p>
       <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
-    </p>
-  </section>
-
-  <section class="content-section">
-    <h2>Compliance with Torn API Terms</h2>
-    <p>
-      TornManager is fully compliant with Torn's API Terms of Service. I follow all acceptable usage guidelines, 
-      including:
-    </p>
-    <ul>
-      <li>Never requesting Torn passwords from users</li>
-      <li>Keeping API keys and data securely protected</li>
-      <li>Optimizing API requests to minimize server load</li>
-      <li>Respecting rate limits (100 requests per minute per user)</li>
-      <li>Providing transparent disclosure of data usage and storage</li>
-      <li>Not providing unfair competitive advantages</li>
-      <li>Not selling or monetizing user data</li>
-    </ul>
-    
-    <h3>API Request Identification</h3>
-    <p>
-      All API requests made by TornManager include the comment parameter <code>tmanager</code> to identify 
-      them in your API key activity logs. This allows you to:
-    </p>
-    <ul>
-      <li>Monitor TornManager's API usage through Torn.com's key log feature</li>
-      <li>Distinguish TornManager requests from other services using your API key</li>
-      <li>Track and audit all API calls made on your behalf</li>
-      <li>Verify that only legitimate requests are being made</li>
-    </ul>
-    <p>
-      You can view all API requests at any time by visiting the 'key' → 'log' selection on Torn.com or 
-      using TornManager's <%= link_to "Key Activity Log", key_log_path %> feature.
     </p>
   </section>
 </div>
