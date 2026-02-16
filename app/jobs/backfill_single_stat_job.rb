@@ -33,24 +33,10 @@ class BackfillSingleStatJob < ApplicationJob
   private
 
   def fetch_stat(torn_id, api_stat_name, timestamp, api_key)
-    uri = URI("https://api.torn.com/v2/user/#{torn_id}/personalstats?stat=#{api_stat_name}&timestamp=#{timestamp}&comment=tmanager")
-
-    http = Net::HTTP.new(uri.host, uri.port)
-    http.use_ssl = true
-    http.read_timeout = 10
-    http.open_timeout = 5
-
-    request = Net::HTTP::Get.new(uri)
-    request["Authorization"] = "ApiKey #{api_key}"
-
-    response = http.request(request)
-    data = JSON.parse(response.body)
-
-    if data["error"]
-      Rails.logger.error("API error for stat #{api_stat_name}: #{data['error']['error']}")
-      return nil
-    end
-
-    data["personalstats"]&.first&.dig("value")
+    api = TornApi::User::HistoricalPersonalStat.new(api_key, torn_id)
+    api.fetch(api_stat_name, timestamp)
+  rescue TornApi::ApiError => e
+    Rails.logger.error("API error for stat #{api_stat_name}: #{e.message}")
+    nil
   end
 end
