@@ -1,0 +1,123 @@
+<div class="page-header">
+  <h1>Settings</h1>
+  <p class="page-subtitle">Manage your account and subscription</p>
+</div>
+
+<!-- Section 1: Subscription Status -->
+<div class="settings-section">
+  <h2>Subscription Status</h2>
+  
+  <div class="subscription-card">
+    <% if @subscribed %>
+      <!-- Active Subscription -->
+      <div class="subscription-active">
+        <div class="subscription-badge">✓ Active Subscriber</div>
+        <div class="subscription-days"><%= @days_remaining %> days remaining</div>
+        <div class="subscription-expires">Expires: <%= Current.user.subscription_expires_at.strftime("%B %d, %Y") %></div>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar-container">
+          <div class="progress-bar-fill" style="width: <%= @subscription_progress %>%"></div>
+        </div>
+      </div>
+    <% else %>
+      <!-- No Active Subscription -->
+      <div class="subscription-inactive">
+        <div class="subscription-badge subscription-badge-inactive">Not Subscribed</div>
+        <p>You don't have an active subscription.</p>
+      </div>
+    <% end %>
+    
+    <!-- Refresh Button -->
+    <%= form_with url: settings_refresh_subscription_path, method: :post do |form| %>
+      <% if @can_refresh %>
+        <%= form.submit "Check for New Payments", 
+            class: "btn-secondary",
+            data: { turbo_submits_with: "Checking..." } %>
+      <% else %>
+        <%= form.submit "Available in #{@seconds_until_refresh} seconds",
+            class: "btn-secondary",
+            disabled: true,
+            data: { 
+              controller: "refresh-countdown",
+              refresh_countdown_seconds_remaining_value: @seconds_until_refresh
+            } %>
+      <% end %>
+    <% end %>
+  </div>
+  
+  <!-- Renewal Instructions -->
+  <div class="info-card">
+    <h3>How to Subscribe or Extend Your Subscription</h3>
+    
+    <div class="renewal-method">
+      <h4>💊 Xanax Payment (Automated)</h4>
+      <p>Send Xanax to user <strong>Bram [2728237]</strong> in Torn City.</p>
+      <p>Each Xanax sent = <strong>1 week</strong> of subscription.</p>
+      <p>Payments are automatically processed daily at 12 PM TCT. Use the "Check for New Payments" button above to refresh immediately.</p>
+    </div>
+    
+    <div class="renewal-method">
+      <h4>🏢 Faction Grant</h4>
+      <p>If you're part of a faction, your faction leader can request bulk subscriptions for all members.</p>
+      <p>Contact <strong>Bram [2728237]</strong> to arrange a faction grant.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Section 2: Data Overview -->
+<div class="settings-section">
+  <h2>Your Data</h2>
+  
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Login Sessions</div>
+      <div class="stat-value"><%= @sessions_count %></div>
+      <div class="stat-description">Active and past login sessions with IP addresses</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-label">API Call Logs</div>
+      <div class="stat-value"><%= @api_calls_count %></div>
+      <div class="stat-description">Recorded API requests with timestamps and responses</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-label">Subscription Payments</div>
+      <div class="stat-value"><%= @payments_count %></div>
+      <div class="stat-description">Xanax payments made to extend your subscription</div>
+    </div>
+    
+    <div class="stat-card">
+      <div class="stat-label">Faction Grants Received</div>
+      <div class="stat-value"><%= @faction_grants_count %></div>
+      <div class="stat-description">Faction subscription grants you've received</div>
+    </div>
+  </div>
+  
+  <div class="info-card mt-4">
+    <p><strong>What TornManager collects with your API key:</strong> Your Torn profile data (name, level, profile image), login sessions (IP address, browser info), and API request logs.</p>
+    <p>See the <%= link_to "Privacy Policy", privacy_policy_path %> for complete details.</p>
+  </div>
+</div>
+
+<!-- Section 3: Data Management -->
+<div class="settings-section">
+  <h2>Data Management</h2>
+  
+  <div class="danger-zone">
+    <h3>⚠️ Delete Your Data</h3>
+    <p>This will permanently delete:</p>
+    <ul>
+      <li>All login sessions and session history</li>
+      <li>All API call logs and monitoring data</li>
+      <li>Your stored API key</li>
+    </ul>
+    <p><strong>Your subscription will NOT be revoked.</strong> You can log back in anytime using your Torn API key, and we'll reconnect your account using your Torn ID. Your subscription time will be preserved.</p>
+    
+    <%= button_to "Delete Collected Data", settings_purge_data_path, 
+        method: :delete, 
+        class: "btn-danger",
+        data: { turbo_confirm: "Are you sure? This will delete all your collected data and sign you out. Your subscription will be preserved." } %>
+  </div>
+</div>

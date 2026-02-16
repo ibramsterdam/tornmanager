@@ -12,6 +12,10 @@ Rails.application.routes.draw do
 
   get "user/api-calls", to: "user_api_calls#index", as: :user_api_calls
 
+  get "settings", to: "settings#index", as: :settings
+  delete "settings/purge_data", to: "settings#purge_data", as: :settings_purge_data
+  post "settings/refresh_subscription", to: "settings#refresh_subscription", as: :settings_refresh_subscription
+
   resources :subscriptions, only: [ :index ] do
     collection do
       get :faction_grant
