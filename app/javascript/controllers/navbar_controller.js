@@ -1,6 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
+  static values = { admin: Boolean }
 
   connect() {
     document.addEventListener("keydown", this.handleKeydown)
@@ -29,6 +30,8 @@ export default class extends Controller {
     if (e.key === "p" && window.location.pathname !== "/progress") window.location.href = "/progress";
     if (e.key === "f" && window.location.pathname !== "/faction") window.location.href = "/faction";
     if (e.key === "r" && window.location.pathname !== "/ranked_war") window.location.href = "/ranked_war";
+    if (e.key === "h" && window.location.pathname !== "/hall-of-famers") window.location.href = "/hall-of-famers";
+    if (e.key === "a" && this.adminValue && window.location.pathname !== "/subscriptions") window.location.href = "/subscriptions";
   }
 
   #shouldIgnore(event) {
