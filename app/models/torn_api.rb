@@ -40,10 +40,19 @@ module TornApi
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "success", response_time, body["_metadata"])
       log_success(uri)
+
+      # Track successful API call metrics
+      Appsignal.add_distribution_value("torn_api.response_time", response_time)
+      Appsignal.increment_counter("torn_api.requests", 1, { status: "success", endpoint: path.split("/").first })
+
       body
     rescue InvalidKeyError, ApiError => e
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, e.message)
+
+      # Track API errors
+      Appsignal.increment_counter("torn_api.requests", 1, { status: "error", endpoint: path.split("/").first, error_type: e.class.name })
+
       raise
     rescue Net::ReadTimeout, Net::OpenTimeout => e
       handle_timeout(uri, api_params, e, retries, start_time)
@@ -51,6 +60,9 @@ module TornApi
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, "JSON parse error: #{e.message}")
       Rails.logger.error("JSON parse error for #{uri}: #{e.message}")
+
+      Appsignal.increment_counter("torn_api.requests", 1, { status: "error", endpoint: path.split("/").first, error_type: "JSONParseError" })
+
       raise ApiError, "Invalid JSON response from Torn API"
     rescue Net::HTTPError, SocketError => e
       handle_network_error(uri, api_params, e, retries, start_time)
@@ -93,8 +105,10 @@ module TornApi
 
       case error_code
       when 2
+        Appsignal.increment_counter("torn_api.invalid_key", 1)
         raise InvalidKeyError, "Invalid API key"
       when 5
+        Appsignal.increment_counter("torn_api.rate_limit", 1)
         raise RateLimitError, "Too many requests: #{error_msg}"
       when 6
         raise NotFoundError, "Incorrect ID: #{error_msg}"
@@ -103,8 +117,10 @@ module TornApi
       when 9
         raise ApiError, "API disabled: #{error_msg}"
       when 10
+        Appsignal.increment_counter("torn_api.invalid_key", 1)
         raise InvalidKeyError, "Key owner is in federal jail"
       when 13
+        Appsignal.increment_counter("torn_api.rate_limit", 1)
         raise RateLimitError, "Key rate limit reached: #{error_msg}"
       else
         raise ApiError, "API error #{error_code}: #{error_msg}"
@@ -114,12 +130,14 @@ module TornApi
     def handle_timeout(uri, api_params, error, retries, start_time)
       if retries < MAX_RETRIES
         Rails.logger.warn("Timeout for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
+        Appsignal.increment_counter("torn_api.retries", 1, { reason: "timeout" })
         sleep(1 * (retries + 1))
         get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
         response_time = ((Time.current - start_time) * 1000).to_i
         log_api_call(uri.path.sub(/^\//, ""), api_params, "error", response_time, nil, "Timeout after #{MAX_RETRIES} retries")
         Rails.logger.error("Timeout for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
+        Appsignal.increment_counter("torn_api.requests", 1, { status: "error", error_type: "TimeoutError" })
         raise TimeoutError, "Torn API request timed out after #{MAX_RETRIES} retries"
       end
     end
@@ -127,12 +145,14 @@ module TornApi
     def handle_network_error(uri, api_params, error, retries, start_time)
       if retries < MAX_RETRIES
         Rails.logger.warn("Network error for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
+        Appsignal.increment_counter("torn_api.retries", 1, { reason: "network_error" })
         sleep(1 * (retries + 1))
         get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
       else
         response_time = ((Time.current - start_time) * 1000).to_i
         log_api_call(uri.path.sub(/^\//, ""), api_params, "error", response_time, nil, "Network error: #{error.message}")
         Rails.logger.error("Network error for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
+        Appsignal.increment_counter("torn_api.requests", 1, { status: "error", error_type: "NetworkError" })
         raise ApiError, "Network error: #{error.message}"
       end
     end

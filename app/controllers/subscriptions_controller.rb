@@ -19,13 +19,17 @@ class SubscriptionsController < ApplicationController
     grant_faction_subscription
   rescue TornApi::InvalidKeyError => e
     Rails.logger.error("Invalid API key error: #{e.message}")
+    Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "invalid_key" })
     redirect_with_error("Invalid API key.")
   rescue TornApi::ApiError => e
     Rails.logger.error("Torn API error: #{e.class} - #{e.message}")
+    Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "api_error" })
     redirect_with_error("Torn API error: #{e.message}")
   rescue => e
     Rails.logger.error("Faction grant error: #{e.class} - #{e.message}")
     Rails.logger.error(e.backtrace.join("\n"))
+    Appsignal.increment_counter("subscription.faction_grant_failed", 1, { reason: "unexpected_error" })
+    Appsignal.send_error(e)
     redirect_with_error("An error occurred: #{e.message}")
   end
 
@@ -35,6 +39,7 @@ class SubscriptionsController < ApplicationController
 
     if days >= 0
       user.update!(subscription_expires_at: days.days.from_now)
+      Appsignal.increment_counter("subscription.days_updated", 1)
       render json: { success: true, new_expires_at: user.subscription_expires_at.strftime("%Y-%m-%d %H:%M"), days: days }
     else
       render json: { success: false, error: "Days must be a positive number" }, status: :unprocessable_entity
@@ -57,6 +62,11 @@ class SubscriptionsController < ApplicationController
       grant = create_grant_record(faction_info["name"], members.count)
       members.each { |member| grant_to_member(grant, member) }
     end
+
+    # Track faction grant
+    Appsignal.increment_counter("subscription.faction_grant", 1)
+    Appsignal.increment_counter("subscription.weeks_granted", weeks * members.count, { type: "faction_grant" })
+    Appsignal.increment_counter("subscription.users_granted", members.count)
 
     redirect_to subscriptions_path, notice: "Successfully granted #{weeks} week(s) to #{members.count} members of #{faction_info['name']}."
   end
