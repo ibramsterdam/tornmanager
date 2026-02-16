@@ -47,20 +47,20 @@
   </div>
   
   <!-- Renewal Instructions -->
-  <div class="info-card">
-    <h3>How to Subscribe or Extend Your Subscription</h3>
-    
-    <div class="renewal-method">
+  <h3 class="mb-3">How to Subscribe or Extend Your Subscription</h3>
+  
+  <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr);">
+    <div class="info-card">
       <h4>💊 Xanax Payment (Automated)</h4>
-      <p>Send Xanax to user <strong>Bram [2728237]</strong> in Torn City.</p>
+      <p>Send Xanax to <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>.</p>
       <p>Each Xanax sent = <strong>1 week</strong> of subscription.</p>
-      <p>Payments are automatically processed daily at 12 PM TCT. Use the "Check for New Payments" button above to refresh immediately.</p>
+      <p class="text-muted">Payments are automatically processed daily at 12 PM TCT. Use the "Check for New Payments" button above to refresh immediately.</p>
     </div>
     
-    <div class="renewal-method">
+    <div class="info-card">
       <h4>🏢 Faction Grant</h4>
       <p>If you're part of a faction, your faction leader can request bulk subscriptions for all members.</p>
-      <p>Contact <strong>Bram [2728237]</strong> to arrange a faction grant.</p>
+      <p>Contact <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %> to arrange a faction grant.</p>
     </div>
   </div>
 </div>

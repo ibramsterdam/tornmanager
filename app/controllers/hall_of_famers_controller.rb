@@ -1,6 +1,4 @@
 class HallOfFamersController < ApplicationController
-  allow_unauthenticated_access
-
   SORTABLE_COLUMNS = %w[name xanax_gained energy_drinks_gained networth_gained total_se se_gained].freeze
 
   def index
