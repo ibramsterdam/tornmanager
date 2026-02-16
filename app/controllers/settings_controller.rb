@@ -89,6 +89,48 @@ class SettingsController < ApplicationController
     redirect_to root_path, notice: "All your collected data has been deleted and you've been signed out. Your subscription status has been preserved. You can log back in anytime using your Torn API key."
   end
 
+  def export_data
+    user = Current.user
+
+    export = {
+      exported_at: Time.current.iso8601,
+      user: {
+        torn_id: user.torn_id,
+        name: user.name,
+        level: user.level,
+        profile_image: user.profile_image,
+        api_access_type: user.api_access_type,
+        subscription_expires_at: user.subscription_expires_at&.iso8601,
+        created_at: user.created_at.iso8601,
+        updated_at: user.updated_at.iso8601
+      },
+      sessions: user.sessions.map do |session|
+        {
+          ip_address: session.ip_address,
+          user_agent: session.user_agent,
+          created_at: session.created_at.iso8601
+        }
+      end,
+      api_calls: user.api_calls.map do |call|
+        {
+          endpoint: call.endpoint,
+          selections: call.selections,
+          status: call.status,
+          response_time_ms: call.response_time,
+          error_message: call.error_message,
+          created_at: call.created_at.iso8601
+        }
+      end
+    }
+
+    Appsignal.increment_counter("user.data_exported", 1)
+
+    send_data export.to_json,
+              filename: "tornmanager-data-#{user.torn_id}-#{Date.current}.json",
+              type: "application/json",
+              disposition: "attachment"
+  end
+
   def refresh_subscription
     unless can_refresh?
       redirect_to settings_path, alert: "Please wait #{seconds_until_refresh} seconds before refreshing again."

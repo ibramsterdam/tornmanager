@@ -82,6 +82,12 @@
       However, no method of transmission over the internet or electronic storage is 100% secure. While I strive 
       to protect your data, I cannot guarantee absolute security.
     </p>
+    
+    <h3>Data Location</h3>
+    <p>
+      Your data is stored on servers located in <strong>Helsinki, Finland</strong> (EU) within the Hetzner datacenter (hel1-dc2). 
+      This means your data is subject to European Union data protection laws, including GDPR.
+    </p>
   </section>
 
   <section class="content-section">
@@ -90,9 +96,52 @@
       I retain your data as long as your account is active. Historical statistics are maintained to provide 
       long-term progress tracking and trend analysis.
     </p>
+    
+    <h3>Retention Periods</h3>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Data Type</th>
+            <th>Retention Period</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Personal stat snapshots</td>
+            <td>Indefinitely (until account deletion)</td>
+            <td>Long-term progress tracking</td>
+          </tr>
+          <tr>
+            <td>Session data</td>
+            <td>90 days</td>
+            <td>Security monitoring and session management</td>
+          </tr>
+          <tr>
+            <td>API call logs</td>
+            <td>30 days</td>
+            <td>Debugging and usage monitoring</td>
+          </tr>
+          <tr>
+            <td>Subscription records</td>
+            <td>Indefinitely</td>
+            <td>Payment history and subscription verification</td>
+          </tr>
+          <tr>
+            <td>Profile data (name, level, etc.)</td>
+            <td>Until account deletion</td>
+            <td>Account identification and display</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <h3>Your Data Rights</h3>
     <p>
       <strong>You can delete your collected data at any time</strong> through the Settings page when logged in. 
-      This will permanently remove:
+      You can also <strong>export all your data</strong> in JSON format from the Settings page. 
+      Data deletion will permanently remove:
     </p>
     <ul>
       <li>All login sessions and session history</li>
@@ -272,16 +321,23 @@
     <h2>Cookies and Tracking</h2>
     <p>
       I use essential cookies to maintain your login session. These cookies are necessary for the service to 
-      function and cannot be disabled. I do not use third-party tracking cookies or analytics services.
+      function and cannot be disabled.
+    </p>
+    <p>
+      <strong>Analytics:</strong> I use AppSignal for application performance monitoring and error tracking. 
+      AppSignal collects anonymized performance metrics (page load times, error rates) to help me identify 
+      and fix technical issues. This data does not include your personal information, Torn ID, or game data.
     </p>
   </section>
 
   <section class="content-section">
     <h2>Third-Party Services</h2>
-    <p>
-      TornManager uses the official Torn API provided by Torn.com. I do not integrate with any other third-party 
-      services. Your data is only shared with Torn's servers when fetching updated information via the API.
-    </p>
+    <p>TornManager integrates with the following third-party services:</p>
+    <ul>
+      <li><strong>Torn API:</strong> The official Torn.com API is used to fetch your game data. Your information is shared with Torn's servers only when fetching updates via the API.</li>
+      <li><strong>AppSignal:</strong> Used for application performance monitoring and error tracking. AppSignal receives only anonymized technical metrics (response times, error counts) to help maintain service reliability. No personal data, Torn IDs, or game information is sent to AppSignal.</li>
+    </ul>
+    <p>I do not sell or share your personal data with any other third parties for marketing or advertising purposes.</p>
   </section>
 
   <section class="content-section">

@@ -72,11 +72,11 @@ class SubscriptionsController < ApplicationController
   end
 
   def fetch_faction_info
-    TornApi::Faction::Basic.new(api_key, faction_id).fetch
+    TornApi::Faction::Basic.new(OwnerCredentials.api_key, faction_id).fetch
   end
 
   def fetch_faction_members
-    TornApi::Faction::Members.new(api_key, faction_id).fetch
+    TornApi::Faction::Members.new(OwnerCredentials.api_key, faction_id).fetch
   end
 
   def create_grant_record(faction_name, member_count)
@@ -127,9 +127,5 @@ class SubscriptionsController < ApplicationController
 
   def require_admin
     redirect_to root_path, alert: "Access denied." unless Current.user&.admin?
-  end
-
-  def api_key
-    Rails.application.credentials.dig(:bram, :full_api_key)
   end
 end

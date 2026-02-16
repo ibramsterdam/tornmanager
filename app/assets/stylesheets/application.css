@@ -2416,6 +2416,16 @@ tbody tr:hover {
   transition: background 0.2s ease;
   font-family: inherit;
   font-size: 0.875rem;
+  text-decoration: none;
+  display: inline-block;
+}
+
+a.btn-secondary {
+  color: white;
+}
+
+a.btn-secondary:hover {
+  color: white;
 }
 
 .btn-secondary:hover {
@@ -2601,4 +2611,3 @@ tbody tr:hover {
   color: #fca5a5;
   border: 1px solid rgba(239, 68, 68, 0.3);
 }
-
