@@ -574,6 +574,12 @@ tbody tr:hover {
   margin-bottom: var(--space-6);
 }
 
+.login-hint {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  margin-top: var(--space-2);
+}
+
 .login-checkbox-field {
   display: flex;
   align-items: center;
