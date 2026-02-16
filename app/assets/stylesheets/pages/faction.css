@@ -1,0 +1,206 @@
+/*
+ * Faction page specific styles
+ */
+
+/* Compliance Summary Section */
+.compliance-summary {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-6);
+  padding: var(--space-6);
+  border-bottom: 1px solid var(--gray-800);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.target-info h3 {
+  color: var(--gray-300);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin: 0 0 var(--space-3) 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.target-info ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.target-info li {
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+  padding: var(--space-1) 0;
+}
+
+.target-info li strong {
+  color: var(--gray-200);
+}
+
+/* Compliance Stats Boxes */
+.compliance-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.stat-box {
+  background: var(--gray-1000);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  text-align: center;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+
+.stat-box:hover {
+  transform: translateY(-2px);
+}
+
+.stat-box.compliant {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.stat-box.compliant:hover {
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.stat-box.warning {
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+.stat-box.warning:hover {
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.stat-box.danger {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.stat-box.danger:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.stat-box .count {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--gray-100);
+  margin-bottom: var(--space-2);
+  font-family: "Geist Mono", monospace;
+}
+
+.stat-box .label {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Compliance Badges in Table */
+.compliance-badge-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.compliance-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 0.875rem;
+  font-weight: 700;
+  transition: transform 0.15s ease;
+}
+
+.compliance-badge.compliant {
+  background: rgba(34, 197, 94, 0.2);
+  color: rgb(34, 197, 94);
+  border: 1px solid rgba(34, 197, 94, 0.4);
+}
+
+.compliance-badge.warning {
+  background: rgba(234, 179, 8, 0.2);
+  color: rgb(234, 179, 8);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.compliance-badge.danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+
+/* Table Row Highlighting by Compliance */
+tr.row-compliant {
+  background: rgba(34, 197, 94, 0.03);
+}
+
+tr.row-compliant:hover {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+tr.row-warning {
+  background: rgba(234, 179, 8, 0.03);
+}
+
+tr.row-warning:hover {
+  background: rgba(234, 179, 8, 0.06);
+}
+
+tr.row-danger {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+tr.row-danger:hover {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* Stat Cell with Compliance Coloring */
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.stat-daily.compliance-green {
+  color: rgb(34, 197, 94);
+  font-weight: 600;
+}
+
+.stat-daily.compliance-yellow {
+  color: rgb(234, 179, 8);
+  font-weight: 600;
+}
+
+.stat-daily.compliance-red {
+  color: rgb(239, 68, 68);
+  font-weight: 600;
+}
+
+/* Player Link */
+.player-link {
+  color: var(--gray-100);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.player-link:hover {
+  color: #ffffff;
+  text-decoration: underline;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .compliance-summary {
+    grid-template-columns: 1fr;
+  }
+  
+  .compliance-stats {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,46 @@
+<div class="page-header">
+  <h1>Edit Faction Targets</h1>
+  <p class="page-subtitle">Configure daily compliance targets for <%= @faction.name %></p>
+</div>
+
+<div class="settings-section">
+  <div class="section-header">
+    <h2>Daily Targets</h2>
+  </div>
+
+  <%= form_with model: @faction, url: admin_faction_path(@faction), method: :patch do |form| %>
+    <% if @faction.errors.any? %>
+      <div class="flash flash-alert">
+        <h3><%= pluralize(@faction.errors.count, "error") %> prevented this faction from being saved:</h3>
+        <ul>
+          <% @faction.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-field">
+      <%= form.label :xanax_target, "Xanax (per day)" %>
+      <%= form.number_field :xanax_target, step: 0.1, min: 0.1, class: "form-input" %>
+      <small class="form-hint">Minimum xanax consumption expected per member per day</small>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :energy_refill_target, "Energy Refills (per day)" %>
+      <%= form.number_field :energy_refill_target, step: 0.1, min: 0.1, class: "form-input" %>
+      <small class="form-hint">Minimum energy refills expected per member per day</small>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :nerve_refill_target, "Nerve Refills (per day)" %>
+      <%= form.number_field :nerve_refill_target, step: 0.1, min: 0.1, class: "form-input" %>
+      <small class="form-hint">Minimum nerve refills expected per member per day</small>
+    </div>
+
+    <div class="form-actions">
+      <%= form.submit "Update Targets", class: "btn-primary" %>
+      <%= link_to "Cancel", admin_factions_path, class: "btn-secondary" %>
+    </div>
+  <% end %>
+</div>

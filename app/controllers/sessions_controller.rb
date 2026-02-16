@@ -13,7 +13,7 @@ class SessionsController < ApplicationController
       profile = TornApi::User::Profile.new(api_key).fetch
 
       if profile.nil?
-        Appsignal.increment_counter("auth.login_failed", 1, { reason: "profile_fetch_failed" })
+        ::Appsignal.increment_counter("auth.login_failed", 1, { reason: "profile_fetch_failed" }) if defined?(::Appsignal)
         return redirect_to new_session_path, alert: "Could not fetch profile from Torn API."
       end
 
@@ -31,26 +31,26 @@ class SessionsController < ApplicationController
 
       start_new_session_for user
 
-      Appsignal.increment_counter("auth.login_success", 1)
+      ::Appsignal.increment_counter("auth.login_success", 1) if defined?(::Appsignal)
 
       redirect_to after_authentication_url
     rescue TornApi::InvalidKeyError
-      Appsignal.increment_counter("auth.login_failed", 1, { reason: "invalid_key" })
+      ::Appsignal.increment_counter("auth.login_failed", 1, { reason: "invalid_key" }) if defined?(::Appsignal)
       redirect_to new_session_path, alert: "Invalid Torn API key."
     rescue ActiveRecord::RecordInvalid => e
       Rails.logger.error("User upsert failed: #{e.record.errors.full_messages}")
-      Appsignal.increment_counter("auth.login_failed", 1, { reason: "user_save_failed" })
+      ::Appsignal.increment_counter("auth.login_failed", 1, { reason: "user_save_failed" }) if defined?(::Appsignal)
       redirect_to new_session_path, alert: "Could not create user profile."
     rescue => e
       Rails.logger.error("Unexpected login error: #{e.class} - #{e.message}")
-      Appsignal.increment_counter("auth.login_failed", 1, { reason: "unexpected_error" })
-      Appsignal.send_error(e)
+      ::Appsignal.increment_counter("auth.login_failed", 1, { reason: "unexpected_error" }) if defined?(::Appsignal)
+      ::Appsignal.send_error(e) if defined?(::Appsignal)
       redirect_to new_session_path, alert: "Unexpected error. Please try again."
     end
   end
 
   def destroy
-    Appsignal.increment_counter("auth.logout", 1)
+    ::Appsignal.increment_counter("auth.logout", 1) if defined?(::Appsignal)
     terminate_session
     redirect_to root_path, status: :see_other
   end

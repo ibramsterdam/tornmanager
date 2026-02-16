@@ -4,7 +4,11 @@ Rails.application.routes.draw do
 
   resource :session
   resources :progress, only: [ :index ]
-  resources :faction, only: [ :index ]
+  resources :faction, only: [ :index ] do
+    collection do
+      get "members/:torn_id", to: "faction#member", as: "member"
+    end
+  end
   resources :ranked_war, only: [ :index ]
   resources :welcome, only: [ :index ]
 
@@ -30,7 +34,7 @@ Rails.application.routes.draw do
         patch :update_days
       end
     end
-    resources :factions, only: [ :index, :new, :create, :destroy ] do
+    resources :factions, only: [ :index, :new, :create, :edit, :update, :destroy ] do
       member do
         patch :toggle_tracking
         post :sync_members

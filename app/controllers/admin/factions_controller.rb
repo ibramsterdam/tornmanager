@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :destroy, :toggle_tracking, :sync_members ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -55,6 +55,17 @@ module Admin
       redirect_to admin_factions_path, notice: "Faction '#{name}' removed."
     end
 
+    def edit
+    end
+
+    def update
+      if @faction.update(faction_params)
+        redirect_to admin_factions_path, notice: "Faction targets updated successfully."
+      else
+        render :edit, status: :unprocessable_entity
+      end
+    end
+
     def toggle_tracking
       @faction.update!(track_stats: !@faction.track_stats)
 
@@ -80,6 +91,10 @@ module Admin
 
     def set_faction
       @faction = Faction.find(params[:id])
+    end
+
+    def faction_params
+      params.require(:faction).permit(:xanax_target, :energy_refill_target, :nerve_refill_target)
     end
   end
 end

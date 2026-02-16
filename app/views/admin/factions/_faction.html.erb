@@ -5,6 +5,13 @@
   <td><%= faction.torn_id %></td>
   <td class="member-count"><%= faction.users.count %></td>
   <td>
+    <small>
+      Xanax: <%= faction.xanax_target %>/day<br>
+      Energy: <%= faction.energy_refill_target %>/day<br>
+      Nerve: <%= faction.nerve_refill_target %>/day
+    </small>
+  </td>
+  <td>
     <label class="toggle-switch">
       <input type="checkbox" 
              <%= "checked" if faction.track_stats %>
@@ -16,6 +23,7 @@
     </label>
   </td>
   <td>
+    <%= link_to "Edit Targets", edit_admin_faction_path(faction), class: "btn-small" %>
     <%= link_to "Sync", sync_members_admin_faction_path(faction), method: :post, class: "btn-small", data: { turbo_method: :post } %>
     <%= button_to "Delete", admin_faction_path(faction), method: :delete, class: "btn-small btn-small-danger", data: { turbo_confirm: "Are you sure you want to remove '#{faction.name}'?" } %>
   </td>

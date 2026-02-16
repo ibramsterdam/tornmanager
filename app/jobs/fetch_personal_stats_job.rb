@@ -8,9 +8,9 @@ class FetchPersonalStatsJob < ApplicationJob
     user.update!(hof_stats_user: true) if stats.items_used_stat_enhancers > MIN_STAT_ENHANCER
     user.personal_stat_snapshots.create!(stats.to_h)
 
-    Appsignal.increment_counter("jobs.personal_stats_fetched", 1)
+    ::Appsignal.increment_counter("jobs.personal_stats_fetched", 1) if defined?(::Appsignal)
   rescue => e
-    Appsignal.increment_counter("jobs.personal_stats_failed", 1)
+    ::Appsignal.increment_counter("jobs.personal_stats_failed", 1) if defined?(::Appsignal)
     raise
   end
 end

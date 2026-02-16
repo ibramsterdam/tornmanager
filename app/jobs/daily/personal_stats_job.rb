@@ -15,7 +15,7 @@ module Daily
         end
       end
 
-      Appsignal.set_gauge("jobs.personal_stats_scheduled", total_users)
+      ::Appsignal.set_gauge("jobs.personal_stats_scheduled", total_users) if defined?(::Appsignal)
     end
   end
 end
