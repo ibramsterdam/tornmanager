@@ -35,6 +35,10 @@ module Daily
 
       sender.extend_subscription!(entry.xanax_quantity)
 
+      # Track subscription payment
+      Appsignal.increment_counter("subscription.xanax_payment", 1)
+      Appsignal.increment_counter("subscription.weeks_granted", entry.xanax_quantity, { type: "xanax" })
+
       Rails.logger.info "Xanax payment processed: #{entry.xanax_quantity} from #{sender.name || sender.torn_id}"
     end
 

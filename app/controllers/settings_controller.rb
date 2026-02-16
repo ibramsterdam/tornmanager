@@ -23,6 +23,8 @@ class SettingsController < ApplicationController
     Current.user.api_calls.destroy_all
     Current.user.update!(api_key: nil)
 
+    Appsignal.increment_counter("user.data_purged", 1)
+
     Rails.logger.info "Data purge completed for user #{Current.user.torn_id}"
 
     terminate_session
@@ -37,9 +39,14 @@ class SettingsController < ApplicationController
 
     session[:last_subscription_refresh_at] = Time.current.to_i
     Daily::XanaxPaymentsJob.perform_now
+
+    Appsignal.increment_counter("subscription.manual_refresh", 1)
+
     redirect_to settings_path, notice: "Subscription status refreshed! Check your subscription details above."
   rescue => e
     Rails.logger.error "Failed to refresh subscription for user #{Current.user.torn_id}: #{e.message}"
+    Appsignal.increment_counter("subscription.refresh_failed", 1)
+    Appsignal.send_error(e)
     redirect_to settings_path, alert: "Failed to refresh subscription status. Please try again later."
   end
 

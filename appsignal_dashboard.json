@@ -1,0 +1,236 @@
+{
+  "title": "TornManager Overview",
+  "description": "",
+  "visuals": [
+    {
+      "type": "timeseries",
+      "title": "API Response Time",
+      "line_label": "%name% %field%",
+      "display": "LINE",
+      "format": "duration",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "torn_api.response_time",
+          "fields": [
+            { "field": "MEAN" },
+            { "field": "P90" },
+            { "field": "P95" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "API Requests",
+      "line_label": "%name% %tag_value%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "torn_api.requests",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": [
+            { "key": "status", "value": "*" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Rate Limits & Invalid Keys",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "torn_api.rate_limit",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        },
+        {
+          "name": "torn_api.invalid_key",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Logins",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "auth.login_success",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        },
+        {
+          "name": "auth.login_failed",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Login Failures by Reason",
+      "line_label": "%name% %tag_value%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "auth.login_failed",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": [
+            { "key": "reason", "value": "*" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Xanax Payments",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "subscription.xanax_payment",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Weeks Granted",
+      "line_label": "%name% %tag_value%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "subscription.weeks_granted",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": [
+            { "key": "type", "value": "*" }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Faction Grants",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "subscription.faction_grant",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        },
+        {
+          "name": "subscription.users_granted",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Manual Refreshes",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "subscription.manual_refresh",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        },
+        {
+          "name": "subscription.refresh_failed",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Personal Stats Jobs",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "jobs.personal_stats_fetched",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        },
+        {
+          "name": "jobs.personal_stats_failed",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Data Purges",
+      "line_label": "%name%",
+      "display": "LINE",
+      "format": "number",
+      "draw_null_as_zero": true,
+      "metrics": [
+        {
+          "name": "user.data_purged",
+          "fields": [
+            { "field": "COUNTER" }
+          ],
+          "tags": []
+        }
+      ]
+    }
+  ]
+}
