@@ -1,4 +1,4 @@
-<nav data-controller="navbar">
+<nav data-controller="navbar" data-navbar-admin-value="<%= Current.user&.admin? ? 'true' : 'false' %>">
   <% if authenticated? %>
     <div class="navbar-left">
       <%= link_to "TornManager", progress_index_path, class: "navbar-link navbar-title" %>
