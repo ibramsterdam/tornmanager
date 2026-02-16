@@ -133,11 +133,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert new_user.has_limited_access?, "Full Access should count as having limited access"
   end
 
-  test "create accepts Basic Access API keys and stores access type" do
+  test "create accepts Public Only API keys and stores access type" do
     mock_key_info = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(
         level: 1,
-        type: "Basic Access",
+        type: "Public Only",
         faction: false,
         company: false
       ),
@@ -150,9 +150,9 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     mock_profile = TornApi::User::Profile::ProfileData.new(
       id: 8888888,
-      name: "BasicAccessUser",
+      name: "PublicOnlyUser",
       level: 30,
-      image: "https://example.com/basic_access.jpg"
+      image: "https://example.com/public_only.jpg"
     )
 
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
@@ -166,8 +166,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to root_path
     new_user = User.find_by(torn_id: 8888888)
-    assert_equal "Basic Access", new_user.api_access_type
-    assert_not new_user.has_limited_access?, "Basic Access should not count as having limited access"
+    assert_equal "Public Only", new_user.api_access_type
+    assert_not new_user.has_limited_access?, "Public Only should not count as having limited access"
   end
 
   test "create handles invalid API key error" do
