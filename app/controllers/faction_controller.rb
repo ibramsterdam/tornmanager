@@ -1,16 +1,33 @@
 class FactionController < ApplicationController
   include FactionHelper
 
-  SORTABLE_COLUMNS = %w[name xanax_daily energy_refills_daily nerve_refills_daily merits_daily missions_daily boosters_daily activity_time_daily compliance_score].freeze
+  SORTABLE_COLUMNS = %w[name xanax_daily energy_refills_daily nerve_refills_daily missions_daily crimes_daily activity_time_daily compliance_score].freeze
 
   def index
-    # Check if user has a faction
-    unless Current.user.faction
-      @no_faction = true
-      return
+    # Allow admins to view any faction via faction_id parameter
+    if Current.user.admin?
+      if params[:faction_id].present?
+        @faction = Faction.find_by(id: params[:faction_id])
+        unless @faction
+          redirect_to admin_dashboard_path, alert: "Faction not found."
+          return
+        end
+      else
+        # Admin with no faction_id - pick first tracked faction
+        @faction = Faction.where(track_stats: true).order(:name).first
+        unless @faction
+          redirect_to admin_dashboard_path, alert: "No factions with tracking enabled."
+          return
+        end
+      end
+    else
+      # Regular users view their own faction
+      unless Current.user.faction
+        @no_faction = true
+        return
+      end
+      @faction = Current.user.faction
     end
-
-    @faction = Current.user.faction
 
     # Check if faction has tracking enabled
     unless @faction.track_stats
@@ -21,10 +38,10 @@ class FactionController < ApplicationController
     # Determine date range for filtering
     all_snapshots = PersonalStatSnapshot.joins(:user)
                                        .where(users: { faction_id: @faction.id })
-                                       .order(:created_at)
+                                       .order(:date)
 
-    @earliest_date = all_snapshots.first&.created_at&.to_date
-    @latest_date = all_snapshots.last&.created_at&.to_date
+    @earliest_date = all_snapshots.first&.date
+    @latest_date = all_snapshots.last&.date
 
     # If no snapshots exist, set defaults
     if @earliest_date.nil? || @latest_date.nil?
@@ -38,48 +55,52 @@ class FactionController < ApplicationController
       return
     end
 
-    # Parse date parameters (default to last 30 days)
-    default_start = [ @earliest_date, 30.days.ago.to_date ].max
+    # Parse date parameters (default to this whole year, ending yesterday)
+    default_start = [ @earliest_date, Date.new(Date.today.year, 1, 1) ].max
+    default_end = [ @latest_date, Date.yesterday ].min
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : default_start
-    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
+    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : default_end
 
     # Calculate total days for the selected range
     @total_days_tracked = (@end_date - @start_date).to_i + 1
 
     # Build member stats rows
     @member_rows = @faction.users.includes(:personal_stat_snapshots).filter_map do |user|
-      # Filter snapshots by date range
-      snapshots = user.personal_stat_snapshots
-                           .where("DATE(created_at) >= ? AND DATE(created_at) <= ?", @start_date, @end_date)
-                           .order(:created_at)
+      # Get all snapshots in date range
+      all_snapshots = user.personal_stat_snapshots
+                           .where("date >= ? AND date <= ?", @start_date, @end_date)
+                           .order(:date)
 
-      # Skip users with no snapshots or only one snapshot
-      next if snapshots.empty? || snapshots.size < 2
+      # Helper to calculate stat for a specific field
+      calculate_stat = lambda do |field|
+        snapshots = all_snapshots.where.not(field => nil)
+        return { gained: 0, daily: 0.0, days: 0 } if snapshots.size < 2
 
-      latest = snapshots.last
-      first = snapshots.first
+        first = snapshots.first
+        last = snapshots.last
+        gained = (last[field] || 0) - (first[field] || 0)
+        daily = @total_days_tracked > 0 ? (gained.to_f / @total_days_tracked).round(2) : 0.0
 
-      # Calculate days between first and last snapshot (inclusive)
-      actual_days = (latest.created_at.to_date - first.created_at.to_date).to_i
-      next if actual_days.zero?
+        { gained: gained, daily: daily, days: @total_days_tracked }
+      end
 
-      # Calculate gains
-      xanax_gained = (latest.drugs_xanax || 0) - (first.drugs_xanax || 0)
-      energy_refills_gained = (latest.other_refills_energy || 0) - (first.other_refills_energy || 0)
-      nerve_refills_gained = (latest.other_refills_nerve || 0) - (first.other_refills_nerve || 0)
-      merits_gained = (latest.other_merits_bought || 0) - (first.other_merits_bought || 0)
-      missions_gained = (latest.missions_missions || 0) - (first.missions_missions || 0)
-      boosters_gained = (latest.items_used_boosters || 0) - (first.items_used_boosters || 0)
-      activity_time_gained = (latest.other_activity_time || 0) - (first.other_activity_time || 0)
+      # Calculate each stat independently
+      xanax_stats = calculate_stat.call(:drugs_xanax)
+      energy_stats = calculate_stat.call(:other_refills_energy)
+      nerve_stats = calculate_stat.call(:other_refills_nerve)
+      missions_stats = calculate_stat.call(:missions_contracts_total)
+      crimes_stats = calculate_stat.call(:crimes_offenses_total)
+      activity_stats = calculate_stat.call(:other_activity_time)
 
-      # Calculate daily averages using actual snapshot days
-      xanax_daily = (xanax_gained.to_f / actual_days).round(2)
-      energy_refills_daily = (energy_refills_gained.to_f / actual_days).round(2)
-      nerve_refills_daily = (nerve_refills_gained.to_f / actual_days).round(2)
-      merits_daily = (merits_gained.to_f / actual_days).round(2)
-      missions_daily = (missions_gained.to_f / actual_days).round(2)
-      boosters_daily = (boosters_gained.to_f / actual_days).round(2)
-      activity_time_daily = (activity_time_gained.to_f / actual_days).round(0)  # minutes per day
+      # Skip if no valid stats for any critical field
+      next if xanax_stats[:days].zero? && energy_stats[:days].zero? && nerve_stats[:days].zero?
+
+      xanax_daily = xanax_stats[:daily]
+      energy_refills_daily = energy_stats[:daily]
+      nerve_refills_daily = nerve_stats[:daily]
+      missions_daily = missions_stats[:daily]
+      crimes_daily = crimes_stats[:daily]
+      activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / activity_stats[:days]).round(0) : 0
 
       # Calculate compliance statuses
       xanax_compliance = stat_compliance(xanax_daily, @faction.xanax_target)
@@ -96,31 +117,26 @@ class FactionController < ApplicationController
         compliance_level: compliance_level,
         compliance_score: score,
 
-        xanax_gained: xanax_gained,
+        xanax_gained: xanax_stats[:gained],
         xanax_daily: xanax_daily,
         xanax_compliance: xanax_compliance,
 
-        energy_refills_gained: energy_refills_gained,
+        energy_refills_gained: energy_stats[:gained],
         energy_refills_daily: energy_refills_daily,
         energy_refills_compliance: energy_compliance,
 
-        nerve_refills_gained: nerve_refills_gained,
+        nerve_refills_gained: nerve_stats[:gained],
         nerve_refills_daily: nerve_refills_daily,
         nerve_refills_compliance: nerve_compliance,
 
-        merits_gained: merits_gained,
-        merits_daily: merits_daily,
-
-        missions_gained: missions_gained,
+        missions_gained: missions_stats[:gained],
         missions_daily: missions_daily,
 
-        boosters_gained: boosters_gained,
-        boosters_daily: boosters_daily,
+        crimes_gained: crimes_stats[:gained],
+        crimes_daily: crimes_daily,
 
-        activity_time_gained: activity_time_gained,
-        activity_time_daily: activity_time_daily,
-
-        actual_days: actual_days  # Store for debugging/display
+        activity_time_gained: activity_stats[:gained],
+        activity_time_daily: activity_time_daily
       }
     end
 

@@ -4,15 +4,15 @@
       <%= link_to "TornManager", progress_index_path, class: "navbar-link navbar-title" %>
     </div>
     <div class="navbar-center">
-      <%= link_to "[p] My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
+      <%= link_to "My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
       <% if Current.user&.faction&.track_stats %>
-        <%= link_to "[f] My Faction", faction_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/faction')}" %>
+        <%= link_to "My Faction", faction_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/faction')}" %>
       <% else %>
-        <span class="navbar-link navbar-link-disabled" title="Join a tracked faction to access">[f] My Faction</span>
+        <span class="navbar-link navbar-link-disabled" title="Join a tracked faction to access">My Faction</span>
       <% end %>
-      <%= link_to "[h] Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
+      <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
       <% if Current.user&.admin? %>
-        <%= link_to "[a] Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
+        <%= link_to "Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
       <% end %>
     </div>
     <div class="navbar-right">
