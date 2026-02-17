@@ -51,62 +51,75 @@
   </div>
 <% else %>
   <div class="table-container">
-    <table>
-      <thead>
-        <tr>
-          <th>TIMESTAMP</th>
-          <th>ENDPOINT</th>
-          <th>SELECTIONS</th>
-          <th>RESPONSE TIME</th>
-          <th>STATUS</th>
-          <th>ERROR</th>
-          <th>API KEY</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @api_calls.each do |call| %>
+    <div class="table-wrapper">
+      <table>
+        <thead>
           <tr>
-            <td><%= call.created_at.strftime("%b %d, %Y %I:%M:%S %p") %></td>
-            <td><%= call.endpoint %></td>
-            <td>
-              <% if call.selections.present? %>
-                <%= call.selections.is_a?(Hash) ? call.selections.to_json : call.selections %>
-              <% else %>
-                <span style="color: #6b7280;">—</span>
-              <% end %>
-            </td>
-            <td>
-              <% if call.response_time.present? %>
-                <span class="stat-value"><%= call.response_time %>ms</span>
-              <% else %>
-                <span style="color: #6b7280;">—</span>
-              <% end %>
-            </td>
-            <td>
-              <% if call.status == "success" %>
-                <span class="stat-value" style="color: #10b981;">✓ Success</span>
-              <% else %>
-                <span class="stat-value" style="color: #ef4444;">✗ Error</span>
-              <% end %>
-            </td>
-            <td>
-              <% if call.error_message.present? %>
-                <%= call.error_message %>
-              <% else %>
-                <span style="color: #6b7280;">—</span>
-              <% end %>
-            </td>
-            <td>
-              <% if call.api_key.present? %>
-                <span style="font-family: monospace; color: #6b7280;">....<%= call.api_key.last(4) %></span>
-              <% else %>
-                <span style="color: #6b7280;">—</span>
-              <% end %>
-            </td>
+            <th>TIMESTAMP</th>
+            <th>ENDPOINT</th>
+            <th>SELECTIONS</th>
+            <th>RESPONSE TIME</th>
+            <th>STATUS</th>
+            <th>ERROR</th>
+            <th>API KEY</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          <% @api_calls.each do |call| %>
+            <tr>
+              <td class="nowrap"><%= call.created_at.strftime("%b %d, %Y %I:%M:%S %p") %></td>
+              <td class="nowrap"><%= call.endpoint %></td>
+              <td class="selections-cell">
+                <% if call.selections.present? %>
+                  <%
+                    # Parse JSON string to hash, extract all values and split by comma
+                    parsed = JSON.parse(call.selections) rescue {}
+                    tags = parsed.values.flat_map { |v| v.to_s.split(",").map(&:strip) }.reject(&:blank?)
+                  %>
+                  <% if tags.any? %>
+                    <% tags.each do |tag| %>
+                      <span class="selection-tag"><%= tag %></span>
+                    <% end %>
+                  <% else %>
+                    <span class="muted">—</span>
+                  <% end %>
+                <% else %>
+                  <span class="muted">—</span>
+                <% end %>
+              </td>
+              <td class="nowrap">
+                <% if call.response_time.present? %>
+                  <span class="stat-value"><%= call.response_time %>ms</span>
+                <% else %>
+                  <span class="muted">—</span>
+                <% end %>
+              </td>
+              <td class="nowrap">
+                <% if call.status == "success" %>
+                  <span class="status-success">✓ Success</span>
+                <% else %>
+                  <span class="status-error">✗ Error</span>
+                <% end %>
+              </td>
+              <td>
+                <% if call.error_message.present? %>
+                  <%= call.error_message %>
+                <% else %>
+                  <span class="muted">—</span>
+                <% end %>
+              </td>
+              <td class="nowrap">
+                <% if call.api_key.present? %>
+                  <span class="api-key-display">....<%= call.api_key.last(4) %></span>
+                <% else %>
+                  <span class="muted">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   </div>
 <% end %>
 
