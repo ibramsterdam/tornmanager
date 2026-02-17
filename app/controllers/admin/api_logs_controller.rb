@@ -6,28 +6,37 @@ module Admin
       owner_api_key = OwnerCredentials.api_key
       admin_user = User.find_by(torn_id: 2728237)
 
-      @api_logs = ApiCall
+      base_scope = ApiCall
         .where(api_key: owner_api_key)
         .where(user_id: admin_user&.id)
-        .recent
-        .limit(500)
 
-      @total_calls = @api_logs.count
-      @successful_calls = @api_logs.successful.count
-      @failed_calls = @api_logs.failed.count
-      @avg_response_time = @api_logs.where.not(response_time: nil).average(:response_time)&.round(0)
+      @api_logs = base_scope.recent.limit(500)
 
-      @calls_today = ApiCall
-        .where(api_key: owner_api_key)
-        .where(user_id: admin_user&.id)
-        .today
+      @total_calls = base_scope.count
+      @successful_calls = base_scope.successful.count
+      @failed_calls = base_scope.failed.count
+      @avg_response_time = base_scope.where.not(response_time: nil).average(:response_time)&.round(0)
+
+      @calls_today = base_scope.today.count
+      @calls_last_24h = base_scope.last_24_hours.count
+
+      # Peak calls/min today using SQL grouping for efficiency
+      @peak_rate_today = calculate_peak_rate(base_scope.today)
+    end
+
+    private
+
+    def calculate_peak_rate(scope)
+      # Group by minute and find the maximum count
+      # SQLite: strftime('%Y-%m-%d %H:%M', created_at)
+      counts_by_minute = scope
+        .group("strftime('%Y-%m-%d %H:%M', created_at)")
         .count
 
-      @calls_last_24h = ApiCall
-        .where(api_key: owner_api_key)
-        .where(user_id: admin_user&.id)
-        .last_24_hours
-        .count
+      return { rate: 0, minute_start: nil } if counts_by_minute.empty?
+
+      max_minute, max_rate = counts_by_minute.max_by { |_, count| count }
+      { rate: max_rate, minute_start: max_minute }
     end
   end
 end
