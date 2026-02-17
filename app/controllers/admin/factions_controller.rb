@@ -70,8 +70,8 @@ module Admin
       @faction.update!(track_stats: !@faction.track_stats)
 
       if @faction.track_stats
-        # Sync members immediately when tracking is enabled
-        Daily::FactionMembershipSyncJob.new.sync_faction_members(@faction)
+        SyncFactionMembersJob.perform_later(@faction.id)
+        @faction.reload
         render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
       else
         render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
@@ -81,7 +81,8 @@ module Admin
     end
 
     def sync_members
-      Daily::FactionMembershipSyncJob.new.sync_faction_members(@faction)
+      SyncFactionMembersJob.perform_now(@faction.id)
+      @faction.reload
       redirect_to admin_factions_path, notice: "Synced #{@faction.users.count} members for '#{@faction.name}'."
     rescue => e
       redirect_to admin_factions_path, alert: "Failed to sync members: #{e.message}"
