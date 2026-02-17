@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_17_084617) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_17_095236) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -42,6 +42,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_17_084617) do
   end
 
   create_table "factions", force: :cascade do |t|
+    t.datetime "backfill_ends_at"
+    t.date "backfill_target_date"
     t.datetime "created_at", null: false
     t.decimal "energy_refill_target", default: "1.0", null: false
     t.string "name", null: false

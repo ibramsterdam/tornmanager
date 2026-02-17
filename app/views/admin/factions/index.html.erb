@@ -30,6 +30,8 @@
     </table>
   </div>
 
+  <%= yield :modals %>
+
   <% if @factions.empty? %>
     <div class="info-card mt-4">
       <p>No factions added yet. Use the form above to start tracking a faction's members.</p>

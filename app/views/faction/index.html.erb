@@ -15,6 +15,7 @@
     </div>
   </div>
 <% else %>
+  <% backfill_in_progress = @faction.backfill_in_progress? %>
   <%
     def sortable_header(sort_info)
       if sort_info[:current]
@@ -37,7 +38,25 @@
     <p class="page-subtitle">Stats tracking for <%= @faction.users.count %> members</p>
   </div>
 
-  <div class="table-container">
+  <% if backfill_in_progress %>
+    <div class="backfill-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @faction.backfill_seconds_remaining %>">
+      <div class="backfill-banner-content">
+        <div class="backfill-banner-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="backfill-banner-text">
+          <strong>Fetching historical data</strong>
+          <span>Backfilling member stats up until <%= @faction.backfill_target_date&.strftime("%B %d, %Y") %>.</span>
+          <span>Table will be enabled in: <strong data-backfill-countdown-target="countdown"></strong></span>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <div class="table-container <%= 'table-disabled' if backfill_in_progress %>">
     <% if Current.user.admin? %>
       <div class="table-info" style="margin-bottom: 16px;">
         <%= form_with url: faction_index_path, method: :get, class: "table-filter-form" do |form| %>
