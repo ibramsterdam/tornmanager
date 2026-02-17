@@ -25,6 +25,7 @@ Rails.application.routes.draw do
 
   namespace :admin do
     get "/", to: "dashboard#index", as: :dashboard
+    resources :stats, only: [ :index ]
     resources :subscriptions, only: [ :index ] do
       collection do
         get :faction_grant
