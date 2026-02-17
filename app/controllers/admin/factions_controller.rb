@@ -70,12 +70,11 @@ module Admin
       @faction.update!(track_stats: !@faction.track_stats)
 
       if @faction.track_stats
-        SyncFactionMembersJob.perform_later(@faction.id)
+        SyncFactionMembersJob.perform_now(@faction.id)
         @faction.reload
-        render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
-      else
-        render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
       end
+
+      render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
     rescue => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
