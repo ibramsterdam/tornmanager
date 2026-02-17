@@ -1,6 +1,5 @@
 module Daily
-  class XanaxPaymentsJob < ApplicationJob
-    queue_as :default
+  class XanaxPaymentsJob < TornApiJob
     PAYMENT_RECIPIENT_TORN_ID = 2728237
 
     def perform

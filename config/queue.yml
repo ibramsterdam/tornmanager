@@ -3,7 +3,14 @@ default: &default
     - polling_interval: 1
       batch_size: 500
   workers:
-    - queues: "*"
+    # Torn API queue: rate-limited to ~1 request per second (60/min API limit)
+    # Single thread ensures sequential execution, polling_interval adds delay between jobs
+    - queues: torn_api
+      threads: 1
+      processes: 1
+      polling_interval: 1.1
+    # Default queue for all other jobs (explicitly named to avoid picking up torn_api)
+    - queues: default
       threads: 3
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>
       polling_interval: 0.1

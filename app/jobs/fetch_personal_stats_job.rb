@@ -1,6 +1,4 @@
-class FetchPersonalStatsJob < ApplicationJob
-  queue_as :default
-
+class FetchPersonalStatsJob < TornApiJob
   MIN_STAT_ENHANCER = 200
 
   # @param user [User] User to fetch stats for
@@ -29,9 +27,9 @@ class FetchPersonalStatsJob < ApplicationJob
     snapshot.assign_attributes(stats.except(:timestamp))
     snapshot.save!
 
-    # Schedule batch 2 if this was batch 1, passing the date so it finds the same snapshot
+    # Enqueue batch 2 if this was batch 1 (queue handles rate limiting)
     if batch == 1
-      FetchPersonalStatsJob.set(wait: 1.second).perform_later(user, batch: 2, target_date: snapshot_date)
+      FetchPersonalStatsJob.perform_later(user, batch: 2, target_date: snapshot_date)
     end
 
     ::Appsignal.increment_counter("jobs.personal_stats_fetched", 1) if defined?(::Appsignal)
