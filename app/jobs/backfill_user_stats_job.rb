@@ -1,10 +1,6 @@
 class BackfillUserStatsJob < ApplicationJob
   queue_as :default
 
-  # Each backfill requires 2 API calls (batch 1 + batch 2), spaced 1 second apart
-  # So we schedule each date 2 seconds apart to avoid rate limiting
-  SECONDS_PER_BACKFILL = 2
-
   # Used for backfilling a single user (not called by BackfillPersonalStatsJob anymore)
   def perform(user_id, start_date, end_date)
     user = User.find(user_id)
@@ -12,7 +8,6 @@ class BackfillUserStatsJob < ApplicationJob
 
     Rails.logger.info("Scheduling backfill for user #{user.name} (#{user.torn_id}): #{dates.size} days")
 
-    delay = 0.seconds
     jobs_scheduled = 0
 
     # Get existing snapshots and index by date (derived from timestamp)
@@ -26,8 +21,8 @@ class BackfillUserStatsJob < ApplicationJob
       # Skip if we already have a snapshot for this date
       next if existing_snapshots.include?(date)
 
-      BackfillSingleStatJob.set(wait: delay).perform_later(user.id, date.to_s)
-      delay += SECONDS_PER_BACKFILL.seconds
+      # Jobs go to torn_api queue which handles rate limiting (~1 req/sec)
+      BackfillSingleStatJob.perform_later(user.id, date.to_s)
       jobs_scheduled += 1
     end
 

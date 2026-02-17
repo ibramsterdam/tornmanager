@@ -1,6 +1,4 @@
-class BackfillSingleStatJob < ApplicationJob
-  queue_as :default
-
+class BackfillSingleStatJob < TornApiJob
   # @param user_id [Integer] User ID
   # @param date_str [String] Date string (YYYY-MM-DD)
   # @param batch [Integer] Which batch to fetch (1 or 2), defaults to 1 which schedules batch 2
@@ -37,9 +35,9 @@ class BackfillSingleStatJob < ApplicationJob
       Rails.logger.error("Failed to save snapshot for user #{user.torn_id} on #{snapshot.date}: #{snapshot.errors.full_messages.join(', ')}")
     end
 
-    # Schedule batch 2 if this was batch 1
+    # Enqueue batch 2 if this was batch 1 (queue handles rate limiting)
     if batch == 1
-      BackfillSingleStatJob.set(wait: 1.second).perform_later(user_id, date_str, batch: 2)
+      BackfillSingleStatJob.perform_later(user_id, date_str, batch: 2)
     end
   end
 

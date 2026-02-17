@@ -1,9 +1,8 @@
 class BackfillPersonalStatsJob < ApplicationJob
   queue_as :default
 
-  # Each backfill requires 2 API calls (batch 1 + batch 2), spaced 1 second apart
-  # So we schedule each user/date combo 2 seconds apart to avoid rate limiting
-  SECONDS_PER_BACKFILL = 2
+  # Seconds per API call (polling_interval of torn_api queue)
+  SECONDS_PER_API_CALL = 1.1
 
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
@@ -12,10 +11,9 @@ class BackfillPersonalStatsJob < ApplicationJob
 
     Rails.logger.info("Scheduling backfill for faction #{faction.name}: #{users.count} users, #{dates.size} days")
 
-    delay = 0.seconds
     jobs_scheduled = 0
 
-    # Schedule all jobs with sequential delays to avoid rate limiting
+    # Enqueue all jobs - torn_api queue handles rate limiting (~1 req/sec)
     users.each do |user|
       # Get existing snapshots for this user
       existing_snapshots = user.personal_stat_snapshots
@@ -28,22 +26,28 @@ class BackfillPersonalStatsJob < ApplicationJob
         # Skip if we already have a snapshot for this date
         next if existing_snapshots.include?(date)
 
-        BackfillSingleStatJob.set(wait: delay).perform_later(user.id, date.to_s)
-        delay += SECONDS_PER_BACKFILL.seconds
+        BackfillSingleStatJob.perform_later(user.id, date.to_s)
         jobs_scheduled += 1
       end
     end
 
-    total_seconds = [ delay.to_i, 1 ].max
+    # Count jobs already in the torn_api queue (not yet finished)
+    # These will be processed before our newly enqueued jobs
+    existing_queued_jobs = SolidQueue::Job.where(queue_name: "torn_api", finished_at: nil).count
+
+    # Each BackfillSingleStatJob triggers 2 API calls (batch 1 + batch 2)
+    # Total API calls = existing jobs + (new jobs * 2)
+    total_api_calls = existing_queued_jobs + (jobs_scheduled * 2)
+    estimated_seconds = [ total_api_calls * SECONDS_PER_API_CALL, 1 ].max.to_i
 
     faction.update!(
-      backfill_ends_at: Time.current + total_seconds.seconds,
+      backfill_ends_at: Time.current + estimated_seconds.seconds,
       backfill_target_date: start_date.to_date
     )
 
     # Schedule cleanup job to clear backfill status when done
-    ClearBackfillStatusJob.set(wait: total_seconds.seconds).perform_later(faction.id)
+    ClearBackfillStatusJob.set(wait: estimated_seconds.seconds).perform_later(faction.id)
 
-    Rails.logger.info("Scheduled #{jobs_scheduled} stat fetch jobs for faction #{faction.name}, completing in ~#{total_seconds}s")
+    Rails.logger.info("Scheduled #{jobs_scheduled} stat fetch jobs for faction #{faction.name} (#{existing_queued_jobs} jobs already queued), completing in ~#{estimated_seconds}s")
   end
 end
