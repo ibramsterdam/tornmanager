@@ -1,6 +1,7 @@
 class BackfillUserStatsJob < ApplicationJob
   queue_as :default
 
+  # Used for backfilling a single user (not called by BackfillPersonalStatsJob anymore)
   def perform(user_id, start_date, end_date)
     user = User.find(user_id)
     dates = (start_date.to_date..end_date.to_date).to_a
@@ -13,11 +14,13 @@ class BackfillUserStatsJob < ApplicationJob
     # Get existing snapshots and index by date (derived from timestamp)
     existing_snapshots = user.personal_stat_snapshots
                             .where(timestamp: dates.first.to_time.to_i..dates.last.end_of_day.to_i)
-                            .index_by(&:date)
+                            .pluck(:timestamp)
+                            .map { |ts| Time.at(ts).utc.to_date }
+                            .to_set
 
     dates.each do |date|
       # Skip if we already have a snapshot for this date
-      next if existing_snapshots[date].present?
+      next if existing_snapshots.include?(date)
 
       BackfillSingleStatJob.set(wait: delay).perform_later(user.id, date.to_s)
       delay += 1.second

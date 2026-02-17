@@ -13,4 +13,17 @@ class Faction < ApplicationRecord
   def member_count
     users.count
   end
+
+  def backfill_in_progress?
+    backfill_ends_at.present? && backfill_ends_at > Time.current
+  end
+
+  def backfill_seconds_remaining
+    return 0 unless backfill_in_progress?
+    (backfill_ends_at - Time.current).to_i
+  end
+
+  def clear_backfill_status!
+    update!(backfill_ends_at: nil, backfill_target_date: nil)
+  end
 end
