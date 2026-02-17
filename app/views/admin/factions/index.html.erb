@@ -1,4 +1,5 @@
 <div class="page-header">
+  <%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
   <h1>Manage Factions</h1>
   <p class="page-subtitle">Configure which factions have their members' stats tracked</p>
 </div>
@@ -37,35 +38,4 @@
       <p>No factions added yet. Use the form above to start tracking a faction's members.</p>
     </div>
   <% end %>
-</div>
-
-<div class="settings-section">
-  <h2>Stats Tracking Info</h2>
-  <div class="info-card">
-    <p><strong>How it works:</strong></p>
-    <ul>
-      <li>When "Track Stats" is enabled for a faction, all members are synced from the Torn API</li>
-      <li>Daily at 10:30 AM TCT, faction membership is automatically synced</li>
-      <li>Daily at 11:00 AM TCT, personal stats are fetched for all tracked users</li>
-      <li>Users are tracked if they are a HoF stats user OR in a tracked faction</li>
-      <li>Disabling tracking does NOT delete existing stats data</li>
-    </ul>
-    <p><strong>Currently tracking:</strong> <%= User.tracked_for_stats.count %> users</p>
-  </div>
-
-  <h3 style="margin-top: 30px;">Backfill Historical Data</h3>
-  <div class="info-card">
-    <p><strong>What is backfilling?</strong></p>
-    <p>The backfill feature allows you to populate historical stats data for faction members. This is useful if you recently enabled tracking for a faction and want to import past data.</p>
-    <p><strong>How to use:</strong></p>
-    <ul>
-      <li>Click the "Backfill" button next to any faction</li>
-      <li>Select the date range (default: Jan 1-20, 2026)</li>
-      <li>Jobs are scheduled per user, then per date at 60 API calls/minute</li>
-      <li>Each date requires up to 2 API calls (batch of 10 stats + batch of 1 stat)</li>
-      <li>The system will skip dates that already have complete snapshot data</li>
-    </ul>
-    <p><strong>Stats backfilled:</strong> Xanax, Cannabis, Energy Refills, Nerve Refills, Boosters, Stat Enhancers, Contracts, Crimes, Activity Time, Net Worth, Money Mugged (10 total)</p>
-    <p><strong>Note:</strong> Merits are not backfilled as they don't support historical data via the Torn API.</p>
-  </div>
 </div>

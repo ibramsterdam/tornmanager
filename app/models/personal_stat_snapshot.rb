@@ -5,7 +5,8 @@ class PersonalStatSnapshot < ApplicationRecord
   validate :one_snapshot_per_day_per_user, on: :create
 
   # Central definition of stats we track - maps API stat name to DB column
-  TRACKED_STATS = {
+  # Split into batches of max 10 due to Torn API v2 limit
+  TRACKED_STATS_BATCH_1 = {
     "xantaken" => :drugs_xanax,
     "cantaken" => :drugs_cannabis,
     "refills" => :other_refills_energy,
@@ -15,16 +16,33 @@ class PersonalStatSnapshot < ApplicationRecord
     "contractscompleted" => :missions_contracts_total,
     "criminaloffenses" => :crimes_offenses_total,
     "timeplayed" => :other_activity_time,
-    "networth" => :networth_total,
+    "networth" => :networth_total
+  }.freeze
+
+  TRACKED_STATS_BATCH_2 = {
     "moneymugged" => :attacking_networth_money_mugged
   }.freeze
+
+  TRACKED_STATS = TRACKED_STATS_BATCH_1.merge(TRACKED_STATS_BATCH_2).freeze
 
   def self.api_stat_names
     TRACKED_STATS.keys
   end
 
+  def self.api_stat_names_batch_1
+    TRACKED_STATS_BATCH_1.keys
+  end
+
+  def self.api_stat_names_batch_2
+    TRACKED_STATS_BATCH_2.keys
+  end
+
   def self.db_columns
     TRACKED_STATS.values
+  end
+
+  def self.stat_batches
+    [ TRACKED_STATS_BATCH_1, TRACKED_STATS_BATCH_2 ]
   end
 
   def date

@@ -1,0 +1,259 @@
+<div class="page-header">
+  <%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
+  <h1>System Stats</h1>
+  <p class="page-subtitle">Overview of users, snapshots, and data health</p>
+</div>
+
+<!-- User Counts -->
+<div class="stats-section">
+  <h2>Users</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @total_users %></div>
+      <div class="stat-label">Total Users</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @tracked_users %></div>
+      <div class="stat-label">Tracked for Stats</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @active_subscribers %></div>
+      <div class="stat-label">Active Subscribers</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @hof_stats_users %></div>
+      <div class="stat-label">HoF Stats Users</div>
+    </div>
+  </div>
+</div>
+
+<!-- Faction Overview -->
+<div class="stats-section">
+  <h2>Factions</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @total_factions %></div>
+      <div class="stat-label">Total Factions</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @tracked_factions %></div>
+      <div class="stat-label">Tracked</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value <%= @factions_with_backfill > 0 ? 'warning' : '' %>"><%= @factions_with_backfill %></div>
+      <div class="stat-label">Backfill In Progress</div>
+    </div>
+  </div>
+
+  <% if @faction_stats.any? %>
+    <div class="mini-table">
+      <h3>Tracked Factions</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Faction</th>
+            <th>Members</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @faction_stats.each do |(faction_id, faction_name), count| %>
+            <tr>
+              <td><%= faction_name %></td>
+              <td><%= count %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
+
+<!-- Snapshot Coverage -->
+<div class="stats-section">
+  <h2>Snapshot Coverage</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= number_with_delimiter(@total_snapshots) %></div>
+      <div class="stat-label">Total Snapshots</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @unique_snapshot_days %></div>
+      <div class="stat-label">Days with Data</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%Y-%m-%d") : "N/A" %></div>
+      <div class="stat-label">Earliest Snapshot</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%Y-%m-%d") : "N/A" %></div>
+      <div class="stat-label">Latest Snapshot</div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="stats-section">
+  <h2>Recent Activity</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value"><%= @snapshots_today %></div>
+      <div class="stat-label">Snapshots Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @snapshots_this_week %></div>
+      <div class="stat-label">Snapshots This Week</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @api_calls_today %></div>
+      <div class="stat-label">API Calls Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @api_calls_this_week %></div>
+      <div class="stat-label">API Calls This Week</div>
+    </div>
+  </div>
+
+  <% if @daily_snapshots.any? %>
+    <div class="mini-table">
+      <h3>Snapshots by Day (Last 7 Days)</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Snapshots</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @daily_snapshots.each do |date, count| %>
+            <tr>
+              <td><%= date %></td>
+              <td><%= count %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>
+
+<!-- Data Health -->
+<div class="stats-section">
+  <h2>Data Health</h2>
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %></div>
+      <div class="stat-label">Users Missing Yesterday's Snapshot</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value success"><%= number_with_delimiter(@complete_snapshots) %></div>
+      <div class="stat-label">Complete Snapshots</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value <%= @incomplete_snapshots > 0 ? 'warning' : '' %>"><%= number_with_delimiter(@incomplete_snapshots) %></div>
+      <div class="stat-label">Incomplete Snapshots</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value"><%= @total_snapshots > 0 ? "#{((@complete_snapshots.to_f / @total_snapshots) * 100).round(1)}%" : "N/A" %></div>
+      <div class="stat-label">Completeness Rate</div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .stats-section {
+    background: var(--card-bg, #171717);
+    border: 1px solid var(--border-color, #262626);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+  }
+
+  .stats-section h2 {
+    margin: 0 0 16px 0;
+    font-size: 1.25rem;
+    color: var(--text-primary, #e5e5e5);
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+  }
+
+  .stat-card {
+    background: var(--bg-secondary, #0a0a0a);
+    border: 1px solid var(--border-color, #262626);
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary, #e5e5e5);
+    font-family: 'Geist Mono', monospace;
+  }
+
+  .stat-value.success {
+    color: #22c55e;
+  }
+
+  .stat-value.warning {
+    color: #f59e0b;
+  }
+
+  .stat-value.error {
+    color: #ef4444;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted, #737373);
+    text-transform: uppercase;
+    margin-top: 8px;
+    letter-spacing: 0.05em;
+  }
+
+  .mini-table {
+    margin-top: 20px;
+    background: var(--bg-secondary, #0a0a0a);
+    border: 1px solid var(--border-color, #262626);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .mini-table h3 {
+    margin: 0 0 12px 0;
+    font-size: 0.875rem;
+    color: var(--text-muted, #a3a3a3);
+  }
+
+  .mini-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .mini-table th,
+  .mini-table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color, #262626);
+    font-size: 0.875rem;
+  }
+
+  .mini-table th {
+    color: var(--text-muted, #737373);
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+  }
+
+  .mini-table td {
+    color: var(--text-primary, #e5e5e5);
+  }
+
+  .mini-table tr:last-child td {
+    border-bottom: none;
+  }
+</style>

@@ -1,6 +1,10 @@
 class BackfillPersonalStatsJob < ApplicationJob
   queue_as :default
 
+  # Each backfill requires 2 API calls (batch 1 + batch 2), spaced 1 second apart
+  # So we schedule each user/date combo 2 seconds apart to avoid rate limiting
+  SECONDS_PER_BACKFILL = 2
+
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
     users = faction.users.to_a
@@ -25,7 +29,7 @@ class BackfillPersonalStatsJob < ApplicationJob
         next if existing_snapshots.include?(date)
 
         BackfillSingleStatJob.set(wait: delay).perform_later(user.id, date.to_s)
-        delay += 1.second
+        delay += SECONDS_PER_BACKFILL.seconds
         jobs_scheduled += 1
       end
     end
