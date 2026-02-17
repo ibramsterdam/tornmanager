@@ -38,7 +38,7 @@ class FactionController < ApplicationController
     # Determine date range for filtering
     all_snapshots = PersonalStatSnapshot.joins(:user)
                                        .where(users: { faction_id: @faction.id })
-                                       .order(:date)
+                                       .order(:timestamp)
 
     @earliest_date = all_snapshots.first&.date
     @latest_date = all_snapshots.last&.date
@@ -55,8 +55,8 @@ class FactionController < ApplicationController
       return
     end
 
-    # Parse date parameters (default to this whole year, ending yesterday)
-    default_start = [ @earliest_date, Date.new(Date.today.year, 1, 1) ].max
+    # Parse date parameters (default to Jan 1, 2026 through yesterday)
+    default_start = [ @earliest_date, Date.new(2026, 1, 1) ].max
     default_end = [ @latest_date, Date.yesterday ].min
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : default_start
     @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : default_end
@@ -65,11 +65,15 @@ class FactionController < ApplicationController
     @total_days_tracked = (@end_date - @start_date).to_i + 1
 
     # Build member stats rows
+    # Convert date range to timestamp range for querying
+    start_timestamp = @start_date.beginning_of_day.to_i
+    end_timestamp = @end_date.end_of_day.to_i
+
     @member_rows = @faction.users.includes(:personal_stat_snapshots).filter_map do |user|
       # Get all snapshots in date range
       all_snapshots = user.personal_stat_snapshots
-                           .where("date >= ? AND date <= ?", @start_date, @end_date)
-                           .order(:date)
+                           .where(timestamp: start_timestamp..end_timestamp)
+                           .order(:timestamp)
 
       # Helper to calculate stat for a specific field
       calculate_stat = lambda do |field|

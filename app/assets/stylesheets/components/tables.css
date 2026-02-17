@@ -260,3 +260,46 @@ tbody tr:hover {
   margin-left: var(--space-2);
   display: inline-block;
 }
+
+/* Utility classes */
+.nowrap {
+  white-space: nowrap;
+}
+
+.muted {
+  color: var(--gray-500);
+}
+
+/* Selection tags for API calls table */
+.selections-cell {
+  max-width: 300px;
+}
+
+.selection-tag {
+  display: inline-block;
+  background: var(--gray-800);
+  color: var(--gray-300);
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-family: "Geist Mono", monospace;
+  margin: 2px 4px 2px 0;
+  white-space: nowrap;
+}
+
+/* Status indicators */
+.status-success {
+  color: #10b981;
+  font-weight: 500;
+}
+
+.status-error {
+  color: #ef4444;
+  font-weight: 500;
+}
+
+/* API key display */
+.api-key-display {
+  font-family: "Geist Mono", monospace;
+  color: var(--gray-500);
+}

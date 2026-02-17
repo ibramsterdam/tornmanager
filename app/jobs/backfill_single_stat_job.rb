@@ -1,47 +1,46 @@
 class BackfillSingleStatJob < ApplicationJob
   queue_as :default
 
-  def perform(user_id, date_str, stat_mapping_json)
+  def perform(user_id, date_str)
     user = User.find(user_id)
     date = Date.parse(date_str)
-    stat_mapping = JSON.parse(stat_mapping_json)
     api_key = OwnerCredentials.api_key
 
     return Rails.logger.error("No API key found") if api_key.blank?
 
-    timestamp = date.to_time.to_i
-    api_stat_names = stat_mapping.keys
+    request_timestamp = date.to_time.to_i
 
-    values = fetch_stats(user.torn_id, api_stat_names, timestamp, api_key)
+    stats = fetch_stats(user.torn_id, request_timestamp, api_key)
 
-    return if values.nil? || values.empty?
+    return if stats.nil?
 
-    fetched_data = {}
-    stat_mapping.each do |api_stat_name, db_column|
-      value = values[api_stat_name]
-      fetched_data[db_column] = value if value
-    end
+    # Use the timestamp returned by the API
+    response_timestamp = stats.timestamp
+    response_date = Time.at(response_timestamp).utc.to_date
+    stats_data = stats.to_h.except(:timestamp)
 
-    return if fetched_data.empty?
+    # Find existing snapshot for this day, or initialize new one with response timestamp
+    day_start = response_date.beginning_of_day.to_i
+    day_end = response_date.end_of_day.to_i
+    snapshot = user.personal_stat_snapshots.find_by(timestamp: day_start..day_end)
+    snapshot ||= user.personal_stat_snapshots.new(timestamp: response_timestamp)
 
-    snapshot = user.personal_stat_snapshots.find_or_initialize_by(date: date)
-    snapshot.assign_attributes(fetched_data)
-    snapshot.created_at = date.to_time.midday if snapshot.new_record?
+    snapshot.assign_attributes(stats_data)
 
     if snapshot.save
-      Rails.logger.debug("Upserted snapshot for user #{user.torn_id} on #{date}: #{fetched_data.keys.join(', ')}")
+      Rails.logger.debug("Upserted snapshot for user #{user.torn_id} on #{snapshot.date}")
     else
-      Rails.logger.error("Failed to save snapshot for user #{user.torn_id} on #{date}: #{snapshot.errors.full_messages.join(', ')}")
+      Rails.logger.error("Failed to save snapshot for user #{user.torn_id} on #{snapshot.date}: #{snapshot.errors.full_messages.join(', ')}")
     end
   end
 
   private
 
-  def fetch_stats(torn_id, api_stat_names, timestamp, api_key)
-    api = TornApi::User::HistoricalPersonalStat.new(api_key, torn_id)
-    api.fetch(api_stat_names, timestamp)
+  def fetch_stats(torn_id, timestamp, api_key)
+    api = TornApi::User::PersonalStats.new(api_key, torn_id, timestamp: timestamp)
+    api.fetch
   rescue TornApi::ApiError => e
-    Rails.logger.error("API error for stats #{api_stat_names.join(', ')}: #{e.message}")
+    Rails.logger.error("API error fetching stats: #{e.message}")
     nil
   end
 end
