@@ -16,8 +16,11 @@ class User < ApplicationRecord
 
   scope :hof_stats_users, -> { where(hof_stats_user: true) }
   scope :active_subscribers, -> { where("subscription_expires_at > ?", Time.current) }
+  scope :active, -> { where(fallen: false) }
+  scope :fallen, -> { where(fallen: true) }
   scope :tracked_for_stats, -> {
     left_joins(:faction)
+      .where(fallen: false)
       .where("hof_stats_user = ? OR factions.track_stats = ?", true, true)
       .distinct
   }
