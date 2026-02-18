@@ -43,4 +43,13 @@ class User < ApplicationRecord
   def has_limited_access?
     LIMITED_ACCESS_TYPES.include?(api_access_type)
   end
+
+  def backfill_in_progress?
+    backfill_ends_at.present? && backfill_ends_at > Time.current
+  end
+
+  def backfill_seconds_remaining
+    return 0 unless backfill_in_progress?
+    (backfill_ends_at - Time.current).to_i
+  end
 end

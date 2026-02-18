@@ -53,60 +53,60 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody>
           <% @users_with_gaps.each do |data| %>
-            <tr>
-              <td>
-                <a href="https://www.torn.com/profiles.php?XID=<%= data[:user].torn_id %>" target="_blank" class="player-link">
-                  <%= data[:user].name %>
-                </a>
-                <span class="text-muted">[<%= data[:user].torn_id %>]</span>
-              </td>
-              <td>
-                <% if data[:user].faction %>
-                  <%= data[:user].faction.name %>
-                <% else %>
-                  <span class="text-muted">-</span>
-                <% end %>
-              </td>
-              <td>
-                <span class="badge <%= data[:missing_count] > 10 ? 'badge-warning' : 'badge-info' %>">
-                  <%= data[:missing_count] %> days
-                </span>
-              </td>
-              <td><%= data[:oldest_missing]&.strftime("%d-%m-%Y") || "-" %></td>
-              <td><%= data[:latest_snapshot]&.strftime("%d-%m-%Y") || "Never" %></td>
-              <td>
-                <%= button_to "Backfill", 
-                    backfill_user_admin_snapshot_management_path(data[:user]), 
-                    method: :post,
-                    class: "btn-small btn-primary",
-                    data: { confirm: "Schedule #{data[:missing_count]} backfill jobs for #{data[:user].name}?" } %>
-                
-                <button type="button" 
-                        class="btn-small btn-secondary" 
-                        onclick="toggleDetails(<%= data[:user].id %>)">
-                  Details
-                </button>
-              </td>
-            </tr>
-            <tr id="details-<%= data[:user].id %>" class="details-row" style="display: none;">
-              <td colspan="6">
-                <div class="missing-dates-container">
-                  <strong>Missing dates:</strong>
-                  <div class="missing-dates-list">
-                    <% data[:missing_dates].first(30).each do |date| %>
-                      <span class="date-tag"><%= date.strftime("%d-%m-%Y") %></span>
-                    <% end %>
-                    <% if data[:missing_dates].size > 30 %>
-                      <span class="text-muted">... and <%= data[:missing_dates].size - 30 %> more</span>
-                    <% end %>
+            <tbody data-controller="backfill-row">
+              <tr data-backfill-row-target="row">
+                <td>
+                  <a href="https://www.torn.com/profiles.php?XID=<%= data[:user].torn_id %>" target="_blank" class="player-link">
+                    <%= data[:user].name %>
+                  </a>
+                  <span class="text-muted">[<%= data[:user].torn_id %>]</span>
+                </td>
+                <td>
+                  <% if data[:user].faction %>
+                    <%= data[:user].faction.name %>
+                  <% else %>
+                    <span class="text-muted">-</span>
+                  <% end %>
+                </td>
+                <td>
+                  <span class="badge <%= data[:missing_count] > 10 ? 'badge-warning' : 'badge-info' %>">
+                    <%= data[:missing_count] %> days
+                  </span>
+                </td>
+                <td><%= data[:oldest_missing]&.strftime("%d-%m-%Y") || "-" %></td>
+                <td><%= data[:latest_snapshot]&.strftime("%d-%m-%Y") || "Never" %></td>
+                <td>
+                  <%= button_to "Backfill", 
+                      backfill_user_admin_snapshot_management_path(data[:user]), 
+                      method: :post,
+                      class: "btn-small btn-primary",
+                      data: { action: "click->backfill-row#remove" } %>
+                  
+                  <button type="button" 
+                          class="btn-small btn-secondary" 
+                          onclick="toggleDetails(<%= data[:user].id %>)">
+                    Details
+                  </button>
+                </td>
+              </tr>
+              <tr id="details-<%= data[:user].id %>" class="details-row" style="display: none;" data-backfill-row-target="detailsRow">
+                <td colspan="6">
+                  <div class="missing-dates-container">
+                    <strong>Missing dates:</strong>
+                    <div class="missing-dates-list">
+                      <% data[:missing_dates].first(30).each do |date| %>
+                        <span class="date-tag"><%= date.strftime("%d-%m-%Y") %></span>
+                      <% end %>
+                      <% if data[:missing_dates].size > 30 %>
+                        <span class="text-muted">... and <%= data[:missing_dates].size - 30 %> more</span>
+                      <% end %>
+                    </div>
                   </div>
-                </div>
-              </td>
-            </tr>
+                </td>
+              </tr>
+            </tbody>
           <% end %>
-        </tbody>
       </table>
     </div>
   <% else %>
