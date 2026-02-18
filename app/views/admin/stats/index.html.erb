@@ -81,11 +81,11 @@
       <div class="stat-label">Days with Data</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%Y-%m-%d") : "N/A" %></div>
+      <div class="stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d-%m-%Y") : "N/A" %></div>
       <div class="stat-label">Earliest Snapshot</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%Y-%m-%d") : "N/A" %></div>
+      <div class="stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d-%m-%Y") : "N/A" %></div>
       <div class="stat-label">Latest Snapshot</div>
     </div>
   </div>
@@ -145,6 +145,14 @@
       <div class="stat-label">Users Missing Yesterday's Snapshot</div>
     </div>
     <div class="stat-card">
+      <div class="stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></div>
+      <div class="stat-label">Users With Data Gaps</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></div>
+      <div class="stat-label">Total Missing Snapshot-Days</div>
+    </div>
+    <div class="stat-card">
       <div class="stat-value success"><%= number_with_delimiter(@complete_snapshots) %></div>
       <div class="stat-label">Complete Snapshots</div>
     </div>
@@ -157,6 +165,28 @@
       <div class="stat-label">Completeness Rate</div>
     </div>
   </div>
+
+  <% if @missing_dates_summary.any? %>
+    <div class="mini-table">
+      <h3>Recent Dates With Missing Snapshots</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Users Missing</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @missing_dates_summary.each do |date, count| %>
+            <tr>
+              <td><%= date.strftime("%d-%m-%Y") %></td>
+              <td><%= count %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
 </div>
 
 <style>

@@ -18,7 +18,7 @@
           <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
-        <%= @peak_today[:minute_start].strftime("%I:%M %p") %>
+        <%= @peak_today[:minute_start].strftime("%H:%M") %>
       </div>
     <% else %>
       <div class="api-peak-value">0</div>
@@ -36,7 +36,7 @@
           <circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/>
           <path d="M7 3.5V7L9.5 9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
         </svg>
-        <%= @peak_all_time[:minute_start].strftime("%b %d, %Y %I:%M %p") %>
+        <%= @peak_all_time[:minute_start].strftime("%d %b %Y %H:%M") %>
       </div>
     <% else %>
       <div class="api-peak-value">0</div>
@@ -67,7 +67,7 @@
         <tbody>
           <% @api_calls.each do |call| %>
             <tr>
-              <td class="nowrap"><%= call.created_at.strftime("%b %d, %Y %I:%M:%S %p") %></td>
+              <td class="nowrap"><%= call.created_at.strftime("%d %b %Y %H:%M:%S") %></td>
               <td class="nowrap"><%= call.endpoint %></td>
               <td class="selections-cell">
                 <% if call.selections.present? %>

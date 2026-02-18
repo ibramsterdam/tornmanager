@@ -67,7 +67,7 @@
         <% @api_logs.each do |log| %>
           <% selections = log.selections.present? ? JSON.parse(log.selections) : {} %>
           <tr class="<%= log.status == 'error' ? 'error-row' : '' %>">
-            <td><%= log.created_at.strftime("%Y-%m-%d %H:%M:%S") %></td>
+            <td><%= log.created_at.strftime("%d-%m-%Y %H:%M:%S") %></td>
             <td><code><%= log.endpoint %></code></td>
             <td class="selections-cell">
               <% if selections.any? %>
@@ -75,7 +75,7 @@
                   <span class="selection-tag">
                     <strong><%= key %>:</strong>
                     <% if key == "timestamp" && value.is_a?(Integer) %>
-                      <%= Time.at(value).utc.strftime("%Y-%m-%d") %>
+                      <%= Time.at(value).utc.strftime("%d-%m-%Y") %>
                     <% else %>
                       <%= value.to_s %>
                     <% end %>

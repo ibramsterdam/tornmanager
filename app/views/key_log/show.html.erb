@@ -188,7 +188,7 @@
         <tbody>
           <% @log_data.log.each do |entry| %>
             <tr>
-              <td><%= Time.at(entry.timestamp).utc.strftime("%Y-%m-%d %H:%M:%S") %></td>
+              <td><%= Time.at(entry.timestamp).utc.strftime("%d-%m-%Y %H:%M:%S") %></td>
               <td><code><%= entry.type %></code></td>
               <td><code><%= entry.selections %></code></td>
               <td><%= entry.id || "-" %></td>
