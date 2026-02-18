@@ -2,6 +2,9 @@ module Admin
   class SnapshotManagementController < ApplicationController
     before_action :require_admin
 
+    # Seconds per API call (polling_interval of torn_api queue)
+    SECONDS_PER_API_CALL = 1.1
+
     def index
       @users_with_gaps = users_with_missing_snapshots
       @summary = calculate_summary
@@ -11,12 +14,21 @@ module Admin
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
 
+      # Count jobs already in the torn_api queue (not yet finished)
+      existing_queued_jobs = SolidQueue::Job.where(queue_name: "torn_api", finished_at: nil).count
+
       missing_dates.each_with_index do |date, index|
         BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s)
       end
 
-      redirect_to admin_snapshot_management_index_path,
-        notice: "Scheduled #{missing_dates.size} backfill jobs for #{user.name}"
+      # Each BackfillSingleStatJob triggers 2 API calls (batch 1 + batch 2)
+      # Total API calls = existing jobs + (new jobs * 2)
+      total_api_calls = existing_queued_jobs + (missing_dates.size * 2)
+      estimated_seconds = (total_api_calls * SECONDS_PER_API_CALL).ceil
+
+      user.update!(backfill_ends_at: Time.current + estimated_seconds.seconds)
+
+      render json: { success: true, message: "Scheduled #{missing_dates.size * 2} API calls for #{user.name} (~#{estimated_seconds}s)" }
     end
 
     private
@@ -33,7 +45,10 @@ module Admin
 
       expected_dates = expected_date_range.to_a
 
-      users_data = User.tracked_for_stats.includes(:faction).map do |user|
+      users_data = User.tracked_for_stats.includes(:faction).filter_map do |user|
+        # Skip users with backfill in progress
+        next if user.backfill_in_progress?
+
         user_snapshots = existing_snapshots[user.id] || Set.new
         missing = expected_dates - user_snapshots.to_a
 
@@ -46,7 +61,7 @@ module Admin
           latest_snapshot: user_snapshots.max,
           oldest_missing: missing.min
         }
-      end.compact
+      end
 
       users_data.sort_by { |u| -u[:missing_count] }
     end
