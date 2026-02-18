@@ -155,6 +155,7 @@
             <th><%= sortable_header(sort_link("missions_daily", "CONTRACTS")) %></th>
             <th><%= sortable_header(sort_link("crimes_daily", "CRIMES")) %></th>
             <th><%= sortable_header(sort_link("activity_time_daily", "ACTIVITY")) %><br><small>min/day</small></th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -209,6 +210,19 @@
                   <span class="stat-value"><%= number_with_delimiter(row[:activity_time_gained]) %> min</span>
                   <span class="stat-daily"><%= row[:activity_time_daily] %> min/day</span>
                 </div>
+              </td>
+              <td class="copy-cell">
+                <button type="button" 
+                        class="copy-stats-button" 
+                        data-controller="clipboard" 
+                        data-clipboard-text-value="<%= member_stats_clipboard_text(row, @total_days_tracked, @faction) %>"
+                        data-action="click->clipboard#copy"
+                        title="Copy stats to clipboard">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
               </td>
             </tr>
           <% end %>
