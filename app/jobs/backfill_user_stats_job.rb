@@ -10,16 +10,15 @@ class BackfillUserStatsJob < ApplicationJob
 
     jobs_scheduled = 0
 
-    # Get existing snapshots and index by date (derived from timestamp)
-    existing_snapshots = user.personal_stat_snapshots
-                            .where(timestamp: dates.first.to_time.to_i..dates.last.end_of_day.to_i)
-                            .pluck(:timestamp)
-                            .map { |ts| Time.at(ts).utc.to_date }
-                            .to_set
+    # Get existing snapshots by date
+    existing_dates = user.personal_stat_snapshots
+                         .where(date: dates.first..dates.last)
+                         .pluck(:date)
+                         .to_set
 
     dates.each do |date|
       # Skip if we already have a snapshot for this date
-      next if existing_snapshots.include?(date)
+      next if existing_dates.include?(date)
 
       # Jobs go to torn_api queue which handles rate limiting (~1 req/sec)
       BackfillSingleStatJob.perform_later(user.id, date.to_s)

@@ -4,12 +4,16 @@ Rails.application.routes.draw do
 
   resource :session
   resources :progress, only: [ :index ]
-  resources :faction, only: [ :index ] do
-    collection do
-      get "members/:torn_id", to: "faction#member", as: "member"
+  resources :factions, only: [ :index, :show ], param: :torn_id do
+    resource :training, only: [ :show ], controller: "factions/training" do
+      get "members/:torn_id", to: "factions/training#member", as: "member"
+    end
+    resources :ranked_wars, only: [ :index, :show ], controller: "factions/ranked_wars" do
+      collection do
+        post :sync
+      end
     end
   end
-  resources :ranked_war, only: [ :index ]
   resources :welcome, only: [ :index ]
 
   get "hall-of-famers", to: "hall_of_famers#index", as: :hall_of_famers

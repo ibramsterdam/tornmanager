@@ -1,7 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static values = { secondsRemaining: Number }
+  static values = { 
+    secondsRemaining: Number,
+    buttonText: { type: String, default: "Check for New Payments" }
+  }
 
   connect() {
     if (this.hasSecondsRemainingValue && this.secondsRemainingValue > 0) {
@@ -35,11 +38,11 @@ export default class extends Controller {
   }
 
   updateDisplay() {
-    this.element.value = `Available in ${this.secondsRemainingValue} seconds`
+    this.element.value = `Available in ${this.secondsRemainingValue}s`
   }
 
   enableButton() {
     this.element.disabled = false
-    this.element.value = "Check for New Payments"
+    this.element.value = this.buttonTextValue
   }
 }

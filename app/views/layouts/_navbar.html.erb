@@ -6,7 +6,7 @@
     <div class="navbar-center">
       <%= link_to "My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
       <% if Current.user&.faction&.track_stats %>
-        <%= link_to "My Faction", faction_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/faction')}" %>
+        <%= link_to "My Faction", faction_path(Current.user.faction), class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/factions')}" %>
       <% else %>
         <span class="navbar-link navbar-link-disabled" title="Join a tracked faction to access">My Faction</span>
       <% end %>

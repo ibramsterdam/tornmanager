@@ -96,6 +96,44 @@
   color: var(--gray-300);
 }
 
+/* Disabled Admin Card */
+.admin-card-disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  position: relative;
+}
+
+.admin-card-disabled:hover {
+  border-color: var(--gray-800);
+  background: var(--gray-900);
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-card-disabled:hover .admin-card-icon {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--gray-400);
+}
+
+.admin-card-disabled:hover p {
+  color: var(--gray-400);
+}
+
+.coming-soon-badge {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: var(--gray-800);
+  color: var(--gray-400);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--gray-700);
+}
+
 /* Section Header */
 .section-header {
   display: flex;

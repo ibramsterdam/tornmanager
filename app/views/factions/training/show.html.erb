@@ -1,41 +1,39 @@
-<% if @no_faction %>
-  <div class="centered-content">
-    <div class="info-card">
-      <h2>No Faction</h2>
-      <p>You need to be in a faction to view faction stats.</p>
-      <p>Join a faction in <%= link_to "Torn", "https://www.torn.com", target: "_blank" %> to access this page.</p>
-    </div>
-  </div>
-<% elsif @tracking_disabled %>
+<% if @tracking_disabled %>
   <div class="centered-content">
     <div class="info-card">
       <h2>Stats Tracking Disabled</h2>
-      <p>Your faction (<strong><%= @faction.name %></strong>) does not have stats tracking enabled.</p>
+      <p>This faction (<strong><%= @faction.name %></strong>) does not have stats tracking enabled.</p>
       <p>Contact an administrator to enable stats tracking for your faction.</p>
     </div>
   </div>
 <% else %>
   <% backfill_in_progress = @faction.backfill_in_progress? %>
   <%
-    def sortable_header(sort_info)
+    def sortable_header(sort_info, faction)
       if sort_info[:current]
         arrow = sort_info[:current_direction] == "asc" ? "▲" : "▼"
         arrow_html = "<span class='sort-arrow active'>#{arrow}</span>"
       else
         arrow_html = "<span class='sort-arrow'>▼</span>"
       end
-      # Preserve date filter params and faction_id when sorting
+      # Preserve date filter params when sorting
       url_params = { sort: sort_info[:column], direction: sort_info[:direction] }
       url_params[:start_date] = params[:start_date] if params[:start_date].present?
       url_params[:end_date] = params[:end_date] if params[:end_date].present?
-      url_params[:faction_id] = params[:faction_id] if params[:faction_id].present?
-      link_to "#{sort_info[:label]} #{arrow_html}".html_safe, faction_index_path(url_params), class: "sort-link"
+      link_to "#{sort_info[:label]} #{arrow_html}".html_safe, faction_training_path(faction, url_params), class: "sort-link"
     end
   %>
 
   <div class="page-header">
-    <h1><%= Current.user.admin? ? "Viewing Faction:" : "My Faction:" %> <%= @faction.name %></h1>
-    <p class="page-subtitle">Stats tracking for <%= @faction.users.count %> members</p>
+    <div class="page-header-content">
+      <div>
+        <h1>Training Compliance</h1>
+        <p class="page-subtitle"><%= @faction.name %> - <%= @faction.users.count %> members</p>
+      </div>
+      <div class="page-header-actions">
+        <%= link_to "Back to Faction", faction_path(@faction), class: "btn btn-secondary" %>
+      </div>
+    </div>
   </div>
 
   <% if backfill_in_progress %>
@@ -57,26 +55,8 @@
   <% end %>
 
   <div class="table-container <%= 'table-disabled' if backfill_in_progress %>">
-    <% if Current.user.admin? %>
-      <div class="table-info" style="margin-bottom: 16px;">
-        <%= form_with url: faction_index_path, method: :get, class: "table-filter-form" do |form| %>
-          <div class="filter-inline">
-            <span class="info-label">Switch Faction:</span>
-            <%= form.select :faction_id, 
-                options_from_collection_for_select(Faction.where(track_stats: true).order(:name), :id, :name, @faction.id),
-                {}, 
-                { class: "date-input-inline", style: "width: 250px;", onchange: "this.form.submit()" } %>
-            <%= hidden_field_tag :start_date, params[:start_date] if params[:start_date].present? %>
-            <%= hidden_field_tag :end_date, params[:end_date] if params[:end_date].present? %>
-            <%= hidden_field_tag :sort, params[:sort] if params[:sort].present? %>
-            <%= hidden_field_tag :direction, params[:direction] if params[:direction].present? %>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
-    
     <div class="table-info">
-      <%= form_with url: faction_index_path, method: :get, class: "table-filter-form" do |form| %>
+      <%= form_with url: faction_training_path(@faction), method: :get, class: "table-filter-form" do |form| %>
         <div class="filter-inline">
           <span class="info-label">Tracking Period:</span>
           
@@ -87,7 +67,7 @@
                 max: PersonalStatSnapshot.tracking_end_date,
                 class: "date-input-inline" %>
             
-            <span class="date-separator">→</span>
+            <span class="date-separator">-></span>
             
             <%= form.date_field :end_date, 
                 value: params[:end_date] || @end_date,
@@ -100,13 +80,10 @@
           
           <%= hidden_field_tag :sort, params[:sort] %>
           <%= hidden_field_tag :direction, params[:direction] %>
-          <% if Current.user.admin? %>
-            <%= hidden_field_tag :faction_id, params[:faction_id] %>
-          <% end %>
           
           <button type="submit" class="filter-button-inline">Apply</button>
           <% if params[:start_date].present? || params[:end_date].present? %>
-            <%= link_to "Reset", faction_index_path(faction_id: params[:faction_id]), class: "filter-reset-inline" %>
+            <%= link_to "Reset", faction_training_path(@faction), class: "filter-reset-inline" %>
           <% end %>
         </div>
       <% end %>
@@ -148,13 +125,13 @@
         <thead>
           <tr>
             <th>Status</th>
-            <th><%= sortable_header(sort_link("name", "MEMBER")) %></th>
-            <th><%= sortable_header(sort_link("xanax_daily", "XANAX")) %><br><small>Target: <%= @faction.xanax_target %>/day</small></th>
-            <th><%= sortable_header(sort_link("energy_refills_daily", "ENERGY REFILLS")) %><br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
-            <th><%= sortable_header(sort_link("nerve_refills_daily", "NERVE REFILLS")) %><br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
-            <th><%= sortable_header(sort_link("missions_daily", "CONTRACTS")) %></th>
-            <th><%= sortable_header(sort_link("crimes_daily", "CRIMES")) %></th>
-            <th><%= sortable_header(sort_link("activity_time_daily", "ACTIVITY")) %><br><small>min/day</small></th>
+            <th><%= sortable_header(sort_link("name", "MEMBER"), @faction) %></th>
+            <th><%= sortable_header(sort_link("xanax_daily", "XANAX"), @faction) %><br><small>Target: <%= @faction.xanax_target %>/day</small></th>
+            <th><%= sortable_header(sort_link("energy_refills_daily", "ENERGY REFILLS"), @faction) %><br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
+            <th><%= sortable_header(sort_link("nerve_refills_daily", "NERVE REFILLS"), @faction) %><br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
+            <th><%= sortable_header(sort_link("missions_daily", "CONTRACTS"), @faction) %></th>
+            <th><%= sortable_header(sort_link("crimes_daily", "CRIMES"), @faction) %></th>
+            <th><%= sortable_header(sort_link("activity_time_daily", "ACTIVITY"), @faction) %><br><small>min/day</small></th>
             <th></th>
           </tr>
         </thead>
@@ -167,7 +144,7 @@
                 </span>
               </td>
               <td>
-                <%= link_to row[:name], member_faction_index_path(torn_id: row[:torn_id]), class: "player-link" %>
+                <%= link_to row[:name], member_faction_training_path(@faction, torn_id: row[:torn_id]), class: "player-link" %>
               </td>
               <td>
                 <div class="stat-cell">
@@ -215,7 +192,7 @@
                 <button type="button" 
                         class="copy-stats-button" 
                         data-controller="clipboard" 
-                        data-clipboard-text-value="<%= member_stats_clipboard_text(row, @total_days_tracked, @faction) %>"
+                        data-clipboard-text-value="<%= member_stats_clipboard_text(row, row[:days_tracked], @faction) %>"
                         data-action="click->clipboard#copy"
                         title="Copy stats to clipboard">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

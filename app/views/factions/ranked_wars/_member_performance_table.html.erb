@@ -1,0 +1,45 @@
+<div class="table-container">
+  <div class="table-info">
+    <span class="info-label">Member Performance (All Wars)</span>
+  </div>
+
+  <% if member_performance.any? %>
+    <div class="table-scroll-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Member</th>
+            <th>Wars Participated</th>
+            <th>Total Attacks</th>
+            <th>Avg Attacks</th>
+            <th>Total Score</th>
+            <th>Avg Score</th>
+            <th>Avg Respect/Hit</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% member_performance.each_with_index do |member, index| %>
+            <tr>
+              <td class="rank-position"><%= index + 1 %></td>
+              <td>
+                <%= link_to member[:name], "https://www.torn.com/profiles.php?XID=#{member[:torn_id]}", target: "_blank", class: "player-link" %>
+              </td>
+              <td><%= member[:wars_participated] %></td>
+              <td><%= number_with_delimiter(member[:total_attacks]) %></td>
+              <td><%= member[:avg_attacks] %></td>
+              <td class="score-highlight"><%= number_with_delimiter(member[:total_score].round(0)) %></td>
+              <td><%= member[:avg_score] %></td>
+              <td class="score-highlight"><%= member[:avg_respect_per_hit] %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="table-empty">
+      <div class="table-empty-icon">&#128100;</div>
+      <p class="table-empty-text">No member performance data yet. Sync wars to see member statistics.</p>
+    </div>
+  <% end %>
+</div>
