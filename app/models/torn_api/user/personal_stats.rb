@@ -3,21 +3,6 @@ module TornApi
     class PersonalStats < Base
       attr_reader :torn_id, :timestamp, :stat_batch
 
-      PersonalStatSnapshot = Data.define(
-        :timestamp,
-        :drugs_xanax,
-        :drugs_cannabis,
-        :other_refills_energy,
-        :other_refills_nerve,
-        :items_used_boosters,
-        :items_used_stat_enhancers,
-        :missions_contracts_total,
-        :crimes_offenses_total,
-        :other_activity_time,
-        :networth_total,
-        :attacking_networth_money_mugged
-      )
-
       # @param api_key [String] API key
       # @param torn_id [Integer] User's Torn ID
       # @param timestamp [Integer, nil] Unix timestamp for historical data
@@ -56,11 +41,12 @@ module TornApi
           hash[stat["name"]] = stat["value"]
         end
 
-        # Get timestamp from the first stat (they should all have the same timestamp)
+        # Get date from the first stat's timestamp (they should all have the same timestamp)
         response_timestamp = stats.first&.dig("timestamp")
+        response_date = response_timestamp ? Time.at(response_timestamp).utc.to_date : nil
 
         # Build result with only the requested stats, defaulting missing to 0
-        result = { timestamp: response_timestamp }
+        result = { date: response_date, timestamp: response_timestamp }
 
         requested_stats.each do |api_name, db_column|
           # Default to 0 if stat not in response (API omits stats with value 0)
