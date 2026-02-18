@@ -1,28 +1,23 @@
 class BackfillHofStatsJob < ApplicationJob
   queue_as :default
 
-  # Seconds per API call (polling_interval of torn_api queue)
   SECONDS_PER_API_CALL = 1.1
 
-  def perform(start_date, end_date)
+  def perform(start_date = nil, end_date = nil)
+    start_date = (start_date || PersonalStatSnapshot::TRACKING_START_DATE).to_date
+    end_date = (end_date || PersonalStatSnapshot.tracking_end_date).to_date
+
     users = User.hof_stats_users.to_a
-    dates = (start_date.to_date..end_date.to_date).to_a
+    dates = (start_date..end_date).to_a
 
     Rails.logger.info("Scheduling HOF backfill: #{users.count} users, #{dates.size} days")
 
     jobs_scheduled = 0
 
-    users.each do |user|
-      existing_snapshots = user.personal_stat_snapshots
-                              .where(timestamp: dates.first.to_time.to_i..dates.last.end_of_day.to_i)
-                              .pluck(:timestamp)
-                              .map { |ts| Time.at(ts).utc.to_date }
-                              .to_set
-
-      dates.each do |date|
-        next if existing_snapshots.include?(date)
-
-        BackfillSingleStatJob.perform_later(user.id, date.to_s)
+    users.each_with_index do |user, user_index|
+      dates.each_with_index do |date, date_index|
+        delay = (user_index * dates.size) + date_index
+        BackfillSingleStatJob.set(wait: delay.seconds).perform_later(user.id, date.to_s)
         jobs_scheduled += 1
       end
     end
@@ -31,6 +26,6 @@ class BackfillHofStatsJob < ApplicationJob
     total_api_calls = existing_queued_jobs + (jobs_scheduled * 2)
     estimated_seconds = [ total_api_calls * SECONDS_PER_API_CALL, 1 ].max.to_i
 
-    Rails.logger.info("Scheduled #{jobs_scheduled} HOF stat fetch jobs (#{existing_queued_jobs} jobs already queued), completing in ~#{estimated_seconds}s")
+    Rails.logger.info("Scheduled #{jobs_scheduled} HOF stat fetch jobs, completing in ~#{estimated_seconds}s")
   end
 end
