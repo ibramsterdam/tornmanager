@@ -12,13 +12,13 @@ class SyncFactionMembersJob < TornApiJob
         .where.not(torn_id: member_torn_ids)
         .update_all(faction_id: nil)
 
-    # Create/update users for current members
     members.each do |member|
       user = User.find_or_initialize_by(torn_id: member.id)
       user.assign_attributes(
         name: member.name,
         level: member.level,
-        faction_id: faction.id
+        faction_id: faction.id,
+        fallen: member.status_state == "Fallen"
       )
       user.save!
     end

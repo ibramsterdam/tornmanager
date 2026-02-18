@@ -74,7 +74,7 @@ module Admin
         @faction.reload
       end
 
-      render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.count }
+      render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.active.count }
     rescue => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
@@ -82,7 +82,7 @@ module Admin
     def sync_members
       SyncFactionMembersJob.perform_now(@faction.id)
       @faction.reload
-      redirect_to admin_factions_path, notice: "Synced #{@faction.users.count} members for '#{@faction.name}'."
+      redirect_to admin_factions_path, notice: "Synced #{@faction.users.active.count} members for '#{@faction.name}'."
     rescue => e
       redirect_to admin_factions_path, alert: "Failed to sync members: #{e.message}"
     end
@@ -109,7 +109,7 @@ module Admin
         return
       end
 
-      user_count = @faction.users.count
+      user_count = @faction.users.active.count
       date_count = (end_date - start_date).to_i + 1
 
       if user_count == 0

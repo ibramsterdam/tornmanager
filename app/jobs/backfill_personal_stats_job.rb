@@ -6,7 +6,7 @@ class BackfillPersonalStatsJob < ApplicationJob
 
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
-    users = faction.users.to_a
+    users = faction.users.active.to_a
     dates = (start_date.to_date..end_date.to_date).to_a
 
     Rails.logger.info("Scheduling backfill for faction #{faction.name}: #{users.count} users, #{dates.size} days")

@@ -51,7 +51,7 @@ class FactionController < ApplicationController
     start_timestamp = @start_date.beginning_of_day.to_i
     end_timestamp = @end_date.end_of_day.to_i
 
-    @member_rows = @faction.users.includes(:personal_stat_snapshots).filter_map do |user|
+    @member_rows = @faction.users.active.includes(:personal_stat_snapshots).filter_map do |user|
       # Get all snapshots in date range
       all_snapshots = user.personal_stat_snapshots
                            .where(timestamp: start_timestamp..end_timestamp)

@@ -4,9 +4,9 @@
   </td>
   <td><%= faction.torn_id %></td>
   <td class="member-count">
-    <%= faction.users.count %>
+    <%= faction.users.active.count %><% if faction.users.fallen.any? %> <small style="color:#737373;">(+<%= faction.users.fallen.count %> fallen)</small><% end %>
     <% if faction.users.any? %>
-      <button type="button" class="btn-small" onclick="document.getElementById('users-list-<%= faction.id %>').style.display = document.getElementById('users-list-<%= faction.id %>').style.display === 'none' ? 'table-row' : 'none'" style="margin-left:8px; font-size:0.75rem; padding:4px 8px;">👥 View</button>
+      <button type="button" class="btn-small" onclick="document.getElementById('users-list-<%= faction.id %>').style.display = document.getElementById('users-list-<%= faction.id %>').style.display === 'none' ? 'table-row' : 'none'" style="margin-left:8px; font-size:0.75rem; padding:4px 8px;">View</button>
     <% end %>
   </td>
   <td>
@@ -39,9 +39,9 @@
 <tr id="users-list-<%= faction.id %>" style="display:none;">
   <td colspan="6" style="padding:0;">
     <div style="background:#0a0a0a; padding:16px; border-top:1px solid #262626;">
-      <h4 style="margin:0 0 12px 0; color:#e5e5e5; font-size:0.875rem; font-weight:600;">Members (<%= faction.users.count %>)</h4>
+      <h4 style="margin:0 0 12px 0; color:#e5e5e5; font-size:0.875rem; font-weight:600;">Active Members (<%= faction.users.active.count %>)</h4>
       <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px;">
-        <% faction.users.order(:name).each do |user| %>
+        <% faction.users.active.order(:name).each do |user| %>
           <div style="background:#171717; padding:12px; border-radius:6px; border:1px solid #262626; display:flex; justify-content:space-between; align-items:center;">
             <span style="color:#e5e5e5; font-size:0.875rem;">
               <%= link_to user.name, "https://www.torn.com/profiles.php?XID=#{user.torn_id}", target: "_blank", style: "color:#e5e5e5; text-decoration:none;" %> 
@@ -51,6 +51,19 @@
           </div>
         <% end %>
       </div>
+      <% if faction.users.fallen.any? %>
+        <h4 style="margin:24px 0 12px 0; color:#737373; font-size:0.875rem; font-weight:600;">Fallen Members (<%= faction.users.fallen.count %>)</h4>
+        <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px;">
+          <% faction.users.fallen.order(:name).each do |user| %>
+            <div style="background:#171717; padding:12px; border-radius:6px; border:1px solid #262626; opacity:0.5;">
+              <span style="color:#737373; font-size:0.875rem;">
+                <%= link_to user.name, "https://www.torn.com/profiles.php?XID=#{user.torn_id}", target: "_blank", style: "color:#737373; text-decoration:none;" %> 
+                <small>[<%= user.torn_id %>]</small>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </td>
 </tr>
@@ -61,7 +74,7 @@
   <div id="backfill-modal-<%= faction.id %>" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1000; align-items:center; justify-content:center; padding:20px;">
     <div style="background:#171717; max-width:500px; width:100%; padding:32px; border-radius:12px; border:1px solid #262626; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
       <h2 style="color:#e5e5e5; margin:0 0 8px 0; font-size:1.5rem; font-weight:600;">Backfill Historical Stats</h2>
-      <p style="color:#a3a3a3; margin:0 0 24px 0; font-size:0.875rem;">Faction: <strong style="color:#e5e5e5;"><%= faction.name %></strong> • Members: <strong style="color:#e5e5e5;"><%= faction.users.count %></strong></p>
+      <p style="color:#a3a3a3; margin:0 0 24px 0; font-size:0.875rem;">Faction: <strong style="color:#e5e5e5;"><%= faction.name %></strong> • Members: <strong style="color:#e5e5e5;"><%= faction.users.active.count %></strong></p>
       
       <%= form_with url: backfill_stats_admin_faction_path(faction), method: :post, data: { turbo: false } do |f| %>
         <div style="margin-bottom:24px;">
@@ -86,8 +99,8 @@
     </div>
   </div>
 
-  <!-- User-specific Backfill Modals -->
-  <% faction.users.each do |user| %>
+  <!-- User-specific Backfill Modals (only for active users) -->
+  <% faction.users.active.each do |user| %>
     <div id="backfill-user-modal-<%= user.id %>" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); z-index:1001; align-items:center; justify-content:center; padding:20px;">
       <div style="background:#171717; max-width:500px; width:100%; padding:32px; border-radius:12px; border:1px solid #262626; box-shadow:0 20px 25px -5px rgba(0,0,0,0.5);">
         <h2 style="color:#e5e5e5; margin:0 0 8px 0; font-size:1.5rem; font-weight:600;">Backfill User Stats</h2>
