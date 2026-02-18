@@ -39,7 +39,7 @@ module Admin
       # Data health - snapshot gaps for tracked users
       calculate_snapshot_gaps
 
-      # Snapshot completeness (users with all 11 stats filled)
+      # Snapshot completeness (snapshots with all stats filled)
       @complete_snapshots = PersonalStatSnapshot
         .where.not(
           drugs_xanax: nil,

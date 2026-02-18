@@ -62,8 +62,12 @@ module Admin
 
     def calculate_summary
       tracked_count = User.tracked_for_stats.count
-      total_expected = tracked_count * expected_date_range.count
-      total_existing = PersonalStatSnapshot.where(user_id: User.tracked_for_stats.select(:id)).count
+      date_range = expected_date_range
+      total_expected = tracked_count * date_range.count
+      total_existing = PersonalStatSnapshot
+        .where(user_id: User.tracked_for_stats.select(:id))
+        .where(date: date_range)
+        .count
 
       {
         tracked_users: tracked_count,
