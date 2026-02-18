@@ -86,7 +86,7 @@ class FactionController < ApplicationController
       nerve_refills_daily = nerve_stats[:daily]
       missions_daily = missions_stats[:daily]
       crimes_daily = crimes_stats[:daily]
-      activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / activity_stats[:days]).round(0) : 0
+      activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / 60 / activity_stats[:days]).round(0) : 0
 
       # Calculate compliance statuses
       xanax_compliance = stat_compliance(xanax_daily, @faction.xanax_target)
