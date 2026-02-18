@@ -29,14 +29,15 @@ module Admin
       @api_calls_today = ApiCall.where("created_at >= ?", Time.current.beginning_of_day).count
       @api_calls_this_week = ApiCall.where("created_at >= ?", 7.days.ago.beginning_of_day).count
 
-      # Data health - users missing recent snapshots
-      yesterday_start = 1.day.ago.beginning_of_day.to_i
-      yesterday_end = 1.day.ago.end_of_day.to_i
+      # Data health - users missing yesterday's snapshot
       users_with_yesterday_snapshot = PersonalStatSnapshot
-        .where(timestamp: yesterday_start..yesterday_end)
+        .where(date: Date.yesterday)
         .distinct
         .pluck(:user_id)
       @users_missing_yesterday = User.tracked_for_stats.where.not(id: users_with_yesterday_snapshot).count
+
+      # Data health - snapshot gaps for tracked users
+      calculate_snapshot_gaps
 
       # Snapshot completeness (users with all 11 stats filled)
       @complete_snapshots = PersonalStatSnapshot
@@ -63,6 +64,49 @@ module Admin
         .count
         .sort_by { |date, _| date }
         .last(7)
+    end
+
+    private
+
+    def calculate_snapshot_gaps
+      tracked_user_ids = User.tracked_for_stats.pluck(:id)
+      return set_empty_gap_stats if tracked_user_ids.empty?
+
+      # Get all existing snapshot dates per user
+      existing_snapshots = PersonalStatSnapshot
+        .where(user_id: tracked_user_ids)
+        .pluck(:user_id, :date)
+        .group_by(&:first)
+        .transform_values { |pairs| pairs.map(&:last).to_set }
+
+      start_date = PersonalStatSnapshot::TRACKING_START_DATE
+      end_date = PersonalStatSnapshot.tracking_end_date
+      expected_dates = (start_date..end_date).to_a
+
+      users_with_gaps = 0
+      total_missing = 0
+      missing_by_date = Hash.new(0)
+
+      tracked_user_ids.each do |user_id|
+        user_snapshots = existing_snapshots[user_id] || Set.new
+        missing_dates = expected_dates - user_snapshots.to_a
+
+        if missing_dates.any?
+          users_with_gaps += 1
+          total_missing += missing_dates.size
+          missing_dates.each { |d| missing_by_date[d] += 1 }
+        end
+      end
+
+      @users_with_gaps = users_with_gaps
+      @total_missing_snapshot_days = total_missing
+      @missing_dates_summary = missing_by_date.sort_by { |date, _| date }.last(10).reverse
+    end
+
+    def set_empty_gap_stats
+      @users_with_gaps = 0
+      @total_missing_snapshot_days = 0
+      @missing_dates_summary = []
     end
   end
 end

@@ -3,6 +3,12 @@ class PersonalStatSnapshot < ApplicationRecord
 
   validates :date, presence: true, uniqueness: { scope: :user_id }
 
+  TRACKING_START_DATE = Date.new(2026, 1, 1).freeze
+
+  def self.tracking_end_date
+    Date.current.yesterday
+  end
+
   # Central definition of stats we track - maps API stat name to DB column
   # Split into batches of max 10 due to Torn API v2 limit
   TRACKED_STATS_BATCH_1 = {

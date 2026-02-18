@@ -29,7 +29,7 @@
               <a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a>
             </td>
             <td><%= user.level %></td>
-            <td data-subscription-days-target="expiresAt"><%= user.subscription_expires_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td data-subscription-days-target="expiresAt"><%= user.subscription_expires_at.strftime("%d-%m-%Y %H:%M") %></td>
             <td class="days-cell">
               <span data-subscription-days-target="display"><%= ((user.subscription_expires_at - Time.current) / 1.day).ceil %> days</span>
               <input type="number" 
@@ -78,7 +78,7 @@
             </td>
             <td><%= payment.xanax_amount %></td>
             <td><%= payment.weeks_granted %></td>
-            <td><%= payment.processed_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td><%= payment.processed_at.strftime("%d-%m-%Y %H:%M") %></td>
           </tr>
         <% end %>
       </tbody>
@@ -119,7 +119,7 @@
             <td>
               <a href="https://www.torn.com/profiles.php?XID=<%= grant.granted_by.torn_id %>" target="_blank" class="player-link"><%= grant.granted_by.name %></a>
             </td>
-            <td><%= grant.granted_at.strftime("%Y-%m-%d %H:%M") %></td>
+            <td><%= grant.granted_at.strftime("%d-%m-%Y %H:%M") %></td>
             <td><%= grant.users.count %></td>
           </tr>
         <% end %>

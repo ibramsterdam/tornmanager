@@ -20,7 +20,7 @@
       <div class="subscription-active">
         <div class="subscription-badge">✓ Active Subscriber</div>
         <div class="subscription-days"><%= @days_remaining %> days remaining</div>
-        <div class="subscription-expires">Expires: <%= Current.user.subscription_expires_at.strftime("%B %d, %Y") %></div>
+        <div class="subscription-expires">Expires: <%= Current.user.subscription_expires_at.strftime("%d %B %Y") %></div>
         
         <!-- Progress Bar -->
         <div class="progress-bar-container">
