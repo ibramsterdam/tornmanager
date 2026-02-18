@@ -1,39 +1,12 @@
-class FactionController < ApplicationController
+class Factions::TrainingController < ApplicationController
   include FactionHelper
+
+  before_action :set_faction
 
   SORTABLE_COLUMNS = %w[name xanax_daily energy_refills_daily nerve_refills_daily missions_daily crimes_daily activity_time_daily compliance_score].freeze
 
-  def index
-    # Allow admins to view any faction via faction_id parameter
-    if Current.user.admin?
-      if params[:faction_id].present?
-        @faction = Faction.find_by(id: params[:faction_id])
-        unless @faction
-          redirect_to admin_dashboard_path, alert: "Faction not found."
-          return
-        end
-      else
-        # Admin with no faction_id - pick first tracked faction
-        @faction = Faction.where(track_stats: true).order(:name).first
-        unless @faction
-          redirect_to admin_dashboard_path, alert: "No factions with tracking enabled."
-          return
-        end
-      end
-    else
-      # Regular users view their own faction
-      unless Current.user.faction
-        @no_faction = true
-        return
-      end
-      @faction = Current.user.faction
-    end
-
-    # Check if faction has tracking enabled
-    unless @faction.track_stats
-      @tracking_disabled = true
-      return
-    end
+  def show
+    return if @tracking_disabled
 
     # Use tracking constants for date bounds
     @earliest_date = PersonalStatSnapshot.tracking_start_date
@@ -47,15 +20,11 @@ class FactionController < ApplicationController
     @total_days_tracked = (@end_date - @start_date).to_i + 1
 
     # Build member stats rows
-    # Convert date range to timestamp range for querying
-    start_timestamp = @start_date.beginning_of_day.to_i
-    end_timestamp = @end_date.end_of_day.to_i
-
     @member_rows = @faction.users.active.includes(:personal_stat_snapshots).filter_map do |user|
       # Get all snapshots in date range
       all_snapshots = user.personal_stat_snapshots
-                           .where(timestamp: start_timestamp..end_timestamp)
-                           .order(:timestamp)
+                           .where(date: @start_date..@end_date)
+                           .order(:date)
 
       # Helper to calculate stat for a specific field
       calculate_stat = lambda do |field|
@@ -65,9 +34,13 @@ class FactionController < ApplicationController
         first = snapshots.first
         last = snapshots.last
         gained = (last[field] || 0) - (first[field] || 0)
-        daily = @total_days_tracked > 0 ? (gained.to_f / @total_days_tracked).round(2) : 0.0
 
-        { gained: gained, daily: daily, days: @total_days_tracked }
+        # Calculate actual days between first and last snapshot for this stat
+        actual_days = (last.date - first.date).to_i + 1
+
+        daily = actual_days > 0 ? (gained.to_f / actual_days).round(2) : 0.0
+
+        { gained: gained, daily: daily, days: actual_days }
       end
 
       # Calculate each stat independently
@@ -80,6 +53,12 @@ class FactionController < ApplicationController
 
       # Skip if no valid stats for any critical field
       next if xanax_stats[:days].zero? && energy_stats[:days].zero? && nerve_stats[:days].zero?
+
+      # Calculate overall days tracked for this user (max across all stats)
+      days_tracked = [
+        xanax_stats[:days], energy_stats[:days], nerve_stats[:days],
+        missions_stats[:days], crimes_stats[:days], activity_stats[:days]
+      ].max
 
       xanax_daily = xanax_stats[:daily]
       energy_refills_daily = energy_stats[:daily]
@@ -122,7 +101,9 @@ class FactionController < ApplicationController
         crimes_daily: crimes_daily,
 
         activity_time_gained: activity_stats[:gained],
-        activity_time_daily: activity_time_daily
+        activity_time_daily: activity_time_daily,
+
+        days_tracked: days_tracked
       }
     end
 
@@ -141,12 +122,26 @@ class FactionController < ApplicationController
 
   def member
     # Placeholder for Phase 3 - individual member detail page
-    redirect_to faction_index_path, alert: "Member detail page coming soon!"
+    redirect_to faction_training_path(@faction), alert: "Member detail page coming soon!"
   end
 
   helper_method :sort_link
 
   private
+
+  def set_faction
+    @faction = Faction.find_by!(torn_id: params[:faction_torn_id])
+
+    # Authorization: users can only view their own faction, admins can view any
+    unless Current.user.admin? || Current.user.faction == @faction
+      redirect_to root_path, alert: "You don't have access to this faction."
+      return
+    end
+
+    unless @faction.track_stats
+      @tracking_disabled = true
+    end
+  end
 
   def sort_link(column, label)
     direction = (@sort_column == column && @sort_direction == "asc") ? "desc" : "asc"

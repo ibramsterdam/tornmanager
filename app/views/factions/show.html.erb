@@ -1,0 +1,43 @@
+<% if @tracking_disabled %>
+  <div class="centered-content">
+    <div class="info-card">
+      <h2>Stats Tracking Disabled</h2>
+      <p>This faction (<strong><%= @faction.name %></strong>) does not have stats tracking enabled.</p>
+      <p>Contact an administrator to enable stats tracking for your faction.</p>
+    </div>
+  </div>
+<% else %>
+  <div class="page-header">
+    <h1><%= @faction.name %></h1>
+    <p class="page-subtitle">Faction management and analytics</p>
+  </div>
+
+  <div class="admin-cards">
+    <%= link_to faction_training_path(@faction), class: "admin-card" do %>
+      <div class="admin-card-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <h2>Training Compliance</h2>
+      <p>Track member xanax, energy refills, nerve refills, and daily activity compliance.</p>
+    <% end %>
+
+    <div class="admin-card admin-card-disabled">
+      <span class="coming-soon-badge">Coming Soon</span>
+      <div class="admin-card-icon">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+          <path d="M2 17l10 5 10-5"></path>
+          <path d="M2 12l10 5 10-5"></path>
+        </svg>
+      </div>
+      <h2>Ranked Wars</h2>
+      <p>View war history, track member performance, and monitor ongoing wars.</p>
+    </div>
+  </div>
+<% end %>

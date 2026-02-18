@@ -1,0 +1,68 @@
+<div class="table-container">
+  <div class="table-info">
+    <span class="info-label">War History</span>
+    <span class="muted" style="margin-left: var(--space-2);">Syncing...</span>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>Opponent</th>
+        <th>Score</th>
+        <th>Duration</th>
+        <th>Attacks</th>
+        <th>Avg Respect</th>
+        <th>Rank</th>
+        <th>Rewards</th>
+        <th>Date</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% 5.times do %>
+        <tr class="skeleton-row">
+          <td><div class="skeleton skeleton-badge"></div></td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 120px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 60px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 70px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td><div class="skeleton skeleton-text" style="width: 80px;"></div></td>
+          <td>
+            <div class="skeleton-cell-inline">
+              <div class="skeleton skeleton-text" style="width: 25px;"></div>
+              <div class="skeleton skeleton-text" style="width: 25px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell-inline">
+              <div class="skeleton skeleton-text" style="width: 35px;"></div>
+              <div class="skeleton skeleton-text" style="width: 35px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell-inline">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            </div>
+          </td>
+          <td><div class="skeleton skeleton-text" style="width: 100px;"></div></td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 80px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td><div class="skeleton skeleton-text" style="width: 16px; height: 16px;"></div></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

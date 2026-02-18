@@ -1,6 +1,7 @@
 class Faction < ApplicationRecord
   has_many :users, dependent: :nullify
   has_many :faction_subscription_grants, dependent: :nullify
+  has_many :ranked_wars, dependent: :destroy
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
@@ -10,10 +11,16 @@ class Faction < ApplicationRecord
 
   scope :tracked, -> { where(track_stats: true) }
 
+  # Use torn_id in URLs instead of database id
+  def to_param
+    torn_id.to_s
+  end
+
   def member_count
     users.count
   end
 
+  # Backfill status
   def backfill_in_progress?
     backfill_ends_at.present? && backfill_ends_at > Time.current
   end

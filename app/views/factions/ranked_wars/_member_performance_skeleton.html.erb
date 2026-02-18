@@ -1,0 +1,37 @@
+<div class="table-container">
+  <div class="table-info">
+    <span class="info-label">Member Performance (All Wars)</span>
+    <span class="muted" style="margin-left: var(--space-2);">Syncing...</span>
+  </div>
+
+  <div class="table-scroll-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Member</th>
+          <th>Wars Participated</th>
+          <th>Total Attacks</th>
+          <th>Avg Attacks</th>
+          <th>Total Score</th>
+          <th>Avg Score</th>
+          <th>Avg Respect/Hit</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% 8.times do |i| %>
+          <tr class="skeleton-row">
+            <td><div class="skeleton skeleton-text" style="width: 20px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 100px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 30px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 50px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 40px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 60px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 40px;"></div></td>
+            <td><div class="skeleton skeleton-text" style="width: 45px;"></div></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

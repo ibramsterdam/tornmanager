@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_19_100001) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_19_100004) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -75,6 +75,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_19_100001) do
     t.integer "user_id", null: false
     t.index ["user_id", "date"], name: "index_personal_stat_snapshots_on_user_id_and_date", unique: true
     t.index ["user_id"], name: "index_personal_stat_snapshots_on_user_id"
+  end
+
+  create_table "ranked_wars", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "ended_at"
+    t.integer "faction_id", null: false
+    t.boolean "forfeit", default: false, null: false
+    t.integer "opponent_faction_id", null: false
+    t.string "opponent_faction_name", null: false
+    t.integer "our_attacks", default: 0, null: false
+    t.json "our_members", default: []
+    t.json "our_rewards", default: {}
+    t.integer "our_score", default: 0, null: false
+    t.integer "points_gained", default: 0, null: false
+    t.string "rank_after"
+    t.string "rank_before"
+    t.integer "respect_gained", default: 0, null: false
+    t.datetime "started_at", null: false
+    t.integer "target_score", null: false
+    t.integer "their_attacks", default: 0, null: false
+    t.json "their_members", default: []
+    t.json "their_rewards", default: {}
+    t.integer "their_score", default: 0, null: false
+    t.integer "torn_war_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "winner_faction_id"
+    t.index ["faction_id", "started_at"], name: "index_ranked_wars_on_faction_id_and_started_at"
+    t.index ["faction_id"], name: "index_ranked_wars_on_faction_id"
+    t.index ["torn_war_id"], name: "index_ranked_wars_on_torn_war_id", unique: true
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -160,6 +189,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_19_100001) do
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
+  add_foreign_key "ranked_wars", "factions"
   add_foreign_key "sessions", "users"
   add_foreign_key "subscription_grants", "faction_subscription_grants"
   add_foreign_key "subscription_grants", "users"
