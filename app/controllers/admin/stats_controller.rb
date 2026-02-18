@@ -43,7 +43,7 @@ module Admin
       @complete_snapshots = PersonalStatSnapshot
         .where.not(
           drugs_xanax: nil,
-          drugs_cannabis: nil,
+          items_used_energy_drinks: nil,
           other_refills_energy: nil,
           other_refills_nerve: nil,
           items_used_boosters: nil,
