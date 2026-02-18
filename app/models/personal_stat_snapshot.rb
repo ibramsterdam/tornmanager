@@ -13,7 +13,7 @@ class PersonalStatSnapshot < ApplicationRecord
   # Split into batches of max 10 due to Torn API v2 limit
   TRACKED_STATS_BATCH_1 = {
     "xantaken" => :drugs_xanax,
-    "cantaken" => :drugs_cannabis,
+    "energydrinkused" => :items_used_energy_drinks,
     "refills" => :other_refills_energy,
     "nerverefills" => :other_refills_nerve,
     "boostersused" => :items_used_boosters,
