@@ -84,7 +84,7 @@
             <%= form.date_field :start_date, 
                 value: params[:start_date] || @start_date,
                 min: @earliest_date,
-                max: Date.today,
+                max: PersonalStatSnapshot.tracking_end_date,
                 class: "date-input-inline" %>
             
             <span class="date-separator">→</span>
@@ -92,7 +92,7 @@
             <%= form.date_field :end_date, 
                 value: params[:end_date] || @end_date,
                 min: @earliest_date,
-                max: Date.today,
+                max: PersonalStatSnapshot.tracking_end_date,
                 class: "date-input-inline" %>
           </div>
           
