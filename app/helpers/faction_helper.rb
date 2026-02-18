@@ -63,4 +63,17 @@ module FactionHelper
   def row_compliance_class(level)
     "row-#{level}"
   end
+
+  # Generate clipboard text for member stats
+  def member_stats_clipboard_text(row, days, faction)
+    lines = []
+    lines << "Over the past #{days} days you have:"
+    lines << "- Used #{number_with_delimiter(row[:xanax_gained])} xanax (#{row[:xanax_daily]}/day, target: #{faction.xanax_target}/day)"
+    lines << "- Used #{number_with_delimiter(row[:energy_refills_gained])} energy refills (#{row[:energy_refills_daily]}/day, target: #{faction.energy_refill_target}/day)"
+    lines << "- Used #{number_with_delimiter(row[:nerve_refills_gained])} nerve refills (#{row[:nerve_refills_daily]}/day, target: #{faction.nerve_refill_target}/day)"
+    lines << "- Completed #{number_with_delimiter(row[:missions_gained])} contracts (#{row[:missions_daily]}/day)"
+    lines << "- Committed #{number_with_delimiter(row[:crimes_gained])} crimes (#{row[:crimes_daily]}/day)"
+    lines << "- Been active for #{number_with_delimiter(row[:activity_time_daily])} min/day"
+    lines.join("\n")
+  end
 end

@@ -259,3 +259,38 @@ tr.row-danger:hover {
   opacity: 0.4;
   filter: blur(1px);
 }
+
+/* Copy Stats Button */
+.copy-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.copy-stats-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-md);
+  color: var(--gray-500);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.copy-stats-button:hover {
+  background: var(--gray-800);
+  border-color: var(--gray-600);
+  color: var(--gray-300);
+}
+
+.copy-stats-button:active {
+  transform: scale(0.95);
+}
+
+.copy-stats-button svg {
+  flex-shrink: 0;
+}
