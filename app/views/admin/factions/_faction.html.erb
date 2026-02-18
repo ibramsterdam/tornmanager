@@ -66,12 +66,12 @@
       <%= form_with url: backfill_stats_admin_faction_path(faction), method: :post, data: { turbo: false } do |f| %>
         <div style="margin-bottom:24px;">
           <label for="start_date_<%= faction.id %>" style="display:block; margin-bottom:8px; color:#e5e5e5; font-weight:600; font-size:0.875rem;">Start Date</label>
-          <%= f.date_field :start_date, id: "start_date_#{faction.id}", value: "2026-01-01", min: "2026-01-01", max: Date.yesterday.to_s, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
+          <%= f.date_field :start_date, id: "start_date_#{faction.id}", value: PersonalStatSnapshot.tracking_start_date, min: PersonalStatSnapshot.tracking_start_date, max: PersonalStatSnapshot.tracking_end_date, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
         </div>
         
         <div style="margin-bottom:24px;">
           <label for="end_date_<%= faction.id %>" style="display:block; margin-bottom:8px; color:#e5e5e5; font-weight:600; font-size:0.875rem;">End Date</label>
-          <%= f.date_field :end_date, id: "end_date_#{faction.id}", value: Date.yesterday.to_s, min: "2026-01-01", max: Date.yesterday.to_s, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
+          <%= f.date_field :end_date, id: "end_date_#{faction.id}", value: PersonalStatSnapshot.tracking_end_date, min: PersonalStatSnapshot.tracking_start_date, max: PersonalStatSnapshot.tracking_end_date, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
         </div>
         
         <div style="background:#0a2540; border:1px solid #1e40af; padding:16px; border-radius:8px; margin-bottom:24px;">
@@ -96,12 +96,12 @@
         <%= form_with url: backfill_user_stats_admin_faction_path(faction, user_id: user.id), method: :post, data: { turbo: false } do |f| %>
           <div style="margin-bottom:24px;">
             <label for="user_start_date_<%= user.id %>" style="display:block; margin-bottom:8px; color:#e5e5e5; font-weight:600; font-size:0.875rem;">Start Date</label>
-            <%= f.date_field :start_date, id: "user_start_date_#{user.id}", value: "2026-01-01", min: "2026-01-01", max: Date.yesterday.to_s, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
+            <%= f.date_field :start_date, id: "user_start_date_#{user.id}", value: PersonalStatSnapshot.tracking_start_date, min: PersonalStatSnapshot.tracking_start_date, max: PersonalStatSnapshot.tracking_end_date, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
           </div>
           
           <div style="margin-bottom:24px;">
             <label for="user_end_date_<%= user.id %>" style="display:block; margin-bottom:8px; color:#e5e5e5; font-weight:600; font-size:0.875rem;">End Date</label>
-            <%= f.date_field :end_date, id: "user_end_date_#{user.id}", value: Date.yesterday.to_s, min: "2026-01-01", max: Date.yesterday.to_s, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
+            <%= f.date_field :end_date, id: "user_end_date_#{user.id}", value: PersonalStatSnapshot.tracking_end_date, min: PersonalStatSnapshot.tracking_start_date, max: PersonalStatSnapshot.tracking_end_date, style: "width:100%; padding:12px 16px; background:#0a0a0a; border:1px solid #262626; border-radius:8px; color:#e5e5e5; font-family:'Geist Mono',monospace; font-size:0.875rem; color-scheme:dark;" %>
           </div>
           
           <div style="background:#0a2540; border:1px solid #1e40af; padding:16px; border-radius:8px; margin-bottom:24px;">

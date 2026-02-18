@@ -3,7 +3,7 @@ class HallOfFamersController < ApplicationController
 
   def index
     # Use tracking constants for date range
-    @earliest_date = PersonalStatSnapshot::TRACKING_START_DATE
+    @earliest_date = PersonalStatSnapshot.tracking_start_date
     @latest_date = PersonalStatSnapshot.tracking_end_date
 
     # Parse date parameters

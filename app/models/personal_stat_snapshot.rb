@@ -3,7 +3,9 @@ class PersonalStatSnapshot < ApplicationRecord
 
   validates :date, presence: true, uniqueness: { scope: :user_id }
 
-  TRACKING_START_DATE = Date.new(2026, 1, 1).freeze
+  def self.tracking_start_date
+    Date.new(2026, 1, 1)
+  end
 
   def self.tracking_end_date
     Date.current.yesterday
