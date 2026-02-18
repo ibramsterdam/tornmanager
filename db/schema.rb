@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_18_085746) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_18_094005) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -61,9 +61,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_18_085746) do
     t.datetime "created_at", null: false
     t.integer "crimes_offenses_total"
     t.date "date", null: false
-    t.integer "drugs_cannabis"
     t.integer "drugs_xanax"
     t.integer "items_used_boosters"
+    t.integer "items_used_energy_drinks"
     t.integer "items_used_stat_enhancers"
     t.integer "missions_contracts_total"
     t.bigint "networth_total"

@@ -44,6 +44,11 @@ Rails.application.routes.draw do
       end
     end
     resources :api_logs, only: [ :index ]
+    resources :snapshot_management, only: [ :index ] do
+      member do
+        post :backfill_user
+      end
+    end
   end
 
   get "privacy-policy", to: "pages#privacy_policy", as: :privacy_policy

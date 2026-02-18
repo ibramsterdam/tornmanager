@@ -41,18 +41,18 @@ class HallOfFamersController < ApplicationController
       if latest && first && snapshots.size > 1
         # Calculate gains
         xanax_gained = (latest.drugs_xanax || 0) - (first.drugs_xanax || 0)
-        se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
         energy_drinks_gained = (latest.items_used_energy_drinks || 0) - (first.items_used_energy_drinks || 0)
+        se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
         networth_gained = (latest.networth_total || 0) - (first.networth_total || 0)
 
         # Calculate daily averages using the overall tracking period
         xanax_daily = @total_days_tracked > 0 ? (xanax_gained.to_f / @total_days_tracked).round(2) : 0
-        se_daily = @total_days_tracked > 0 ? (se_gained.to_f / @total_days_tracked).round(2) : 0
         energy_drinks_daily = @total_days_tracked > 0 ? (energy_drinks_gained.to_f / @total_days_tracked).round(2) : 0
+        se_daily = @total_days_tracked > 0 ? (se_gained.to_f / @total_days_tracked).round(2) : 0
         networth_daily = @total_days_tracked > 0 ? (networth_gained.to_f / @total_days_tracked).round(0) : 0
       else
         xanax_gained = energy_drinks_gained = se_gained = networth_gained = 0
-        xanax_daily = se_daily = energy_drinks_daily = networth_daily = 0
+        xanax_daily = energy_drinks_daily = se_daily = networth_daily = 0
       end
 
       {
