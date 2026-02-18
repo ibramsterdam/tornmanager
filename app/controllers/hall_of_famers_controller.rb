@@ -2,22 +2,9 @@ class HallOfFamersController < ApplicationController
   SORTABLE_COLUMNS = %w[name xanax_gained energy_drinks_gained networth_gained total_se se_gained].freeze
 
   def index
-    # Determine date range for filtering
-    all_snapshots = PersonalStatSnapshot.joins(:user)
-                                       .where(users: { hof_stats_user: true })
-                                       .order(:created_at)
-
-    @earliest_date = all_snapshots.first&.created_at&.to_date
-    @latest_date = all_snapshots.last&.created_at&.to_date
-
-    # If no snapshots exist, set defaults
-    if @earliest_date.nil? || @latest_date.nil?
-      @start_date = Date.today
-      @end_date = Date.today
-      @total_days_tracked = 0
-      @table_rows = []
-      return
-    end
+    # Use tracking constants for date range
+    @earliest_date = PersonalStatSnapshot::TRACKING_START_DATE
+    @latest_date = PersonalStatSnapshot.tracking_end_date
 
     # Parse date parameters
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
@@ -29,8 +16,8 @@ class HallOfFamersController < ApplicationController
     @table_rows = User.hof_stats_users.includes(:personal_stat_snapshots).filter_map do |user|
       # Filter snapshots by date range
       snapshots = user.personal_stat_snapshots
-                           .where("DATE(created_at) >= ? AND DATE(created_at) <= ?", @start_date, @end_date)
-                           .order(:created_at)
+                      .where(date: @start_date..@end_date)
+                      .order(:date)
 
       # Skip users with no snapshots
       next if snapshots.empty?
