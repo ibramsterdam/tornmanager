@@ -57,7 +57,7 @@ module Admin
     end
 
     def expected_date_range
-      PersonalStatSnapshot::TRACKING_START_DATE..PersonalStatSnapshot.tracking_end_date
+      PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date
     end
 
     def calculate_summary

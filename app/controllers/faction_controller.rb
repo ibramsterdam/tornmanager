@@ -35,31 +35,13 @@ class FactionController < ApplicationController
       return
     end
 
-    # Determine date range for filtering
-    all_snapshots = PersonalStatSnapshot.joins(:user)
-                                       .where(users: { faction_id: @faction.id })
-                                       .order(:timestamp)
+    # Use tracking constants for date bounds
+    @earliest_date = PersonalStatSnapshot.tracking_start_date
+    @latest_date = PersonalStatSnapshot.tracking_end_date
 
-    @earliest_date = all_snapshots.first&.date
-    @latest_date = all_snapshots.last&.date
-
-    # If no snapshots exist, set defaults
-    if @earliest_date.nil? || @latest_date.nil?
-      @start_date = Date.today
-      @end_date = Date.today
-      @total_days_tracked = 0
-      @member_rows = []
-      @compliant_members_count = 0
-      @warning_members_count = 0
-      @non_compliant_members_count = 0
-      return
-    end
-
-    # Parse date parameters (default to Jan 1, 2026 through yesterday)
-    default_start = [ @earliest_date, Date.new(2026, 1, 1) ].max
-    default_end = [ @latest_date, Date.yesterday ].min
-    @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : default_start
-    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : default_end
+    # Parse date parameters
+    @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
+    @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
 
     # Calculate total days for the selected range
     @total_days_tracked = (@end_date - @start_date).to_i + 1

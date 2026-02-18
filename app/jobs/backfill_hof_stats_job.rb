@@ -4,7 +4,7 @@ class BackfillHofStatsJob < ApplicationJob
   SECONDS_PER_API_CALL = 1.1
 
   def perform(start_date = nil, end_date = nil)
-    start_date = (start_date || PersonalStatSnapshot::TRACKING_START_DATE).to_date
+    start_date = (start_date || PersonalStatSnapshot.tracking_start_date).to_date
     end_date = (end_date || PersonalStatSnapshot.tracking_end_date).to_date
 
     users = User.hof_stats_users.to_a

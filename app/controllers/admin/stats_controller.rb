@@ -79,7 +79,7 @@ module Admin
         .group_by(&:first)
         .transform_values { |pairs| pairs.map(&:last).to_set }
 
-      start_date = PersonalStatSnapshot::TRACKING_START_DATE
+      start_date = PersonalStatSnapshot.tracking_start_date
       end_date = PersonalStatSnapshot.tracking_end_date
       expected_dates = (start_date..end_date).to_a
 
