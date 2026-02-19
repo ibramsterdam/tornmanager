@@ -3,6 +3,7 @@
     <div class="navbar-left">
       <%= link_to "TornManager", progress_index_path, class: "navbar-link navbar-title" %>
     </div>
+    
     <div class="navbar-center">
       <%= link_to "My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
       <% if Current.user&.faction&.track_stats %>
@@ -15,6 +16,7 @@
         <%= link_to "Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
       <% end %>
     </div>
+    
     <div class="navbar-right">
       <div class="navbar-user" data-controller="dropdown">
         <% if Current.user.profile_image.present? %>
@@ -33,6 +35,41 @@
         </div>
       </div>
     </div>
+    
+    <!-- Mobile menu -->
+    <div class="navbar-mobile" data-controller="dropdown">
+      <% if Current.user.profile_image.present? %>
+        <img src="<%= Current.user.profile_image %>" alt="<%= Current.user.name %>" class="navbar-user-avatar" />
+      <% end %>
+      <button class="navbar-mobile-toggle" data-action="click->dropdown#toggle" aria-label="Toggle menu">
+        <svg class="navbar-hamburger-icon" data-dropdown-target="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="navbar-mobile-menu" data-dropdown-target="menu">
+        <div class="navbar-mobile-menu-section">
+          <%= link_to "My Progress", progress_index_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/progress')}" %>
+          <% if Current.user&.faction&.track_stats %>
+            <%= link_to "My Faction", faction_path(Current.user.faction), class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/factions')}" %>
+          <% else %>
+            <span class="navbar-mobile-menu-item disabled">My Faction</span>
+          <% end %>
+          <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/hall-of-famers')}" %>
+          <% if Current.user&.admin? %>
+            <%= link_to "Admin", admin_dashboard_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/admin')}" %>
+          <% end %>
+        </div>
+        <div class="navbar-mobile-menu-divider"></div>
+        <div class="navbar-mobile-menu-section">
+          <%= link_to "API Calls", user_api_calls_path, class: "navbar-mobile-menu-item" %>
+          <%= link_to "Settings", settings_path, class: "navbar-mobile-menu-item" %>
+          <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-mobile-menu-item signout" %>
+        </div>
+      </div>
+    </div>
+    
     <div class="live-api-feed" id="live-api-feed" data-turbo-permanent data-controller="api-live-feed">
       <div class="live-api-feed-list" data-api-live-feed-target="list"></div>
     </div>
@@ -45,6 +82,23 @@
     </div>
     <div class="navbar-right">
       <%= link_to "Sign In", new_session_path, class: "navbar-signin" %>
+    </div>
+    
+    <!-- Mobile menu (unauthenticated) -->
+    <div class="navbar-mobile" data-controller="dropdown">
+      <button class="navbar-mobile-toggle" data-action="click->dropdown#toggle" aria-label="Toggle menu">
+        <svg class="navbar-hamburger-icon" data-dropdown-target="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="navbar-mobile-menu" data-dropdown-target="menu">
+        <div class="navbar-mobile-menu-section">
+          <%= link_to "Key Activity Log", key_log_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/key-log')}" %>
+          <%= link_to "Sign In", new_session_path, class: "navbar-mobile-menu-item" %>
+        </div>
+      </div>
     </div>
   <% end %>
 </nav>

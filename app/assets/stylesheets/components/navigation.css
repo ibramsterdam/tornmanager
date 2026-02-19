@@ -260,3 +260,131 @@ nav {
   color: #ffffff;
   border-color: var(--gray-700);
 }
+
+/* Mobile Navigation */
+.navbar-mobile {
+  display: none;
+  align-items: center;
+  gap: var(--space-3);
+  position: relative;
+}
+
+.navbar-mobile-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--gray-800);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-md);
+  padding: var(--space-2);
+  cursor: pointer;
+  color: var(--gray-300);
+  transition: all 0.15s ease;
+}
+
+.navbar-mobile-toggle:hover {
+  background: var(--gray-700);
+  color: #ffffff;
+  border-color: var(--gray-600);
+}
+
+.navbar-mobile-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  min-width: 200px;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-8px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+.navbar-mobile-menu.navbar-dropdown-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.navbar-mobile-menu-section {
+  padding: var(--space-2) 0;
+}
+
+.navbar-mobile-menu-divider {
+  height: 1px;
+  background: var(--gray-800);
+  margin: 0;
+}
+
+.navbar-mobile-menu-item {
+  display: block;
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  color: var(--gray-200);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: "Geist Mono", monospace;
+  transition: background-color 0.15s ease, color 0.15s ease;
+  border: none;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.navbar-mobile-menu-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.navbar-mobile-menu-item.active {
+  color: var(--primary-400);
+}
+
+.navbar-mobile-menu-item.disabled {
+  color: var(--gray-600);
+  cursor: not-allowed;
+}
+
+.navbar-mobile-menu-item.disabled:hover {
+  background: transparent;
+  color: var(--gray-600);
+}
+
+.navbar-mobile-menu-item.signout:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+}
+
+/* Mobile breakpoint */
+@media (max-width: 768px) {
+  nav {
+    flex-wrap: wrap;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .navbar-mobile {
+    display: flex;
+  }
+
+  .navbar-center,
+  .navbar-right {
+    display: none;
+  }
+
+  .navbar-left {
+    flex: 1;
+  }
+
+  /* Live feed below navbar on mobile */
+  .live-api-feed {
+    width: 100%;
+    order: 3;
+    margin-top: var(--space-3);
+  }
+}
