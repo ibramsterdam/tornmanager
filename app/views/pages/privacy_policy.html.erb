@@ -34,6 +34,8 @@
           <li>Daily snapshots for historical tracking</li>
           <li>Xanax payments sent</li>
           <li>Faction grants received</li>
+          <li>Faction member statistics (for tracked factions)</li>
+          <li>Faction ranked war history and member performance</li>
           <li>Subscription expiration dates</li>
           <li>IP address</li>
           <li>Browser type and version</li>
@@ -132,6 +134,16 @@
             <td>Profile data (name, level, etc.)</td>
             <td>Until account deletion</td>
             <td>Account identification and display</td>
+          </tr>
+          <tr>
+            <td>Faction member statistics</td>
+            <td>Until faction is removed from tracking</td>
+            <td>Training compliance monitoring</td>
+          </tr>
+          <tr>
+            <td>Faction ranked war data</td>
+            <td>Indefinitely</td>
+            <td>Historical war performance tracking</td>
           </tr>
         </tbody>
       </table>
@@ -270,7 +282,15 @@
           </tr>
           <tr>
             <td><code>v2/faction/{id}/members</code></td>
-            <td>Verify faction membership for grants</td>
+            <td>Verify faction membership for grants; fetch member lists for training compliance</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}/rankedwars</code></td>
+            <td>Fetch ranked war history for tracked factions</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{war_id}/rankedwarreport</code></td>
+            <td>Fetch detailed war reports with member performance data</td>
           </tr>
           <tr>
             <td><code>v2/torn/stocks</code></td>
