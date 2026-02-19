@@ -75,7 +75,8 @@ module Admin
       end
 
       render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.active.count }
-    rescue => e
+    rescue StandardError => e
+      Rails.logger.error("Toggle tracking failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
 
@@ -174,7 +175,7 @@ module Admin
     private
 
     def set_faction
-      @faction = Faction.find(params[:id])
+      @faction = Faction.find_by!(torn_id: params[:id])
     end
 
     def faction_params
