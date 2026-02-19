@@ -1,0 +1,94 @@
+<!-- Compliance Summary Skeleton -->
+<div class="compliance-summary">
+  <div class="target-info">
+    <h3>Daily Targets</h3>
+    <ul>
+      <li><strong>Xanax:</strong> <%= @faction.xanax_target %>/day</li>
+      <li><strong>Energy Refills:</strong> <%= @faction.energy_refill_target %>/day</li>
+      <li><strong>Nerve Refills:</strong> <%= @faction.nerve_refill_target %>/day</li>
+    </ul>
+  </div>
+  
+  <div class="compliance-stats">
+    <div class="stat-box compliant">
+      <span class="count"><div class="skeleton skeleton-text" style="width: 30px; height: 1.5rem; margin: 0 auto;"></div></span>
+      <span class="label">Compliant</span>
+    </div>
+    <div class="stat-box warning">
+      <span class="count"><div class="skeleton skeleton-text" style="width: 30px; height: 1.5rem; margin: 0 auto;"></div></span>
+      <span class="label">Needs Attention</span>
+    </div>
+    <div class="stat-box danger">
+      <span class="count"><div class="skeleton skeleton-text" style="width: 30px; height: 1.5rem; margin: 0 auto;"></div></span>
+      <span class="label">Below Target</span>
+    </div>
+  </div>
+</div>
+
+<!-- Table Skeleton -->
+<table>
+  <thead>
+    <tr>
+      <th>Status</th>
+      <th>MEMBER</th>
+      <th>XANAX<br><small>Target: <%= @faction.xanax_target %>/day</small></th>
+      <th>ENERGY REFILLS<br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
+      <th>NERVE REFILLS<br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
+      <th>CONTRACTS</th>
+      <th>CRIMES</th>
+      <th>ACTIVITY<br><small>min/day</small></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <% 10.times do %>
+      <tr class="skeleton-row">
+        <td class="compliance-badge-cell">
+          <div class="skeleton skeleton-badge" style="width: 28px; height: 28px; border-radius: 50%;"></div>
+        </td>
+        <td>
+          <div class="skeleton skeleton-text" style="width: 100px;"></div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+          </div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+          </div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+          </div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+          </div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 50px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+          </div>
+        </td>
+        <td>
+          <div class="skeleton-cell">
+            <div class="skeleton skeleton-text" style="width: 60px;"></div>
+            <div class="skeleton skeleton-text-sm" style="width: 50px;"></div>
+          </div>
+        </td>
+        <td class="copy-cell">
+          <div class="skeleton skeleton-badge" style="width: 32px; height: 32px;"></div>
+        </td>
+      </tr>
+    <% end %>
+  </tbody>
+</table>
