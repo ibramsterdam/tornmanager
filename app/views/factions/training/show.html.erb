@@ -195,7 +195,7 @@
                   <button type="button" 
                           class="copy-stats-button" 
                           data-controller="clipboard" 
-                          data-clipboard-text-value="<%= member_stats_clipboard_text(row, row[:days_tracked], @faction) %>"
+                          data-clipboard-text-value="<%= member_stats_clipboard_text(row, row[:days_tracked], @faction, start_date: @start_date, end_date: @end_date) %>"
                           data-action="click->clipboard#copy"
                           title="Copy stats to clipboard">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
