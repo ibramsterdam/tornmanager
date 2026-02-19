@@ -65,9 +65,17 @@ module FactionHelper
   end
 
   # Generate clipboard text for member stats
-  def member_stats_clipboard_text(row, days, faction)
+  def member_stats_clipboard_text(row, days, faction, start_date: nil, end_date: nil)
     lines = []
-    lines << "Over the past #{days} days #{row[:name]} has:"
+
+    if start_date.present? && end_date.present?
+      formatted_start = start_date.is_a?(String) ? Date.parse(start_date).strftime("%d %b %Y") : start_date.strftime("%d %b %Y")
+      formatted_end = end_date.is_a?(String) ? Date.parse(end_date).strftime("%d %b %Y") : end_date.strftime("%d %b %Y")
+      lines << "From #{formatted_start} to #{formatted_end} (#{days} days) #{row[:name]} has:"
+    else
+      lines << "Over the past #{days} days #{row[:name]} has:"
+    end
+
     lines << "- Used #{number_with_delimiter(row[:xanax_gained])} xanax (#{row[:xanax_daily]}/day, target: #{faction.xanax_target}/day)"
     lines << "- Used #{number_with_delimiter(row[:energy_refills_gained])} energy refills (#{row[:energy_refills_daily]}/day, target: #{faction.energy_refill_target}/day)"
     lines << "- Used #{number_with_delimiter(row[:nerve_refills_gained])} nerve refills (#{row[:nerve_refills_daily]}/day, target: #{faction.nerve_refill_target}/day)"
