@@ -13,38 +13,25 @@ class ApiCall < ApplicationRecord
   after_create :broadcast_api_call
 
   def self.peak_rate_for(user, scope: :all)
-    calls = case scope
+    base = case scope
     when :today
-              user.api_calls.today.order(:created_at)
+              user.api_calls.today
     else
-              user.api_calls.order(:created_at)
+              user.api_calls
     end
 
-    return { rate: 0, minute_start: nil } if calls.empty?
+    result = base
+      .group(Arel.sql("strftime('%Y-%m-%d %H:%M', created_at)"))
+      .order(Arel.sql("COUNT(*) DESC"))
+      .limit(1)
+      .pluck(Arel.sql("strftime('%Y-%m-%d %H:%M', created_at), COUNT(*)"))
+      .first
 
-    max_rate = 0
-    max_minute = nil
-
-    calls.each do |call|
-      minute_start = call.created_at.beginning_of_minute
-      minute_end = minute_start + 1.minute
-
-      scope_calls = case scope
-      when :today
-                      user.api_calls.today
-      else
-                      user.api_calls
-      end
-
-      rate = scope_calls.where(created_at: minute_start..minute_end).count
-
-      if rate > max_rate
-        max_rate = rate
-        max_minute = minute_start
-      end
+    if result
+      { rate: result[1], minute_start: Time.zone.parse(result[0]) }
+    else
+      { rate: 0, minute_start: nil }
     end
-
-    { rate: max_rate, minute_start: max_minute }
   end
 
   private
