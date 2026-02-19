@@ -4,6 +4,7 @@ Rails.application.routes.draw do
 
   namespace :api do
     resource :session, only: [ :create ]
+    post :subscription, to: "subscriptions#show"
   end
 
   resource :session
