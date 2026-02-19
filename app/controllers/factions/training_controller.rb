@@ -16,14 +16,20 @@ class Factions::TrainingController < ApplicationController
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
     @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
 
-    # Calculate total days for the selected range
+    # Calculate total days for the selected range (inclusive)
     @total_days_tracked = (@end_date - @start_date).to_i + 1
+
+    # To calculate stats for days X to Y, we need:
+    # - Snapshot from day BEFORE start (X-1) as baseline
+    # - Snapshot from end day (Y) as final value
+    # The difference gives us what was consumed ON days X through Y
+    query_start_date = @start_date - 1.day
 
     # Build member stats rows
     @member_rows = @faction.users.active.includes(:personal_stat_snapshots).filter_map do |user|
-      # Get all snapshots in date range
+      # Get all snapshots including the day before start
       all_snapshots = user.personal_stat_snapshots
-                           .where(date: @start_date..@end_date)
+                           .where(date: query_start_date..@end_date)
                            .order(:date)
 
       # Helper to calculate stat for a specific field
@@ -35,8 +41,10 @@ class Factions::TrainingController < ApplicationController
         last = snapshots.last
         gained = (last[field] || 0) - (first[field] || 0)
 
-        # Calculate actual days between first and last snapshot for this stat
-        actual_days = (last.date - first.date).to_i + 1
+        # Days = the number of days we're measuring consumption FOR
+        # If first snapshot is from day X and last is from day Y,
+        # we're measuring consumption on days (X+1) through Y
+        actual_days = (last.date - first.date).to_i
 
         daily = actual_days > 0 ? (gained.to_f / actual_days).round(2) : 0.0
 
