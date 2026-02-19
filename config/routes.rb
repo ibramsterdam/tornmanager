@@ -2,6 +2,10 @@ Rails.application.routes.draw do
   mount MissionControl::Jobs::Engine, at: "/jobs"
   mount ActionCable.server => "/cable"
 
+  namespace :api do
+    resource :session, only: [ :create ]
+  end
+
   resource :session
   resources :progress, only: [ :index ]
   resources :factions, only: [ :index, :show ], param: :torn_id do
