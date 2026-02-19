@@ -16,14 +16,16 @@ module Api
         return render json: { error: "Unknown API key. Please sign in first." }, status: :not_found
       end
 
-      unless check_payments!
-        seconds = seconds_until_available
-        return render json: {
-          error: "Payment check was run recently. Try again in #{seconds} seconds."
-        }, status: :too_many_requests
-      end
+      if params[:refresh].present?
+        unless check_payments!
+          seconds = seconds_until_available
+          return render json: {
+            error: "Payment check was run recently. Try again in #{seconds} seconds."
+          }, status: :too_many_requests
+        end
 
-      user.reload
+        user.reload
+      end
 
       render json: {
         subscription: {
