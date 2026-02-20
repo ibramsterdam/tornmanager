@@ -1,0 +1,120 @@
+<div class="page-header"
+  <% if @is_admin %>
+    data-controller="roadmap-form"
+    data-roadmap-form-editing-value="<%= @editing_item.present? %>"
+    data-action="keydown@document->roadmap-form#hideOnEscape"
+  <% end %>
+>
+  <div class="page-header-content">
+    <div>
+      <h1>Roadmap</h1>
+      <p class="page-subtitle">Track upcoming features and improvements for TornManager</p>
+    </div>
+    <% if @is_admin %>
+      <div class="page-header-actions">
+        <button class="btn btn-primary" data-action="click->roadmap-form#show" data-roadmap-form-mode-param="new">
+          + Add Item
+        </button>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Slide-in form panel -->
+  <% if @is_admin %>
+    <div class="roadmap-form-overlay" data-roadmap-form-target="overlay" data-action="click->roadmap-form#hide"></div>
+    <div class="roadmap-form-panel" data-roadmap-form-target="panel">
+      <div class="roadmap-form-panel-header">
+        <h2 id="roadmap-form-title"><%= @editing_item ? "Edit Item" : "New Roadmap Item" %></h2>
+        <button class="roadmap-form-close" data-action="click->roadmap-form#hide" aria-label="Close">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="roadmap-form-panel-body">
+        <% item = @editing_item || RoadmapItem.new %>
+        <%= form_with(
+          model: item,
+          url: @editing_item ? roadmap_item_path(@editing_item) : roadmap_path,
+          method: @editing_item ? :patch : :post,
+          class: "roadmap-form"
+        ) do |f| %>
+          <div class="form-group">
+            <%= f.label :title, class: "form-label" %>
+            <%= f.text_field :title, class: "form-input", placeholder: "Feature title...", required: true %>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :description, class: "form-label" %>
+            <%= f.text_area :description, class: "form-input roadmap-textarea", placeholder: "Describe this feature...", rows: 4 %>
+          </div>
+
+          <div class="roadmap-form-row">
+            <div class="form-group roadmap-form-half">
+              <%= f.label :status, class: "form-label" %>
+              <%= f.select :status, RoadmapItem::STATUSES.map { |s| [RoadmapItem.status_label(s), s] }, {}, class: "form-select" %>
+            </div>
+
+            <div class="form-group roadmap-form-half">
+              <%= f.label :category, class: "form-label" %>
+              <%= f.select :category, RoadmapItem::CATEGORIES.map { |c| [RoadmapItem.category_label(c), c] }, {}, class: "form-select" %>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <%= f.label :position, "Sort Order", class: "form-label" %>
+            <%= f.number_field :position, class: "form-input", value: item.position || 0, min: 0 %>
+            <p class="form-help">Lower numbers appear first within a column.</p>
+          </div>
+
+          <div class="form-actions">
+            <%= f.submit(@editing_item ? "Update Item" : "Create Item", class: "btn btn-primary") %>
+            <% if @editing_item %>
+              <%= button_to "Delete", roadmap_item_path(@editing_item), method: :delete, class: "btn-danger btn", data: { turbo_confirm: "Delete this roadmap item?" } %>
+            <% end %>
+            <button type="button" class="btn btn-secondary" data-action="click->roadmap-form#hide">Cancel</button>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Board -->
+  <div class="roadmap-board">
+    <% RoadmapItem::STATUSES.each do |status| %>
+      <div class="roadmap-lane">
+        <div class="roadmap-lane-header">
+          <span class="roadmap-lane-title"><%= RoadmapItem.status_label(status) %></span>
+          <span class="roadmap-lane-count"><%= @items_by_status[status].size %></span>
+        </div>
+
+        <div class="roadmap-lane-body">
+          <% if @items_by_status[status].any? %>
+            <% @items_by_status[status].each do |item| %>
+              <div class="roadmap-card">
+                <div class="roadmap-card-header">
+                  <span class="roadmap-badge roadmap-badge-<%= item.category %>">
+                    <%= RoadmapItem.category_label(item.category) %>
+                  </span>
+                  <% if @is_admin %>
+                    <%= link_to "Edit", roadmap_path(edit: item.id), class: "roadmap-card-edit", data: { turbo_action: "replace" } %>
+                  <% end %>
+                </div>
+                <h3 class="roadmap-card-title"><%= item.title %></h3>
+                <% if item.description.present? %>
+                  <p class="roadmap-card-description"><%= truncate(item.description, length: 120) %></p>
+                <% end %>
+              </div>
+            <% end %>
+          <% else %>
+            <div class="roadmap-lane-empty">
+              No items yet
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>

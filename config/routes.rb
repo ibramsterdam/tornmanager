@@ -60,6 +60,11 @@ Rails.application.routes.draw do
     end
   end
 
+  get "roadmap", to: "roadmap#index", as: :roadmap
+  post "roadmap", to: "roadmap#create"
+  patch "roadmap/:id", to: "roadmap#update", as: :roadmap_item
+  delete "roadmap/:id", to: "roadmap#destroy"
+
   get "privacy-policy", to: "pages#privacy_policy", as: :privacy_policy
   get "terms-of-service", to: "pages#terms_of_service", as: :terms_of_service
 

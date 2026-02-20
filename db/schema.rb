@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_19_100004) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_20_071935) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -104,6 +104,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_19_100004) do
     t.index ["faction_id", "started_at"], name: "index_ranked_wars_on_faction_id_and_started_at"
     t.index ["faction_id"], name: "index_ranked_wars_on_faction_id"
     t.index ["torn_war_id"], name: "index_ranked_wars_on_torn_war_id", unique: true
+  end
+
+  create_table "roadmap_items", force: :cascade do |t|
+    t.string "category", default: "factions", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.string "status", default: "planned", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status", "position"], name: "index_roadmap_items_on_status_and_position"
   end
 
   create_table "sessions", force: :cascade do |t|
