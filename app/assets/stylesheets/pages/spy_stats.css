@@ -1,0 +1,68 @@
+/*
+ * Spy Stats Page Styles
+ */
+
+/* Table columns */
+.spy-stats-col-rank {
+  width: 48px;
+  text-align: center;
+}
+
+.spy-stats-col-id {
+  width: 100px;
+}
+
+.spy-stats-col-stat {
+  text-align: right;
+}
+
+.spy-stats-col-total {
+  text-align: right;
+}
+
+.spy-stats-col-age {
+  text-align: right;
+  width: 120px;
+}
+
+/* Table cells */
+.spy-stats-rank {
+  text-align: center;
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.spy-stats-id-link {
+  color: var(--blue-500);
+  text-decoration: none;
+  font-family: "Geist Mono", monospace;
+  font-weight: 500;
+}
+
+.spy-stats-id-link:hover {
+  text-decoration: underline;
+}
+
+.spy-stats-number {
+  text-align: right;
+  font-family: "Geist Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  color: var(--gray-300);
+}
+
+.spy-stats-total {
+  color: var(--gray-100);
+  font-weight: 600;
+}
+
+.spy-stats-age {
+  text-align: right;
+  color: var(--gray-500);
+  font-size: 0.8125rem;
+}
+
+/* Empty state */
+.table-empty-cell {
+  padding: 0 !important;
+}

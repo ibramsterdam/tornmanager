@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   namespace :api do
     resource :session, only: [ :create ]
     post :subscription, to: "subscriptions#show"
+    post :war, to: "wars#show"
   end
 
   resource :session
@@ -18,6 +19,10 @@ Rails.application.routes.draw do
         post :sync
       end
     end
+    resource :settings, only: [ :show, :update ], controller: "factions/settings" do
+      post :import_spies
+    end
+    resource :spy_stats, only: [ :show ], controller: "factions/spy_stats"
   end
   resources :welcome, only: [ :index ]
 
