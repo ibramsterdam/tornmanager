@@ -107,6 +107,30 @@
   line-height: 1.5;
 }
 
+.roadmap-card-description p {
+  margin: 0;
+}
+
+.roadmap-card-description .hidden {
+  display: none;
+}
+
+.roadmap-read-more {
+  background: none;
+  border: none;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.8125rem;
+  padding: 0;
+  font-weight: 500;
+  transition: color 0.15s ease;
+}
+
+.roadmap-read-more:hover {
+  color: var(--primary-light, var(--gray-200));
+  text-decoration: underline;
+}
+
 .roadmap-card-edit {
   font-size: 0.75rem;
   color: var(--gray-500);
