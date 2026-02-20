@@ -29,6 +29,7 @@
           </svg>
         </button>
         <div class="navbar-dropdown" data-dropdown-target="menu">
+          <%= link_to "Roadmap", roadmap_path, class: "navbar-dropdown-item" %>
           <%= link_to "API Calls", user_api_calls_path, class: "navbar-dropdown-item" %>
           <%= link_to "Settings", settings_path, class: "navbar-dropdown-item" %>
           <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-dropdown-item navbar-dropdown-signout" %>
@@ -63,6 +64,7 @@
         </div>
         <div class="navbar-mobile-menu-divider"></div>
         <div class="navbar-mobile-menu-section">
+          <%= link_to "Roadmap", roadmap_path, class: "navbar-mobile-menu-item" %>
           <%= link_to "API Calls", user_api_calls_path, class: "navbar-mobile-menu-item" %>
           <%= link_to "Settings", settings_path, class: "navbar-mobile-menu-item" %>
           <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-mobile-menu-item signout" %>
@@ -79,6 +81,7 @@
     </div>
     <div class="navbar-center">
       <%= link_to "Key Activity Log", key_log_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/key-log')}" %>
+      <%= link_to "Roadmap", roadmap_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/roadmap')}" %>
     </div>
     <div class="navbar-right">
       <%= link_to "Sign In", new_session_path, class: "navbar-signin" %>
@@ -96,6 +99,7 @@
       <div class="navbar-mobile-menu" data-dropdown-target="menu">
         <div class="navbar-mobile-menu-section">
           <%= link_to "Key Activity Log", key_log_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/key-log')}" %>
+          <%= link_to "Roadmap", roadmap_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/roadmap')}" %>
           <%= link_to "Sign In", new_session_path, class: "navbar-mobile-menu-item" %>
         </div>
       </div>
