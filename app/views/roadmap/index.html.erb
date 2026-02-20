@@ -104,7 +104,14 @@
                 </div>
                 <h3 class="roadmap-card-title"><%= item.title %></h3>
                 <% if item.description.present? %>
-                  <p class="roadmap-card-description"><%= truncate(item.description, length: 120) %></p>
+                  <% if item.description.length > 120 %>
+                    <div class="roadmap-card-description" data-controller="expandable">
+                      <p data-expandable-target="truncated"><%= truncate(item.description, length: 120) %> <button class="roadmap-read-more" data-action="click->expandable#toggle">Read more</button></p>
+                      <p data-expandable-target="full" class="hidden"><%= simple_format(item.description, {}, wrapper_tag: "span") %> <button class="roadmap-read-more" data-action="click->expandable#toggle">Show less</button></p>
+                    </div>
+                  <% else %>
+                    <p class="roadmap-card-description"><%= item.description %></p>
+                  <% end %>
                 <% end %>
               </div>
             <% end %>
