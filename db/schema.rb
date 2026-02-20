@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_20_071935) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_20_100003) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -25,6 +25,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_071935) do
     t.index ["created_at"], name: "index_api_calls_on_created_at"
     t.index ["user_id", "created_at"], name: "index_api_calls_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_api_calls_on_user_id"
+  end
+
+  create_table "faction_settings", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "faction_id", null: false
+    t.string "torn_api_access_type"
+    t.string "torn_api_key"
+    t.string "tornstats_api_key"
+    t.datetime "updated_at", null: false
+    t.index ["faction_id"], name: "index_faction_settings_on_faction_id", unique: true
   end
 
   create_table "faction_subscription_grants", force: :cascade do |t|
@@ -126,6 +136,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_071935) do
     t.index ["user_id"], name: "index_sessions_on_user_id"
   end
 
+  create_table "spy_reports", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "defense"
+    t.bigint "dexterity"
+    t.integer "faction_id", null: false
+    t.decimal "fair_fight"
+    t.bigint "speed"
+    t.datetime "spied_at"
+    t.string "spy_type"
+    t.bigint "strength"
+    t.integer "torn_id", null: false
+    t.bigint "total"
+    t.datetime "updated_at", null: false
+    t.index ["faction_id", "torn_id"], name: "index_spy_reports_on_faction_id_and_torn_id", unique: true
+    t.index ["faction_id"], name: "index_spy_reports_on_faction_id"
+    t.index ["torn_id"], name: "index_spy_reports_on_torn_id"
+  end
+
   create_table "subscription_grants", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "faction_subscription_grant_id", null: false
@@ -196,12 +224,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_071935) do
   end
 
   add_foreign_key "api_calls", "users"
+  add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "ranked_wars", "factions"
   add_foreign_key "sessions", "users"
+  add_foreign_key "spy_reports", "factions"
   add_foreign_key "subscription_grants", "faction_subscription_grants"
   add_foreign_key "subscription_grants", "users"
   add_foreign_key "users", "factions"

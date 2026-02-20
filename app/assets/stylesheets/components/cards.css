@@ -479,6 +479,74 @@
   text-decoration: underline;
 }
 
+/* API Keys Grid (side-by-side cards) */
+.api-keys-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 768px) {
+  .api-keys-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.api-keys-actions {
+  margin-top: var(--space-4);
+}
+
+/* API Key Field */
+.api-key-field-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.api-key-field-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.api-key-field-current {
+  margin-bottom: 0.75rem;
+}
+
+.api-key-form-input-full {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
+}
+
+/* Import Spy Stats */
+.import-spy-header {
+  margin-bottom: 1.25rem;
+}
+
+.import-spy-description {
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.5;
+}
+
+.import-spy-count {
+  color: var(--gray-500);
+  font-size: 0.8125rem;
+  margin: 0;
+}
+
+.import-spy-link {
+  color: var(--blue-500);
+  text-decoration: none;
+}
+
+.import-spy-link:hover {
+  text-decoration: underline;
+}
+
 .api-key-feedback {
   margin-top: 0.75rem;
   padding: 0.75rem 1rem;

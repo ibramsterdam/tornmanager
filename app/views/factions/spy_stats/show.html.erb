@@ -1,0 +1,56 @@
+<div class="page-header">
+  <h1><%= @faction.name %> Spy Stats</h1>
+  <p class="page-subtitle"><%= @total_count %> spy reports</p>
+</div>
+
+<%= link_to "← Back to faction", faction_path(@faction), class: "back-link mb-4" %>
+
+<div class="table-container">
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th class="spy-stats-col-rank">#</th>
+          <th class="spy-stats-col-id">TORN ID</th>
+          <th class="spy-stats-col-stat">STRENGTH</th>
+          <th class="spy-stats-col-stat">DEFENSE</th>
+          <th class="spy-stats-col-stat">SPEED</th>
+          <th class="spy-stats-col-stat">DEXTERITY</th>
+          <th class="spy-stats-col-total">TOTAL</th>
+          <th class="spy-stats-col-age">DATA AGE</th>
+        </tr>
+      </thead>
+      <tbody data-spy-stats-filter-target="body">
+        <% if @spy_reports.empty? %>
+          <tr>
+            <td colspan="8" class="table-empty-cell">
+              <div class="table-empty">
+                <p>No spy reports imported yet.</p>
+                <p class="text-muted">Import spy data from the <%= link_to "Faction Settings", faction_settings_path(@faction) %> page.</p>
+              </div>
+            </td>
+          </tr>
+        <% else %>
+          <% @spy_reports.each_with_index do |report, index| %>
+            <tr>
+              <td class="spy-stats-rank"><%= index + 1 %></td>
+              <td>
+                <a href="https://www.torn.com/profiles.php?XID=<%= report.torn_id %>"
+                   target="_blank"
+                   class="spy-stats-id-link">
+                  <%= report.torn_id %>
+                </a>
+              </td>
+              <td class="spy-stats-number"><%= number_with_delimiter(report.strength) %></td>
+              <td class="spy-stats-number"><%= number_with_delimiter(report.defense) %></td>
+              <td class="spy-stats-number"><%= number_with_delimiter(report.speed) %></td>
+              <td class="spy-stats-number"><%= number_with_delimiter(report.dexterity) %></td>
+              <td class="spy-stats-number spy-stats-total"><%= number_with_delimiter(report.total) %></td>
+              <td class="spy-stats-age"><%= report.spied_at ? time_ago_in_words(report.spied_at) + " ago" : "Unknown" %></td>
+            </tr>
+          <% end %>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

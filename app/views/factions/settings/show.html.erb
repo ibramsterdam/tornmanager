@@ -1,0 +1,97 @@
+<div class="page-header">
+  <h1><%= @faction.name %> Settings</h1>
+  <p class="page-subtitle">Configure API keys and manage spy data imports</p>
+</div>
+
+<%= link_to "← Back to faction", faction_path(@faction), class: "back-link mb-4" %>
+
+<!-- Section 1: API Keys (side by side) -->
+<div class="settings-section">
+  <h2>API Keys</h2>
+
+  <%= form_with model: @faction_setting, url: faction_settings_path(@faction), method: :patch do |form| %>
+    <div class="api-keys-grid">
+      <!-- Torn API Key -->
+      <div class="api-key-card">
+        <div class="api-key-field-header">
+          <span class="api-key-field-label">Torn API Key</span>
+          <% if @faction_setting.torn_api_key? %>
+            <% access_type = @faction_setting.torn_api_access_type %>
+            <% badge_class = access_type&.downcase&.include?("full") ? "api-key-access-good" : "api-key-access-limited" %>
+            <span class="api-key-access-badge <%= badge_class %>"><%= access_type || "Unknown" %></span>
+          <% end %>
+        </div>
+        <div class="api-key-field-current">
+          <span class="api-key-value"><%= @torn_api_key_masked || "Not set" %></span>
+        </div>
+        <%= form.text_field :torn_api_key,
+            class: "api-key-form-input api-key-form-input-full",
+            placeholder: "Enter new Torn API key",
+            autocomplete: "off",
+            value: "" %>
+        <p class="api-key-form-hint">Faction access required. Validated on save.</p>
+      </div>
+
+      <!-- TornStats API Key -->
+      <div class="api-key-card">
+        <div class="api-key-field-header">
+          <span class="api-key-field-label">TornStats API Key</span>
+        </div>
+        <div class="api-key-field-current">
+          <span class="api-key-value"><%= @tornstats_api_key_masked || "Not set" %></span>
+        </div>
+        <%= form.text_field :tornstats_api_key,
+            class: "api-key-form-input api-key-form-input-full",
+            placeholder: "Enter new TornStats API key",
+            autocomplete: "off",
+            value: "" %>
+        <p class="api-key-form-hint">Used to import spy data for enemy factions.</p>
+      </div>
+    </div>
+
+    <div class="api-keys-actions">
+      <%= form.submit "Save Keys", class: "btn-primary" %>
+    </div>
+  <% end %>
+</div>
+
+<!-- Section 2: Import Spy Stats -->
+<div class="settings-section">
+  <h2>Import Spy Stats</h2>
+
+  <div class="api-key-card">
+    <div class="import-spy-header">
+      <p class="import-spy-description">Import spy data from TornStats for an enemy faction. Updates existing reports and adds new ones.</p>
+      <p class="import-spy-count"><%= @spy_report_count %> reports stored
+        <% if @spy_report_count > 0 %>
+          &middot; <%= link_to "View all", faction_spy_stats_path(@faction), class: "import-spy-link" %>
+        <% end %>
+      </p>
+    </div>
+
+    <% unless @faction_setting.tornstats_api_key? %>
+      <p class="api-key-form-hint">Configure your TornStats API key above before importing.</p>
+    <% else %>
+      <%= form_with url: import_spies_faction_settings_path(@faction), method: :post do |form| %>
+        <div class="api-key-form-inline">
+          <%= form.text_field :target_faction_id,
+              class: "api-key-form-input",
+              placeholder: "Enter enemy faction ID",
+              autocomplete: "off",
+              inputmode: "numeric",
+              pattern: "[0-9]*" %>
+          <% if @can_import %>
+            <%= form.submit "Import", class: "btn-primary" %>
+          <% else %>
+            <span data-controller="backfill-countdown"
+                  data-backfill-countdown-seconds-remaining-value="<%= @seconds_until_import %>">
+              <button type="button" class="btn-secondary" disabled>
+                <span data-backfill-countdown-target="countdown"><%= @seconds_until_import %>s</span>
+              </button>
+            </span>
+          <% end %>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</div>

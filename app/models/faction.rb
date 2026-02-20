@@ -2,6 +2,8 @@ class Faction < ApplicationRecord
   has_many :users, dependent: :nullify
   has_many :faction_subscription_grants, dependent: :nullify
   has_many :ranked_wars, dependent: :destroy
+  has_one :faction_setting, dependent: :destroy
+  has_many :spy_reports, dependent: :destroy
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true

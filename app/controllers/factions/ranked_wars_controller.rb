@@ -1,7 +1,10 @@
 class Factions::RankedWarsController < ApplicationController
+  include FactionAccess
+
   SYNC_COOLDOWN = 1.minute
 
-  before_action :set_faction
+  before_action :require_faction_member
+  before_action :check_tracking_enabled
 
   def index
     return if @tracking_disabled
@@ -91,14 +94,8 @@ class Factions::RankedWarsController < ApplicationController
 
   private
 
-  def set_faction
-    @faction = Faction.find_by!(torn_id: params[:faction_torn_id])
-
-    # Authorization: users can only view their own faction, admins can view any
-    unless Current.user.admin? || Current.user.faction == @faction
-      redirect_to root_path, alert: "You don't have access to this faction."
-      return
-    end
+  def check_tracking_enabled
+    return if performed?
 
     unless @faction.track_stats
       @tracking_disabled = true
