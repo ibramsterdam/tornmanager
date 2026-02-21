@@ -38,7 +38,7 @@ class SettingsController < ApplicationController
 
     begin
       # Validate the new API key with Torn API (track the request)
-      key_info = TornApi::Key::Info.new(new_api_key, user: Current.user).fetch
+      key_info = TornApi::Key::Info.new(new_api_key).fetch
 
       # Don't allow Full Access keys
       if key_info.access.type == "Full Access"
@@ -47,7 +47,7 @@ class SettingsController < ApplicationController
       end
 
       # Verify the key belongs to this user (track the request)
-      profile = TornApi::User::Profile.new(new_api_key, user: Current.user).fetch
+      profile = TornApi::User::Profile.new(new_api_key).fetch
 
       if profile.id != Current.user.torn_id
         render json: { success: false, message: "This API key belongs to a different user." }
