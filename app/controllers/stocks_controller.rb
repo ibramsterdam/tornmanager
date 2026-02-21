@@ -1,4 +1,4 @@
-class ProgressController < ApplicationController
+class StocksController < ApplicationController
   before_action :ensure_user_authenticated
 
   def index
@@ -21,7 +21,7 @@ class ProgressController < ApplicationController
 
   def ensure_user_authenticated
     unless Current.user&.api_key.present?
-      redirect_to new_session_path, alert: "Please sign in to view your progress."
+      redirect_to new_session_path, alert: "Please sign in to view stocks."
     end
   end
 end

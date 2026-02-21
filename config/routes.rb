@@ -9,7 +9,7 @@ Rails.application.routes.draw do
   end
 
   resource :session
-  resources :progress, only: [ :index ]
+  resources :stocks, only: [ :index ]
   resources :factions, only: [ :index, :show ], param: :torn_id do
     resource :training, only: [ :show ], controller: "factions/training" do
       get "members/:torn_id", to: "factions/training#member", as: "member"

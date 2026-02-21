@@ -1,11 +1,10 @@
 <nav data-controller="navbar" data-navbar-admin-value="<%= Current.user&.admin? ? 'true' : 'false' %>">
   <% if authenticated? %>
     <div class="navbar-left">
-      <%= link_to "TornManager", progress_index_path, class: "navbar-link navbar-title" %>
+      <%= link_to "TornManager", Current.user&.faction&.track_stats ? faction_path(Current.user.faction) : stocks_path, class: "navbar-link navbar-title" %>
     </div>
     
     <div class="navbar-center">
-      <%= link_to "My Progress", progress_index_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/progress')}" %>
       <% if Current.user&.faction&.track_stats %>
         <%= link_to "My Faction", faction_path(Current.user.faction), class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/factions')}" %>
       <% else %>
@@ -31,6 +30,7 @@
         <div class="navbar-dropdown" data-dropdown-target="menu">
           <%= link_to "Roadmap", roadmap_path, class: "navbar-dropdown-item" %>
           <%= link_to "API Calls", user_api_calls_path, class: "navbar-dropdown-item" %>
+          <%= link_to "Stocks", stocks_path, class: "navbar-dropdown-item" %>
           <%= link_to "Settings", settings_path, class: "navbar-dropdown-item" %>
           <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-dropdown-item navbar-dropdown-signout" %>
         </div>
@@ -51,7 +51,6 @@
       </button>
       <div class="navbar-mobile-menu" data-dropdown-target="menu">
         <div class="navbar-mobile-menu-section">
-          <%= link_to "My Progress", progress_index_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/progress')}" %>
           <% if Current.user&.faction&.track_stats %>
             <%= link_to "My Faction", faction_path(Current.user.faction), class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/factions')}" %>
           <% else %>
@@ -66,6 +65,7 @@
         <div class="navbar-mobile-menu-section">
           <%= link_to "Roadmap", roadmap_path, class: "navbar-mobile-menu-item" %>
           <%= link_to "API Calls", user_api_calls_path, class: "navbar-mobile-menu-item" %>
+          <%= link_to "Stocks", stocks_path, class: "navbar-mobile-menu-item" %>
           <%= link_to "Settings", settings_path, class: "navbar-mobile-menu-item" %>
           <%= button_to "Sign Out", session_path, method: :delete, class: "navbar-mobile-menu-item signout" %>
         </div>
