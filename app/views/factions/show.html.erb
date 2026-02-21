@@ -7,101 +7,119 @@
     </div>
   </div>
 <% else %>
+  <% energy_enabled = @energy_target > 0 %>
+  <% nerve_enabled = @nerve_target > 0 %>
+
   <div class="page-header">
     <h1><%= @faction.name %></h1>
-    <p class="page-subtitle">Faction management and analytics</p>
+    <p class="page-subtitle">Faction dashboard</p>
   </div>
 
-  <div class="admin-cards">
-    <%= link_to faction_training_path(@faction), class: "admin-card" do %>
-      <div class="admin-card-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-      </div>
+  <!-- Compliance Overview -->
+  <div class="dashboard-section">
+    <div class="dashboard-section-header">
       <h2>Training Compliance</h2>
-      <p>Track member xanax, energy refills, nerve refills, and daily activity compliance.</p>
-    <% end %>
+      <%= link_to "View full report ->", faction_training_path(@faction), class: "dashboard-section-link" %>
+    </div>
 
-    <% if Current.user.admin? %>
-      <%= link_to faction_ranked_wars_path(@faction), class: "admin-card" do %>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-        </div>
-        <h2>Ranked Wars</h2>
-        <p>View war history, track member performance, and monitor ongoing wars.</p>
-      <% end %>
-    <% else %>
-      <div class="admin-card admin-card-disabled">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
-            <path d="M2 17l10 5 10-5"></path>
-            <path d="M2 12l10 5 10-5"></path>
-          </svg>
-        </div>
-        <h2>Ranked Wars</h2>
-        <p>View war history, track member performance, and monitor ongoing wars.</p>
+    <div class="dashboard-stats-row">
+      <div class="dashboard-stat-card dashboard-stat-compliant">
+        <span class="dashboard-stat-value"><%= @compliant_count %></span>
+        <span class="dashboard-stat-label">Compliant</span>
       </div>
-    <% end %>
+      <div class="dashboard-stat-card dashboard-stat-warning">
+        <span class="dashboard-stat-value"><%= @warning_count %></span>
+        <span class="dashboard-stat-label">Warning</span>
+      </div>
+      <div class="dashboard-stat-card dashboard-stat-danger">
+        <span class="dashboard-stat-value"><%= @non_compliant_count %></span>
+        <span class="dashboard-stat-label">Below Target</span>
+      </div>
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-value"><%= @total_members %></span>
+        <span class="dashboard-stat-label">Tracked</span>
+      </div>
+    </div>
 
-    <% if Current.user.admin? %>
-      <%= link_to faction_spy_stats_path(@faction), class: "admin-card" do %>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </div>
-        <h2>Spy Stats</h2>
-        <p>Browse imported spy reports, filter by stats, and view enemy battle stats.</p>
+    <div class="dashboard-targets">
+      <span class="dashboard-target-item">Xanax: <%= @xanax_target %>/day</span>
+      <% if energy_enabled %>
+        <span class="dashboard-target-divider">&middot;</span>
+        <span class="dashboard-target-item">Energy: <%= @energy_target %>/day</span>
       <% end %>
-    <% else %>
-      <div class="admin-card admin-card-disabled">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </div>
-        <h2>Spy Stats</h2>
-        <p>Browse imported spy reports, filter by stats, and view enemy battle stats.</p>
-      </div>
-    <% end %>
+      <% if nerve_enabled %>
+        <span class="dashboard-target-divider">&middot;</span>
+        <span class="dashboard-target-item">Nerve: <%= @nerve_target %>/day</span>
+      <% end %>
+    </div>
+  </div>
 
-    <% if Current.user.admin? %>
-      <%= link_to faction_settings_path(@faction), class: "admin-card" do %>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </div>
-        <h2>Faction Settings</h2>
-        <p>Configure API keys, import spy data, and manage faction-specific settings.</p>
-      <% end %>
-    <% else %>
-      <div class="admin-card admin-card-disabled">
-        <span class="coming-soon-badge">Coming Soon</span>
-        <div class="admin-card-icon">
-          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </div>
-        <h2>Faction Settings</h2>
-        <p>Configure API keys, import spy data, and manage faction-specific settings.</p>
+  <!-- Worst Performers -->
+  <% if @worst_performers.any? %>
+    <div class="dashboard-section">
+      <div class="dashboard-section-header">
+        <h2>Needs Attention</h2>
       </div>
-    <% end %>
+
+      <div class="dashboard-mini-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Xanax/day</th>
+              <% if energy_enabled %><th>Energy/day</th><% end %>
+              <% if nerve_enabled %><th>Nerve/day</th><% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @worst_performers.each do |row| %>
+              <tr class="dashboard-mini-table-row-<%= row[:compliance_level] %>">
+                <td>
+                  <a href="https://www.torn.com/profiles.php?XID=<%= row[:torn_id] %>" target="_blank" rel="noopener" class="dashboard-member-link"><%= row[:name] %></a>
+                </td>
+                <td><%= row[:xanax_daily] %></td>
+                <% if energy_enabled %><td><%= row[:energy_refills_daily] %></td><% end %>
+                <% if nerve_enabled %><td><%= row[:nerve_refills_daily] %></td><% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Quick Links / Coming Soon -->
+  <div class="dashboard-section">
+    <div class="dashboard-section-header">
+      <h2>More Tools</h2>
+    </div>
+
+    <div class="feature-cards feature-cards-compact">
+      <% if Current.user.admin? %>
+        <%= link_to faction_ranked_wars_path(@faction), class: "feature-card feature-card-small" do %>
+          <h3>Ranked Wars</h3>
+          <p>War history and member performance</p>
+        <% end %>
+      <% else %>
+        <div class="feature-card feature-card-small feature-card-disabled">
+          <span class="coming-soon-badge">Coming Soon</span>
+          <h3>Ranked Wars</h3>
+          <p>War history and member performance</p>
+        </div>
+      <% end %>
+
+      <% if Current.user.admin? %>
+        <%= link_to faction_spy_stats_path(@faction), class: "feature-card feature-card-small" do %>
+          <h3>Spy Stats</h3>
+          <p>Enemy battle stats and spy reports</p>
+        <% end %>
+      <% else %>
+        <div class="feature-card feature-card-small feature-card-disabled">
+          <span class="coming-soon-badge">Coming Soon</span>
+          <h3>Spy Stats</h3>
+          <p>Enemy battle stats and spy reports</p>
+        </div>
+      <% end %>
+    </div>
   </div>
 <% end %>

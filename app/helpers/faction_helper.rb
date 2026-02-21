@@ -1,8 +1,9 @@
 module FactionHelper
   # Calculate compliance level for a stat compared to target
   # Returns :green, :yellow, or :red
+  # Target of 0 means this stat is disabled — always compliant
   def stat_compliance(actual_daily, target)
-    return :red if target.nil? || target.zero?
+    return :green if target.nil? || target.zero?
 
     ratio = actual_daily.to_f / target.to_f
 
@@ -30,11 +31,21 @@ module FactionHelper
   end
 
   # Calculate overall compliance score (0-100)
-  # Xanax weighted at 40%, energy and nerve at 30% each
+  # Weights adjust dynamically based on which targets are enabled.
+  # Disabled targets (0) get full marks and their weight redistributes.
   def compliance_score(xanax_daily, energy_daily, nerve_daily, faction)
-    xanax_score = [ (xanax_daily.to_f / faction.xanax_target.to_f) * 40, 40 ].min
-    energy_score = [ (energy_daily.to_f / faction.energy_refill_target.to_f) * 30, 30 ].min
-    nerve_score = [ (nerve_daily.to_f / faction.nerve_refill_target.to_f) * 30, 30 ].min
+    energy_disabled = faction.energy_refill_target.zero?
+    nerve_disabled = faction.nerve_refill_target.zero?
+
+    # Redistribute weight from disabled targets to xanax
+    bonus = (energy_disabled ? 30 : 0) + (nerve_disabled ? 30 : 0)
+    xanax_weight = 40 + bonus
+    energy_weight = energy_disabled ? 0 : 30
+    nerve_weight = nerve_disabled ? 0 : 30
+
+    xanax_score = [ (xanax_daily.to_f / faction.xanax_target.to_f) * xanax_weight, xanax_weight ].min
+    energy_score = energy_disabled ? 0 : [ (energy_daily.to_f / faction.energy_refill_target.to_f) * energy_weight, energy_weight ].min
+    nerve_score = nerve_disabled ? 0 : [ (nerve_daily.to_f / faction.nerve_refill_target.to_f) * nerve_weight, nerve_weight ].min
 
     (xanax_score + energy_score + nerve_score).round
   end
@@ -77,8 +88,16 @@ module FactionHelper
     end
 
     lines << "- Used #{number_with_delimiter(row[:xanax_gained])} xanax (#{row[:xanax_daily]}/day, target: #{faction.xanax_target}/day)"
-    lines << "- Used #{number_with_delimiter(row[:energy_refills_gained])} energy refills (#{row[:energy_refills_daily]}/day, target: #{faction.energy_refill_target}/day)"
-    lines << "- Used #{number_with_delimiter(row[:nerve_refills_gained])} nerve refills (#{row[:nerve_refills_daily]}/day, target: #{faction.nerve_refill_target}/day)"
+    if faction.energy_refill_target > 0
+      lines << "- Used #{number_with_delimiter(row[:energy_refills_gained])} energy refills (#{row[:energy_refills_daily]}/day, target: #{faction.energy_refill_target}/day)"
+    else
+      lines << "- Used #{number_with_delimiter(row[:energy_refills_gained])} energy refills (#{row[:energy_refills_daily]}/day)"
+    end
+    if faction.nerve_refill_target > 0
+      lines << "- Used #{number_with_delimiter(row[:nerve_refills_gained])} nerve refills (#{row[:nerve_refills_daily]}/day, target: #{faction.nerve_refill_target}/day)"
+    else
+      lines << "- Used #{number_with_delimiter(row[:nerve_refills_gained])} nerve refills (#{row[:nerve_refills_daily]}/day)"
+    end
     lines << "- Completed #{number_with_delimiter(row[:missions_gained])} contracts (#{row[:missions_daily]}/day)"
     lines << "- Committed #{number_with_delimiter(row[:crimes_gained])} crimes (#{row[:crimes_daily]}/day)"
     lines << "- Been active for #{number_with_delimiter(row[:activity_time_daily])} min/day"

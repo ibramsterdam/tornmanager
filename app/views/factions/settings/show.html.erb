@@ -55,7 +55,46 @@
   <% end %>
 </div>
 
-<!-- Section 2: Import Spy Stats -->
+<!-- Section 2: Dashboard Access -->
+<div class="settings-section">
+  <h2>Dashboard Access</h2>
+  <p class="settings-section-description">Control which faction members can view the faction dashboard, training data, and other faction pages. Only whitelisted members (and admins) have access.</p>
+
+  <!-- Add member to whitelist -->
+  <% if @faction_members.any? %>
+    <%= form_with url: add_whitelist_faction_settings_path(@faction), method: :post, class: "whitelist-add-form" do |form| %>
+      <div class="api-key-form-inline">
+        <%= form.select :user_id,
+            options_from_collection_for_select(@faction_members, :id, :name),
+            { prompt: "Select a member..." },
+            class: "whitelist-select" %>
+        <%= form.submit "Grant Access", class: "btn-primary" %>
+      </div>
+    <% end %>
+  <% else %>
+    <p class="api-key-form-hint">All faction members already have access.</p>
+  <% end %>
+
+  <!-- Current whitelist -->
+  <% if @whitelisted_users.any? %>
+    <div class="whitelist-list">
+      <% @whitelisted_users.each do |user| %>
+        <div class="whitelist-item">
+          <span class="whitelist-user-name"><%= user.name %> [<%= user.torn_id %>]</span>
+          <%= button_to "Remove",
+              remove_whitelist_faction_settings_path(@faction, user_id: user.id),
+              method: :delete,
+              class: "whitelist-remove-btn",
+              data: { turbo_confirm: "Remove #{user.name}'s access?" } %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="whitelist-empty">No members have been granted access yet.</p>
+  <% end %>
+</div>
+
+<!-- Section 3: Import Spy Stats -->
 <div class="settings-section">
   <h2>Import Spy Stats</h2>
 

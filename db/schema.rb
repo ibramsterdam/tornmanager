@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_20_100003) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_21_171801) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -51,15 +51,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_100003) do
     t.index ["torn_faction_id"], name: "index_faction_subscription_grants_on_torn_faction_id"
   end
 
+  create_table "faction_whitelists", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "faction_id", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["faction_id", "user_id"], name: "index_faction_whitelists_on_faction_id_and_user_id", unique: true
+    t.index ["faction_id"], name: "index_faction_whitelists_on_faction_id"
+    t.index ["user_id"], name: "index_faction_whitelists_on_user_id"
+  end
+
   create_table "factions", force: :cascade do |t|
     t.datetime "backfill_ends_at"
     t.date "backfill_target_date"
     t.datetime "created_at", null: false
-    t.decimal "energy_refill_target", default: "1.0", null: false
+    t.decimal "energy_refill_target", default: "0.0", null: false
     t.string "name", null: false
-    t.decimal "nerve_refill_target", default: "1.0", null: false
+    t.decimal "nerve_refill_target", default: "0.0", null: false
     t.integer "torn_id", null: false
-    t.boolean "track_stats", default: false, null: false
+    t.boolean "track_stats", default: true, null: false
     t.datetime "updated_at", null: false
     t.decimal "xanax_target", default: "2.5", null: false
     t.index ["torn_id"], name: "index_factions_on_torn_id", unique: true
@@ -227,6 +237,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_20_100003) do
   add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
+  add_foreign_key "faction_whitelists", "factions"
+  add_foreign_key "faction_whitelists", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "ranked_wars", "factions"
