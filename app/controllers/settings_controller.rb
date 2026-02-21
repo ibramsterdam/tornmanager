@@ -60,8 +60,6 @@ class SettingsController < ApplicationController
         api_access_type: key_info.access.type
       )
 
-      ::Appsignal.increment_counter("user.api_key_updated", 1) if defined?(::Appsignal)
-
       render json: { success: true, message: "API key updated! Access level: #{key_info.access.type}", access_type: key_info.access.type }
     rescue TornApi::InvalidKeyError => e
       Rails.logger.error "Invalid API key for user #{Current.user.torn_id}: #{e.message}"
@@ -71,7 +69,6 @@ class SettingsController < ApplicationController
       render json: { success: false, message: "Torn API error: #{e.message}" }
     rescue => e
       Rails.logger.error "Failed to update API key for user #{Current.user.torn_id}: #{e.class} - #{e.message}"
-      ::Appsignal.send_error(e) if defined?(::Appsignal)
       render json: { success: false, message: "Failed to update API key. Please try again later." }
     end
   end
@@ -82,8 +79,6 @@ class SettingsController < ApplicationController
     Current.user.sessions.destroy_all
     Current.user.api_calls.destroy_all
     Current.user.update!(api_key: nil)
-
-    ::Appsignal.increment_counter("user.data_purged", 1) if defined?(::Appsignal)
 
     Rails.logger.info "Data purge completed for user #{Current.user.torn_id}"
 
@@ -125,8 +120,6 @@ class SettingsController < ApplicationController
       end
     }
 
-    ::Appsignal.increment_counter("user.data_exported", 1) if defined?(::Appsignal)
-
     send_data export.to_json,
               filename: "tornmanager-data-#{user.torn_id}-#{Date.current}.json",
               type: "application/json",
@@ -142,13 +135,9 @@ class SettingsController < ApplicationController
     session[:last_subscription_refresh_at] = Time.current.to_i
     Daily::XanaxPaymentsJob.perform_now
 
-    ::Appsignal.increment_counter("subscription.manual_refresh", 1) if defined?(::Appsignal)
-
     redirect_to settings_path, notice: "Subscription status refreshed! Check your subscription details above."
   rescue => e
     Rails.logger.error "Failed to refresh subscription for user #{Current.user.torn_id}: #{e.message}"
-    ::Appsignal.increment_counter("subscription.refresh_failed", 1) if defined?(::Appsignal)
-    ::Appsignal.send_error(e) if defined?(::Appsignal)
     redirect_to settings_path, alert: "Failed to refresh subscription status. Please try again later."
   end
 

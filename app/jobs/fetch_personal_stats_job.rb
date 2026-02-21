@@ -8,9 +8,6 @@ class FetchPersonalStatsJob < TornApiJob
     save_snapshot(user, stats, stats_date)
 
     FetchPersonalStatsJob.perform_later(user, batch: 2, stats_date: stats_date) if batch == 1
-  rescue
-    Appsignal.increment_counter("jobs.personal_stats_failed", 1) if defined?(Appsignal)
-    raise
   end
 
   private
