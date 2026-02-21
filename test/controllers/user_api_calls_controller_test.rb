@@ -2,7 +2,7 @@ require "test_helper"
 
 class UserApiCallsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = users(:one)
+    @user = users(:bram)
     sign_in_as(@user)
   end
 

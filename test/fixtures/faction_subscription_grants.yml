@@ -4,12 +4,12 @@ one:
   torn_faction_id: 12345
   faction_name: Test Faction One
   weeks_granted: 4
-  granted_by: one
+  granted_by: bram
   granted_at: 2026-02-15 18:03:20
 
 two:
   torn_faction_id: 67890
   faction_name: Test Faction Two
   weeks_granted: 2
-  granted_by: two
+  granted_by: bert
   granted_at: 2026-02-15 18:03:20

@@ -1,21 +1,19 @@
-# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
-
 one:
-  user: one
-  api_key: test_api_key_one
-  endpoint: MyString
-  selections: MyString
-  response_time: 1
-  status: MyString
-  error_message: MyText
-  torn_api_timestamp: 1
+  user: bram
+  api_key: ABCDEF
+  endpoint: /user
+  selections: '{"selections":"profile"}'
+  response_time: 150
+  status: success
+  error_message:
+  torn_api_timestamp: 1708000000
 
 two:
-  user: two
-  api_key: test_api_key_two
-  endpoint: MyString
-  selections: MyString
-  response_time: 1
-  status: MyString
-  error_message: MyText
-  torn_api_timestamp: 1
+  user: bert
+  api_key: GHIJKL
+  endpoint: /faction
+  selections: '{"selections":"basic"}'
+  response_time: 200
+  status: error
+  error_message: "Incorrect ID"
+  torn_api_timestamp: 1708000100
