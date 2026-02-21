@@ -1,4 +1,6 @@
 class ApiCall < ApplicationRecord
+  MINUTE_BUCKET = Arel.sql("strftime('%Y-%m-%d %H:%M', created_at)")
+
   belongs_to :user
 
   validates :endpoint, presence: true
@@ -13,25 +15,15 @@ class ApiCall < ApplicationRecord
   after_create :broadcast_api_call
 
   def self.peak_rate_for(user, scope: :all)
-    base = case scope
-    when :today
-              user.api_calls.today
-    else
-              user.api_calls
-    end
+    calls = scope == :today ? user.api_calls.today : user.api_calls
 
-    result = base
-      .group(Arel.sql("strftime('%Y-%m-%d %H:%M', created_at)"))
+    minute, count = calls
+      .group(MINUTE_BUCKET)
       .order(Arel.sql("COUNT(*) DESC"))
       .limit(1)
-      .pluck(Arel.sql("strftime('%Y-%m-%d %H:%M', created_at), COUNT(*)"))
-      .first
+      .pick(MINUTE_BUCKET, Arel.sql("COUNT(*)"))
 
-    if result
-      { rate: result[1], minute_start: Time.zone.parse(result[0]) }
-    else
-      { rate: 0, minute_start: nil }
-    end
+    { rate: count || 0, minute_start: minute ? Time.zone.parse(minute) : nil }
   end
 
   private

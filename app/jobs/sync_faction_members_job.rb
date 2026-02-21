@@ -24,9 +24,7 @@ class SyncFactionMembersJob < TornApiJob
     end
 
     Rails.logger.info "SyncFactionMembersJob: Synced #{members.size} members for faction #{faction.name} [#{faction.torn_id}]"
-    ::Appsignal.set_gauge("faction_sync.members_synced", members.size, faction_id: faction.torn_id) if defined?(::Appsignal)
   rescue TornApi::ApiError => e
     Rails.logger.error "SyncFactionMembersJob: Failed to sync faction #{faction.torn_id}: #{e.message}"
-    ::Appsignal.send_error(e) if defined?(::Appsignal)
   end
 end
