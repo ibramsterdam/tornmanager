@@ -5,7 +5,7 @@ class ProgressController < ApplicationController
     @has_limited_access = Current.user.has_limited_access?
 
     if @has_limited_access
-      owned_stocks = TornApi::User::Stocks.new(Current.user.api_key, user: Current.user).fetch
+      owned_stocks = TornApi::User::Stocks.new(Current.user.api_key).fetch
       @table_rows = Torn::Stock.money_rows(owned_stocks).sort_by { |row| row[:days_to_break_even].infinite? ? Float::INFINITY : row[:days_to_break_even] }
     else
       # Show all stocks without ownership info for users without Limited Access

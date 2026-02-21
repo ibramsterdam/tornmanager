@@ -15,12 +15,11 @@ module TornApi
     DEFAULT_OPEN_TIMEOUT = 5
     MAX_RETRIES = 2
 
-    attr_reader :api_key, :user
+    attr_reader :api_key
 
-    def initialize(api_key, user: nil)
+    def initialize(api_key)
       raise InvalidKeyError, "No API key provided" if api_key.blank?
       @api_key = api_key
-      @user = user
     end
 
     def get(path, params = {}, retries: 0)
@@ -175,14 +174,12 @@ module TornApi
     end
 
     def log_api_call(endpoint, params, status, response_time, metadata, error_message = nil)
-      is_owner_key = api_key == OwnerCredentials.api_key
+      target_user = resolve_api_key_owner
 
-      Rails.logger.debug("log_api_call called: endpoint=#{endpoint}, user=#{user&.id}, is_owner_key=#{is_owner_key}")
-
-      return unless user || is_owner_key
-
-      target_user = user || ::User.find_by(torn_id: 2728237)
-      Rails.logger.debug("Creating API log for user_id=#{target_user&.id}, api_key=#{api_key[0..5]}...")
+      unless target_user
+        Rails.logger.debug("log_api_call skipped: no user found for api_key=#{api_key[0..5]}...")
+        return
+      end
 
       ApiCall.create!(
         user: target_user,
@@ -194,11 +191,22 @@ module TornApi
         error_message: error_message,
         torn_api_timestamp: metadata&.dig("timestamp")
       )
-
-      Rails.logger.debug("API call logged successfully")
     rescue => e
       Rails.logger.error("Failed to log API call: #{e.message}")
       Rails.logger.error(e.backtrace.first(5).join("\n"))
+    end
+
+    def resolve_api_key_owner
+      @resolved_user ||= begin
+        # Try to find user by API key
+        found = ::User.find_by(api_key: api_key)
+        return found if found
+
+        # Fall back to owner if this is the owner key
+        if api_key == OwnerCredentials.api_key
+          ::User.find_by(torn_id: 2728237)
+        end
+      end
     end
   end
 end

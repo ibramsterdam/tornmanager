@@ -29,6 +29,12 @@ class Factions::SettingsController < ApplicationController
     if new_torn_key
       begin
         key_info = TornApi::Key::Info.new(new_torn_key).fetch
+
+        # Verify the key belongs to the current user
+        unless Current.user.admin? || key_info.user.id == Current.user.torn_id
+          return redirect_to faction_settings_path(@faction), alert: "This API key does not belong to you."
+        end
+
         @faction_setting.torn_api_key = new_torn_key
         @faction_setting.torn_api_access_type = key_info.access.type
         changes_made = true
