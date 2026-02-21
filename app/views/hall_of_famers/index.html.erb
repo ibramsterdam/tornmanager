@@ -63,6 +63,7 @@
         <th><%= sortable_header(sort_link("networth_gained", "NETWORTH GAINED")) %></th>
         <th><%= sortable_header(sort_link("total_se", "TOTAL SE")) %></th>
         <th><%= sortable_header(sort_link("se_gained", "SE GAINED")) %></th>
+        <th></th>
       </tr>
     </thead>
     <tbody>
@@ -100,6 +101,19 @@
             <% if @total_days_tracked > 0 %>
               <span class="stat-daily"><%= row[:se_daily] %> taken/day</span>
             <% end %>
+          </td>
+          <td class="copy-cell">
+            <button type="button"
+                    class="copy-stats-button"
+                    data-controller="clipboard"
+                    data-clipboard-text-value="<%= user_stats_clipboard_text(row, start_date: @start_date, end_date: @end_date, days: row[:days_tracked]) %>"
+                    data-action="click->clipboard#copy"
+                    title="Copy stats to clipboard">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+            </button>
           </td>
         </tr>
       <% end %>

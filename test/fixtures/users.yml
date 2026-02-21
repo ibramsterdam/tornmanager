@@ -11,3 +11,10 @@ bert:
   level: 50
   hof_stats_user: false
   api_key: GHIJKL
+
+kaneki:
+  name: Kaneki
+  torn_id: 2685512
+  level: 75
+  hof_stats_user: false
+  api_key: MNOPQR
