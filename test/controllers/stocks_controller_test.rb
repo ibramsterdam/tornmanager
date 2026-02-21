@@ -1,6 +1,6 @@
 require "test_helper"
 
-class ProgressControllerTest < ActionDispatch::IntegrationTest
+class StocksControllerTest < ActionDispatch::IntegrationTest
   setup do
     @user = User.take
     @mock_user_stocks = [
@@ -28,9 +28,9 @@ class ProgressControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
 
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
-    get progress_index_path
+    get stocks_path
 
     assert_response :success
-    assert_select "h1", "Stock Progress"
+    assert_select "h1", "Stocks"
   end
 end
