@@ -23,7 +23,7 @@ class ApiCallTest < ActiveSupport::TestCase
     today = users(:bram).api_calls.create!(endpoint: "/t", status: "success", api_key: "k")
 
     assert_includes users(:bram).api_calls.today, today
-    assert_equal 1, users(:bram).api_calls.today.where(endpoint: ["/y", "/t"]).count
+    assert_equal 1, users(:bram).api_calls.today.where(endpoint: [ "/y", "/t" ]).count
   end
 
   test "last 24 hours excludes older calls" do
