@@ -13,6 +13,90 @@
   color: var(--gray-100);
 }
 
+/* Top Grid: API Key + Subscription side by side */
+.settings-top-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+@media (max-width: 768px) {
+  .settings-top-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Collapsible "How to subscribe" */
+.subscribe-details {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--gray-800);
+  padding-top: 1rem;
+}
+
+.subscribe-details summary {
+  cursor: pointer;
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
+  list-style: none;
+}
+
+.subscribe-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.subscribe-details summary::before {
+  content: "▸ ";
+  color: var(--gray-500);
+}
+
+.subscribe-details[open] summary::before {
+  content: "▾ ";
+}
+
+.subscribe-details-content {
+  margin-top: 1rem;
+}
+
+.subscribe-method {
+  margin-bottom: 1rem;
+}
+
+.subscribe-method:last-child {
+  margin-bottom: 0;
+}
+
+.subscribe-method h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-200);
+  margin-bottom: 0.5rem;
+}
+
+.subscribe-method p {
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
+.subscribe-method p:last-child {
+  margin-bottom: 0;
+}
+
+.subscribe-method a {
+  color: var(--blue-500);
+  text-decoration: none;
+}
+
+.subscribe-method a:hover {
+  text-decoration: underline;
+}
+
+
+
 /* Settings Page Stat Cards */
 .settings-section .stat-card .stat-label {
   color: #ffffff;

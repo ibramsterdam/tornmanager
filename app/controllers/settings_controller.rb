@@ -9,7 +9,6 @@ class SettingsController < ApplicationController
 
     @subscribed = Current.user.subscribed?
     @days_remaining = calculate_days_remaining if @subscribed
-    @subscription_progress = calculate_subscription_progress if @subscribed
 
     @last_refresh_at = session[:last_subscription_refresh_at]
     @can_refresh = can_refresh?
@@ -145,16 +144,6 @@ class SettingsController < ApplicationController
 
   def calculate_days_remaining
     (Current.user.subscription_expires_at.to_date - Date.current).to_i
-  end
-
-  def calculate_subscription_progress
-    return 0 unless Current.user.subscribed?
-
-    days_remaining = calculate_days_remaining
-    total_days = 365
-
-    percentage_remaining = [ (days_remaining.to_f / total_days * 100).round(1), 100 ].min
-    100 - percentage_remaining
   end
 
   def can_refresh?
