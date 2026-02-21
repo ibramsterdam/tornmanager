@@ -1,13 +1,13 @@
-one:
+bram:
   name: Bram
   torn_id: 2728237
   level: 69
   hof_stats_user: false
   api_key: ABCDEF
 
-two:
-  name: TestUser
+bert:
+  name: Bert
   torn_id: 1234567
   level: 50
-  hof_stats_user: true
-  api_key: nil
+  hof_stats_user: false
+  api_key: GHIJKL

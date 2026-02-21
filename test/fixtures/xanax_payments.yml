@@ -1,16 +1,16 @@
 # Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
 
 one:
-  recipient: one
-  sender: one
+  recipient: bram
+  sender: bram
   log_id: log_one
   xanax_amount: 1
   weeks_granted: 1
   processed_at: 2026-02-15 18:02:55
 
 two:
-  recipient: two
-  sender: two
+  recipient: bert
+  sender: bert
   log_id: log_two
   xanax_amount: 1
   weeks_granted: 1

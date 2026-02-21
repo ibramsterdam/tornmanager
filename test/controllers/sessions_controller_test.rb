@@ -4,7 +4,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @valid_api_key = "test_api_key_valid"
     @invalid_api_key = "test_api_key_invalid"
-    @existing_user = users(:one)
+    @existing_user = users(:bram)
   end
 
   test "new shows login page" do
@@ -292,7 +292,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy terminates session and redirects to root" do
-    user = users(:one)
+    user = users(:bram)
     sign_in_as(user)
     session_count_before = user.sessions.count
 
@@ -305,7 +305,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy uses see_other status" do
-    sign_in_as(users(:one))
+    sign_in_as(users(:bram))
 
     delete session_path
 
