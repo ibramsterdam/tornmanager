@@ -13,6 +13,8 @@ class Factions::SettingsController < ApplicationController
     @last_import_at = Rails.cache.read(import_cache_key)
     @can_import = @last_import_at.nil?
     @seconds_until_import = seconds_until_import
+    @whitelisted_users = @faction.whitelisted_users.order(:name)
+    @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
   end
 
   def update
@@ -57,6 +59,31 @@ class Factions::SettingsController < ApplicationController
       redirect_to faction_settings_path(@faction), notice: "API keys saved successfully."
     else
       redirect_to faction_settings_path(@faction), alert: "Failed to save settings."
+    end
+  end
+
+  def add_whitelist
+    user = @faction.users.find_by(id: params[:user_id])
+
+    if user.nil?
+      redirect_to faction_settings_path(@faction), alert: "User not found in this faction."
+    elsif @faction.faction_whitelists.exists?(user: user)
+      redirect_to faction_settings_path(@faction), notice: "#{user.name} already has access."
+    else
+      @faction.faction_whitelists.create!(user: user)
+      redirect_to faction_settings_path(@faction), notice: "#{user.name} has been granted access."
+    end
+  end
+
+  def remove_whitelist
+    whitelist = @faction.faction_whitelists.find_by(user_id: params[:user_id])
+
+    if whitelist
+      name = whitelist.user.name
+      whitelist.destroy!
+      redirect_to faction_settings_path(@faction), notice: "#{name}'s access has been removed."
+    else
+      redirect_to faction_settings_path(@faction), alert: "User not found in whitelist."
     end
   end
 

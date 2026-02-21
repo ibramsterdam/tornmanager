@@ -1,0 +1,113 @@
+class ComplianceSummary
+  include FactionHelper
+
+  attr_reader :faction, :start_date, :end_date, :member_rows,
+              :compliant_count, :warning_count, :non_compliant_count, :total_days
+
+  def initialize(faction, start_date: nil, end_date: nil)
+    @faction = faction
+    @start_date = start_date || PersonalStatSnapshot.tracking_start_date
+    @end_date = end_date || PersonalStatSnapshot.tracking_end_date
+    @total_days = (@end_date - @start_date).to_i + 1
+    @member_rows = []
+
+    compute
+  end
+
+  # Bottom N members by compliance score
+  def worst_performers(limit = 5)
+    member_rows.sort_by { |row| row[:compliance_score] }.first(limit)
+  end
+
+  private
+
+  def compute
+    query_start_date = start_date - 1.day
+
+    @member_rows = faction.users.active.includes(:personal_stat_snapshots).filter_map do |user|
+      build_member_row(user, query_start_date)
+    end
+
+    @compliant_count = @member_rows.count { |row| row[:compliance_level] == :compliant }
+    @warning_count = @member_rows.count { |row| row[:compliance_level] == :warning }
+    @non_compliant_count = @member_rows.count { |row| row[:compliance_level] == :danger }
+  end
+
+  def build_member_row(user, query_start_date)
+    all_snapshots = user.personal_stat_snapshots
+                        .where(date: query_start_date..end_date)
+                        .order(:date)
+
+    xanax_stats = calculate_stat(all_snapshots, :drugs_xanax)
+    energy_stats = calculate_stat(all_snapshots, :other_refills_energy)
+    nerve_stats = calculate_stat(all_snapshots, :other_refills_nerve)
+    missions_stats = calculate_stat(all_snapshots, :missions_contracts_total)
+    crimes_stats = calculate_stat(all_snapshots, :crimes_offenses_total)
+    activity_stats = calculate_stat(all_snapshots, :other_activity_time)
+
+    return if xanax_stats[:days].zero? && energy_stats[:days].zero? && nerve_stats[:days].zero?
+
+    days_tracked = [
+      xanax_stats[:days], energy_stats[:days], nerve_stats[:days],
+      missions_stats[:days], crimes_stats[:days], activity_stats[:days]
+    ].max
+
+    xanax_daily = xanax_stats[:daily]
+    energy_refills_daily = energy_stats[:daily]
+    nerve_refills_daily = nerve_stats[:daily]
+    missions_daily = missions_stats[:daily]
+    crimes_daily = crimes_stats[:daily]
+    activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / 60 / activity_stats[:days]).round(0) : 0
+
+    xanax_compliance = stat_compliance(xanax_daily, faction.xanax_target)
+    energy_compliance = stat_compliance(energy_refills_daily, faction.energy_refill_target)
+    nerve_compliance = stat_compliance(nerve_refills_daily, faction.nerve_refill_target)
+
+    compliance_level = member_compliance_level(xanax_compliance, energy_compliance, nerve_compliance)
+    score = compliance_score(xanax_daily, energy_refills_daily, nerve_refills_daily, faction)
+
+    {
+      torn_id: user.torn_id,
+      name: user.name,
+      compliance_level: compliance_level,
+      compliance_score: score,
+
+      xanax_gained: xanax_stats[:gained],
+      xanax_daily: xanax_daily,
+      xanax_compliance: xanax_compliance,
+
+      energy_refills_gained: energy_stats[:gained],
+      energy_refills_daily: energy_refills_daily,
+      energy_refills_compliance: energy_compliance,
+
+      nerve_refills_gained: nerve_stats[:gained],
+      nerve_refills_daily: nerve_refills_daily,
+      nerve_refills_compliance: nerve_compliance,
+
+      missions_gained: missions_stats[:gained],
+      missions_daily: missions_daily,
+
+      crimes_gained: crimes_stats[:gained],
+      crimes_daily: crimes_daily,
+
+      activity_time_gained: activity_stats[:gained],
+      activity_time_daily: activity_time_daily,
+
+      days_tracked: days_tracked
+    }
+  end
+
+  def calculate_stat(all_snapshots, field)
+    snapshots = all_snapshots.where.not(field => nil)
+    return { gained: 0, daily: 0.0, days: 0 } if snapshots.size < 2
+
+    first = snapshots.first
+    last = snapshots.last
+    gained = (last[field] || 0) - (first[field] || 0)
+
+    actual_days = (last.date - first.date).to_i
+    daily = actual_days > 0 ? (gained.to_f / actual_days).round(2) : 0.0
+
+    { gained: gained, daily: daily, days: actual_days }
+  end
+end

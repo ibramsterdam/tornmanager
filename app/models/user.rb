@@ -8,6 +8,7 @@ class User < ApplicationRecord
   has_many :faction_subscription_grants, through: :subscription_grants
   has_many :granted_faction_subscriptions, class_name: "FactionSubscriptionGrant", foreign_key: :granted_by_id
   has_many :api_calls, dependent: :destroy
+  has_many :faction_whitelists, dependent: :destroy
 
   validates :api_key, uniqueness: true, allow_nil: true
   validates :torn_id, presence: true, uniqueness: true

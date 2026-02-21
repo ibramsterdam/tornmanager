@@ -12,8 +12,8 @@
   <td>
     <small>
       Xanax: <%= faction.xanax_target %>/day<br>
-      Energy: <%= faction.energy_refill_target %>/day<br>
-      Nerve: <%= faction.nerve_refill_target %>/day
+      Energy: <%= faction.energy_refill_target > 0 ? "#{faction.energy_refill_target}/day" : "Disabled" %><br>
+      Nerve: <%= faction.nerve_refill_target > 0 ? "#{faction.nerve_refill_target}/day" : "Disabled" %>
     </small>
   </td>
   <td>

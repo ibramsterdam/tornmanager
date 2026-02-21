@@ -3,7 +3,7 @@ class Factions::RankedWarsController < ApplicationController
 
   SYNC_COOLDOWN = 1.minute
 
-  before_action :require_faction_member
+  before_action :require_faction_whitelisted
   before_action :check_tracking_enabled
 
   def index

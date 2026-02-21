@@ -92,14 +92,17 @@
     <% if backfill_in_progress %>
       <%= render "factions/training/table_skeleton" %>
     <% else %>
+      <% energy_enabled = @faction.energy_refill_target > 0 %>
+      <% nerve_enabled = @faction.nerve_refill_target > 0 %>
+
       <!-- Compliance Summary -->
       <div class="compliance-summary">
         <div class="target-info">
           <h3>Daily Targets</h3>
           <ul>
             <li><strong>Xanax:</strong> <%= @faction.xanax_target %>/day</li>
-            <li><strong>Energy Refills:</strong> <%= @faction.energy_refill_target %>/day</li>
-            <li><strong>Nerve Refills:</strong> <%= @faction.nerve_refill_target %>/day</li>
+            <li><strong>Energy Refills:</strong> <%= energy_enabled ? "#{@faction.energy_refill_target}/day" : "Disabled" %></li>
+            <li><strong>Nerve Refills:</strong> <%= nerve_enabled ? "#{@faction.nerve_refill_target}/day" : "Disabled" %></li>
           </ul>
         </div>
         
@@ -130,8 +133,8 @@
               <th>Status</th>
               <th><%= sortable_header(sort_link("name", "MEMBER"), @faction) %></th>
               <th><%= sortable_header(sort_link("xanax_daily", "XANAX"), @faction) %><br><small>Target: <%= @faction.xanax_target %>/day</small></th>
-              <th><%= sortable_header(sort_link("energy_refills_daily", "ENERGY REFILLS"), @faction) %><br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
-              <th><%= sortable_header(sort_link("nerve_refills_daily", "NERVE REFILLS"), @faction) %><br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
+              <th><%= sortable_header(sort_link("energy_refills_daily", "ENERGY REFILLS"), @faction) %><br><small>Target: <%= energy_enabled ? "#{@faction.energy_refill_target}/day" : "Disabled" %></small></th>
+              <th><%= sortable_header(sort_link("nerve_refills_daily", "NERVE REFILLS"), @faction) %><br><small>Target: <%= nerve_enabled ? "#{@faction.nerve_refill_target}/day" : "Disabled" %></small></th>
               <th><%= sortable_header(sort_link("missions_daily", "CONTRACTS"), @faction) %></th>
               <th><%= sortable_header(sort_link("crimes_daily", "CRIMES"), @faction) %></th>
               <th><%= sortable_header(sort_link("activity_time_daily", "ACTIVITY"), @faction) %><br><small>min/day</small></th>

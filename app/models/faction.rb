@@ -4,12 +4,14 @@ class Faction < ApplicationRecord
   has_many :ranked_wars, dependent: :destroy
   has_one :faction_setting, dependent: :destroy
   has_many :spy_reports, dependent: :destroy
+  has_many :faction_whitelists, dependent: :destroy
+  has_many :whitelisted_users, through: :faction_whitelists, source: :user
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :xanax_target, presence: true, numericality: { greater_than: 0 }
-  validates :energy_refill_target, presence: true, numericality: { greater_than: 0 }
-  validates :nerve_refill_target, presence: true, numericality: { greater_than: 0 }
+  validates :energy_refill_target, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :nerve_refill_target, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
   scope :tracked, -> { where(track_stats: true) }
 

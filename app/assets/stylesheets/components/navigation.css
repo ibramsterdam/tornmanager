@@ -93,6 +93,15 @@ nav {
   position: relative;
 }
 
+.navbar-faction-dropdown {
+  position: relative;
+}
+
+.navbar-dropdown-left {
+  left: 0;
+  right: auto;
+}
+
 .navbar-link-button {
   display: flex;
   align-items: center;
@@ -359,6 +368,21 @@ nav {
 .navbar-mobile-menu-item.signout:hover {
   background: rgba(239, 68, 68, 0.1);
   color: #fca5a5;
+}
+
+.navbar-mobile-menu-label {
+  display: block;
+  padding: var(--space-2) var(--space-4);
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+  font-family: "Geist Mono", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.navbar-mobile-menu-item-nested {
+  padding-left: var(--space-6);
 }
 
 /* Mobile breakpoint */

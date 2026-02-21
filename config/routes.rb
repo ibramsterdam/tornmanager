@@ -21,6 +21,8 @@ Rails.application.routes.draw do
     end
     resource :settings, only: [ :show, :update ], controller: "factions/settings" do
       post :import_spies
+      post :add_whitelist
+      delete :remove_whitelist
     end
     resource :spy_stats, only: [ :show ], controller: "factions/spy_stats"
   end

@@ -30,14 +30,16 @@ module Admin
 
         @faction = Faction.new(
           torn_id: torn_id,
-          name: faction_info["name"],
-          track_stats: false
+          name: faction_info["name"]
         )
 
         if @faction.save
+          SyncFactionMembersJob.perform_now(@faction.id)
+          @faction.reload
+
           respond_to do |format|
             format.turbo_stream
-            format.html { redirect_to admin_factions_path, notice: "Faction '#{@faction.name}' added successfully." }
+            format.html { redirect_to admin_factions_path, notice: "Faction '#{@faction.name}' added with #{@faction.users.active.count} members." }
           end
         else
           @error = "Failed to save faction: #{@faction.errors.full_messages.join(', ')}"

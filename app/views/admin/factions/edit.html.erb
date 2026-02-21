@@ -29,14 +29,14 @@
 
     <div class="form-field">
       <%= form.label :energy_refill_target, "Energy Refills (per day)" %>
-      <%= form.number_field :energy_refill_target, step: 0.1, min: 0.1, class: "form-input" %>
-      <small class="form-hint">Minimum energy refills expected per member per day</small>
+      <%= form.number_field :energy_refill_target, step: 0.1, min: 0, class: "form-input" %>
+      <small class="form-hint">Minimum energy refills expected per member per day. Set to 0 to disable.</small>
     </div>
 
     <div class="form-field">
       <%= form.label :nerve_refill_target, "Nerve Refills (per day)" %>
-      <%= form.number_field :nerve_refill_target, step: 0.1, min: 0.1, class: "form-input" %>
-      <small class="form-hint">Minimum nerve refills expected per member per day</small>
+      <%= form.number_field :nerve_refill_target, step: 0.1, min: 0, class: "form-input" %>
+      <small class="form-hint">Minimum nerve refills expected per member per day. Set to 0 to disable.</small>
     </div>
 
     <div class="form-actions">
