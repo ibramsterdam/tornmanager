@@ -2,35 +2,90 @@ require "test_helper"
 
 class StocksControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @user = User.take
+    @user = users(:bert)
     @mock_user_stocks = [
       TornApi::User::Stocks::UserStock.new(
         stock_id: 16,
         total_shares: 1_500_000,
         dividend: TornApi::User::Stocks::Dividend.new(ready: 0, increment: 2, progress: 5, frequency: 7),
         transactions: [
-          TornApi::User::Stocks::Transaction.new(shares: 957_754, bought_price: 675.8, time_bought: Time.new(2025, 3, 23, 18, 26, 26, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 34_511, bought_price: 667.06, time_bought: Time.new(2024, 4, 23, 17, 29, 1, "+02:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 81_704, bought_price: 636.74, time_bought: Time.new(2023, 11, 30, 20, 3, 8, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 79_835, bought_price: 626.47, time_bought: Time.new(2023, 11, 22, 14, 36, 57, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 80_191, bought_price: 627.07, time_bought: Time.new(2023, 11, 16, 9, 15, 23, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 17_107, bought_price: 627.41, time_bought: Time.new(2023, 11, 12, 21, 30, 18, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 79_792, bought_price: 626.86, time_bought: Time.new(2023, 11, 5, 10, 8, 10, "+01:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 3_270, bought_price: 631.69, time_bought: Time.new(2023, 10, 28, 17, 21, 2, "+02:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 79_533, bought_price: 630.3, time_bought: Time.new(2023, 10, 19, 10, 22, 10, "+02:00")),
-          TornApi::User::Stocks::Transaction.new(shares: 86_303, bought_price: 625.73, time_bought: Time.new(2023, 10, 10, 20, 37, 8, "+02:00"))
+          TornApi::User::Stocks::Transaction.new(shares: 1_500_000, bought_price: 675.8, time_bought: Time.new(2025, 3, 23))
         ]
       )
     ]
   end
 
-  test "index" do
-    sign_in_as(@user)
+  # -- Authentication --
 
-    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+  test "redirects to login when not authenticated" do
     get stocks_path
+    assert_redirected_to new_session_path
+  end
 
+  test "redirects to login when user has no API key" do
+    @user.update!(api_key: nil)
+    sign_in_as(@user)
+    get stocks_path
+    assert_redirected_to new_session_path
+    assert_match /Please sign in/, flash[:alert]
+  end
+
+  # -- Limited Access user sees owned column --
+
+  test "limited access user sees stock table with owned column" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
     assert_response :success
     assert_select "h1", "Stocks"
+    assert_select "th", text: "OWNED"
+  end
+
+  # -- Non-limited access user sees table without owned column --
+
+  test "non-limited access user sees stock table without owned column" do
+    @user.update!(api_access_type: "Minimal Access")
+    sign_in_as(@user)
+
+    get stocks_path
+    assert_response :success
+    assert_select "th", text: "OWNED", count: 0
+    assert_select ".alert-info", /Limited Access Required/
+  end
+
+  # -- API error handling --
+
+  test "invalid API key redirects to login" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError, "Invalid key")
+
+    get stocks_path
+    assert_redirected_to new_session_path
+    assert_match /Invalid or expired API key/, flash[:alert]
+  end
+
+  test "API error redirects to root with message" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
+
+    get stocks_path
+    assert_redirected_to root_path
+    assert_match /Could not fetch stock data/, flash[:alert]
+  end
+
+  # -- Table content --
+
+  test "table rows are sorted by days to break even" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
+    assert_response :success
+    assert_select "table tbody tr"
   end
 end
