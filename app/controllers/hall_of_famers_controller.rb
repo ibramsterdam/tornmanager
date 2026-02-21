@@ -1,5 +1,8 @@
 class HallOfFamersController < ApplicationController
+  HOF_OWNER_TORN_ID = 2685512
   SORTABLE_COLUMNS = %w[name xanax_gained energy_drinks_gained networth_gained total_se se_gained].freeze
+
+  before_action :require_hof_access
 
   def index
     # Use tracking constants for date range
@@ -10,37 +13,34 @@ class HallOfFamersController < ApplicationController
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
     @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
 
-    # Calculate total days for the selected range
-    @total_days_tracked = (@end_date - @start_date).to_i
+    # Calculate total days for the selected range (inclusive)
+    @total_days_tracked = (@end_date - @start_date).to_i + 1
+
+    # To calculate stats for days X to Y, we need the snapshot from day
+    # before start (X-1) as baseline, so gains reflect consumption ON
+    # days X through Y.
+    query_start_date = @start_date - 1.day
 
     @table_rows = User.hof_stats_users.includes(:personal_stat_snapshots).filter_map do |user|
-      # Filter snapshots by date range
       snapshots = user.personal_stat_snapshots
-                      .where(date: @start_date..@end_date)
+                      .where(date: query_start_date..@end_date)
                       .order(:date)
 
-      # Skip users with no snapshots
-      next if snapshots.empty?
+      next if snapshots.size < 2
 
-      latest = snapshots.last
       first = snapshots.first
+      latest = snapshots.last
+      actual_days = (latest.date - first.date).to_i
 
-      if latest && first && snapshots.size > 1
-        # Calculate gains
-        xanax_gained = (latest.drugs_xanax || 0) - (first.drugs_xanax || 0)
-        energy_drinks_gained = (latest.items_used_energy_drinks || 0) - (first.items_used_energy_drinks || 0)
-        se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
-        networth_gained = (latest.networth_total || 0) - (first.networth_total || 0)
+      xanax_gained = (latest.drugs_xanax || 0) - (first.drugs_xanax || 0)
+      energy_drinks_gained = (latest.items_used_energy_drinks || 0) - (first.items_used_energy_drinks || 0)
+      se_gained = (latest.items_used_stat_enhancers || 0) - (first.items_used_stat_enhancers || 0)
+      networth_gained = (latest.networth_total || 0) - (first.networth_total || 0)
 
-        # Calculate daily averages using the overall tracking period
-        xanax_daily = @total_days_tracked > 0 ? (xanax_gained.to_f / @total_days_tracked).round(2) : 0
-        energy_drinks_daily = @total_days_tracked > 0 ? (energy_drinks_gained.to_f / @total_days_tracked).round(2) : 0
-        se_daily = @total_days_tracked > 0 ? (se_gained.to_f / @total_days_tracked).round(2) : 0
-        networth_daily = @total_days_tracked > 0 ? (networth_gained.to_f / @total_days_tracked).round(0) : 0
-      else
-        xanax_gained = energy_drinks_gained = se_gained = networth_gained = 0
-        xanax_daily = energy_drinks_daily = se_daily = networth_daily = 0
-      end
+      xanax_daily = actual_days > 0 ? (xanax_gained.to_f / actual_days).round(2) : 0
+      energy_drinks_daily = actual_days > 0 ? (energy_drinks_gained.to_f / actual_days).round(2) : 0
+      se_daily = actual_days > 0 ? (se_gained.to_f / actual_days).round(2) : 0
+      networth_daily = actual_days > 0 ? (networth_gained.to_f / actual_days).round(0) : 0
 
       {
         name: user.name,
@@ -53,7 +53,8 @@ class HallOfFamersController < ApplicationController
         networth_daily: networth_daily,
         total_se: latest&.items_used_stat_enhancers || 0,
         se_gained: se_gained,
-        se_daily: se_daily
+        se_daily: se_daily,
+        days_tracked: actual_days
       }
     end
 
@@ -71,5 +72,9 @@ class HallOfFamersController < ApplicationController
   def sort_link(column, label)
     direction = (@sort_column == column && @sort_direction == "asc") ? "desc" : "asc"
     { column: column, label: label, direction: direction, current: @sort_column == column, current_direction: @sort_direction }
+  end
+
+  def require_hof_access
+    redirect_to root_path, alert: "Access denied." unless Current.user&.admin? || Current.user&.torn_id == HOF_OWNER_TORN_ID
   end
 end
