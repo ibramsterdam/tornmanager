@@ -16,7 +16,7 @@ export default class extends Controller {
 
   static targets = [
     "ourScore", "theirScore", "targetScore",
-    "warTimer", "connectionStatus", "lastUpdated",
+    "warTimer", "connectionStatus", "lastUpdated", "updateCountdown",
     "membersBody",
     "sortIndicatorName", "sortIndicatorLevel", "sortIndicatorStatus",
     "sortIndicatorTimer", "sortIndicatorTotal",
@@ -30,6 +30,8 @@ export default class extends Controller {
     this.sortDirection = "asc"
     this.timerInterval = null
     this.pollInterval = null
+    this.countdownInterval = null
+    this.secondsUntilUpdate = 6
 
     // Load initial data from cache if available
     if (this.initialDataValue && Object.keys(this.initialDataValue).length > 0) {
@@ -45,6 +47,9 @@ export default class extends Controller {
 
     // Start hospital countdown ticker
     this.timerInterval = setInterval(() => this.tickTimers(), 1000)
+
+    // Start update countdown ticker
+    this.startUpdateCountdown()
 
     // Update sort indicator for default sort
     this.updateSortIndicators()
@@ -62,6 +67,10 @@ export default class extends Controller {
     if (this.warTimerInterval) {
       clearInterval(this.warTimerInterval)
       this.warTimerInterval = null
+    }
+    if (this.countdownInterval) {
+      clearInterval(this.countdownInterval)
+      this.countdownInterval = null
     }
   }
 
@@ -198,7 +207,7 @@ export default class extends Controller {
     `
   }
 
-  // --- Last updated ---
+  // --- Last updated & countdown ---
 
   updateLastUpdated(isoString) {
     if (!this.hasLastUpdatedTarget) return
@@ -208,6 +217,23 @@ export default class extends Controller {
     const minutes = date.getMinutes().toString().padStart(2, "0")
     const seconds = date.getSeconds().toString().padStart(2, "0")
     this.lastUpdatedTarget.textContent = `Updated ${hours}:${minutes}:${seconds}`
+
+    // Reset countdown when data is updated
+    this.secondsUntilUpdate = POLL_INTERVAL / 1000
+    this.updateCountdownDisplay()
+  }
+
+  startUpdateCountdown() {
+    this.updateCountdownDisplay()
+    this.countdownInterval = setInterval(() => {
+      this.secondsUntilUpdate = Math.max(0, this.secondsUntilUpdate - 1)
+      this.updateCountdownDisplay()
+    }, 1000)
+  }
+
+  updateCountdownDisplay() {
+    if (!this.hasUpdateCountdownTarget) return
+    this.updateCountdownTarget.textContent = `Next update in ${this.secondsUntilUpdate}s`
   }
 
   // --- Sorting ---
