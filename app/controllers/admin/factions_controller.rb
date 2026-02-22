@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats, :backfill_wars ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats, :backfill_wars, :toggle_ssl ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -182,6 +182,20 @@ module Admin
                   notice: "Backfill queued for '#{@faction.name}': fetching last 20 ranked wars."
     rescue => e
       redirect_to admin_factions_path, alert: "Failed to queue war backfill: #{e.message}"
+    end
+
+    def toggle_ssl
+      user = @faction.users.find_by(id: params[:user_id])
+
+      unless user
+        render json: { success: false, error: "User not found" }, status: :not_found
+        return
+      end
+
+      user.update!(ssl_user: !user.ssl_user)
+      render json: { success: true, ssl_user: user.ssl_user, user_name: user.name }
+    rescue StandardError => e
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
 
     private

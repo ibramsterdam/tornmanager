@@ -397,6 +397,27 @@ tr.row-danger:hover {
   text-decoration: underline;
 }
 
+/* SSL Badge (Sports Science Lab) */
+.ssl-badge {
+  display: inline-flex;
+  align-items: center;
+  margin-left: var(--space-2);
+  padding: 1px 5px;
+  background: rgba(139, 92, 246, 0.15);
+  color: rgb(167, 139, 250);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  vertical-align: middle;
+}
+
+.ssl-exempt {
+  color: rgb(167, 139, 250);
+  font-style: italic;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .compliance-summary {

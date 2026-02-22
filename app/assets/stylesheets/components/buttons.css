@@ -127,6 +127,16 @@ a.btn-secondary:hover {
   background: #991b1b;
 }
 
+.btn-small-active {
+  background: rgba(139, 92, 246, 0.2);
+  border-color: rgba(139, 92, 246, 0.4);
+  color: rgb(167, 139, 250);
+}
+
+.btn-small-active:hover {
+  background: rgba(139, 92, 246, 0.3);
+}
+
 .button {
   display: inline-flex;
   align-items: center;
