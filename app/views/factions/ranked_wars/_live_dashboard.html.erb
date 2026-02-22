@@ -27,7 +27,17 @@
     </div>
 
     <div class="live-war-center">
-      <div class="live-war-target">First to <span data-war-dashboard-target="targetScore"><%= war.target_score %></span></div>
+      <div class="live-war-lead">
+        <span class="lead-label">Lead Target</span>
+        <span class="lead-values">
+          <span data-war-dashboard-target="currentLead"><%= war.our_score - war.their_score %></span>
+          <span class="lead-separator">/</span>
+          <span data-war-dashboard-target="targetScore"><%= war.target_score %></span>
+        </span>
+        <div class="lead-progress-bar">
+          <div class="lead-progress-fill" data-war-dashboard-target="leadProgress" style="width: <%= [(war.our_score - war.their_score).to_f / war.target_score * 100, 100].min %>%"></div>
+        </div>
+      </div>
       <div class="live-war-timer" data-war-dashboard-target="warTimer"></div>
       <div class="live-war-connection" data-war-dashboard-target="connectionStatus">
         <span class="connection-dot connecting"></span>
