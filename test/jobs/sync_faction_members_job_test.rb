@@ -92,6 +92,22 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     assert_equal new_user.id, job["arguments"].first
   end
 
+  test "sets backfill_ends_at on newly discovered members" do
+    new_member = TornApi::Faction::Members::Member.new(
+      9999999, "NewPlayer", 15, 5,
+      "Online", 1708000000, "1 minute ago",
+      "Okay", "", "Okay", "green", 0,
+      "Everyone", "Member", true, false, false, false
+    )
+    OwnerCredentials.stubs(:api_key).returns("test_key")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
+
+    SyncFactionMembersJob.perform_now(@faction.id)
+
+    new_user = User.find_by(torn_id: 9999999)
+    assert new_user.backfill_in_progress?, "New member should have backfill_ends_at set"
+  end
+
   test "does not schedule backfill for existing members" do
     OwnerCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])

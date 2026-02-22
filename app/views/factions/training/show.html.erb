@@ -54,6 +54,22 @@
     </div>
   <% end %>
 
+  <% if @backfilling_members.present? %>
+    <div class="backfill-members-banner">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"/>
+        <polyline points="12 6 12 12 16 14"/>
+      </svg>
+      <span>
+        <% if @backfilling_members.size == 1 %>
+          1 member (<%= @backfilling_members.first.name %>) is being backfilled and will appear once data is available.
+        <% else %>
+          <%= @backfilling_members.size %> new members (<%= @backfilling_members.map(&:name).join(", ") %>) are being backfilled and will appear once data is available.
+        <% end %>
+      </span>
+    </div>
+  <% end %>
+
   <div class="table-container <%= 'table-disabled' if backfill_in_progress %>">
     <div class="table-info">
       <%= form_with url: faction_training_path(@faction), method: :get, class: "table-filter-form" do |form| %>

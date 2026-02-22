@@ -34,10 +34,14 @@ class SyncFactionMembersJob < OwnerApiJob
   private
 
   def schedule_backfill(user)
-    BackfillUserStatsJob.perform_later(
-      user.id,
-      PersonalStatSnapshot.tracking_start_date.to_s,
-      PersonalStatSnapshot.tracking_end_date.to_s
-    )
+    start_date = PersonalStatSnapshot.tracking_start_date
+    end_date = PersonalStatSnapshot.tracking_end_date
+    days = (end_date - start_date).to_i + 1
+
+    # Each day = 2 API calls (batch 1 + batch 2), ~2.1s per call
+    estimated_seconds = (days * 2 * BackfillPersonalStatsJob::SECONDS_PER_API_CALL).ceil
+    user.update!(backfill_ends_at: Time.current + estimated_seconds.seconds)
+
+    BackfillUserStatsJob.perform_later(user.id, start_date.to_s, end_date.to_s)
   end
 end

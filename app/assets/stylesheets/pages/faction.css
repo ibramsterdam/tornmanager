@@ -441,6 +441,26 @@ tr.row-danger:hover {
   font-size: 1rem;
 }
 
+/* Per-member Backfill Banner */
+.backfill-members-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: var(--radius-md);
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+
+.backfill-members-banner svg {
+  flex-shrink: 0;
+  color: rgba(59, 130, 246, 0.6);
+}
+
 /* Disabled Table State */
 .table-container.table-disabled {
   position: relative;
