@@ -73,6 +73,50 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     assert @bram.reload.fallen
   end
 
+  test "schedules backfill for newly discovered members" do
+    new_member = TornApi::Faction::Members::Member.new(
+      9999999, "NewPlayer", 15, 5,
+      "Online", 1708000000, "1 minute ago",
+      "Okay", "", "Okay", "green", 0,
+      "Everyone", "Member", true, false, false, false
+    )
+    OwnerCredentials.stubs(:api_key).returns("test_key")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
+
+    assert_enqueued_with(job: BackfillUserStatsJob) do
+      SyncFactionMembersJob.perform_now(@faction.id)
+    end
+
+    job = queue_adapter.enqueued_jobs.find { |j| j["job_class"] == "BackfillUserStatsJob" }
+    new_user = User.find_by(torn_id: 9999999)
+    assert_equal new_user.id, job["arguments"].first
+  end
+
+  test "does not schedule backfill for existing members" do
+    OwnerCredentials.stubs(:api_key).returns("test_key")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
+
+    assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
+      SyncFactionMembersJob.perform_now(@faction.id)
+    end
+  end
+
+  test "does not schedule backfill when faction does not track stats" do
+    @faction.update!(track_stats: false)
+    new_member = TornApi::Faction::Members::Member.new(
+      9999999, "NewPlayer", 15, 5,
+      "Online", 1708000000, "1 minute ago",
+      "Okay", "", "Okay", "green", 0,
+      "Everyone", "Member", true, false, false, false
+    )
+    OwnerCredentials.stubs(:api_key).returns("test_key")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
+
+    assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
+      SyncFactionMembersJob.perform_now(@faction.id)
+    end
+  end
+
   test "handles API error gracefully" do
     OwnerCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")

@@ -14,6 +14,7 @@ class SyncFactionMembersJob < OwnerApiJob
 
     members.each do |member|
       user = User.find_or_initialize_by(torn_id: member.id)
+      new_member = user.new_record?
       user.assign_attributes(
         name: member.name,
         level: member.level,
@@ -21,10 +22,22 @@ class SyncFactionMembersJob < OwnerApiJob
         fallen: member.status_state == "Fallen"
       )
       user.save!
+
+      schedule_backfill(user) if new_member && faction.track_stats?
     end
 
     Rails.logger.info "SyncFactionMembersJob: Synced #{members.size} members for faction #{faction.name} [#{faction.torn_id}]"
   rescue TornApi::ApiError => e
     Rails.logger.error "SyncFactionMembersJob: Failed to sync faction #{faction.torn_id}: #{e.message}"
+  end
+
+  private
+
+  def schedule_backfill(user)
+    BackfillUserStatsJob.perform_later(
+      user.id,
+      PersonalStatSnapshot.tracking_start_date.to_s,
+      PersonalStatSnapshot.tracking_end_date.to_s
+    )
   end
 end
