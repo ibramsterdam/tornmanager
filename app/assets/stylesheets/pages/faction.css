@@ -588,3 +588,54 @@ tr.row-danger:hover {
   font-style: italic;
   margin-top: var(--space-3);
 }
+
+/* War Polling */
+.war-polling-card {
+  padding: var(--space-5);
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+}
+
+.war-polling-scores {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.war-polling-score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  font-family: "Geist Mono", monospace;
+}
+
+.war-polling-score--ours {
+  color: #22c55e;
+}
+
+.war-polling-score--theirs {
+  color: #ef4444;
+}
+
+.war-polling-score-divider {
+  color: var(--gray-500);
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+.war-polling-target {
+  color: var(--gray-500);
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.war-polling-actions {
+  margin-bottom: var(--space-3);
+}
+
+.war-polling-status {
+  color: var(--gray-500);
+  font-size: 0.8125rem;
+  margin: 0;
+}

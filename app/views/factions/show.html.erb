@@ -54,6 +54,43 @@
     </div>
   </div>
 
+  <!-- War Polling -->
+  <% if @current_war %>
+    <div class="dashboard-section">
+      <div class="dashboard-section-header">
+        <h2>
+          Ranked War vs <%= @current_war.opponent_faction_name %>
+          <% if @faction.war_polling_active? %>
+            <span class="ping-dot"><span class="ping-ring"></span></span>
+          <% end %>
+        </h2>
+      </div>
+
+      <div class="war-polling-card">
+        <div class="war-polling-scores">
+          <span class="war-polling-score war-polling-score--ours"><%= @current_war.our_score %></span>
+          <span class="war-polling-score-divider">-</span>
+          <span class="war-polling-score war-polling-score--theirs"><%= @current_war.their_score %></span>
+          <span class="war-polling-target">/ <%= @current_war.target_score %></span>
+        </div>
+
+        <div class="war-polling-actions">
+          <% if @faction.war_polling_active? %>
+            <%= button_to "Stop Polling", stop_faction_war_polling_path(@faction), method: :delete, class: "btn-small btn-small-danger" %>
+          <% else %>
+            <%= button_to "Start Polling", start_faction_war_polling_path(@faction), method: :post, class: "btn-small" %>
+          <% end %>
+        </div>
+
+        <% if @faction.war_polling_active? %>
+          <p class="war-polling-status">Live polling active — enemy status updates every 6 seconds.</p>
+        <% else %>
+          <p class="war-polling-status">Start polling to feed live enemy status data to the TornManager userscript.</p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- Worst Performers -->
   <% if @worst_performers.any? %>
     <div class="dashboard-section">

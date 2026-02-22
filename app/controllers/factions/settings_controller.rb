@@ -152,6 +152,9 @@ class Factions::SettingsController < ApplicationController
         imported += 1
       end
 
+      # Invalidate war cache so next poll picks up fresh spy data
+      Rails.cache.delete(@faction.war_cache_key)
+
       redirect_to faction_settings_path(@faction), notice: "Successfully imported #{imported} spy reports."
     rescue TornStatsApi::NotFoundError => e
       redirect_to faction_settings_path(@faction), alert: "No spy data found: #{e.message}"

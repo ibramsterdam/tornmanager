@@ -37,4 +37,23 @@ class Faction < ApplicationRecord
   def clear_backfill_status!
     update!(backfill_ends_at: nil, backfill_target_date: nil)
   end
+
+  # War polling
+  def current_war
+    ranked_wars.ongoing.order(started_at: :desc).find(&:in_progress?)
+  end
+
+  def start_war_polling!
+    update!(war_polling_active: true)
+    WarPollingJob.perform_later(id)
+  end
+
+  def stop_war_polling!
+    update!(war_polling_active: false)
+    Rails.cache.delete(war_cache_key)
+  end
+
+  def war_cache_key
+    "faction:#{id}:war_data"
+  end
 end

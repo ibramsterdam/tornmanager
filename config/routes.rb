@@ -6,6 +6,7 @@ Rails.application.routes.draw do
     resource :session, only: [ :create ]
     post :subscription, to: "subscriptions#show"
     post :war, to: "wars#show"
+    post :current_war, to: "current_war#show"
   end
 
   resource :session
@@ -27,6 +28,10 @@ Rails.application.routes.draw do
       delete :delete_tornstats_key
     end
     resource :spy_stats, only: [ :show ], controller: "factions/spy_stats"
+    resource :war_polling, only: [], controller: "factions/war_polling" do
+      post :start
+      delete :stop
+    end
   end
   resources :welcome, only: [ :index ]
 
