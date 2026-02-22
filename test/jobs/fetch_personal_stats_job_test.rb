@@ -8,6 +8,7 @@ class FetchPersonalStatsJobTest < ActiveJob::TestCase
       .merge(date: @stats_date)
     @batch2_stats = PersonalStatSnapshot::TRACKED_STATS_BATCH_2.values.index_with { |_| 200 }
       .merge(date: @stats_date)
+    OwnerCredentials.stubs(:api_key).returns("test_key")
   end
 
   test "batch 1 saves snapshot and chains batch 2" do
