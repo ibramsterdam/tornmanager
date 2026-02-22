@@ -23,6 +23,8 @@ Rails.application.routes.draw do
       post :import_spies
       post :add_whitelist
       delete :remove_whitelist
+      delete :delete_torn_key
+      delete :delete_tornstats_key
     end
     resource :spy_stats, only: [ :show ], controller: "factions/spy_stats"
   end

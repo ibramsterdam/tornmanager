@@ -77,6 +77,82 @@ class Factions::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Bram/, response.body
   end
 
+  # -- API key validation --
+
+  test "rejects non-Limited Access torn api key" do
+    sign_in_as_faction_leader(@bert)
+
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 4, type: "Full Access", faction: true, company: true),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: @faction.torn_id, company_id: nil)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+
+    patch faction_settings_path(@faction), params: { faction_setting: { torn_api_key: "full_access_key" } }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /Limited Access/, flash[:alert]
+  end
+
+  test "accepts Limited Access torn api key" do
+    sign_in_as_faction_leader(@bert)
+
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: @faction.torn_id, company_id: nil)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+
+    patch faction_settings_path(@faction), params: { faction_setting: { torn_api_key: "limited_key_123" } }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /saved successfully/, flash[:notice]
+
+    @faction.reload.faction_setting
+    assert_equal "Limited Access", @faction.faction_setting.torn_api_access_type
+  end
+
+  # -- Delete keys --
+
+  test "delete torn api key clears key and access type" do
+    @faction.create_faction_setting!(torn_api_key: "old_key_123", torn_api_access_type: "Limited Access")
+    sign_in_as_faction_leader(@bert)
+
+    delete delete_torn_key_faction_settings_path(@faction)
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /Torn API key deleted/, flash[:notice]
+
+    setting = @faction.faction_setting.reload
+    assert_nil setting.torn_api_key
+    assert_nil setting.torn_api_access_type
+  end
+
+  test "delete tornstats api key clears key" do
+    @faction.create_faction_setting!(tornstats_api_key: "ts_old_key")
+    sign_in_as_faction_leader(@bert)
+
+    delete delete_tornstats_key_faction_settings_path(@faction)
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /TornStats API key deleted/, flash[:notice]
+
+    setting = @faction.faction_setting.reload
+    assert_nil setting.tornstats_api_key
+  end
+
+  # -- Settings page rendering --
+
+  test "settings shows single spy configuration card with both key fields" do
+    sign_in_as(@bram)
+
+    get faction_settings_path(@faction)
+    assert_response :success
+    assert_select ".spy-config-card", 1
+    assert_select ".spy-config-card details summary", /How your API keys are used/
+    assert_select ".spy-config-card details .ping-dot", 1
+  end
+
   test "non-leader member cannot access settings" do
     sign_in_as(@bert)
 
