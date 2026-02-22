@@ -10,16 +10,24 @@
      data-war-dashboard-started-at-value="<%= war.started_at.iso8601 %>"
      data-war-dashboard-poll-url-value="<%= war_data_faction_ranked_war_path(faction, war) %>">
 
+  <!-- Header -->
+  <div class="live-war-header">
+    <div class="live-war-title">
+      <span class="war-status ongoing">LIVE</span>
+      <span>vs <%= war.opponent_faction_name %></span>
+    </div>
+    <%= link_to "Back to Wars", faction_ranked_wars_path(faction), class: "btn btn-secondary btn-sm" %>
+  </div>
+
   <!-- Score Overview -->
   <div class="live-war-scores">
     <div class="live-war-faction our-side">
-      <span class="live-faction-label">Our Faction</span>
-      <span class="live-faction-name"><%= faction.name %></span>
+      <span class="live-faction-label"><%= faction.name %></span>
       <span class="live-faction-score" data-war-dashboard-target="ourScore"><%= war.our_score %></span>
     </div>
 
     <div class="live-war-center">
-      <div class="live-war-target">Target: <span data-war-dashboard-target="targetScore"><%= war.target_score %></span></div>
+      <div class="live-war-target">First to <span data-war-dashboard-target="targetScore"><%= war.target_score %></span></div>
       <div class="live-war-timer" data-war-dashboard-target="warTimer"></div>
       <div class="live-war-connection" data-war-dashboard-target="connectionStatus">
         <span class="connection-dot connecting"></span>
@@ -28,8 +36,7 @@
     </div>
 
     <div class="live-war-faction their-side">
-      <span class="live-faction-label">Opponent</span>
-      <span class="live-faction-name"><%= war.opponent_faction_name %></span>
+      <span class="live-faction-label"><%= war.opponent_faction_name %></span>
       <span class="live-faction-score" data-war-dashboard-target="theirScore"><%= war.their_score %></span>
     </div>
   </div>
