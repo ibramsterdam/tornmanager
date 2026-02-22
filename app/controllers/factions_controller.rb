@@ -28,5 +28,32 @@ class FactionsController < ApplicationController
     @xanax_target = @faction.xanax_target
     @energy_target = @faction.energy_refill_target
     @nerve_target = @faction.nerve_refill_target
+
+    @current_war = @faction.current_war
+    refresh_current_war_scores if @current_war
+  end
+
+  private
+
+  def refresh_current_war_scores
+    api_key = @faction.faction_setting&.torn_api_key
+    return unless api_key.present?
+
+    wars = TornApi::Faction::RankedWars.new(api_key, @faction.torn_id).fetch(limit: 1)
+    war_data = wars.find { |w| w["id"] == @current_war.torn_war_id }
+    return unless war_data
+
+    our_faction_data = war_data["factions"].find { |f| f["id"] == @faction.torn_id }
+    their_faction_data = war_data["factions"].find { |f| f["id"] != @faction.torn_id }
+    return unless our_faction_data && their_faction_data
+
+    @current_war.update!(
+      our_score: our_faction_data["score"],
+      their_score: their_faction_data["score"],
+      ended_at: war_data["end"].to_i > 0 ? Time.at(war_data["end"]) : nil,
+      winner_faction_id: war_data["winner"]
+    )
+  rescue TornApi::ApiError, TornApi::InvalidKeyError => e
+    Rails.logger.warn("Failed to refresh war scores for faction #{@faction.torn_id}: #{e.message}")
   end
 end

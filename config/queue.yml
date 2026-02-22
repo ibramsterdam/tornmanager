@@ -11,6 +11,13 @@ default: &default
       threads: 1
       processes: 1
       polling_interval: 1.1
+    # Faction polling queue: war status polling using each faction's own API key.
+    # Multiple threads to support concurrent polling for multiple factions.
+    # Fast polling interval (0.5s) for 6-second responsiveness.
+    - queues: faction_polling
+      threads: 3
+      processes: 1
+      polling_interval: 0.5
     # Default queue for all other jobs (explicitly named to avoid picking up owner_api)
     - queues: default
       threads: 3

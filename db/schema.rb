@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_21_171801) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_22_103614) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -71,6 +71,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_21_171801) do
     t.integer "torn_id", null: false
     t.boolean "track_stats", default: true, null: false
     t.datetime "updated_at", null: false
+    t.boolean "war_polling_active", default: false, null: false
     t.decimal "xanax_target", default: "2.5", null: false
     t.index ["torn_id"], name: "index_factions_on_torn_id", unique: true
     t.index ["track_stats"], name: "index_factions_on_track_stats"
