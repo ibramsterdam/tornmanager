@@ -90,46 +90,73 @@
   </div>
 </div>
 
-<!-- Section 2: Dashboard Access -->
+<!-- Section 2: Dashboard Access & Share Subscription (side by side) -->
 <div class="settings-section">
-  <h2>Dashboard Access</h2>
-  <p class="settings-section-description">Control which faction members can view the faction dashboard, training data, and other faction pages. Only whitelisted members (and admins) have access.</p>
+  <div class="settings-top-grid settings-top-grid-stretch">
+    <div class="settings-grid-column">
+      <h2>Dashboard Access</h2>
+      <p class="settings-section-description">Control which faction members can view the faction dashboard, training data, and other faction pages. Only whitelisted members (and admins) have access.</p>
 
-  <!-- Add member to whitelist -->
-  <% if @faction_members.any? %>
-    <%= form_with url: add_whitelist_faction_settings_path(@faction), method: :post, class: "whitelist-add-form" do |form| %>
-      <div class="api-key-form-inline">
-        <%= form.select :user_id,
-            options_from_collection_for_select(@faction_members, :id, :name),
-            { prompt: "Select a member..." },
-            class: "whitelist-select" %>
-        <%= form.submit "Grant Access", class: "btn-primary" %>
+      <div class="api-key-card settings-grid-card">
+        <%= turbo_frame_tag "whitelist" do %>
+          <%= render "factions/settings/whitelist" %>
+        <% end %>
       </div>
-    <% end %>
-  <% else %>
-    <p class="api-key-form-hint">All faction members already have access.</p>
-  <% end %>
-
-  <!-- Current whitelist -->
-  <% if @whitelisted_users.any? %>
-    <div class="whitelist-list">
-      <% @whitelisted_users.each do |user| %>
-        <div class="whitelist-item">
-          <span class="whitelist-user-name"><%= user.name %> [<%= user.torn_id %>]</span>
-          <%= button_to "Remove",
-              remove_whitelist_faction_settings_path(@faction, user_id: user.id),
-              method: :delete,
-              class: "whitelist-remove-btn",
-              data: { turbo_confirm: "Remove #{user.name}'s access?" } %>
-        </div>
-      <% end %>
     </div>
-  <% else %>
-    <p class="whitelist-empty">No members have been granted access yet.</p>
-  <% end %>
+
+    <div class="settings-grid-column">
+      <h2>Share Subscription</h2>
+      <p class="settings-section-description">Share your subscription time evenly across all faction members. Time is deducted from your balance and distributed equally.</p>
+
+      <div class="api-key-card settings-grid-card">
+        <div class="import-spy-header">
+          <p class="import-spy-description">
+            You have <strong><%= @subscription_weeks_remaining %> weeks</strong> remaining.
+            Your faction has <strong><%= @faction_member_count %> members</strong>.
+          </p>
+        </div>
+
+        <% if @subscription_weeks_remaining <= 0 %>
+          <p class="api-key-form-hint">You need an active subscription to share time with your faction.</p>
+        <% elsif @faction_member_count == 0 %>
+          <p class="api-key-form-hint">No faction members found to share with.</p>
+        <% else %>
+          <% max_steps = @subscription_weeks_remaining / @faction_member_count %>
+          <% max_total = max_steps * @faction_member_count %>
+          <%= form_with url: share_subscription_faction_settings_path(@faction), method: :post,
+              data: { controller: "share-subscription",
+                      share_subscription_member_count_value: @faction_member_count,
+                      share_subscription_max_total_value: max_total } do |form| %>
+            <div class="share-slider-container">
+              <%= form.range_field :slider,
+                  min: 0,
+                  max: max_steps,
+                  value: 0,
+                  step: 1,
+                  class: "share-slider",
+                  data: { share_subscription_target: "slider", action: "input->share-subscription#slide" } %>
+              <%= form.hidden_field :total_weeks, value: 0, data: { share_subscription_target: "hidden" } %>
+              <div class="share-slider-labels">
+                <span>0</span>
+                <span><%= max_total %> weeks</span>
+              </div>
+            </div>
+            <p class="share-slider-preview" data-share-subscription-target="preview">
+              Drag the slider to share subscription time.
+            </p>
+            <div class="share-slider-action">
+              <%= form.submit "Share", class: "btn-primary", disabled: true,
+                  data: { share_subscription_target: "submit",
+                          turbo_confirm: "Are you sure? This will deduct weeks from your subscription and distribute them to all faction members." } %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Section 3: Import Spy Stats -->
+<!-- Section 4: Import Spy Stats -->
 <div class="settings-section">
   <h2>Import Spy Stats</h2>
 

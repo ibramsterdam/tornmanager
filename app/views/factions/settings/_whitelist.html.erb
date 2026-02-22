@@ -1,0 +1,33 @@
+<!-- Add member to whitelist -->
+<% if @faction_members.any? %>
+  <%= form_with url: add_whitelist_faction_settings_path(@faction), method: :post, class: "whitelist-add-form" do |form| %>
+    <div class="api-key-form-inline">
+      <%= form.select :user_id,
+          options_from_collection_for_select(@faction_members, :id, :name),
+          { prompt: "Select a member..." },
+          class: "whitelist-select" %>
+      <%= form.submit "Grant Access", class: "btn-primary" %>
+    </div>
+  <% end %>
+<% else %>
+  <p class="api-key-form-hint">All faction members already have access.</p>
+<% end %>
+
+<!-- Current whitelist -->
+<% if @whitelisted_users.any? %>
+  <div class="whitelist-list-wrapper" data-controller="scroll-hint">
+    <div class="whitelist-list whitelist-list-scroll" data-scroll-hint-target="list">
+      <% @whitelisted_users.each do |user| %>
+        <div class="whitelist-item">
+          <span class="whitelist-user-name"><%= user.name %> [<%= user.torn_id %>]</span>
+          <%= button_to "Remove",
+              remove_whitelist_faction_settings_path(@faction, user_id: user.id),
+              method: :delete,
+              class: "whitelist-remove-btn" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% else %>
+  <p class="whitelist-empty">No members have been granted access yet.</p>
+<% end %>

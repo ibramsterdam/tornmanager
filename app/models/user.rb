@@ -32,9 +32,19 @@ class User < ApplicationRecord
     subscription_expires_at.present? && subscription_expires_at > Time.current
   end
 
+  def subscription_weeks_remaining
+    return 0 unless subscribed?
+    ((subscription_expires_at - Time.current) / 1.week).floor
+  end
+
   def extend_subscription!(weeks)
     new_expiry = subscribed? ? subscription_expires_at + weeks.weeks : Time.current + weeks.weeks
     update!(subscription_expires_at: new_expiry)
+  end
+
+  def deduct_subscription!(weeks)
+    raise "Not enough subscription time remaining" unless subscription_weeks_remaining >= weeks
+    update!(subscription_expires_at: subscription_expires_at - weeks.weeks)
   end
 
   def admin?

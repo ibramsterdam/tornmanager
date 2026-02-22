@@ -21,6 +21,19 @@
   align-items: start;
 }
 
+.settings-top-grid-stretch {
+  align-items: stretch;
+}
+
+.settings-grid-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-grid-card {
+  flex: 1;
+}
+
 @media (max-width: 768px) {
   .settings-top-grid {
     grid-template-columns: 1fr;
