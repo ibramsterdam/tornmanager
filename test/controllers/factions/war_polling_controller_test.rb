@@ -53,7 +53,7 @@ class Factions::WarPollingControllerTest < ActionDispatch::IntegrationTest
 
       assert_not @faction.reload.war_polling_active?
       assert_nil Rails.cache.read(@faction.war_cache_key)
-      assert_redirected_to faction_path(@faction)
+      assert_redirected_to faction_settings_path(@faction)
       assert_equal "War polling stopped.", flash[:notice]
     end
   end

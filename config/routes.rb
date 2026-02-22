@@ -19,6 +19,9 @@ Rails.application.routes.draw do
       collection do
         post :sync
       end
+      member do
+        get :war_data
+      end
     end
     resource :settings, only: [ :show, :update ], controller: "factions/settings" do
       post :import_spies

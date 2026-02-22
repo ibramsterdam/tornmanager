@@ -20,6 +20,9 @@ class Factions::SettingsController < ApplicationController
     # Share subscription
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
     @faction_member_count = @faction.users.active.count
+
+    # War polling
+    @war_polling_active = @faction.war_polling_active?
   end
 
   def update

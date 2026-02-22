@@ -1,0 +1,339 @@
+/*
+ * Live War Dashboard styles
+ * Real-time enemy member tracking during ranked wars
+ */
+
+.live-war-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Score Bar */
+.live-war-scores {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: var(--space-6);
+  align-items: center;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6) var(--space-8);
+}
+
+.live-war-faction {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.live-war-faction.our-side {
+  text-align: left;
+}
+
+.live-war-faction.their-side {
+  text-align: right;
+}
+
+.live-faction-label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.live-faction-name {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--gray-100);
+}
+
+.live-faction-score {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: "Geist Mono", monospace;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.live-faction-score.winning {
+  color: rgb(34, 197, 94);
+}
+
+.live-faction-score.losing {
+  color: rgb(239, 68, 68);
+}
+
+.live-faction-score.tied {
+  color: var(--gray-300);
+}
+
+.live-war-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 140px;
+}
+
+.live-war-target {
+  font-size: 0.875rem;
+  color: var(--gray-400);
+}
+
+.live-war-timer {
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  font-family: "Geist Mono", monospace;
+}
+
+.live-war-connection {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.6875rem;
+}
+
+.connection-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.connection-dot.connected {
+  background: rgb(34, 197, 94);
+  box-shadow: 0 0 4px rgba(34, 197, 94, 0.5);
+}
+
+.connection-dot.connecting {
+  background: rgb(234, 179, 8);
+  animation: pulse-dot 1s infinite;
+}
+
+.connection-dot.offline {
+  background: var(--gray-600);
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.connection-text {
+  color: var(--gray-500);
+}
+
+/* Live War Table */
+.live-war-table {
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.live-war-table .table-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-800);
+  background: var(--gray-900);
+}
+
+.live-war-updated {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-family: "Geist Mono", monospace;
+}
+
+.live-war-scroll {
+  max-height: calc(100vh - 340px);
+  min-height: 400px;
+}
+
+/* Sortable headers */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+th.sortable:hover {
+  color: var(--gray-100);
+}
+
+.sort-indicator {
+  display: inline-block;
+  width: 12px;
+  font-size: 0.625rem;
+  vertical-align: middle;
+  color: var(--gray-500);
+}
+
+.sort-indicator.asc::after {
+  content: "\25B2";
+  color: var(--gray-300);
+}
+
+.sort-indicator.desc::after {
+  content: "\25BC";
+  color: var(--gray-300);
+}
+
+/* Status badges */
+.member-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.member-status.status-okay {
+  background: rgba(34, 197, 94, 0.15);
+  color: rgb(34, 197, 94);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.member-status.status-hospital {
+  background: rgba(239, 68, 68, 0.15);
+  color: rgb(239, 68, 68);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.member-status.status-jail {
+  background: rgba(234, 179, 8, 0.15);
+  color: rgb(234, 179, 8);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+.member-status.status-traveling {
+  background: rgba(59, 130, 246, 0.15);
+  color: rgb(59, 130, 246);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.member-status.status-fallen {
+  background: rgba(107, 114, 128, 0.15);
+  color: rgb(156, 163, 175);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.member-status.status-unknown {
+  background: rgba(107, 114, 128, 0.1);
+  color: var(--gray-500);
+  border: 1px solid rgba(107, 114, 128, 0.2);
+}
+
+/* Hospital timer in table */
+.hospital-timer {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  color: rgb(239, 68, 68);
+  white-space: nowrap;
+}
+
+.hospital-timer.expiring-soon {
+  color: rgb(234, 179, 8);
+  animation: pulse-timer 1s infinite;
+}
+
+@keyframes pulse-timer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Stat cells */
+.stat-value {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.8125rem;
+  color: var(--gray-300);
+  white-space: nowrap;
+}
+
+.stat-value.no-data {
+  color: var(--gray-600);
+}
+
+.stat-value.stat-total {
+  color: var(--gray-100);
+  font-weight: 600;
+}
+
+/* Attack link */
+.attack-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  color: var(--gray-500);
+  border: 1px solid var(--gray-800);
+  transition: all 0.15s ease;
+  text-decoration: none;
+}
+
+.attack-link:hover {
+  color: rgb(239, 68, 68);
+  border-color: rgba(239, 68, 68, 0.4);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+.attack-link.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Row highlight for status */
+tr.row-hospital {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+tr.row-okay {
+  background: transparent;
+}
+
+tr.row-okay:hover,
+tr.row-hospital:hover {
+  background: var(--gray-850, rgba(255, 255, 255, 0.02));
+}
+
+/* Flash on update */
+@keyframes row-flash {
+  0% { background: rgba(59, 130, 246, 0.1); }
+  100% { background: transparent; }
+}
+
+tr.row-updated {
+  animation: row-flash 0.6s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .live-war-scores {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+  }
+
+  .live-war-faction.our-side,
+  .live-war-faction.their-side {
+    text-align: center;
+  }
+
+  .live-war-center {
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--gray-800);
+    border-bottom: 1px solid var(--gray-800);
+  }
+
+  .live-faction-score {
+    font-size: 2rem;
+  }
+}

@@ -39,6 +39,5 @@ module Admin
     rescue => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
-
   end
 end
