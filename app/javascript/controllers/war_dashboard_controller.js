@@ -15,7 +15,7 @@ export default class extends Controller {
   }
 
   static targets = [
-    "ourScore", "theirScore", "targetScore",
+    "ourScore", "theirScore", "targetScore", "currentLead", "leadProgress",
     "warTimer", "connectionStatus", "lastUpdated", "updateCountdown",
     "membersBody",
     "sortIndicatorName", "sortIndicatorLevel", "sortIndicatorStatus",
@@ -122,6 +122,7 @@ export default class extends Controller {
     }
 
     this.updateScoreClasses()
+    this.updateLeadProgress()
 
     // Update members (filter out Fallen)
     if (data.members) {
@@ -175,6 +176,23 @@ export default class extends Controller {
     } else {
       ourEl.classList.add("tied")
       theirEl.classList.add("tied")
+    }
+  }
+
+  updateLeadProgress() {
+    const lead = this.ourScoreValue - this.theirScoreValue
+    const target = this.targetScoreValue
+
+    if (this.hasCurrentLeadTarget) {
+      this.currentLeadTarget.textContent = lead.toLocaleString()
+    }
+
+    if (this.hasLeadProgressTarget) {
+      const percentage = Math.min(Math.max((lead / target) * 100, 0), 100)
+      this.leadProgressTarget.style.width = `${percentage}%`
+
+      // Update color based on winning/losing
+      this.leadProgressTarget.classList.toggle("losing", lead < 0)
     }
   }
 

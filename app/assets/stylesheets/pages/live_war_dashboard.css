@@ -82,12 +82,53 @@
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  min-width: 140px;
+  min-width: 180px;
 }
 
-.live-war-target {
-  font-size: 0.875rem;
-  color: var(--gray-400);
+.live-war-lead {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  width: 100%;
+}
+
+.lead-label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.lead-values {
+  font-size: 1rem;
+  font-weight: 600;
+  font-family: "Geist Mono", monospace;
+  color: var(--gray-200);
+}
+
+.lead-separator {
+  color: var(--gray-600);
+  margin: 0 2px;
+}
+
+.lead-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: var(--gray-800);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.lead-progress-fill {
+  height: 100%;
+  background: rgb(34, 197, 94);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.lead-progress-fill.losing {
+  background: rgb(239, 68, 68);
 }
 
 .live-war-timer {
