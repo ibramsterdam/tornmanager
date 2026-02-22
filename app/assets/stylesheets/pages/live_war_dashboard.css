@@ -149,7 +149,19 @@
   background: var(--gray-900);
 }
 
+.live-war-update-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
 .live-war-updated {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  font-family: "Geist Mono", monospace;
+}
+
+.live-war-countdown {
   font-size: 0.75rem;
   color: var(--gray-500);
   font-family: "Geist Mono", monospace;
