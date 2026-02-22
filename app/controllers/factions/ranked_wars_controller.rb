@@ -43,9 +43,9 @@ class Factions::RankedWarsController < ApplicationController
       return
     end
 
-    api_key = OwnerCredentials.api_key
+    api_key = @faction.faction_setting&.torn_api_key
     if api_key.blank?
-      redirect_to faction_ranked_wars_path(@faction), alert: "No API key configured."
+      redirect_to faction_settings_path(@faction), alert: "Torn API key must be configured before syncing wars."
       return
     end
 
