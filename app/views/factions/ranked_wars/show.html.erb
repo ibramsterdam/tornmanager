@@ -1,25 +1,27 @@
-<div class="page-header">
-  <div class="page-header-content">
-    <div>
-      <h1>
-        <% if @war.scheduled? %>
-          <span class="war-status scheduled">SOON</span>
-        <% elsif @war.in_progress? %>
-          <span class="war-status ongoing">LIVE</span>
-        <% elsif @war.won? %>
-          <span class="war-status won">WIN</span>
-        <% else %>
-          <span class="war-status lost">LOSS</span>
-        <% end %>
-        vs <%= @war.opponent_faction_name %>
-      </h1>
-      <p class="page-subtitle"><%= @war.started_at.strftime("%d %B %Y at %H:%M") %></p>
-    </div>
-    <div class="page-header-actions">
-      <%= link_to "Back to Wars", faction_ranked_wars_path(@faction), class: "btn btn-secondary" %>
+<% if @war.in_progress? %>
+  <!-- Live war: no page header, dashboard has its own header -->
+<% else %>
+  <div class="page-header">
+    <div class="page-header-content">
+      <div>
+        <h1>
+          <% if @war.scheduled? %>
+            <span class="war-status scheduled">SOON</span>
+          <% elsif @war.won? %>
+            <span class="war-status won">WIN</span>
+          <% else %>
+            <span class="war-status lost">LOSS</span>
+          <% end %>
+          vs <%= @war.opponent_faction_name %>
+        </h1>
+        <p class="page-subtitle"><%= @war.started_at.strftime("%d %B %Y at %H:%M") %></p>
+      </div>
+      <div class="page-header-actions">
+        <%= link_to "Back to Wars", faction_ranked_wars_path(@faction), class: "btn btn-secondary" %>
+      </div>
     </div>
   </div>
-</div>
+<% end %>
 
 <% if @war.scheduled? %>
   <!-- Scheduled War Message -->

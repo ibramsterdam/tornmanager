@@ -9,6 +9,22 @@
   gap: var(--space-6);
 }
 
+/* Header */
+.live-war-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-war-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--gray-100);
+}
+
 /* Score Bar */
 .live-war-scores {
   display: grid;
@@ -36,16 +52,9 @@
 }
 
 .live-faction-label {
-  font-size: 0.6875rem;
-  color: var(--gray-500);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.live-faction-name {
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--gray-100);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-300);
 }
 
 .live-faction-score {
