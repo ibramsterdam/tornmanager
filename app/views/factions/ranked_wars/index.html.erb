@@ -15,22 +15,6 @@
           <p class="page-subtitle"><%= @faction.name %></p>
         </div>
         <div class="page-header-actions">
-          <%= form_with url: sync_faction_ranked_wars_path(@faction), method: :post, class: "sync-form", data: { action: "submit->skeleton-loader#submit" } do |form| %>
-            <% if @can_sync %>
-              <%= form.submit "Sync Wars", 
-                  class: "btn btn-secondary",
-                  data: { turbo_submits_with: "Syncing..." } %>
-            <% else %>
-              <%= form.submit "Available in #{@seconds_until_sync}s",
-                  class: "btn btn-secondary",
-                  disabled: true,
-                  data: { 
-                    controller: "refresh-countdown",
-                    refresh_countdown_seconds_remaining_value: @seconds_until_sync,
-                    refresh_countdown_button_text_value: "Sync Wars"
-                  } %>
-            <% end %>
-          <% end %>
           <%= link_to "Back to Faction", faction_path(@faction), class: "btn btn-secondary" %>
         </div>
       </div>

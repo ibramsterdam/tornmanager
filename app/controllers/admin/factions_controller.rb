@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats, :backfill_wars ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -35,11 +35,12 @@ module Admin
 
         if @faction.save
           SyncFactionMembersJob.perform_now(@faction.id)
+          BackfillRankedWarsJob.perform_later(@faction.id, limit: 20)
           @faction.reload
 
           respond_to do |format|
             format.turbo_stream
-            format.html { redirect_to admin_factions_path, notice: "Faction '#{@faction.name}' added with #{@faction.users.active.count} members." }
+            format.html { redirect_to admin_factions_path, notice: "Faction '#{@faction.name}' added with #{@faction.users.active.count} members. War history backfill queued." }
           end
         else
           @error = "Failed to save faction: #{@faction.errors.full_messages.join(', ')}"
@@ -172,6 +173,15 @@ module Admin
                   notice: "Backfill queued for '#{user.name}': #{date_count} days (up to #{max_api_calls} API calls, ~#{estimated_minutes} minutes)"
     rescue => e
       redirect_to admin_factions_path, alert: "Failed to queue backfill: #{e.message}"
+    end
+
+    def backfill_wars
+      BackfillRankedWarsJob.perform_later(@faction.id, limit: 20)
+
+      redirect_to admin_factions_path,
+                  notice: "Backfill queued for '#{@faction.name}': fetching last 20 ranked wars."
+    rescue => e
+      redirect_to admin_factions_path, alert: "Failed to queue war backfill: #{e.message}"
     end
 
     private

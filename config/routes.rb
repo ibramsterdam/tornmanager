@@ -16,9 +16,6 @@ Rails.application.routes.draw do
       get "members/:torn_id", to: "factions/training#member", as: "member"
     end
     resources :ranked_wars, only: [ :index, :show ], controller: "factions/ranked_wars" do
-      collection do
-        post :sync
-      end
       member do
         get :war_data
       end
@@ -67,6 +64,7 @@ Rails.application.routes.draw do
         post :sync_members
         post :backfill_stats
         post :backfill_user_stats
+        post :backfill_wars
       end
     end
     resources :api_logs, only: [ :index ]
