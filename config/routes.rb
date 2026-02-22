@@ -23,6 +23,7 @@ Rails.application.routes.draw do
     resource :settings, only: [ :show, :update ], controller: "factions/settings" do
       post :import_spies
       post :add_whitelist
+      post :share_subscription
       delete :remove_whitelist
       delete :delete_torn_key
       delete :delete_tornstats_key
@@ -51,8 +52,7 @@ Rails.application.routes.draw do
     resources :stats, only: [ :index ]
     resources :subscriptions, only: [ :index ] do
       collection do
-        get :faction_grant
-        post :create_faction_grant
+        post :grant
       end
       member do
         patch :update_days

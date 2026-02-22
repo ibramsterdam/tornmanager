@@ -141,6 +141,100 @@ class Factions::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_nil setting.tornstats_api_key
   end
 
+  # -- Share subscription --
+
+  test "whitelisted member can share subscription evenly across active members" do
+    @bram.update!(subscription_expires_at: 100.weeks.from_now)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 4 }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /Shared 4 weeks across 2 members \(2 weeks each\)/, flash[:notice]
+
+    @bram.reload
+    @bert.reload
+    assert @bert.subscribed?
+    # Bram: lost 4 weeks, gained 2 back = net -2
+    assert @bram.subscribed?
+  end
+
+  test "share subscription creates audit records" do
+    @bram.update!(subscription_expires_at: 100.weeks.from_now)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    assert_difference -> { FactionSubscriptionGrant.count }, 1 do
+      assert_difference -> { SubscriptionGrant.count }, 2 do
+        post share_subscription_faction_settings_path(@faction), params: { total_weeks: 2 }
+      end
+    end
+
+    grant = FactionSubscriptionGrant.last
+    assert_equal @faction.torn_id, grant.torn_faction_id
+    assert_equal 2, grant.weeks_granted
+    assert_equal @bram, grant.granted_by
+  end
+
+  test "share subscription excludes fallen members" do
+    @bram.update!(subscription_expires_at: 100.weeks.from_now)
+    @bert.update!(fallen: true)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 1 }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /Shared 1 weeks across 1 members/, flash[:notice]
+
+    @bert.reload
+    assert_not @bert.subscribed?, "Fallen member should not receive subscription time"
+  end
+
+  test "share subscription rejects uneven split" do
+    @bram.update!(subscription_expires_at: 100.weeks.from_now)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 3 }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /cannot be split evenly/, flash[:alert]
+  end
+
+  test "share subscription rejects insufficient balance" do
+    @bram.update!(subscription_expires_at: 1.week.from_now)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 4 }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /weeks remaining/, flash[:alert]
+  end
+
+  test "share subscription rejects zero weeks" do
+    @bram.update!(subscription_expires_at: 100.weeks.from_now)
+    @faction.faction_whitelists.create!(user: @bram)
+    sign_in_as(@bram)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 0 }
+
+    assert_redirected_to faction_settings_path(@faction)
+    assert_match /valid number of weeks/, flash[:alert]
+  end
+
+  test "non-whitelisted member cannot share subscription" do
+    @bert.update!(subscription_expires_at: 100.weeks.from_now)
+    sign_in_as(@bert)
+
+    post share_subscription_faction_settings_path(@faction), params: { total_weeks: 2 }
+
+    assert_redirected_to stocks_path
+    assert_match /don't have access/, flash[:alert]
+  end
+
   # -- Settings page rendering --
 
   test "settings shows single spy configuration card with both key fields" do

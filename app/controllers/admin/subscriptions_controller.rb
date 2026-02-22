@@ -5,29 +5,25 @@ module Admin
     def index
       @active_subscribers = User.active_subscribers.order(subscription_expires_at: :desc)
       @recent_payments = XanaxPayment.includes(:sender, :recipient).recent.limit(50)
-      @recent_faction_grants = FactionSubscriptionGrant.includes(:granted_by).recent.limit(20)
     end
 
-    def faction_grant
-    end
+    def grant
+      torn_id = params[:torn_id].to_i
+      weeks = params[:weeks].to_i
 
-    def create_faction_grant
-      Rails.logger.info("Creating faction grant with params: faction_id=#{params[:faction_id]}, weeks=#{params[:weeks]}")
-      Rails.logger.info("Valid params? #{valid_params?}")
+      if torn_id <= 0 || weeks <= 0
+        return redirect_to admin_subscriptions_path, alert: "Invalid Torn ID or weeks."
+      end
 
-      return redirect_with_error("Invalid faction ID or weeks.") unless valid_params?
+      user = User.find_by(torn_id: torn_id)
+      unless user
+        return redirect_to admin_subscriptions_path, alert: "User with Torn ID #{torn_id} not found."
+      end
 
-      grant_faction_subscription
-    rescue TornApi::InvalidKeyError => e
-      Rails.logger.error("Invalid API key error: #{e.message}")
-      redirect_with_error("Invalid API key.")
-    rescue TornApi::ApiError => e
-      Rails.logger.error("Torn API error: #{e.class} - #{e.message}")
-      redirect_with_error("Torn API error: #{e.message}")
+      user.extend_subscription!(weeks)
+      redirect_to admin_subscriptions_path, notice: "Granted #{weeks} week(s) to #{user.name} [#{user.torn_id}]."
     rescue => e
-      Rails.logger.error("Faction grant error: #{e.class} - #{e.message}")
-      Rails.logger.error(e.backtrace.join("\n"))
-      redirect_with_error("An error occurred: #{e.message}")
+      redirect_to admin_subscriptions_path, alert: "Failed: #{e.message}"
     end
 
     def update_days
@@ -44,76 +40,5 @@ module Admin
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
 
-    private
-
-    def valid_params?
-      faction_id.positive? && weeks.positive?
-    end
-
-    def grant_faction_subscription
-      faction_info = fetch_faction_info
-      members = fetch_faction_members
-
-      ActiveRecord::Base.transaction do
-        grant = create_grant_record(faction_info["name"], members.count)
-        members.each { |member| grant_to_member(grant, member) }
-      end
-
-      redirect_to admin_subscriptions_path, notice: "Successfully granted #{weeks} week(s) to #{members.count} members of #{faction_info['name']}."
-    end
-
-    def fetch_faction_info
-      TornApi::Faction::Basic.new(OwnerCredentials.api_key, faction_id).fetch
-    end
-
-    def fetch_faction_members
-      TornApi::Faction::Members.new(OwnerCredentials.api_key, faction_id).fetch
-    end
-
-    def create_grant_record(faction_name, member_count)
-      FactionSubscriptionGrant.create!(
-        torn_faction_id: faction_id,
-        faction_name: faction_name,
-        weeks_granted: weeks,
-        granted_by: Current.user,
-        granted_at: Time.current
-      )
-    end
-
-    def grant_to_member(grant, member)
-      user = find_or_create_user(member)
-
-      SubscriptionGrant.create!(
-        faction_subscription_grant: grant,
-        user: user
-      )
-
-      user.extend_subscription!(weeks)
-    end
-
-    def find_or_create_user(member)
-      User.find_by(torn_id: member.id) || create_user_from_member(member)
-    end
-
-    def create_user_from_member(member)
-      User.create!(
-        torn_id: member.id,
-        name: member.name,
-        level: member.level,
-        api_key: nil
-      )
-    end
-
-    def redirect_with_error(message)
-      redirect_to faction_grant_admin_subscriptions_path, alert: message
-    end
-
-    def faction_id
-      @faction_id ||= params[:faction_id].to_i
-    end
-
-    def weeks
-      @weeks ||= params[:weeks].to_i
-    end
   end
 end

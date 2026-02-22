@@ -3,7 +3,15 @@
   <h1>Subscription Management</h1>
 </div>
 
-<%= render "faction_grant_form" %>
+<div class="form-container">
+  <%= form_with url: grant_admin_subscriptions_path, method: :post do |form| %>
+    <div class="api-key-form-inline">
+      <%= form.number_field :torn_id, required: true, min: 1, class: "api-key-form-input", placeholder: "Torn ID", inputmode: "numeric" %>
+      <%= form.number_field :weeks, required: true, min: 1, value: 1, class: "api-key-form-input", placeholder: "Weeks", inputmode: "numeric", style: "max-width: 100px;" %>
+      <%= form.submit "Grant Subscription", class: "btn-primary" %>
+    </div>
+  <% end %>
+</div>
 
 <div class="table-container" data-controller="collapsible">
   <h2 class="collapsible-header" data-action="click->collapsible#toggle">
@@ -89,44 +97,4 @@
   </div>
 </div>
 
-<div class="table-container" data-controller="collapsible">
-  <h2 class="collapsible-header" data-action="click->collapsible#toggle">
-    <span data-collapsible-target="icon">▼</span>
-    Recent Faction Grants
-  </h2>
-  
-  <div data-collapsible-target="content">
-  <% if @recent_faction_grants.any? %>
-    <table>
-      <thead>
-        <tr>
-          <th>FACTION</th>
-          <th>WEEKS GRANTED</th>
-          <th>GRANTED BY</th>
-          <th>GRANTED AT</th>
-          <th>MEMBERS</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @recent_faction_grants.each do |grant| %>
-          <tr>
-            <td>
-              <a href="https://www.torn.com/factions.php?step=profile&ID=<%= grant.torn_faction_id %>" target="_blank" class="player-link">
-                <%= grant.faction_name %> [<%= grant.torn_faction_id %>]
-              </a>
-            </td>
-            <td><%= grant.weeks_granted %></td>
-            <td>
-              <a href="https://www.torn.com/profiles.php?XID=<%= grant.granted_by.torn_id %>" target="_blank" class="player-link"><%= grant.granted_by.name %></a>
-            </td>
-            <td><%= grant.granted_at.strftime("%d-%m-%Y %H:%M") %></td>
-            <td><%= grant.users.count %></td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  <% else %>
-    <p>No faction grants yet.</p>
-  <% end %>
-  </div>
-</div>
+

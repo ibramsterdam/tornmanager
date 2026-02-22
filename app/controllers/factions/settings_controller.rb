@@ -3,7 +3,8 @@ class Factions::SettingsController < ApplicationController
 
   IMPORT_COOLDOWN = 1.minute
 
-  before_action :require_faction_leader
+  before_action :require_faction_leader, except: [ :share_subscription ]
+  before_action :require_faction_whitelisted, only: [ :share_subscription ]
 
   def show
     @faction_setting = @faction.faction_setting || @faction.build_faction_setting
@@ -15,6 +16,10 @@ class Factions::SettingsController < ApplicationController
     @seconds_until_import = seconds_until_import
     @whitelisted_users = @faction.whitelisted_users.order(:name)
     @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
+
+    # Share subscription
+    @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
+    @faction_member_count = @faction.users.active.count
   end
 
   def update
@@ -87,9 +92,20 @@ class Factions::SettingsController < ApplicationController
     if whitelist
       name = whitelist.user.name
       whitelist.destroy!
-      redirect_to faction_settings_path(@faction), notice: "#{name}'s access has been removed."
+      flash.now[:notice] = "#{name}'s access has been removed."
     else
-      redirect_to faction_settings_path(@faction), alert: "User not found in whitelist."
+      flash.now[:alert] = "User not found in whitelist."
+    end
+
+    load_whitelist_data
+    respond_to do |format|
+      format.turbo_stream do
+        render turbo_stream: [
+          turbo_stream.update("whitelist", partial: "factions/settings/whitelist"),
+          turbo_stream.append("flash-notifications", partial: "layouts/flash", locals: { type: flash.now[:notice] ? "notice" : "alert", message: flash.now[:notice] || flash.now[:alert] })
+        ]
+      end
+      format.html { redirect_to faction_settings_path(@faction) }
     end
   end
 
@@ -111,6 +127,56 @@ class Factions::SettingsController < ApplicationController
     else
       redirect_to faction_settings_path(@faction), alert: "No API keys configured."
     end
+  end
+
+  def share_subscription
+    total_weeks = params[:total_weeks].to_i
+    members = @faction.users.active
+    member_count = members.count
+
+    if total_weeks <= 0
+      return redirect_to faction_settings_path(@faction), alert: "Please enter a valid number of weeks to share."
+    end
+
+    if member_count == 0
+      return redirect_to faction_settings_path(@faction), alert: "No faction members found."
+    end
+
+    if total_weeks % member_count != 0
+      return redirect_to faction_settings_path(@faction), alert: "#{total_weeks} weeks cannot be split evenly across #{member_count} members. Try a multiple of #{member_count}."
+    end
+
+    weeks_per_member = total_weeks / member_count
+
+    if Current.user.subscription_weeks_remaining < total_weeks
+      return redirect_to faction_settings_path(@faction), alert: "You only have #{Current.user.subscription_weeks_remaining} weeks remaining. Cannot share #{total_weeks} weeks."
+    end
+
+    ActiveRecord::Base.transaction do
+      Current.user.deduct_subscription!(total_weeks)
+
+      grant = FactionSubscriptionGrant.create!(
+        torn_faction_id: @faction.torn_id,
+        faction: @faction,
+        faction_name: @faction.name,
+        weeks_granted: total_weeks,
+        granted_by: Current.user,
+        granted_at: Time.current
+      )
+
+      members.each do |member|
+        SubscriptionGrant.create!(
+          faction_subscription_grant: grant,
+          user: member
+        )
+        member.extend_subscription!(weeks_per_member)
+      end
+    end
+
+    redirect_to faction_settings_path(@faction), notice: "Shared #{total_weeks} weeks across #{member_count} members (#{weeks_per_member} weeks each)."
+  rescue => e
+    Rails.logger.error("Share subscription failed for user #{Current.user.torn_id}: #{e.class} - #{e.message}")
+    redirect_to faction_settings_path(@faction), alert: "Failed to share subscription: #{e.message}"
   end
 
   def import_spies
@@ -186,6 +252,11 @@ class Factions::SettingsController < ApplicationController
 
     remaining = IMPORT_COOLDOWN - (Time.current - last_run)
     [ remaining.to_i, 0 ].max
+  end
+
+  def load_whitelist_data
+    @whitelisted_users = @faction.whitelisted_users.order(:name)
+    @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
   end
 
   def mask_key(key)
