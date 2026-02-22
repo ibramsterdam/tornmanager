@@ -8,14 +8,15 @@ class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
   end
 
-  test "sync redirects to settings when no faction torn api key configured" do
-    post sync_faction_ranked_wars_path(@faction)
+  test "index does not refresh wars when no faction torn api key configured" do
+    TornApi::Faction::RankedWars.expects(:new).never
 
-    assert_redirected_to faction_settings_path(@faction)
-    assert_match /Torn API key must be configured/, flash[:alert]
+    get faction_ranked_wars_path(@faction)
+
+    assert_response :success
   end
 
-  test "sync uses the faction configured torn api key" do
+  test "index refreshes latest war using faction api key" do
     @faction.create_faction_setting!(
       torn_api_key: "faction_limited_key",
       torn_api_access_type: "Limited Access"
@@ -25,9 +26,41 @@ class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
     wars_api.stubs(:fetch).returns([])
     TornApi::Faction::RankedWars.expects(:new).with("faction_limited_key", @faction.torn_id).returns(wars_api)
 
-    post sync_faction_ranked_wars_path(@faction)
+    get faction_ranked_wars_path(@faction)
 
-    assert_redirected_to faction_ranked_wars_path(@faction)
-    assert_match /Synced 0 ranked wars/, flash[:notice]
+    assert_response :success
+  end
+
+  test "index creates new war from api response" do
+    @faction.create_faction_setting!(
+      torn_api_key: "faction_limited_key",
+      torn_api_access_type: "Limited Access"
+    )
+
+    war_data = {
+      "id" => 12345,
+      "start" => 1.day.ago.to_i,
+      "end" => 0,
+      "target" => 100,
+      "winner" => nil,
+      "factions" => [
+        { "id" => @faction.torn_id, "name" => @faction.name, "score" => 50 },
+        { "id" => 88888, "name" => "Enemy Faction", "score" => 30 }
+      ]
+    }
+
+    wars_api = mock
+    wars_api.stubs(:fetch).returns([ war_data ])
+    TornApi::Faction::RankedWars.stubs(:new).returns(wars_api)
+
+    assert_difference -> { @faction.ranked_wars.count }, 1 do
+      get faction_ranked_wars_path(@faction)
+    end
+
+    war = @faction.ranked_wars.find_by(torn_war_id: 12345)
+    assert_equal 88888, war.opponent_faction_id
+    assert_equal "Enemy Faction", war.opponent_faction_name
+    assert_equal 50, war.our_score
+    assert_equal 30, war.their_score
   end
 end

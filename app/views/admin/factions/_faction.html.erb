@@ -30,7 +30,8 @@
   <td>
     <%= link_to "Edit Targets", edit_admin_faction_path(faction), class: "btn-small" %>
     <%= link_to "Sync", sync_members_admin_faction_path(faction), method: :post, class: "btn-small", data: { turbo_method: :post } %>
-    <button type="button" class="btn-small" onclick="document.getElementById('backfill-modal-<%= faction.id %>').style.display='flex'">Backfill All</button>
+    <button type="button" class="btn-small" onclick="document.getElementById('backfill-modal-<%= faction.id %>').style.display='flex'">Backfill Stats</button>
+    <%= button_to "Backfill Wars", backfill_wars_admin_faction_path(faction), method: :post, class: "btn-small", data: { turbo_confirm: "Fetch the last 20 ranked wars for '#{faction.name}'?" } %>
     <%= button_to "Delete", admin_faction_path(faction), method: :delete, class: "btn-small btn-small-danger", data: { turbo_confirm: "Are you sure you want to remove '#{faction.name}'?" } %>
   </td>
 </tr>
