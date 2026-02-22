@@ -21,8 +21,8 @@
   </div>
 </div>
 
-<% if @war.ongoing? %>
-  <!-- War Not Ended Message -->
+<% if @war.scheduled? %>
+  <!-- Scheduled War Message -->
   <div class="war-not-ended">
     <div class="war-not-ended-content">
       <div class="war-not-ended-icon">
@@ -31,21 +31,17 @@
           <polyline points="12 6 12 12 16 14"/>
         </svg>
       </div>
-      <h2>War Report Not Available</h2>
-      <% if @war.scheduled? %>
-        <p>This war has not started yet. It will begin in <strong><%= distance_of_time_in_words(@war.starts_in_seconds) %></strong>.</p>
-      <% else %>
-        <p>The detailed war report will be available once the war has ended.</p>
-        <p class="war-score-preview">
-          Current Score: 
-          <strong class="<%= @war.our_score >= @war.their_score ? 'score-winning' : 'score-losing' %>"><%= @war.our_score %></strong>
-          -
-          <strong class="<%= @war.their_score > @war.our_score ? 'score-winning' : 'score-losing' %>"><%= @war.their_score %></strong>
-          (Target: <%= @war.target_score %>)
-        </p>
-      <% end %>
+      <h2>War Not Started</h2>
+      <p>This war has not started yet. It will begin in <strong><%= distance_of_time_in_words(@war.starts_in_seconds) %></strong>.</p>
     </div>
   </div>
+
+<% elsif @war.in_progress? %>
+  <%= render "factions/ranked_wars/live_dashboard",
+             war: @war,
+             faction: @faction,
+             war_data: @war_data,
+             polling_active: @polling_active %>
 <% else %>
   <!-- War Overview -->
   <div class="war-overview">

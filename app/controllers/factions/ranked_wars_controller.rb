@@ -33,7 +33,23 @@ class Factions::RankedWarsController < ApplicationController
 
     unless @war
       redirect_to faction_ranked_wars_path(@faction), alert: "War not found."
-      nil
+      return
+    end
+
+    if @war.in_progress?
+      ensure_war_polling_active
+      @war_data = Rails.cache.read(@faction.war_cache_key)
+      @polling_active = @faction.war_polling_active?
+    end
+  end
+
+  def war_data
+    war_data = Rails.cache.read(@faction.war_cache_key)
+
+    if war_data
+      render json: war_data
+    else
+      render json: {}, status: :no_content
     end
   end
 
@@ -93,6 +109,13 @@ class Factions::RankedWarsController < ApplicationController
   end
 
   private
+
+  def ensure_war_polling_active
+    return if @faction.war_polling_active?
+    return unless @faction.faction_setting&.torn_api_key?
+
+    @faction.start_war_polling!
+  end
 
   def check_tracking_enabled
     return if performed?

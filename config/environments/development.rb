@@ -29,8 +29,8 @@ Rails.application.configure do
   config.active_job.queue_adapter = :solid_queue
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
-  # Change to :null_store to avoid any caching.
-  config.cache_store = :memory_store
+  # Use solid_cache so cache is shared between web and job worker processes.
+  config.cache_store = :solid_cache_store
 
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local

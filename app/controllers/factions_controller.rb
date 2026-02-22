@@ -31,9 +31,17 @@ class FactionsController < ApplicationController
 
     @current_war = @faction.current_war
     refresh_current_war_scores if @current_war
+    ensure_war_polling_active if @current_war
   end
 
   private
+
+  def ensure_war_polling_active
+    return if @faction.war_polling_active?
+    return unless @faction.faction_setting&.torn_api_key?
+
+    @faction.start_war_polling!
+  end
 
   def refresh_current_war_scores
     api_key = @faction.faction_setting&.torn_api_key

@@ -54,39 +54,29 @@
     </div>
   </div>
 
-  <!-- War Polling -->
+  <!-- Live War -->
   <% if @current_war %>
-    <div class="dashboard-section">
+    <div class="dashboard-section"
+         data-controller="war-score"
+         data-war-score-our-score-value="<%= @current_war.our_score %>"
+         data-war-score-their-score-value="<%= @current_war.their_score %>">
       <div class="dashboard-section-header">
         <h2>
           Ranked War vs <%= @current_war.opponent_faction_name %>
-          <% if @faction.war_polling_active? %>
-            <span class="ping-dot"><span class="ping-ring"></span></span>
-          <% end %>
+          <span class="ping-dot"><span class="ping-ring"></span></span>
         </h2>
+        <%= link_to "View live dashboard ->", faction_ranked_war_path(@faction, @current_war), class: "dashboard-section-link" %>
       </div>
 
       <div class="war-polling-card">
         <div class="war-polling-scores">
-          <span class="war-polling-score war-polling-score--ours"><%= @current_war.our_score %></span>
-          <span class="war-polling-score-divider">-</span>
-          <span class="war-polling-score war-polling-score--theirs"><%= @current_war.their_score %></span>
+          <span class="war-polling-score war-polling-score--ours" data-war-score-target="ourScore"><%= @current_war.our_score %></span>
+          <span class="war-polling-score-divider">&ndash;</span>
+          <span class="war-polling-score war-polling-score--theirs" data-war-score-target="theirScore"><%= @current_war.their_score %></span>
           <span class="war-polling-target">/ <%= @current_war.target_score %></span>
         </div>
 
-        <div class="war-polling-actions">
-          <% if @faction.war_polling_active? %>
-            <%= button_to "Stop Polling", stop_faction_war_polling_path(@faction), method: :delete, class: "btn-small btn-small-danger" %>
-          <% else %>
-            <%= button_to "Start Polling", start_faction_war_polling_path(@faction), method: :post, class: "btn-small" %>
-          <% end %>
-        </div>
-
-        <% if @faction.war_polling_active? %>
-          <p class="war-polling-status">Live polling active — enemy status updates every 6 seconds.</p>
-        <% else %>
-          <p class="war-polling-status">Start polling to feed live enemy status data to the TornManager userscript.</p>
-        <% end %>
+        <p class="war-polling-status">Live &mdash; scores update automatically.</p>
       </div>
     </div>
   <% end %>

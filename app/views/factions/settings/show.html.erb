@@ -90,7 +90,67 @@
   </div>
 </div>
 
-<!-- Section 2: Dashboard Access & Share Subscription (side by side) -->
+<!-- Section 2: War Polling & Import Spy Stats (side by side) -->
+<div class="settings-section">
+  <div class="settings-top-grid settings-top-grid-stretch">
+    <div class="settings-grid-column">
+      <h2>War Polling</h2>
+      <p class="settings-section-description">Automatically starts when an active ranked war is detected. Feeds live enemy status data to the war dashboard and userscript.</p>
+
+      <div class="api-key-card settings-grid-card">
+        <% if @war_polling_active %>
+          <div class="war-polling-active-indicator">
+            <span class="connection-dot connected"></span>
+            <span>Polling is active &mdash; updating every 6 seconds.</span>
+          </div>
+          <%= button_to "Stop Polling", stop_faction_war_polling_path(@faction), method: :delete, class: "btn-small btn-small-danger", data: { turbo_confirm: "Stop war polling? It will restart automatically next time the dashboard is visited during an active war." } %>
+        <% else %>
+          <p class="api-key-form-hint">Polling is not active. It will start automatically when an active ranked war is detected on the faction dashboard.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="settings-grid-column">
+      <h2>Import Spy Stats</h2>
+      <p class="settings-section-description">Import spy data from TornStats for an enemy faction. Updates existing reports and adds new ones.</p>
+
+      <div class="api-key-card settings-grid-card">
+        <p class="import-spy-count"><%= @spy_report_count %> reports stored
+          <% if @spy_report_count > 0 %>
+            &middot; <%= link_to "View all", faction_spy_stats_path(@faction), class: "import-spy-link" %>
+          <% end %>
+        </p>
+
+        <% unless @faction_setting.tornstats_api_key? %>
+          <p class="api-key-form-hint">Configure your TornStats API key above before importing.</p>
+        <% else %>
+          <%= form_with url: import_spies_faction_settings_path(@faction), method: :post do |form| %>
+            <div class="api-key-form-inline">
+              <%= form.text_field :target_faction_id,
+                  class: "api-key-form-input",
+                  placeholder: "Enter enemy faction ID",
+                  autocomplete: "off",
+                  inputmode: "numeric",
+                  pattern: "[0-9]*" %>
+              <% if @can_import %>
+                <%= form.submit "Import", class: "btn-primary" %>
+              <% else %>
+                <span data-controller="backfill-countdown"
+                      data-backfill-countdown-seconds-remaining-value="<%= @seconds_until_import %>">
+                  <button type="button" class="btn-secondary" disabled>
+                    <span data-backfill-countdown-target="countdown"><%= @seconds_until_import %>s</span>
+                  </button>
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Section 3: Dashboard Access & Share Subscription (side by side) -->
 <div class="settings-section">
   <div class="settings-top-grid settings-top-grid-stretch">
     <div class="settings-grid-column">
@@ -153,46 +213,5 @@
         <% end %>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- Section 4: Import Spy Stats -->
-<div class="settings-section">
-  <h2>Import Spy Stats</h2>
-
-  <div class="api-key-card">
-    <div class="import-spy-header">
-      <p class="import-spy-description">Import spy data from TornStats for an enemy faction. Updates existing reports and adds new ones.</p>
-      <p class="import-spy-count"><%= @spy_report_count %> reports stored
-        <% if @spy_report_count > 0 %>
-          &middot; <%= link_to "View all", faction_spy_stats_path(@faction), class: "import-spy-link" %>
-        <% end %>
-      </p>
-    </div>
-
-    <% unless @faction_setting.tornstats_api_key? %>
-      <p class="api-key-form-hint">Configure your TornStats API key above before importing.</p>
-    <% else %>
-      <%= form_with url: import_spies_faction_settings_path(@faction), method: :post do |form| %>
-        <div class="api-key-form-inline">
-          <%= form.text_field :target_faction_id,
-              class: "api-key-form-input",
-              placeholder: "Enter enemy faction ID",
-              autocomplete: "off",
-              inputmode: "numeric",
-              pattern: "[0-9]*" %>
-          <% if @can_import %>
-            <%= form.submit "Import", class: "btn-primary" %>
-          <% else %>
-            <span data-controller="backfill-countdown"
-                  data-backfill-countdown-seconds-remaining-value="<%= @seconds_until_import %>">
-              <button type="button" class="btn-secondary" disabled>
-                <span data-backfill-countdown-target="countdown"><%= @seconds_until_import %>s</span>
-              </button>
-            </span>
-          <% end %>
-        </div>
-      <% end %>
-    <% end %>
   </div>
 </div>

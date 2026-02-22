@@ -21,6 +21,6 @@ class Factions::WarPollingController < ApplicationController
 
   def stop
     @faction.stop_war_polling!
-    redirect_to faction_path(@faction), notice: "War polling stopped."
+    redirect_to faction_settings_path(@faction), notice: "War polling stopped."
   end
 end

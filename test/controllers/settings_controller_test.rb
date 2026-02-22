@@ -191,7 +191,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Bram \[2728237\]/, response.body
     assert_match /1 week/, response.body
     assert_match /Xanax Payment/, response.body
-    assert_match /Faction Grant/, response.body
+    assert_match /Faction Sharing/, response.body
   end
 
   test "index renders API Key and Subscription in side-by-side grid" do
