@@ -5,54 +5,89 @@
 
 <%= link_to "← Back to faction", faction_path(@faction), class: "back-link mb-4" %>
 
-<!-- Section 1: API Keys (side by side) -->
+<!-- Section 1: Spy Configuration -->
 <div class="settings-section">
-  <h2>API Keys</h2>
+  <h2>Spy Configuration</h2>
 
-  <%= form_with model: @faction_setting, url: faction_settings_path(@faction), method: :patch do |form| %>
-    <div class="api-keys-grid">
+  <div class="spy-config-card">
+    <div class="spy-config-keys">
       <!-- Torn API Key -->
-      <div class="api-key-card">
+      <div class="spy-config-key-field">
         <div class="api-key-field-header">
           <span class="api-key-field-label">Torn API Key</span>
-          <% if @faction_setting.torn_api_key? %>
-            <% access_type = @faction_setting.torn_api_access_type %>
-            <% badge_class = access_type&.downcase&.include?("full") ? "api-key-access-good" : "api-key-access-limited" %>
-            <span class="api-key-access-badge <%= badge_class %>"><%= access_type || "Unknown" %></span>
+          <% if @faction_setting.torn_api_access_type.present? %>
+            <span class="api-key-access-badge api-key-access-limited"><%= @faction_setting.torn_api_access_type %></span>
           <% end %>
         </div>
         <div class="api-key-field-current">
           <span class="api-key-value"><%= @torn_api_key_masked || "Not set" %></span>
+          <% if @faction_setting.torn_api_key? %>
+            <%= button_to "Delete", delete_torn_key_faction_settings_path(@faction),
+                method: :delete,
+                class: "key-delete-btn",
+                data: { turbo_confirm: "Delete the Torn API key?" } %>
+          <% end %>
         </div>
-        <%= form.text_field :torn_api_key,
-            class: "api-key-form-input api-key-form-input-full",
-            placeholder: "Enter new Torn API key",
-            autocomplete: "off",
-            value: "" %>
-        <p class="api-key-form-hint">Faction access required. Validated on save.</p>
       </div>
 
       <!-- TornStats API Key -->
-      <div class="api-key-card">
+      <div class="spy-config-key-field">
         <div class="api-key-field-header">
           <span class="api-key-field-label">TornStats API Key</span>
         </div>
         <div class="api-key-field-current">
           <span class="api-key-value"><%= @tornstats_api_key_masked || "Not set" %></span>
+          <% if @faction_setting.tornstats_api_key? %>
+            <%= button_to "Delete", delete_tornstats_key_faction_settings_path(@faction),
+                method: :delete,
+                class: "key-delete-btn",
+                data: { turbo_confirm: "Delete the TornStats API key?" } %>
+          <% end %>
         </div>
-        <%= form.text_field :tornstats_api_key,
-            class: "api-key-form-input api-key-form-input-full",
-            placeholder: "Enter new TornStats API key",
-            autocomplete: "off",
-            value: "" %>
-        <p class="api-key-form-hint">Used to import spy data for enemy factions.</p>
       </div>
     </div>
 
-    <div class="api-keys-actions">
-      <%= form.submit "Save Keys", class: "btn-primary" %>
-    </div>
-  <% end %>
+    <%= form_with model: @faction_setting, url: faction_settings_path(@faction), method: :patch do |form| %>
+      <div class="spy-config-keys spy-config-keys-inputs">
+        <div class="spy-config-key-field">
+          <%= form.text_field :torn_api_key,
+              class: "api-key-form-input api-key-form-input-full",
+              placeholder: "Enter new Torn API key",
+              autocomplete: "off",
+              value: "" %>
+          <p class="api-key-form-hint">Must be a Limited Access key. Validated on save.</p>
+        </div>
+
+        <div class="spy-config-key-field">
+          <%= form.text_field :tornstats_api_key,
+              class: "api-key-form-input api-key-form-input-full",
+              placeholder: "Enter new TornStats API key",
+              autocomplete: "off",
+              value: "" %>
+          <p class="api-key-form-hint">Get your key from <a href="https://www.tornstats.com/settings" target="_blank">tornstats.com/settings</a>.</p>
+        </div>
+      </div>
+
+      <div class="api-keys-actions">
+        <%= form.submit "Save Keys", class: "btn-primary" %>
+      </div>
+    <% end %>
+
+    <details class="spy-config-details">
+      <summary>How your API keys are used<span class="ping-dot"><span class="ping-ring"></span></span></summary>
+      <div class="spy-config-details-content">
+        <div class="spy-config-method">
+          <h4>Torn API Key (Limited Access)</h4>
+          <p>Used to fetch live member status (hospital, traveling, jail) during ranked wars. A Limited Access key is required to ensure minimal permissions.</p>
+          <p>Your key is stored securely and is never shared with other factions.</p>
+        </div>
+        <div class="spy-config-method">
+          <h4>TornStats API Key</h4>
+          <p>Used to import spy reports (battle stats) for enemy factions via TornStats. This allows your faction to view estimated strength, defense, speed, and dexterity of opponents.</p>
+        </div>
+      </div>
+    </details>
+  </div>
 </div>
 
 <!-- Section 2: Dashboard Access -->

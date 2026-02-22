@@ -584,6 +584,88 @@
   margin-top: var(--space-4);
 }
 
+/* Spy Configuration Card */
+.spy-config-card {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  padding: 2rem;
+}
+
+.spy-config-keys {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .spy-config-keys {
+    grid-template-columns: 1fr;
+  }
+}
+
+.spy-config-keys-inputs {
+  margin-top: var(--space-3);
+}
+
+.spy-config-details {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--gray-800);
+  padding-top: 1rem;
+}
+
+.spy-config-details summary {
+  cursor: pointer;
+  color: var(--gray-400);
+  font-size: 0.875rem;
+  font-weight: 500;
+  user-select: none;
+  list-style: none;
+}
+
+.spy-config-details summary::-webkit-details-marker {
+  display: none;
+}
+
+.spy-config-details summary::before {
+  content: "\25B8 ";
+  color: var(--gray-500);
+}
+
+.spy-config-details[open] summary::before {
+  content: "\25BE ";
+}
+
+.spy-config-details-content {
+  margin-top: 1rem;
+}
+
+.spy-config-method {
+  margin-bottom: 1rem;
+}
+
+.spy-config-method:last-child {
+  margin-bottom: 0;
+}
+
+.spy-config-method h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-200);
+  margin-bottom: 0.5rem;
+}
+
+.spy-config-method p {
+  color: var(--gray-400);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  margin-bottom: 0.25rem;
+}
+
+.spy-config-method p:last-child {
+  margin-bottom: 0;
+}
+
 /* API Key Field */
 .api-key-field-header {
   display: flex;
@@ -599,7 +681,28 @@
 }
 
 .api-key-field-current {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   margin-bottom: 0.75rem;
+}
+
+.key-delete-btn {
+  padding: 0.125rem 0.5rem;
+  background: transparent;
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-sm);
+  color: var(--gray-500);
+  font-size: 0.6875rem;
+  font-family: "Geist Mono", monospace;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.key-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
 }
 
 .api-key-form-input-full {

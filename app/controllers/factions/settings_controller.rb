@@ -32,6 +32,12 @@ class Factions::SettingsController < ApplicationController
       begin
         key_info = TornApi::Key::Info.new(new_torn_key).fetch
 
+        # Require Limited Access key
+        unless key_info.access.type == "Limited Access"
+          return redirect_to faction_settings_path(@faction),
+            alert: "Only Limited Access keys are allowed. Please create a Limited Access key in your Torn settings."
+        end
+
         # Verify the key belongs to the current user
         unless Current.user.admin? || key_info.user.id == Current.user.torn_id
           return redirect_to faction_settings_path(@faction), alert: "This API key does not belong to you."
@@ -84,6 +90,26 @@ class Factions::SettingsController < ApplicationController
       redirect_to faction_settings_path(@faction), notice: "#{name}'s access has been removed."
     else
       redirect_to faction_settings_path(@faction), alert: "User not found in whitelist."
+    end
+  end
+
+  def delete_torn_key
+    setting = @faction.faction_setting
+    if setting
+      setting.update!(torn_api_key: nil, torn_api_access_type: nil)
+      redirect_to faction_settings_path(@faction), notice: "Torn API key deleted."
+    else
+      redirect_to faction_settings_path(@faction), alert: "No API keys configured."
+    end
+  end
+
+  def delete_tornstats_key
+    setting = @faction.faction_setting
+    if setting
+      setting.update!(tornstats_api_key: nil)
+      redirect_to faction_settings_path(@faction), notice: "TornStats API key deleted."
+    else
+      redirect_to faction_settings_path(@faction), alert: "No API keys configured."
     end
   end
 
