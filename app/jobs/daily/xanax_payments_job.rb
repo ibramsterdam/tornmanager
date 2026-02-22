@@ -1,5 +1,5 @@
 module Daily
-  class XanaxPaymentsJob < TornApiJob
+  class XanaxPaymentsJob < OwnerApiJob
     PAYMENT_RECIPIENT_TORN_ID = 2728237
 
     def perform

@@ -1,4 +1,4 @@
-class BackfillSingleStatJob < TornApiJob
+class BackfillSingleStatJob < OwnerApiJob
   def perform(user_id, date_str, batch: 1)
     user = User.find(user_id)
     date = Date.parse(date_str)

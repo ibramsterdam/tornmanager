@@ -1,5 +1,5 @@
 module Daily
-  class StockDividendJob < TornApiJob
+  class StockDividendJob < OwnerApiJob
     def perform(*args)
       stocks = TornApi::Torn::Stocks.new(OwnerCredentials.api_key).fetch
       items = Torn::Item.money_makers.index_by(&:torn_id)

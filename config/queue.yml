@@ -3,13 +3,15 @@ default: &default
     - polling_interval: 1
       batch_size: 500
   workers:
-    # Torn API queue: rate-limited to ~1 request per second (60/min API limit)
-    # Single thread ensures sequential execution, polling_interval adds delay between jobs
-    - queues: torn_api
+    # Owner API queue: uses the application owner's Torn API key.
+    # Single thread ensures sequential execution. Combined with TornApiJob's
+    # 1.0s sleep after each job and the 1.1s polling_interval, this limits
+    # throughput to ~28 req/min (well under the 50 req/min target).
+    - queues: owner_api
       threads: 1
       processes: 1
       polling_interval: 1.1
-    # Default queue for all other jobs (explicitly named to avoid picking up torn_api)
+    # Default queue for all other jobs (explicitly named to avoid picking up owner_api)
     - queues: default
       threads: 3
       processes: <%= ENV.fetch("JOB_CONCURRENCY", 1) %>

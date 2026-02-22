@@ -1,5 +1,5 @@
 # Fetches members for a single faction from the Torn API and creates/updates user records
-class FetchFactionMembersJob < TornApiJob
+class FetchFactionMembersJob < OwnerApiJob
   def perform(faction_torn_id)
     members = TornApi::Faction::Members.new(OwnerCredentials.api_key, faction_torn_id).fetch
 
