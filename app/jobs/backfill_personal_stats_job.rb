@@ -1,7 +1,7 @@
 class BackfillPersonalStatsJob < ApplicationJob
   queue_as :default
 
-  # Seconds per API call (polling_interval of torn_api queue)
+  # Seconds per API call (polling_interval of owner_api queue)
   SECONDS_PER_API_CALL = 1.1
 
   def perform(faction_id, start_date, end_date)
@@ -13,7 +13,7 @@ class BackfillPersonalStatsJob < ApplicationJob
 
     jobs_scheduled = 0
 
-    # Enqueue all jobs - torn_api queue handles rate limiting (~1 req/sec)
+    # Enqueue all jobs - owner_api queue handles rate limiting (~1 req/sec)
     users.each do |user|
       # Get existing snapshots for this user
       existing_dates = user.personal_stat_snapshots
@@ -30,9 +30,9 @@ class BackfillPersonalStatsJob < ApplicationJob
       end
     end
 
-    # Count jobs already in the torn_api queue (not yet finished)
+    # Count jobs already in the owner_api queue (not yet finished)
     # These will be processed before our newly enqueued jobs
-    existing_queued_jobs = SolidQueue::Job.where(queue_name: "torn_api", finished_at: nil).count
+    existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
 
     # Each BackfillSingleStatJob triggers 2 API calls (batch 1 + batch 2)
     # Total API calls = existing jobs + (new jobs * 2)

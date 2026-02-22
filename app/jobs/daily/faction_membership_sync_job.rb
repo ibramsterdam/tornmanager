@@ -1,6 +1,6 @@
 module Daily
   # Orchestrator job that schedules individual sync jobs per faction
-  # Runs on default queue, schedules API jobs to torn_api queue
+  # Runs on default queue, schedules API jobs to owner_api queue
   class FactionMembershipSyncJob < ApplicationJob
     queue_as :default
 

@@ -1,4 +1,4 @@
-class FetchPersonalStatsJob < TornApiJob
+class FetchPersonalStatsJob < OwnerApiJob
   MIN_STAT_ENHANCER = 200
 
   def perform(user, batch: 1, stats_date: Date.current.yesterday)

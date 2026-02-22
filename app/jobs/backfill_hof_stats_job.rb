@@ -22,7 +22,7 @@ class BackfillHofStatsJob < ApplicationJob
       end
     end
 
-    existing_queued_jobs = SolidQueue::Job.where(queue_name: "torn_api", finished_at: nil).count
+    existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
     total_api_calls = existing_queued_jobs + (jobs_scheduled * 2)
     estimated_seconds = [ total_api_calls * SECONDS_PER_API_CALL, 1 ].max.to_i
 

@@ -1,5 +1,5 @@
 # Syncs members for a single faction from the Torn API
-class SyncFactionMembersJob < TornApiJob
+class SyncFactionMembersJob < OwnerApiJob
   def perform(faction_id)
     faction = Faction.find(faction_id)
     api_key = OwnerCredentials.api_key

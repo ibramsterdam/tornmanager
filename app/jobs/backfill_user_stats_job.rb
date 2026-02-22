@@ -20,7 +20,7 @@ class BackfillUserStatsJob < ApplicationJob
       # Skip if we already have a snapshot for this date
       next if existing_dates.include?(date)
 
-      # Jobs go to torn_api queue which handles rate limiting (~1 req/sec)
+      # Jobs go to owner_api queue which handles rate limiting (~1 req/sec)
       BackfillSingleStatJob.perform_later(user.id, date.to_s)
       jobs_scheduled += 1
     end
