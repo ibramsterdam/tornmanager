@@ -3,49 +3,41 @@ module Api
     PAYMENT_CHECK_COOLDOWN = 5.minutes
     CACHE_KEY = "api:payment_check:last_run"
 
+    before_action :require_api_key
+    before_action :set_user
+
     def show
-      api_key = params[:api_key].to_s.strip
-
-      if api_key.blank?
-        return render json: { error: "API key is required" }, status: :bad_request
-      end
-
-      user = User.find_by(api_key: api_key)
-
-      unless user
-        return render json: { error: "Unknown API key. Please sign in first." }, status: :not_found
-      end
-
-      if params[:refresh].present?
-        unless check_payments!
-          seconds = seconds_until_available
-          return render json: {
-            error: "Payment check was run recently. Try again in #{seconds} seconds."
-          }, status: :too_many_requests
-        end
-
-        user.reload
-      end
+      refresh_payments! if params[:refresh].present?
+      return if performed?
 
       render json: {
         subscription: {
-          active: user.subscribed?,
-          expires_at: user.subscription_expires_at&.iso8601
+          active: @user.subscribed?,
+          expires_at: @user.subscription_expires_at&.iso8601
         }
-      }, status: :ok
-    rescue => e
-      Rails.logger.error("API subscription check failed: #{e.class} - #{e.message}")
-      render json: { error: "Could not check subscription status. Please try again later." }, status: :internal_server_error
+      }
     end
 
     private
 
-    def check_payments!
-      return false if rate_limited?
+    def require_api_key
+      render json: { error: "API key is required" }, status: :bad_request if params[:api_key].blank?
+    end
 
-      Rails.cache.write(CACHE_KEY, Time.current, expires_in: PAYMENT_CHECK_COOLDOWN)
-      Daily::XanaxPaymentsJob.perform_now
-      true
+    def set_user
+      @user = User.find_by(api_key: params[:api_key].to_s.strip)
+      render json: { error: "Unknown API key. Please sign in first." }, status: :not_found unless @user
+    end
+
+    def refresh_payments!
+      if rate_limited?
+        render json: { error: "Payment check was run recently. Try again in #{seconds_until_available} seconds." },
+          status: :too_many_requests
+      else
+        Rails.cache.write(CACHE_KEY, Time.current, expires_in: PAYMENT_CHECK_COOLDOWN)
+        Daily::XanaxPaymentsJob.perform_now
+        @user.reload
+      end
     end
 
     def rate_limited?
