@@ -16,6 +16,8 @@ class Factions::TrainingController < ApplicationController
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
     @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
 
+    @backfilling_members = @faction.users.where("backfill_ends_at > ?", Time.current)
+
     summary = ComplianceSummary.new(@faction, start_date: @start_date, end_date: @end_date)
 
     @total_days_tracked = summary.total_days
