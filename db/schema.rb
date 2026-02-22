@@ -210,6 +210,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_200000) do
     t.integer "level", null: false
     t.string "name", null: false
     t.string "profile_image"
+    t.boolean "ssl_user", default: false, null: false
     t.datetime "subscription_expires_at"
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false

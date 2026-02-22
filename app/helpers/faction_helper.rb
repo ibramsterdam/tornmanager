@@ -50,6 +50,32 @@ module FactionHelper
     (xanax_score + energy_score + nerve_score).round
   end
 
+  # Calculate compliance score for SSL users (exempt from xanax)
+  # SSL = Sports Science Lab, requires max 150 xanax lifetime
+  def compliance_score_ssl(energy_daily, nerve_daily, faction)
+    energy_disabled = faction.energy_refill_target.zero?
+    nerve_disabled = faction.nerve_refill_target.zero?
+
+    # SSL users get full xanax score, redistribute remaining weight
+    if energy_disabled && nerve_disabled
+      # No other targets, SSL user is fully compliant
+      100
+    elsif energy_disabled
+      # Only nerve target active
+      nerve_score = [ (nerve_daily.to_f / faction.nerve_refill_target.to_f) * 100, 100 ].min
+      nerve_score.round
+    elsif nerve_disabled
+      # Only energy target active
+      energy_score = [ (energy_daily.to_f / faction.energy_refill_target.to_f) * 100, 100 ].min
+      energy_score.round
+    else
+      # Both energy and nerve active, split 50/50
+      energy_score = [ (energy_daily.to_f / faction.energy_refill_target.to_f) * 50, 50 ].min
+      nerve_score = [ (nerve_daily.to_f / faction.nerve_refill_target.to_f) * 50, 50 ].min
+      (energy_score + nerve_score).round
+    end
+  end
+
   # Get icon for compliance level
   def compliance_icon(level)
     case level

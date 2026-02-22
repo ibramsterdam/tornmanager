@@ -47,8 +47,21 @@
             <span style="color:#e5e5e5; font-size:0.875rem;">
               <%= link_to user.name, "https://www.torn.com/profiles.php?XID=#{user.torn_id}", target: "_blank", style: "color:#e5e5e5; text-decoration:none;" %> 
               <small style="color:#737373;">[<%= user.torn_id %>]</small>
+              <% if user.ssl_user? %>
+                <span style="margin-left:6px; padding:1px 5px; background:rgba(139,92,246,0.15); color:rgb(167,139,250); border:1px solid rgba(139,92,246,0.3); border-radius:4px; font-size:0.625rem; font-weight:700;">SSL</span>
+              <% end %>
             </span>
-            <button type="button" class="btn-small" onclick="document.getElementById('backfill-user-modal-<%= user.id %>').style.display='flex'" style="font-size:0.75rem; padding:4px 8px;">Backfill</button>
+            <div style="display:flex; gap:6px;">
+              <button type="button" 
+                      class="btn-small <%= user.ssl_user? ? 'btn-small-active' : '' %>" 
+                      id="ssl-toggle-<%= user.id %>"
+                      onclick="toggleSsl(<%= faction.torn_id %>, <%= user.id %>)"
+                      style="font-size:0.75rem; padding:4px 8px;"
+                      title="Toggle Sports Science Lab status">
+                SSL
+              </button>
+              <button type="button" class="btn-small" onclick="document.getElementById('backfill-user-modal-<%= user.id %>').style.display='flex'" style="font-size:0.75rem; padding:4px 8px;">Backfill</button>
+            </div>
           </div>
         <% end %>
       </div>

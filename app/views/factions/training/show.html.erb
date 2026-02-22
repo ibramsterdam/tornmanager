@@ -167,13 +167,21 @@
                 </td>
                 <td>
                   <%= link_to row[:name], member_faction_training_path(@faction, torn_id: row[:torn_id]), class: "player-link" %>
+                  <% if row[:ssl_user] %>
+                    <span class="ssl-badge" title="Sports Science Lab - Exempt from xanax target">SSL</span>
+                  <% end %>
                 </td>
                 <td>
                   <div class="stat-cell">
-                    <span class="stat-value"><%= number_with_delimiter(row[:xanax_gained]) %></span>
-                    <span class="stat-daily <%= compliance_class(row[:xanax_daily], @faction.xanax_target) %>">
-                      <%= row[:xanax_daily] %>/day
-                    </span>
+                    <% if row[:ssl_user] %>
+                      <span class="stat-value ssl-exempt"><%= number_with_delimiter(row[:xanax_gained]) %></span>
+                      <span class="stat-daily ssl-exempt" title="SSL users are exempt from xanax target">Exempt</span>
+                    <% else %>
+                      <span class="stat-value"><%= number_with_delimiter(row[:xanax_gained]) %></span>
+                      <span class="stat-daily <%= compliance_class(row[:xanax_daily], @faction.xanax_target) %>">
+                        <%= row[:xanax_daily] %>/day
+                      </span>
+                    <% end %>
                   </div>
                 </td>
                 <td>

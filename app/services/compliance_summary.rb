@@ -59,16 +59,19 @@ class ComplianceSummary
     crimes_daily = crimes_stats[:daily]
     activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / 60 / activity_stats[:days]).round(0) : 0
 
-    xanax_compliance = stat_compliance(xanax_daily, faction.xanax_target)
+    # SSL users are exempt from xanax target (Sports Science Lab requires max 150 xanax lifetime)
+    ssl_user = user.ssl_user?
+    xanax_compliance = ssl_user ? :green : stat_compliance(xanax_daily, faction.xanax_target)
     energy_compliance = stat_compliance(energy_refills_daily, faction.energy_refill_target)
     nerve_compliance = stat_compliance(nerve_refills_daily, faction.nerve_refill_target)
 
     compliance_level = member_compliance_level(xanax_compliance, energy_compliance, nerve_compliance)
-    score = compliance_score(xanax_daily, energy_refills_daily, nerve_refills_daily, faction)
+    score = ssl_user ? compliance_score_ssl(energy_refills_daily, nerve_refills_daily, faction) : compliance_score(xanax_daily, energy_refills_daily, nerve_refills_daily, faction)
 
     {
       torn_id: user.torn_id,
       name: user.name,
+      ssl_user: ssl_user,
       compliance_level: compliance_level,
       compliance_score: score,
 
