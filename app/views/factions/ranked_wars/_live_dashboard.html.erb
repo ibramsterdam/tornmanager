@@ -51,10 +51,47 @@
     </div>
   </div>
 
+  <!-- Filters -->
+  <div class="war-filters-card">
+    <div class="war-filters-header">
+      <span class="war-filters-title">Filters</span>
+      <span class="war-filters-count" data-war-dashboard-target="filterCount"></span>
+    </div>
+    <div class="war-filters-body">
+      <div class="war-filter-group">
+        <span class="war-filter-label">Status</span>
+        <div class="war-filter-options">
+          <span class="member-status status-okay war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterStatusOkay" data-filter-active="true">Okay</span>
+          <span class="member-status status-hospital war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterStatusHospital" data-filter-active="true">Hospital</span>
+          <span class="member-status status-jail war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterStatusJail" data-filter-active="true">Jail</span>
+          <span class="member-status status-traveling war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterStatusTraveling" data-filter-active="true">Traveling</span>
+          <span class="member-status status-traveling war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterStatusAbroad" data-filter-active="true">Abroad</span>
+        </div>
+      </div>
+      <div class="war-filter-group">
+        <span class="war-filter-label">Activity</span>
+        <div class="war-filter-options">
+          <span class="action-badge action-online war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterActionOnline" data-filter-active="true">Online</span>
+          <span class="action-badge action-idle war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterActionIdle" data-filter-active="true">Idle</span>
+          <span class="action-badge action-offline war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterActionOffline" data-filter-active="true">Offline</span>
+        </div>
+      </div>
+      <div class="war-filter-group">
+        <span class="war-filter-label">Max Total Stats</span>
+        <div class="war-filter-slider">
+          <input type="range" min="0" max="50000000000" step="100000000" value="50000000000"
+                 data-action="input->war-dashboard#applyFilters"
+                 data-war-dashboard-target="filterMaxStats">
+          <span class="war-filter-slider-value" data-war-dashboard-target="filterMaxStatsLabel">No limit</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Enemy Members Table -->
   <div class="table-container live-war-table">
     <div class="table-info">
-      <span class="info-label">Enemy Members</span>
+      <span class="info-label">Enemy Members (<span data-war-dashboard-target="visibleCount">0</span>/<span data-war-dashboard-target="totalCount">0</span>)</span>
       <span class="live-war-update-status">
         <span class="live-war-updated" data-war-dashboard-target="lastUpdated"></span>
         <span class="live-war-countdown" data-war-dashboard-target="updateCountdown"></span><span class="ping-dot"><span class="ping-ring"></span></span>
@@ -73,6 +110,9 @@
             </th>
             <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="status">
               Status <span class="sort-indicator" data-war-dashboard-target="sortIndicatorStatus"></span>
+            </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="lastAction">
+              Activity <span class="sort-indicator" data-war-dashboard-target="sortIndicatorLastAction"></span>
             </th>
             <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="timer">
               Timer <span class="sort-indicator" data-war-dashboard-target="sortIndicatorTimer"></span>
@@ -99,7 +139,7 @@
         </thead>
         <tbody data-war-dashboard-target="membersBody">
           <tr>
-            <td colspan="10" class="table-empty-text">Loading enemy members...</td>
+            <td colspan="11" class="table-empty-text">Loading enemy members...</td>
           </tr>
         </tbody>
       </table>

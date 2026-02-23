@@ -15,15 +15,19 @@ class WarPollingJob < ApplicationJob
     end
 
     setting = faction.faction_setting
-    return unless setting&.torn_api_key?
+    unless setting&.torn_api_key?
+      Rails.logger.warn("WarPollingJob: No API key for faction #{faction_id}, stopping polling")
+      faction.update!(war_polling_active: false)
+      return
+    end
 
     war_data = build_war_data(faction, war, setting)
     Rails.cache.write(faction.war_cache_key, war_data, expires_in: CACHE_TTL)
 
     WarPollingJob.set(wait: POLL_INTERVAL).perform_later(faction_id)
-  rescue TornApi::ApiError => e
-    Rails.logger.error("WarPollingJob: Torn API error for faction #{faction_id}: #{e.message}")
-    WarPollingJob.set(wait: POLL_INTERVAL).perform_later(faction_id)
+  rescue StandardError => e
+    Rails.logger.error("WarPollingJob: Error for faction #{faction_id}: #{e.class} - #{e.message}")
+    WarPollingJob.set(wait: POLL_INTERVAL).perform_later(faction_id) if faction&.war_polling_active?
   end
 
   private
@@ -59,7 +63,8 @@ class WarPollingJob < ApplicationJob
       torn_id: member.id,
       name: member.name,
       level: member.level,
-      status: build_status(member)
+      status: build_status(member),
+      last_action: build_last_action(member)
     }
 
     if spy
@@ -68,6 +73,14 @@ class WarPollingJob < ApplicationJob
     end
 
     data
+  end
+
+  def build_last_action(member)
+    {
+      status: member.last_action_status,
+      timestamp: member.last_action_timestamp,
+      relative: member.last_action_relative
+    }
   end
 
   def build_status(member)
