@@ -17,11 +17,14 @@ export default class extends Controller {
   static targets = [
     "ourScore", "theirScore", "targetScore", "currentLead", "leadProgress",
     "warTimer", "connectionStatus", "lastUpdated", "updateCountdown",
-    "membersBody",
+    "membersBody", "visibleCount", "totalCount", "filterCount",
     "sortIndicatorName", "sortIndicatorLevel", "sortIndicatorStatus",
-    "sortIndicatorTimer", "sortIndicatorTotal",
+    "sortIndicatorLastAction", "sortIndicatorTimer", "sortIndicatorTotal",
     "sortIndicatorStrength", "sortIndicatorDefense",
-    "sortIndicatorSpeed", "sortIndicatorDexterity"
+    "sortIndicatorSpeed", "sortIndicatorDexterity",
+    "filterStatusOkay", "filterStatusHospital", "filterStatusJail", "filterStatusTraveling", "filterStatusAbroad",
+    "filterActionOnline", "filterActionIdle", "filterActionOffline",
+    "filterMaxStats", "filterMaxStatsLabel"
   ]
 
   connect() {
@@ -153,6 +156,7 @@ export default class extends Controller {
     if (prev.status?.state !== current.status?.state) return true
     if (prev.status?.until !== current.status?.until) return true
     if (prev.level !== current.level) return true
+    if (prev.last_action?.status !== current.last_action?.status) return true
     return false
   }
 
@@ -254,6 +258,87 @@ export default class extends Controller {
     this.updateCountdownTarget.textContent = `Next update in ${this.secondsUntilUpdate}s`
   }
 
+  // --- Filtering ---
+
+  toggleFilter({ currentTarget }) {
+    const isActive = currentTarget.dataset.filterActive === "true"
+    currentTarget.dataset.filterActive = isActive ? "false" : "true"
+    currentTarget.classList.toggle("filter-disabled", isActive)
+    this.applyFilters()
+  }
+
+  isFilterActive(target) {
+    return target.dataset.filterActive === "true"
+  }
+
+  applyFilters() {
+    // Update slider label
+    if (this.hasFilterMaxStatsTarget && this.hasFilterMaxStatsLabelTarget) {
+      const maxVal = parseInt(this.filterMaxStatsTarget.value)
+      const sliderMax = parseInt(this.filterMaxStatsTarget.max)
+      if (maxVal >= sliderMax) {
+        this.filterMaxStatsLabelTarget.textContent = "No limit"
+      } else {
+        this.filterMaxStatsLabelTarget.textContent = this.formatStat(maxVal)
+      }
+    }
+
+    this.renderTable()
+  }
+
+  getFilteredMembers(members) {
+    // Status filters
+    const statusFilters = {}
+    if (this.hasFilterStatusOkayTarget) statusFilters["Okay"] = this.isFilterActive(this.filterStatusOkayTarget)
+    if (this.hasFilterStatusHospitalTarget) statusFilters["Hospital"] = this.isFilterActive(this.filterStatusHospitalTarget)
+    if (this.hasFilterStatusJailTarget) statusFilters["Jail"] = this.isFilterActive(this.filterStatusJailTarget)
+    if (this.hasFilterStatusTravelingTarget) statusFilters["Traveling"] = this.isFilterActive(this.filterStatusTravelingTarget)
+    if (this.hasFilterStatusAbroadTarget) statusFilters["Abroad"] = this.isFilterActive(this.filterStatusAbroadTarget)
+
+    // Last action filters
+    const actionFilters = {}
+    if (this.hasFilterActionOnlineTarget) actionFilters["Online"] = this.isFilterActive(this.filterActionOnlineTarget)
+    if (this.hasFilterActionIdleTarget) actionFilters["Idle"] = this.isFilterActive(this.filterActionIdleTarget)
+    if (this.hasFilterActionOfflineTarget) actionFilters["Offline"] = this.isFilterActive(this.filterActionOfflineTarget)
+
+    // Max stats filter
+    let maxStats = Infinity
+    if (this.hasFilterMaxStatsTarget) {
+      const val = parseInt(this.filterMaxStatsTarget.value)
+      const sliderMax = parseInt(this.filterMaxStatsTarget.max)
+      if (val < sliderMax) maxStats = val
+    }
+
+    return members.filter(member => {
+      // Status filter
+      const state = member.status?.state || "Unknown"
+      if (statusFilters[state] === false) return false
+
+      // Last action filter
+      const actionStatus = member.last_action?.status || "Offline"
+      if (actionFilters[actionStatus] === false) return false
+
+      // Max stats filter
+      const total = member.stats?.total || 0
+      if (total > 0 && total > maxStats) return false
+
+      return true
+    })
+  }
+
+  updateFilterCount(visible, total) {
+    if (this.hasVisibleCountTarget) this.visibleCountTarget.textContent = visible
+    if (this.hasTotalCountTarget) this.totalCountTarget.textContent = total
+
+    if (this.hasFilterCountTarget) {
+      if (visible < total) {
+        this.filterCountTarget.textContent = `${total - visible} hidden`
+      } else {
+        this.filterCountTarget.textContent = ""
+      }
+    }
+  }
+
   // --- Sorting ---
 
   sort({ params: { sortKey } }) {
@@ -269,17 +354,18 @@ export default class extends Controller {
   }
 
   updateSortIndicators() {
-    const keys = ["Name", "Level", "Status", "Timer", "Total", "Strength", "Defense", "Speed", "Dexterity"]
+    const keys = ["Name", "Level", "Status", "LastAction", "Timer", "Total", "Strength", "Defense", "Speed", "Dexterity"]
 
     keys.forEach(key => {
       const targetName = `sortIndicator${key}`
-      const target = this[`has${targetName.charAt(0).toUpperCase() + targetName.slice(1)}Target`]
-        ? this[`${targetName}Target`]
-        : null
+      const hasTarget = this[`has${targetName.charAt(0).toUpperCase() + targetName.slice(1)}Target`]
+      const target = hasTarget ? this[`${targetName}Target`] : null
 
       if (target) {
         target.classList.remove("asc", "desc")
-        if (this.sortKey === key.toLowerCase()) {
+        // Convert key to camelCase for comparison (e.g. "LastAction" -> "lastAction")
+        const sortKeyMatch = key.charAt(0).toLowerCase() + key.slice(1)
+        if (this.sortKey === sortKeyMatch) {
           target.classList.add(this.sortDirection)
         }
       }
@@ -307,6 +393,15 @@ export default class extends Controller {
           aVal = this.statusSortOrder(a.status?.state)
           bVal = this.statusSortOrder(b.status?.state)
           return (aVal - bVal) * dir
+
+        case "lastAction":
+          aVal = this.actionSortOrder(a.last_action?.status)
+          bVal = this.actionSortOrder(b.last_action?.status)
+          if (aVal !== bVal) return (aVal - bVal) * dir
+          // Secondary sort by timestamp (most recent first)
+          aVal = a.last_action?.timestamp || 0
+          bVal = b.last_action?.timestamp || 0
+          return (bVal - aVal) * dir
 
         case "timer":
           aVal = this.getTimerSeconds(a)
@@ -349,6 +444,11 @@ export default class extends Controller {
     return order[state] ?? 5
   }
 
+  actionSortOrder(status) {
+    const order = { "Online": 0, "Idle": 1, "Offline": 2 }
+    return order[status] ?? 3
+  }
+
   getTimerSeconds(member) {
     if (!member.status?.until) return -1
 
@@ -364,17 +464,20 @@ export default class extends Controller {
     if (!this.hasMembersBodyTarget) return
 
     const sorted = this.getSortedMembers()
+    const filtered = this.getFilteredMembers(sorted)
 
-    if (sorted.length === 0) {
+    this.updateFilterCount(filtered.length, sorted.length)
+
+    if (filtered.length === 0) {
       this.membersBodyTarget.innerHTML = `
         <tr>
-          <td colspan="10" class="table-empty-text">No member data available.</td>
+          <td colspan="11" class="table-empty-text">${sorted.length === 0 ? "No member data available." : "No members match the current filters."}</td>
         </tr>
       `
       return
     }
 
-    const rows = sorted.map(member => this.renderRow(member)).join("")
+    const rows = filtered.map(member => this.renderRow(member)).join("")
     this.membersBodyTarget.innerHTML = rows
   }
 
@@ -385,10 +488,10 @@ export default class extends Controller {
     const changedClass = member._changed ? "row-updated" : ""
 
     const timerHtml = this.renderTimer(member)
+    const lastActionHtml = this.renderLastAction(member)
     const statsHtml = this.renderStats(member)
     const attackUrl = `https://www.torn.com/loader.php?sid=attack&user2ID=${member.torn_id}`
     const profileUrl = `https://www.torn.com/profiles.php?XID=${member.torn_id}`
-    const attackDisabled = status.state === "Hospital" || status.state === "Jail" || status.state === "Fallen" || status.state === "Traveling"
 
     return `
       <tr class="${rowClass} ${changedClass}" data-member-id="${member.torn_id}">
@@ -399,10 +502,11 @@ export default class extends Controller {
         <td>
           <span class="member-status ${statusClass}">${this.escapeHtml(status.state || "Unknown")}</span>
         </td>
+        <td>${lastActionHtml}</td>
         <td>${timerHtml}</td>
         ${statsHtml}
         <td>
-          <a href="${attackUrl}" target="_blank" class="attack-link ${attackDisabled ? "disabled" : ""}" title="Attack ${this.escapeHtml(member.name || "")}">
+          <a href="${attackUrl}" target="_blank" class="attack-link" title="Attack ${this.escapeHtml(member.name || "")}">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <line x1="12" y1="8" x2="12" y2="16"/>
@@ -412,6 +516,16 @@ export default class extends Controller {
         </td>
       </tr>
     `
+  }
+
+  renderLastAction(member) {
+    const lastAction = member.last_action
+    if (!lastAction?.status) return '<span class="stat-value no-data">-</span>'
+
+    const actionClass = this.actionCssClass(lastAction.status)
+    const relative = lastAction.relative || ""
+
+    return `<span class="action-badge ${actionClass}" title="${this.escapeHtml(relative)}">${this.escapeHtml(lastAction.status)}</span>`
   }
 
   renderTimer(member) {
@@ -489,6 +603,15 @@ export default class extends Controller {
       "Fallen": "status-fallen"
     }
     return map[state] || "status-unknown"
+  }
+
+  actionCssClass(status) {
+    const map = {
+      "Online": "action-online",
+      "Idle": "action-idle",
+      "Offline": "action-offline"
+    }
+    return map[status] || "action-offline"
   }
 
   formatCountdown(totalSeconds) {
