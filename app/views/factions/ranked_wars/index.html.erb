@@ -31,7 +31,7 @@
             </svg>
           </div>
           <div class="ongoing-war-text">
-            <strong>War in Progress vs <%= @ongoing_war.opponent_faction_name %></strong>
+            <strong>War in Progress vs <%= link_to @ongoing_war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{@ongoing_war.opponent_faction_id}", target: "_blank", class: "faction-link" %></strong>
             <span>
               Score: <strong class="<%= @ongoing_war.our_score > @ongoing_war.their_score ? 'score-winning' : 'score-losing' %>"><%= @ongoing_war.our_score %></strong> 
               - 

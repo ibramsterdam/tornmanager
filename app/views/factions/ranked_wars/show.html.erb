@@ -12,7 +12,7 @@
           <% else %>
             <span class="war-status lost">LOSS</span>
           <% end %>
-          vs <%= @war.opponent_faction_name %>
+          vs <%= link_to @war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{@war.opponent_faction_id}", target: "_blank", class: "faction-link" %>
         </h1>
         <p class="page-subtitle"><%= @war.started_at.strftime("%d %B %Y at %H:%M") %></p>
       </div>
@@ -50,7 +50,7 @@
     <div class="war-overview-main">
       <div class="war-faction our-faction">
         <span class="faction-label">Our Faction</span>
-        <span class="faction-name"><%= @faction.name %></span>
+        <span class="faction-name"><%= link_to @faction.name, "https://www.torn.com/factions.php?step=profile&ID=#{@faction.torn_id}", target: "_blank", class: "faction-link" %></span>
         <span class="faction-score <%= @war.our_score >= @war.their_score ? 'winning' : 'losing' %>"><%= @war.our_score %></span>
       </div>
       
@@ -61,7 +61,7 @@
       
       <div class="war-faction their-faction">
         <span class="faction-label">Opponent</span>
-        <span class="faction-name"><%= @war.opponent_faction_name %></span>
+        <span class="faction-name"><%= link_to @war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{@war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
         <span class="faction-score <%= @war.their_score > @war.our_score ? 'winning' : 'losing' %>"><%= @war.their_score %></span>
       </div>
     </div>
