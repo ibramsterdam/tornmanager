@@ -2,6 +2,10 @@ class WarPollingJob < ApplicationJob
   POLL_INTERVAL = 6.seconds
   CACHE_TTL = 30.seconds
 
+  # Destination regex patterns for extracting travel destination from status description
+  # Examples: "Traveling to China", "Returning to Torn from China", "In China"
+  DESTINATION_PATTERN = /(?:Traveling to |Returning to Torn from |In )(.+)/i
+
   queue_as :faction_polling
 
   def perform(faction_id)
@@ -20,6 +24,9 @@ class WarPollingJob < ApplicationJob
       faction.update!(war_polling_active: false)
       return
     end
+
+    # Read previous cache to carry forward travel departure times
+    @previous_data = Rails.cache.read(faction.war_cache_key) || {}
 
     war_data = build_war_data(faction, war, setting)
     Rails.cache.write(faction.war_cache_key, war_data, expires_in: CACHE_TTL)
@@ -89,9 +96,44 @@ class WarPollingJob < ApplicationJob
       status = { state: state }
       status[:description] = member.status_description if member.status_description.present?
       status[:until] = Time.at(member.status_until.to_i).iso8601 if member.status_until.to_i > 0
+
+      # Track travel departure time for Traveling members
+      if state == "Traveling"
+        status[:plane_type] = member.plane_image_type
+        status[:destination] = extract_destination(member.status_description)
+        status[:travel_started_at] = resolve_travel_started_at(member)
+      end
+
       status
     else
       { state: "Okay" }
     end
+  end
+
+  def extract_destination(description)
+    return nil unless description.present?
+
+    match = description.match(DESTINATION_PATTERN)
+    match&.[](1)
+  end
+
+  def resolve_travel_started_at(member)
+    # Check if this member was already traveling in the previous poll — carry forward their departure time
+    previous_members = @previous_data[:members] || @previous_data["members"] || {}
+    member_key = member.id.to_s
+    previous_member = previous_members[member_key] || previous_members[member.id]
+
+    if previous_member
+      previous_status = previous_member[:status] || previous_member["status"] || {}
+      previous_state = previous_status[:state] || previous_status["state"]
+      previous_started = previous_status[:travel_started_at] || previous_status["travel_started_at"]
+
+      if previous_state == "Traveling" && previous_started.present?
+        return previous_started
+      end
+    end
+
+    # First time seeing this member traveling — record now
+    Time.current.iso8601
   end
 end

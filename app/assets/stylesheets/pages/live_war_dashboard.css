@@ -309,6 +309,33 @@ th.sortable:hover {
   50% { opacity: 0.5; }
 }
 
+/* Travel timer in table */
+.travel-timer {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  color: rgb(59, 130, 246);
+  white-space: nowrap;
+}
+
+.travel-timer.expiring-soon {
+  color: rgb(234, 179, 8);
+  animation: pulse-timer 1s infinite;
+}
+
+.travel-fast {
+  color: rgb(59, 130, 246);
+}
+
+.travel-separator {
+  color: var(--gray-600);
+  font-size: 0.625rem;
+}
+
+.travel-slow {
+  color: var(--gray-500);
+  font-size: 0.6875rem;
+}
+
 /* Stat cells */
 .stat-value {
   font-family: "Geist Mono", monospace;

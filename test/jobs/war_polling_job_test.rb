@@ -18,7 +18,7 @@ class WarPollingJobTest < ActiveJob::TestCase
     @enemy_member = TornApi::Faction::Members::Member.new(
       5555555, "EnemyPlayer", 40, 30,
       "Online", 1708000000, "2 minutes ago",
-      "In hospital for 1 hour", "", "Hospital", "red", (Time.current + 1.hour).to_i,
+      "In hospital for 1 hour", "", "Hospital", "red", (Time.current + 1.hour).to_i, nil,
       "Everyone", "Member", true, false, false, false
     )
   end
