@@ -2,6 +2,30 @@ import { Controller } from "@hotwired/stimulus"
 
 const POLL_INTERVAL = 6000 // Match WarPollingJob interval
 
+// Flight times in seconds per destination, by ticket type (without travel book)
+// Source: https://wiki.torn.com/wiki/Travel
+const FLIGHT_TIMES = {
+  "Mexico":           { standard: 1560,  airstrip: 1080, wlt: 780,  bct: 480  },
+  "Cayman Islands":   { standard: 2100,  airstrip: 1500, wlt: 1080, bct: 660  },
+  "Canada":           { standard: 2460,  airstrip: 1740, wlt: 1200, bct: 720  },
+  "Hawaii":           { standard: 8040,  airstrip: 5640, wlt: 4020, bct: 2400 },
+  "United Kingdom":   { standard: 9540,  airstrip: 6660, wlt: 4800, bct: 2880 },
+  "Argentina":        { standard: 10020, airstrip: 7020, wlt: 4980, bct: 3000 },
+  "Switzerland":      { standard: 10500, airstrip: 7380, wlt: 5280, bct: 3180 },
+  "Japan":            { standard: 13500, airstrip: 9480, wlt: 6780, bct: 4080 },
+  "China":            { standard: 14520, airstrip: 10140, wlt: 7260, bct: 4320 },
+  "UAE":              { standard: 16260, airstrip: 11400, wlt: 8100, bct: 4860 },
+  "South Africa":     { standard: 17820, airstrip: 12480, wlt: 8940, bct: 5340 }
+}
+
+// Map API plane_image_type to flight time keys
+// "airliner" is ambiguous: could be Standard or BCT
+const PLANE_TYPE_MAP = {
+  "private_jet":    ["wlt"],
+  "light_aircraft": ["airstrip"],
+  "airliner":       ["bct", "standard"]
+}
+
 export default class extends Controller {
   static values = {
     initialData: Object,
@@ -450,11 +474,26 @@ export default class extends Controller {
   }
 
   getTimerSeconds(member) {
-    if (!member.status?.until) return -1
+    const status = member.status
+    if (!status) return -1
 
-    const expiresAt = new Date(member.status.until)
-    const now = new Date()
-    const remaining = Math.floor((expiresAt - now) / 1000)
+    // Travel timer — compute from departure time + flight duration
+    if (status.state === "Traveling" && status.travel_started_at && status.destination) {
+      const flightData = FLIGHT_TIMES[status.destination]
+      if (flightData) {
+        const ticketTypes = PLANE_TYPE_MAP[status.plane_type] || ["standard"]
+        // Use the fastest estimate for sorting
+        const duration = flightData[ticketTypes[0]]
+        const elapsed = Math.floor((new Date() - new Date(status.travel_started_at)) / 1000)
+        const remaining = duration - elapsed
+        return remaining > 0 ? remaining : -1
+      }
+    }
+
+    // Hospital/Jail timer
+    if (!status.until) return -1
+    const expiresAt = new Date(status.until)
+    const remaining = Math.floor((expiresAt - new Date()) / 1000)
     return remaining > 0 ? remaining : -1
   }
 
@@ -530,7 +569,15 @@ export default class extends Controller {
 
   renderTimer(member) {
     const status = member.status
-    if (!status?.until) return '<span class="stat-value no-data">-</span>'
+    if (!status) return '<span class="stat-value no-data">-</span>'
+
+    // Travel timer — compute ETA from departure time + flight duration
+    if (status.state === "Traveling" && status.travel_started_at && status.destination) {
+      return this.renderTravelTimer(status)
+    }
+
+    // Hospital/Jail timer — use the `until` timestamp
+    if (!status.until) return '<span class="stat-value no-data">-</span>'
 
     const expiresAt = new Date(status.until)
     const now = new Date()
@@ -542,6 +589,60 @@ export default class extends Controller {
     const cssClass = expiringSoon ? "hospital-timer expiring-soon" : "hospital-timer"
 
     return `<span class="${cssClass}" data-timer-until="${status.until}">${this.formatCountdown(remaining)}</span>`
+  }
+
+  renderTravelTimer(status) {
+    const destination = status.destination
+    const planeType = status.plane_type
+    const startedAt = new Date(status.travel_started_at)
+    const now = new Date()
+    const elapsed = Math.floor((now - startedAt) / 1000)
+
+    const flightData = FLIGHT_TIMES[destination]
+    if (!flightData) {
+      // Unknown destination — show description only
+      return `<span class="travel-timer" title="${this.escapeHtml(status.description || "")}">${this.escapeHtml(destination)}</span>`
+    }
+
+    const ticketTypes = PLANE_TYPE_MAP[planeType] || ["standard"]
+
+    if (ticketTypes.length === 2) {
+      // Ambiguous plane type (airliner) — show dual estimate (BCT / Standard)
+      const fastDuration = flightData[ticketTypes[0]] // bct
+      const slowDuration = flightData[ticketTypes[1]] // standard
+      const fastRemaining = Math.max(0, fastDuration - elapsed)
+      const slowRemaining = Math.max(0, slowDuration - elapsed)
+
+      const fastEta = new Date(startedAt.getTime() + fastDuration * 1000).toISOString()
+      const slowEta = new Date(startedAt.getTime() + slowDuration * 1000).toISOString()
+
+      if (slowRemaining <= 0) {
+        return '<span class="stat-value no-data">Landed</span>'
+      }
+
+      const fastText = fastRemaining <= 0 ? "Landed" : this.formatCountdown(fastRemaining)
+      const slowText = this.formatCountdown(slowRemaining)
+      const expiringSoon = fastRemaining > 0 && fastRemaining < 60
+
+      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-fast-eta="${fastEta}" data-travel-slow-eta="${slowEta}" title="${this.escapeHtml(status.description || "")}">`
+        + `<span class="travel-fast">${fastText}</span>`
+        + `<span class="travel-separator"> / </span>`
+        + `<span class="travel-slow">${slowText}</span>`
+        + `</span>`
+    } else {
+      // Unambiguous plane type — show single estimate
+      const duration = flightData[ticketTypes[0]]
+      const remaining = Math.max(0, duration - elapsed)
+      const eta = new Date(startedAt.getTime() + duration * 1000).toISOString()
+
+      if (remaining <= 0) {
+        return '<span class="stat-value no-data">Landed</span>'
+      }
+
+      const expiringSoon = remaining < 60
+
+      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-eta="${eta}" title="${this.escapeHtml(status.description || "")}">${this.formatCountdown(remaining)}</span>`
+    }
   }
 
   renderStats(member) {
@@ -570,6 +671,7 @@ export default class extends Controller {
   tickTimers() {
     if (!this.hasMembersBodyTarget) return
 
+    // Hospital/Jail timers
     const timerElements = this.membersBodyTarget.querySelectorAll("[data-timer-until]")
     timerElements.forEach(el => {
       const expiresAt = new Date(el.dataset.timerUntil)
@@ -587,6 +689,45 @@ export default class extends Controller {
         } else {
           el.className = "hospital-timer"
         }
+      }
+    })
+
+    // Single-estimate travel timers
+    const travelTimers = this.membersBodyTarget.querySelectorAll("[data-travel-eta]")
+    travelTimers.forEach(el => {
+      const eta = new Date(el.dataset.travelEta)
+      const remaining = Math.max(0, Math.floor((eta - new Date()) / 1000))
+
+      if (remaining <= 0) {
+        el.textContent = "Landed"
+        el.className = "stat-value no-data"
+        el.removeAttribute("data-travel-eta")
+      } else {
+        el.textContent = this.formatCountdown(remaining)
+        el.className = remaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
+      }
+    })
+
+    // Dual-estimate travel timers (airliner: BCT / Standard)
+    const dualTimers = this.membersBodyTarget.querySelectorAll("[data-travel-fast-eta]")
+    dualTimers.forEach(el => {
+      const fastEta = new Date(el.dataset.travelFastEta)
+      const slowEta = new Date(el.dataset.travelSlowEta)
+      const now = new Date()
+      const fastRemaining = Math.max(0, Math.floor((fastEta - now) / 1000))
+      const slowRemaining = Math.max(0, Math.floor((slowEta - now) / 1000))
+
+      if (slowRemaining <= 0) {
+        el.textContent = "Landed"
+        el.className = "stat-value no-data"
+        el.removeAttribute("data-travel-fast-eta")
+        el.removeAttribute("data-travel-slow-eta")
+      } else {
+        const fastEl = el.querySelector(".travel-fast")
+        const slowEl = el.querySelector(".travel-slow")
+        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : this.formatCountdown(fastRemaining)
+        if (slowEl) slowEl.textContent = this.formatCountdown(slowRemaining)
+        el.className = fastRemaining > 0 && fastRemaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
     })
   }

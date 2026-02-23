@@ -9,7 +9,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     @member_data = TornApi::Faction::Members::Member.new(
       @bram.torn_id, "Bram", 69, 100,
       "Online", 1708000000, "5 minutes ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Leader", true, false, false, false
     )
   end
@@ -29,7 +29,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     new_member = TornApi::Faction::Members::Member.new(
       9999999, "NewPlayer", 15, 5,
       "Online", 1708000000, "1 minute ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
     OwnerCredentials.stubs(:api_key).returns("test_key")
@@ -62,7 +62,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     fallen_member = TornApi::Faction::Members::Member.new(
       @bram.torn_id, "Bram", 69, 100,
       "Offline", 1708000000, "2 days ago",
-      "Fallen", "", "Fallen", "red", 0,
+      "Fallen", "", "Fallen", "red", 0, nil,
       "Everyone", "Leader", false, false, false, false
     )
     OwnerCredentials.stubs(:api_key).returns("test_key")
@@ -77,7 +77,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     new_member = TornApi::Faction::Members::Member.new(
       9999999, "NewPlayer", 15, 5,
       "Online", 1708000000, "1 minute ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
     OwnerCredentials.stubs(:api_key).returns("test_key")
@@ -96,7 +96,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     new_member = TornApi::Faction::Members::Member.new(
       9999999, "NewPlayer", 15, 5,
       "Online", 1708000000, "1 minute ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
     OwnerCredentials.stubs(:api_key).returns("test_key")
@@ -122,7 +122,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     new_member = TornApi::Faction::Members::Member.new(
       9999999, "NewPlayer", 15, 5,
       "Online", 1708000000, "1 minute ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
     OwnerCredentials.stubs(:api_key).returns("test_key")

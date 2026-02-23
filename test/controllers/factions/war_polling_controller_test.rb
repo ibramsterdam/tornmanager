@@ -81,7 +81,7 @@ class Factions::WarPollingControllerTest < ActionDispatch::IntegrationTest
     member = TornApi::Faction::Members::Member.new(
       user.torn_id, user.name, user.level, 100,
       "Online", Time.current.to_i, "0 seconds ago",
-      "Okay", "", "Okay", "green", 0,
+      "Okay", "", "Okay", "green", 0, nil,
       "Everyone", position, true, false, false, false
     )
     members_api = mock
