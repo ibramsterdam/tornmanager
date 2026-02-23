@@ -1,24 +1,24 @@
 <nav data-controller="navbar" data-navbar-admin-value="<%= Current.user&.admin? ? 'true' : 'false' %>">
   <% if authenticated? %>
     <div class="navbar-left">
-      <%= link_to "TornManager", Current.user&.faction&.track_stats ? faction_path(Current.user.faction) : stocks_path, class: "navbar-link navbar-title" %>
+      <%= link_to "TornManager", Current.user&.faction&.track_stats ? factions_path : stocks_path, class: "navbar-link navbar-title" %>
     </div>
     
     <div class="navbar-center">
-      <% if Current.user&.faction&.track_stats %>
+      <% if navbar_faction&.track_stats %>
         <div class="navbar-faction-dropdown" data-controller="dropdown">
           <button class="navbar-link navbar-link-button #{'navbar-link-active' if request.path.start_with?('/factions')}" data-action="click->dropdown#toggle">
-            My Faction
+            <%= viewing_other_faction? ? navbar_faction.name : "My Faction" %>
             <svg class="navbar-user-arrow" data-dropdown-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none">
               <path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <div class="navbar-dropdown navbar-dropdown-left" data-dropdown-target="menu">
-            <%= link_to "Dashboard", faction_path(Current.user.faction), class: "navbar-dropdown-item" %>
-            <%= link_to "Training", faction_training_path(Current.user.faction), class: "navbar-dropdown-item" %>
-            <%= link_to "Ranked Wars", faction_ranked_wars_path(Current.user.faction), class: "navbar-dropdown-item" %>
-            <%= link_to "Spy Stats", faction_spy_stats_path(Current.user.faction), class: "navbar-dropdown-item" %>
-            <%= link_to "Settings", faction_settings_path(Current.user.faction), class: "navbar-dropdown-item" %>
+            <%= link_to "Dashboard", faction_path(navbar_faction), class: "navbar-dropdown-item" %>
+            <%= link_to "Training", faction_training_path(navbar_faction), class: "navbar-dropdown-item" %>
+            <%= link_to "Ranked Wars", faction_ranked_wars_path(navbar_faction), class: "navbar-dropdown-item" %>
+            <%= link_to "Spy Stats", faction_spy_stats_path(navbar_faction), class: "navbar-dropdown-item" %>
+            <%= link_to "Settings", faction_settings_path(navbar_faction), class: "navbar-dropdown-item" %>
           </div>
         </div>
       <% else %>
@@ -65,13 +65,13 @@
       </button>
       <div class="navbar-mobile-menu" data-dropdown-target="menu">
         <div class="navbar-mobile-menu-section">
-          <% if Current.user&.faction&.track_stats %>
-            <span class="navbar-mobile-menu-label">My Faction</span>
-            <%= link_to "Dashboard", faction_path(Current.user.faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path == faction_path(Current.user.faction)}" %>
-            <%= link_to "Training", faction_training_path(Current.user.faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path.include?('/training')}" %>
-            <%= link_to "Ranked Wars", faction_ranked_wars_path(Current.user.faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
-            <%= link_to "Spy Stats", faction_spy_stats_path(Current.user.faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
-            <%= link_to "Settings", faction_settings_path(Current.user.faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
+          <% if navbar_faction&.track_stats %>
+            <span class="navbar-mobile-menu-label"><%= viewing_other_faction? ? navbar_faction.name : "My Faction" %></span>
+            <%= link_to "Dashboard", faction_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path == faction_path(navbar_faction)}" %>
+            <%= link_to "Training", faction_training_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path.include?('/training')}" %>
+            <%= link_to "Ranked Wars", faction_ranked_wars_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
+            <%= link_to "Spy Stats", faction_spy_stats_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
+            <%= link_to "Settings", faction_settings_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested" %>
           <% else %>
             <span class="navbar-mobile-menu-item disabled">My Faction</span>
           <% end %>
