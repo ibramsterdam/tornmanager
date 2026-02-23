@@ -40,7 +40,7 @@
             </td>
             <td>
               <div class="opponent-cell">
-                <span class="opponent-name"><%= war.opponent_faction_name %></span>
+                <span class="opponent-name"><%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
                 <span class="opponent-id muted">[<%= war.opponent_faction_id %>]</span>
               </div>
             </td>
