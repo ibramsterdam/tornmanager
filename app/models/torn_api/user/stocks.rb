@@ -18,11 +18,11 @@ module TornApi
       private
 
       def parse_user_stocks(stock_data)
-        stock_data.map do |stock_id, stock_details|
+        stock_data.map do |stock_details|
           UserStock.new(
-            stock_id: stock_id.to_i,
-            total_shares: stock_details["total_shares"],
-            dividend: parse_dividend_info(stock_details["dividend"]),
+            stock_id: stock_details["id"],
+            total_shares: stock_details["shares"],
+            dividend: parse_dividend_info(stock_details["bonus"]),
             transactions: parse_transactions(stock_details["transactions"])
           )
         end
@@ -32,7 +32,7 @@ module TornApi
         return nil unless dividend_data
 
         Dividend.new(
-          ready: dividend_data["ready"],
+          ready: dividend_data["available"],
           increment: dividend_data["increment"],
           progress: dividend_data["progress"],
           frequency: dividend_data["frequency"]
@@ -42,11 +42,11 @@ module TornApi
       def parse_transactions(transactions_data)
         return [] unless transactions_data
 
-        transactions_data.map do |_, transaction_details|
+        transactions_data.map do |transaction_details|
           Transaction.new(
             shares: transaction_details["shares"],
-            bought_price: transaction_details["bought_price"],
-            time_bought: Time.at(transaction_details["time_bought"])
+            bought_price: transaction_details["price"],
+            time_bought: Time.at(transaction_details["timestamp"])
           )
         end
       end

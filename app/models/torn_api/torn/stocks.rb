@@ -15,15 +15,15 @@ module TornApi
       private
 
       def build_stocks(data)
-        data.map do |_, details|
+        data.map do |details|
           ::Torn::Stock.new(
-            torn_id: details["stock_id"],
+            torn_id: details["id"],
             name: details["name"],
             acronym: details["acronym"],
-            current_price: details["current_price"],
-            dividend_frequency: details["benefit"]["frequency"],
-            dividend_requirement: details["benefit"]["requirement"],
-            dividend_description: details["benefit"]["description"],
+            current_price: details.dig("market", "price"),
+            dividend_frequency: details.dig("bonus", "frequency"),
+            dividend_requirement: details.dig("bonus", "requirement"),
+            dividend_description: details.dig("bonus", "description"),
           )
         end
       end
