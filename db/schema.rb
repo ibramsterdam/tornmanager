@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_22_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_25_132356) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -123,8 +123,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_200000) do
     t.datetime "updated_at", null: false
     t.integer "winner_faction_id"
     t.index ["faction_id", "started_at"], name: "index_ranked_wars_on_faction_id_and_started_at"
+    t.index ["faction_id", "torn_war_id"], name: "index_ranked_wars_on_faction_id_and_torn_war_id", unique: true
     t.index ["faction_id"], name: "index_ranked_wars_on_faction_id"
-    t.index ["torn_war_id"], name: "index_ranked_wars_on_torn_war_id", unique: true
   end
 
   create_table "roadmap_items", force: :cascade do |t|
@@ -152,10 +152,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_22_200000) do
     t.bigint "defense"
     t.bigint "dexterity"
     t.integer "faction_id", null: false
-    t.decimal "fair_fight"
     t.bigint "speed"
     t.datetime "spied_at"
-    t.string "spy_type"
     t.bigint "strength"
     t.integer "torn_id", null: false
     t.bigint "total"
