@@ -35,7 +35,6 @@ module TornApi
 
       def fetch
         params = { striptags: false, timestamp: Time.current.to_i }
-        
         response = get(endpoint, params)
         if response["members"].present?
           parse(response["members"])
