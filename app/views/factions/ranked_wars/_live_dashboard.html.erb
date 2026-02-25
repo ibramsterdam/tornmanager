@@ -8,12 +8,17 @@
      data-war-dashboard-faction-name-value="<%= faction.name %>"
      data-war-dashboard-enemy-name-value="<%= war.opponent_faction_name %>"
      data-war-dashboard-started-at-value="<%= war.started_at.iso8601 %>"
+     data-war-dashboard-scheduled-value="<%= war.scheduled? %>"
      data-war-dashboard-poll-url-value="<%= war_data_faction_ranked_war_path(faction, war) %>">
 
   <!-- Header -->
   <div class="live-war-header">
     <div class="live-war-title">
-      <span class="war-status ongoing">LIVE</span>
+      <% if war.scheduled? %>
+        <span class="war-status scheduled">SOON</span>
+      <% else %>
+        <span class="war-status ongoing">LIVE</span>
+      <% end %>
       <span>vs <%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
     </div>
     <%= link_to "Back to Wars", faction_ranked_wars_path(faction), class: "btn btn-secondary btn-sm" %>
@@ -121,7 +126,8 @@
                 <span class="column-help-tooltip">
                   <strong>Hospital/Jail</strong>: countdown until release.<br>
                   <strong>Travel</strong>: estimated arrival based on plane type and destination. Timers end up to 6s early so you're at the airport in time.<br>
-                  <strong>Dual times</strong> (e.g. 4:20 / 12:34): airliner could be BCT (fast) or Standard (slow) — Torn's API doesn't distinguish them.
+                  <strong>Dual times</strong> (e.g. 4:20 / 12:34): airliner could be BCT (fast) or Standard (slow) — Torn's API doesn't distinguish them.<br>
+                  <strong>Destination only</strong> (no timer): traveler was mid-flight when tracking started — no accurate ETA available.
                 </span>
               </span>
               <span class="sort-indicator" data-war-dashboard-target="sortIndicatorTimer"></span>

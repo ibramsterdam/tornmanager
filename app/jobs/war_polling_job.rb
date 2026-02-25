@@ -133,10 +133,8 @@ class WarPollingJob < ApplicationJob
       end
     end
 
-    # First time seeing this member traveling — subtract poll interval to account for
-    # worst-case detection delay. The member could have departed up to POLL_INTERVAL ago,
-    # so we assume the earliest possible departure. This makes the timer end early rather
-    # than late — better for attackers waiting at the airport.
-    (Time.current - POLL_INTERVAL).iso8601
+    # First time seeing this member traveling — return nil to indicate unknown departure time
+    # The frontend will show destination without a timer
+    nil
   end
 end

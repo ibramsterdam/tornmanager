@@ -39,8 +39,9 @@ class Faction < ApplicationRecord
   end
 
   # War polling
+  # Returns the current active war (in progress) or the next scheduled war
   def current_war
-    ranked_wars.ongoing.order(started_at: :desc).find(&:in_progress?)
+    ranked_wars.ongoing.order(started_at: :desc).first
   end
 
   def start_war_polling!

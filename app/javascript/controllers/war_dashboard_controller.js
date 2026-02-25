@@ -35,6 +35,7 @@ export default class extends Controller {
     factionName: String,
     enemyName: String,
     startedAt: String,
+    scheduled: Boolean,
     pollUrl: String
   }
 
@@ -232,9 +233,24 @@ export default class extends Controller {
     const startedAt = new Date(this.startedAtValue)
     const updateTimer = () => {
       const now = new Date()
-      const elapsed = Math.floor((now - startedAt) / 1000)
-      if (this.hasWarTimerTarget) {
-        this.warTimerTarget.textContent = this.formatDuration(elapsed)
+
+      if (this.scheduledValue) {
+        // Countdown to war start
+        const remaining = Math.floor((startedAt - now) / 1000)
+        if (remaining <= 0) {
+          // War has started! Reload the page to switch to live mode
+          window.location.reload()
+          return
+        }
+        if (this.hasWarTimerTarget) {
+          this.warTimerTarget.textContent = `Starts in ${this.formatDuration(remaining)}`
+        }
+      } else {
+        // Elapsed time since war started
+        const elapsed = Math.floor((now - startedAt) / 1000)
+        if (this.hasWarTimerTarget) {
+          this.warTimerTarget.textContent = this.formatDuration(elapsed)
+        }
       }
     }
 
@@ -477,8 +493,12 @@ export default class extends Controller {
     const status = member.status
     if (!status) return -1
 
-    // Travel timer — compute from departure time + flight duration
-    if (status.state === "Traveling" && status.travel_started_at && status.destination) {
+    // Travel timer — only if we have departure time
+    if (status.state === "Traveling") {
+      if (!status.travel_started_at || !status.destination) {
+        // Unknown departure time — sort these after timed travelers but before non-travelers
+        return 999999
+      }
       const flightData = FLIGHT_TIMES[status.destination]
       if (flightData) {
         const ticketTypes = PLANE_TYPE_MAP[status.plane_type] || ["standard"]
@@ -571,8 +591,8 @@ export default class extends Controller {
     const status = member.status
     if (!status) return '<span class="stat-value no-data">-</span>'
 
-    // Travel timer — compute ETA from departure time + flight duration
-    if (status.state === "Traveling" && status.travel_started_at && status.destination) {
+    // Travel timer — only show countdown if we tracked departure time
+    if (status.state === "Traveling") {
       return this.renderTravelTimer(status)
     }
 
@@ -593,6 +613,14 @@ export default class extends Controller {
 
   renderTravelTimer(status) {
     const destination = status.destination
+
+    // If we don't have travel_started_at, we caught this traveler mid-flight
+    // Just show destination without a (potentially inaccurate) timer
+    if (!status.travel_started_at) {
+      const destText = destination || "Unknown"
+      return `<span class="travel-timer travel-unknown" title="${this.escapeHtml(status.description || "")}">${this.escapeHtml(destText)}</span>`
+    }
+
     const planeType = status.plane_type
     const startedAt = new Date(status.travel_started_at)
     const now = new Date()

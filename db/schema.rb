@@ -152,8 +152,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_132356) do
     t.bigint "defense"
     t.bigint "dexterity"
     t.integer "faction_id", null: false
+    t.decimal "fair_fight"
     t.bigint "speed"
     t.datetime "spied_at"
+    t.string "spy_type"
     t.bigint "strength"
     t.integer "torn_id", null: false
     t.bigint "total"

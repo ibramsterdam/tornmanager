@@ -7,8 +7,8 @@ class Factions::RankedWarsController < ApplicationController
   def index
     return if @tracking_disabled
 
-    # Auto-refresh latest war data
-    refresh_latest_war
+    # Auto-refresh latest wars data
+    refresh_latest_wars
 
     # Fetch ranked wars
     @wars = @faction.ranked_wars.recent.includes(:faction)
@@ -33,7 +33,7 @@ class Factions::RankedWarsController < ApplicationController
       return
     end
 
-    if @war.in_progress?
+    if @war.ongoing?  # Both scheduled and in_progress
       ensure_war_polling_active
       @war_data = Rails.cache.read(@faction.war_cache_key)
       @polling_active = @faction.war_polling_active?
@@ -76,35 +76,36 @@ class Factions::RankedWarsController < ApplicationController
     end
   end
 
-  def refresh_latest_war
+  def refresh_latest_wars
     api_key = @faction.faction_setting&.torn_api_key
     return unless api_key.present?
 
-    # Fetch only the most recent war
-    wars = TornApi::Faction::RankedWars.new(api_key, @faction.torn_id).fetch(limit: 1)
+    # Fetch recent wars to catch both scheduled and recently ended wars
+    wars = TornApi::Faction::RankedWars.new(api_key, @faction.torn_id).fetch(limit: 5)
     return if wars.empty?
 
-    war_data = wars.first
-    our_faction_data = war_data["factions"].find { |f| f["id"] == @faction.torn_id }
-    their_faction_data = war_data["factions"].find { |f| f["id"] != @faction.torn_id }
-    return unless our_faction_data && their_faction_data
+    wars.each do |war_data|
+      our_faction_data = war_data["factions"].find { |f| f["id"] == @faction.torn_id }
+      their_faction_data = war_data["factions"].find { |f| f["id"] != @faction.torn_id }
+      next unless our_faction_data && their_faction_data
 
-    ranked_war = @faction.ranked_wars.find_or_initialize_by(torn_war_id: war_data["id"])
+      ranked_war = @faction.ranked_wars.find_or_initialize_by(torn_war_id: war_data["id"])
 
-    ranked_war.assign_attributes(
-      opponent_faction_id: their_faction_data["id"],
-      opponent_faction_name: their_faction_data["name"],
-      started_at: Time.at(war_data["start"]),
-      ended_at: war_data["end"].to_i > 0 ? Time.at(war_data["end"]) : nil,
-      target_score: war_data["target"],
-      our_score: our_faction_data["score"],
-      their_score: their_faction_data["score"],
-      winner_faction_id: war_data["winner"]
-    )
+      ranked_war.assign_attributes(
+        opponent_faction_id: their_faction_data["id"],
+        opponent_faction_name: their_faction_data["name"],
+        started_at: Time.at(war_data["start"]),
+        ended_at: war_data["end"].to_i > 0 ? Time.at(war_data["end"]) : nil,
+        target_score: war_data["target"],
+        our_score: our_faction_data["score"],
+        their_score: their_faction_data["score"],
+        winner_faction_id: war_data["winner"]
+      )
 
-    ranked_war.save!
+      ranked_war.save!
+    end
   rescue TornApi::ApiError => e
-    Rails.logger.warn("[RankedWarsController] Failed to refresh latest war: #{e.message}")
+    Rails.logger.warn("[RankedWarsController] Failed to refresh latest wars: #{e.message}")
   end
 
   def calculate_member_performance(wars)
