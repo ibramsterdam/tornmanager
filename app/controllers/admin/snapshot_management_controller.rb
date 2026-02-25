@@ -2,7 +2,6 @@ module Admin
   class SnapshotManagementController < ApplicationController
     before_action :require_admin
 
-    # Seconds per API call (polling_interval of owner_api queue)
     SECONDS_PER_API_CALL = 1.1
 
     def index
@@ -14,15 +13,12 @@ module Admin
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
 
-      # Count jobs already in the owner_api queue (not yet finished)
       existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
 
       missing_dates.each_with_index do |date, index|
         BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s)
       end
 
-      # Each BackfillSingleStatJob triggers 2 API calls (batch 1 + batch 2)
-      # Total API calls = existing jobs + (new jobs * 2)
       total_api_calls = existing_queued_jobs + (missing_dates.size * 2)
       estimated_seconds = (total_api_calls * SECONDS_PER_API_CALL).ceil
 
@@ -46,7 +42,6 @@ module Admin
       expected_dates = expected_date_range.to_a
 
       users_data = User.tracked_for_stats.includes(:faction).filter_map do |user|
-        # Skip users with backfill in progress
         next if user.backfill_in_progress?
 
         user_snapshots = existing_snapshots[user.id] || Set.new

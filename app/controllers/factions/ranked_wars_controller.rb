@@ -8,21 +8,16 @@ class Factions::RankedWarsController < ApplicationController
   def index
     return if @tracking_disabled
 
-    # Auto-refresh latest wars data
     refresh_latest_wars
 
-    # Fetch ranked wars
     @wars = @faction.ranked_wars.recent.includes(:faction)
 
-    # Summary stats (only completed wars)
     completed_wars = @wars.completed
     @wins = completed_wars.won.count
     @losses = completed_wars.lost.count
 
-    # Ongoing war (in progress)
     @ongoing_war = @wars.ongoing.select(&:in_progress?).first
 
-    # Calculate member performance across all wars
     @member_performance = calculate_member_performance(completed_wars)
   end
 
@@ -57,7 +52,6 @@ class Factions::RankedWarsController < ApplicationController
     return unless @faction.faction_setting&.torn_api_key?
 
     if @faction.war_polling_active?
-      # Flag is set but cache is empty/stale — the job chain likely died. Restart it.
       restart_war_polling! unless Rails.cache.exist?(@faction.war_cache_key)
     else
       @faction.start_war_polling!
@@ -86,7 +80,6 @@ class Factions::RankedWarsController < ApplicationController
     api_key = @faction.faction_setting&.torn_api_key
     return unless api_key.present?
 
-    # Fetch recent wars to catch both scheduled and recently ended wars
     wars = TornApi::Faction::RankedWars.new(api_key, @faction.torn_id).fetch(limit: 5)
     return if wars.empty?
 
@@ -143,7 +136,6 @@ class Factions::RankedWarsController < ApplicationController
       end
     end
 
-    # Calculate averages and sort by total score
     performance.values.map do |p|
       p[:avg_attacks] = p[:wars_participated] > 0 ? (p[:total_attacks].to_f / p[:wars_participated]).round(1) : 0
       p[:avg_score] = p[:wars_participated] > 0 ? (p[:total_score] / p[:wars_participated]).round(1) : 0

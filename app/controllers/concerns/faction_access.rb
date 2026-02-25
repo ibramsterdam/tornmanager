@@ -3,20 +3,15 @@ module FactionAccess
 
   private
 
-  # Finds @faction from params and verifies the current user is a member (or admin).
-  # Use as: before_action :require_faction_member
   def require_faction_member
     find_faction
-    return if performed? # redirect already issued by find_faction
+    return if performed?
 
     unless Current.user.admin? || Current.user.faction == @faction
       redirect_to root_path, alert: "You don't have access to this faction."
     end
   end
 
-  # Finds @faction from params and verifies the current user is whitelisted (or admin).
-  # Leaders manually whitelist users from Faction Settings.
-  # Use as: before_action :require_faction_whitelisted
   def require_faction_whitelisted
     find_faction
     return if performed?
@@ -27,9 +22,6 @@ module FactionAccess
     redirect_to stocks_path, alert: "You don't have access to this faction's dashboard. Ask your faction leader for access."
   end
 
-  # Finds @faction from params and verifies the current user is a faction leader/co-leader (or admin).
-  # Use as: before_action :require_faction_leader
-  # This is a superset of require_faction_member — no need to call both.
   def require_faction_leader
     find_faction
     return if performed?

@@ -20,15 +20,12 @@ module Admin
       @calls_today = base_scope.today.count
       @calls_last_24h = base_scope.last_24_hours.count
 
-      # Peak calls/min today using SQL grouping for efficiency
       @peak_rate_today = calculate_peak_rate(base_scope.today)
     end
 
     private
 
     def calculate_peak_rate(scope)
-      # Group by minute and find the maximum count
-      # SQLite: strftime('%Y-%m-%d %H:%M', created_at)
       counts_by_minute = scope
         .group("strftime('%Y-%m-%d %H:%M', created_at)")
         .count

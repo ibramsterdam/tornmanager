@@ -28,16 +28,13 @@ module Api
         return render json: { error: "Faction API keys not configured. Ask your faction leader to set them up on tornmanager.com." }, status: :unprocessable_entity
       end
 
-      # Look up spy reports
       spy_reports = faction.spy_reports.for_targets(torn_ids).index_by(&:torn_id)
 
-      # Live fetch enemy status from Torn API
       members_status = {}
       if enemy_faction_id.present?
         members_status = fetch_enemy_status(setting.torn_api_key, enemy_faction_id)
       end
 
-      # Build response
       members = {}
       torn_ids.each do |torn_id|
         spy = spy_reports[torn_id]
@@ -80,7 +77,6 @@ module Api
           status_data = { state: state }
           status_data[:description] = status.status_description if status.status_description.present?
 
-          # status_until is a Unix timestamp from Torn API; 0 means no timer
           if status.status_until.present? && status.status_until.to_i > 0
             status_data[:until] = Time.at(status.status_until.to_i).iso8601
           end

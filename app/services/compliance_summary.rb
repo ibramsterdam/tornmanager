@@ -14,7 +14,6 @@ class ComplianceSummary
     compute
   end
 
-  # Bottom N members by compliance score
   def worst_performers(limit = 5)
     member_rows.sort_by { |row| row[:compliance_score] }.first(limit)
   end
@@ -59,7 +58,6 @@ class ComplianceSummary
     crimes_daily = crimes_stats[:daily]
     activity_time_daily = activity_stats[:days] > 0 ? (activity_stats[:gained].to_f / 60 / activity_stats[:days]).round(0) : 0
 
-    # SSL users are exempt from xanax target (Sports Science Lab requires max 150 xanax lifetime)
     ssl_user = user.ssl_user?
     xanax_compliance = ssl_user ? :green : stat_compliance(xanax_daily, faction.xanax_target)
     energy_compliance = stat_compliance(energy_refills_daily, faction.energy_refill_target)

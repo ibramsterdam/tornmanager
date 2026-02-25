@@ -17,36 +17,30 @@ class Factions::SettingsController < ApplicationController
     @whitelisted_users = @faction.whitelisted_users.order(:name)
     @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
 
-    # Share subscription
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
     @faction_member_count = @faction.users.active.count
 
-    # War polling
     @war_polling_active = @faction.war_polling_active?
   end
 
   def update
     @faction_setting = @faction.faction_setting || @faction.build_faction_setting
 
-    # Only update keys that were actually provided (non-blank)
     permitted = faction_setting_params
     new_torn_key = permitted.delete(:torn_api_key).presence
     new_tornstats_key = permitted.delete(:tornstats_api_key).presence
 
     changes_made = false
 
-    # Validate and store Torn API key
     if new_torn_key
       begin
         key_info = TornApi::Key::Info.new(new_torn_key).fetch
 
-        # Require Limited Access key
         unless key_info.access.type == "Limited Access"
           return redirect_to faction_settings_path(@faction),
             alert: "Only Limited Access keys are allowed. Please create a Limited Access key in your Torn settings."
         end
 
-        # Verify the key belongs to the current user
         unless Current.user.admin? || key_info.user.id == Current.user.torn_id
           return redirect_to faction_settings_path(@faction), alert: "This API key does not belong to you."
         end
@@ -61,7 +55,6 @@ class Factions::SettingsController < ApplicationController
       end
     end
 
-    # Store TornStats API key (no validation endpoint available)
     if new_tornstats_key
       @faction_setting.tornstats_api_key = new_tornstats_key
       changes_made = true
@@ -212,7 +205,6 @@ class Factions::SettingsController < ApplicationController
         imported += 1
       end
 
-      # Invalidate war cache so next poll picks up fresh spy data
       Rails.cache.delete(@faction.war_cache_key)
 
       redirect_to faction_settings_path(@faction), notice: "Successfully imported #{imported} spy reports."

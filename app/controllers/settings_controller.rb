@@ -36,16 +36,13 @@ class SettingsController < ApplicationController
     end
 
     begin
-      # Validate the new API key with Torn API (track the request)
       key_info = TornApi::Key::Info.new(new_api_key).fetch
 
-      # Don't allow Full Access keys
       if key_info.access.type == "Full Access"
         render json: { success: false, message: "Full Access keys are not allowed. Please use a Limited Access key instead." }
         return
       end
 
-      # Verify the key belongs to this user (track the request)
       profile = TornApi::User::Profile.new(new_api_key).fetch
 
       if profile.id != Current.user.torn_id
@@ -53,7 +50,6 @@ class SettingsController < ApplicationController
         return
       end
 
-      # Update the user's API key and access type
       Current.user.update!(
         api_key: new_api_key,
         api_access_type: key_info.access.type

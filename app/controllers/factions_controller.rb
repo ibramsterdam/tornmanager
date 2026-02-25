@@ -40,7 +40,6 @@ class FactionsController < ApplicationController
     return unless @faction.faction_setting&.torn_api_key?
 
     if @faction.war_polling_active?
-      # Flag is set but cache is empty/stale — the job chain likely died. Restart it.
       unless Rails.cache.exist?(@faction.war_cache_key)
         Rails.logger.info("Restarting dead war polling for faction #{@faction.torn_id}")
         @faction.start_war_polling!
