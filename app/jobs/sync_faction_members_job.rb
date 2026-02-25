@@ -1,4 +1,3 @@
-# Syncs members for a single faction from the Torn API
 class SyncFactionMembersJob < OwnerApiJob
   def perform(faction_id)
     faction = Faction.find(faction_id)
@@ -7,7 +6,6 @@ class SyncFactionMembersJob < OwnerApiJob
 
     member_torn_ids = members.map(&:id)
 
-    # Clear faction_id for users no longer in faction
     User.where(faction_id: faction.id)
         .where.not(torn_id: member_torn_ids)
         .update_all(faction_id: nil)
@@ -38,7 +36,6 @@ class SyncFactionMembersJob < OwnerApiJob
     end_date = PersonalStatSnapshot.tracking_end_date
     days = (end_date - start_date).to_i + 1
 
-    # Each day = 2 API calls (batch 1 + batch 2), ~2.1s per call
     estimated_seconds = (days * 2 * BackfillPersonalStatsJob::SECONDS_PER_API_CALL).ceil
     user.update!(backfill_ends_at: Time.current + estimated_seconds.seconds)
 

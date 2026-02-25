@@ -11,8 +11,6 @@ class PersonalStatSnapshot < ApplicationRecord
     Date.current.yesterday
   end
 
-  # Central definition of stats we track - maps API stat name to DB column
-  # Split into batches of max 10 due to Torn API v2 limit
   TRACKED_STATS_BATCH_1 = {
     "xantaken" => :drugs_xanax,
     "energydrinkused" => :items_used_energy_drinks,

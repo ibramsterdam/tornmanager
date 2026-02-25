@@ -19,7 +19,6 @@ module TornStatsApi
       @faction_id = faction_id
     end
 
-    # Returns array of SpyData for members with spy data
     def fetch
       response = get("api/v2/#{api_key}/spy/faction/#{faction_id}")
 

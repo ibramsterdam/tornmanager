@@ -21,7 +21,6 @@ module TornApi
         response["rankedwars"] || []
       end
 
-      # Fetch all wars (paginated)
       def fetch_all
         all_wars = []
         offset = 0
@@ -33,8 +32,6 @@ module TornApi
 
           all_wars.concat(wars)
           offset += limit
-
-          # Safety limit - fetch up to 1000 wars max
           break if offset > 1000
         end
 

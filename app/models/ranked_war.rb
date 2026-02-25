@@ -7,7 +7,6 @@ class RankedWar < ApplicationRecord
   scope :lost, -> { completed.joins(:faction).where("winner_faction_id != factions.torn_id AND winner_faction_id IS NOT NULL") }
   scope :recent, -> { order(started_at: :desc) }
 
-  # Use torn_war_id in URLs instead of database id
   def to_param
     torn_war_id.to_s
   end
@@ -20,12 +19,10 @@ class RankedWar < ApplicationRecord
     ended_at.present?
   end
 
-  # War hasn't started yet (scheduled for future)
   def scheduled?
     ongoing? && started_at > Time.current
   end
 
-  # War is actively in progress
   def in_progress?
     ongoing? && started_at <= Time.current
   end
@@ -38,7 +35,6 @@ class RankedWar < ApplicationRecord
     completed? && winner_faction_id.present? && winner_faction_id != faction.torn_id
   end
 
-  # Seconds until war starts (for scheduled wars)
   def starts_in_seconds
     return 0 unless scheduled?
     (started_at - Time.current).to_i
@@ -68,7 +64,6 @@ class RankedWar < ApplicationRecord
     "→"
   end
 
-  # Member stats helpers
   def our_participating_members
     our_members.select { |m| m["attacks"].to_i > 0 }
   end
