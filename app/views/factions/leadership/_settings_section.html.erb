@@ -9,26 +9,21 @@
       <div class="leadership-settings-card leadership-settings-card-compact">
         <h3>API Configuration</h3>
         
-        <%= form_with model: @faction_setting, url: update_keys_faction_leadership_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
-          <!-- Torn API Key -->
-          <div class="leadership-api-field">
-            <div class="leadership-api-field-header">
+        <!-- Current Keys Display -->
+        <div class="leadership-api-current">
+          <div class="leadership-api-current-row">
+            <div class="leadership-api-current-info">
               <span class="leadership-api-key-label">Torn API Key</span>
               <% if @faction_setting.torn_api_access_type.present? %>
                 <span class="leadership-api-key-badge"><%= @faction_setting.torn_api_access_type %></span>
               <% end %>
             </div>
-            <div class="leadership-api-field-input">
-              <%= form.text_field :torn_api_key,
-                  class: "leadership-api-input",
-                  placeholder: @torn_api_key_masked || "Enter Torn API key",
-                  autocomplete: "off",
-                  value: "" %>
+            <div class="leadership-api-current-value">
+              <code><%= @torn_api_key_masked || "Not set" %></code>
               <% if @faction_setting.torn_api_key? %>
                 <%= button_to delete_torn_key_faction_leadership_path(@faction),
                     method: :delete,
                     class: "leadership-key-delete-btn",
-                    form: { data: { turbo_confirm: "Delete the Torn API key?" } },
                     data: { turbo_confirm: "Delete the Torn API key?" } do %>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -38,22 +33,16 @@
             </div>
           </div>
 
-          <!-- TornStats API Key -->
-          <div class="leadership-api-field">
-            <div class="leadership-api-field-header">
+          <div class="leadership-api-current-row">
+            <div class="leadership-api-current-info">
               <span class="leadership-api-key-label">TornStats API Key</span>
             </div>
-            <div class="leadership-api-field-input">
-              <%= form.text_field :tornstats_api_key,
-                  class: "leadership-api-input",
-                  placeholder: @tornstats_api_key_masked || "Enter TornStats API key",
-                  autocomplete: "off",
-                  value: "" %>
+            <div class="leadership-api-current-value">
+              <code><%= @tornstats_api_key_masked || "Not set" %></code>
               <% if @faction_setting.tornstats_api_key? %>
                 <%= button_to delete_tornstats_key_faction_leadership_path(@faction),
                     method: :delete,
                     class: "leadership-key-delete-btn",
-                    form: { data: { turbo_confirm: "Delete the TornStats API key?" } },
                     data: { turbo_confirm: "Delete the TornStats API key?" } do %>
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
@@ -62,7 +51,22 @@
               <% end %>
             </div>
           </div>
+        </div>
 
+        <!-- Update Keys Form -->
+        <%= form_with model: @faction_setting, url: update_keys_faction_leadership_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
+          <div class="leadership-api-fields">
+            <%= form.text_field :torn_api_key,
+                class: "leadership-api-input",
+                placeholder: "New Torn API key (Limited Access)",
+                autocomplete: "off",
+                value: "" %>
+            <%= form.text_field :tornstats_api_key,
+                class: "leadership-api-input",
+                placeholder: "New TornStats API key",
+                autocomplete: "off",
+                value: "" %>
+          </div>
           <%= form.submit "Save Keys", class: "btn btn-sm btn-primary" %>
         <% end %>
       </div>
