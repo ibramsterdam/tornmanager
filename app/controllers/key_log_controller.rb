@@ -2,7 +2,6 @@ class KeyLogController < ApplicationController
   allow_unauthenticated_access
 
   def index
-    # Just render the form - no data yet
   end
 
   def show
@@ -15,11 +14,9 @@ class KeyLogController < ApplicationController
     end
 
     begin
-      # First validate the key exists and is valid
       key_info = TornApi::Key::Info.new(api_key)
       key_info.fetch
 
-      # If key is valid, fetch the log
       log_fetcher = TornApi::Key::Log.new(api_key)
       @log_data = log_fetcher.fetch
       @api_key = api_key

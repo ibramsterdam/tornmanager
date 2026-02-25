@@ -26,7 +26,6 @@ class Factions::TrainingController < ApplicationController
     @warning_members_count = summary.warning_count
     @non_compliant_members_count = summary.non_compliant_count
 
-    # Sorting
     @sort_column = SORTABLE_COLUMNS.include?(params[:sort]) ? params[:sort] : "compliance_score"
     @sort_direction = params[:direction] == "asc" ? "asc" : "desc"
 

@@ -5,20 +5,14 @@ class HallOfFamersController < ApplicationController
   before_action :require_hof_access
 
   def index
-    # Use tracking constants for date range
     @earliest_date = PersonalStatSnapshot.tracking_start_date
     @latest_date = PersonalStatSnapshot.tracking_end_date
 
-    # Parse date parameters
     @start_date = params[:start_date].present? ? Date.parse(params[:start_date]) : @earliest_date
     @end_date = params[:end_date].present? ? Date.parse(params[:end_date]) : @latest_date
 
-    # Calculate total days for the selected range (inclusive)
     @total_days_tracked = (@end_date - @start_date).to_i + 1
 
-    # To calculate stats for days X to Y, we need the snapshot from day
-    # before start (X-1) as baseline, so gains reflect consumption ON
-    # days X through Y.
     query_start_date = @start_date - 1.day
 
     @table_rows = User.hof_stats_users.includes(:personal_stat_snapshots).filter_map do |user|
