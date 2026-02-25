@@ -19,6 +19,7 @@ module TornStatsApi
       @faction_id = faction_id
     end
 
+    # Returns array of SpyData for members with spy data
     def fetch
       response = get("api/v2/#{api_key}/spy/faction/#{faction_id}")
 
@@ -38,26 +39,30 @@ module TornStatsApi
     private
 
     def parse_members(members_hash)
-      members_hash.filter_map do |torn_id, member_data|
+      spies = []
+
+      members_hash.each do |torn_id, member_data|
         spy = member_data["spy"]
-        next unless spy && spy["total"]
 
-        # Spy timestamp is on the spy object itself
-        spy_timestamp = spy["timestamp"]
-        spied_at = spy_timestamp ? Time.at(spy_timestamp.to_i) : nil
+        if spy && spy["total"]
+          spy_timestamp = spy["timestamp"]
+          spied_at = spy_timestamp ? Time.at(spy_timestamp.to_i) : nil
 
-        SpyData.new(
-          torn_id: torn_id.to_i,
-          name: member_data["name"],
-          level: member_data["level"],
-          strength: spy["strength"]&.to_i,
-          defense: spy["defense"]&.to_i,
-          speed: spy["speed"]&.to_i,
-          dexterity: spy["dexterity"]&.to_i,
-          total: spy["total"]&.to_i,
-          spied_at: spied_at
-        )
+          spies << SpyData.new(
+            torn_id: torn_id.to_i,
+            name: member_data["name"],
+            level: member_data["level"],
+            strength: spy["strength"]&.to_i,
+            defense: spy["defense"]&.to_i,
+            speed: spy["speed"]&.to_i,
+            dexterity: spy["dexterity"]&.to_i,
+            total: spy["total"]&.to_i,
+            spied_at: spied_at
+          )
+        end
       end
+
+      spies
     end
   end
 end

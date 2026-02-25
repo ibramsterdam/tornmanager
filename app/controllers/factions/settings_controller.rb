@@ -201,23 +201,14 @@ class Factions::SettingsController < ApplicationController
     Rails.cache.write(import_cache_key, Time.current, expires_in: IMPORT_COOLDOWN)
 
     begin
-      spy_data = TornStatsApi::SpyFaction.new(
+      spies = TornStatsApi::SpyFaction.new(
         @faction_setting.tornstats_api_key,
         faction_id: target_faction_id
       ).fetch
 
       imported = 0
-      spy_data.each do |spy|
-        report = @faction.spy_reports.find_or_initialize_by(torn_id: spy.torn_id)
-        report.assign_attributes(
-          strength: spy.strength,
-          defense: spy.defense,
-          speed: spy.speed,
-          dexterity: spy.dexterity,
-          total: spy.total,
-          spied_at: spy.spied_at
-        )
-        report.save!
+      spies.each do |spy|
+        import_spy_report(spy)
         imported += 1
       end
 
@@ -260,6 +251,19 @@ class Factions::SettingsController < ApplicationController
   def load_whitelist_data
     @whitelisted_users = @faction.whitelisted_users.order(:name)
     @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
+  end
+
+  def import_spy_report(spy)
+    report = @faction.spy_reports.find_or_initialize_by(torn_id: spy.torn_id)
+    report.assign_attributes(
+      strength: spy.strength,
+      defense: spy.defense,
+      speed: spy.speed,
+      dexterity: spy.dexterity,
+      total: spy.total,
+      spied_at: spy.spied_at
+    )
+    report.save!
   end
 
   def mask_key(key)
