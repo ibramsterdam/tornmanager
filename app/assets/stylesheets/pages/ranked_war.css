@@ -668,6 +668,75 @@ tr.row-inactive {
   font-family: "Geist Mono", monospace;
 }
 
+/* Scheduled War Banner */
+.scheduled-war-banner {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.15) 0%, rgba(202, 138, 4, 0.15) 100%);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.scheduled-war-countdown {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  color: rgb(234, 179, 8);
+  font-size: 1.125rem;
+}
+
+.scheduled-war-countdown svg {
+  flex-shrink: 0;
+}
+
+.scheduled-war-countdown strong {
+  color: rgb(250, 204, 21);
+}
+
+/* Scheduled war enemy table */
+.stats-total {
+  font-weight: 600;
+  font-family: "Geist Mono", monospace;
+  color: var(--gray-100);
+}
+
+.stats-age {
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  margin-left: var(--space-1);
+}
+
+.no-stats {
+  color: var(--gray-600);
+  font-style: italic;
+}
+
+.last-action {
+  color: var(--gray-400);
+  font-size: 0.875rem;
+}
+
+.attack-cell {
+  width: 40px;
+  text-align: center;
+}
+
+.attack-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-1);
+  color: var(--gray-500);
+  border-radius: var(--radius-sm);
+  transition: color 0.15s, background 0.15s;
+}
+
+.attack-link:hover {
+  color: rgb(239, 68, 68);
+  background: rgba(239, 68, 68, 0.1);
+}
+
 /* War Not Ended State */
 .war-not-ended {
   display: flex;

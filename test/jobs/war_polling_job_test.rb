@@ -129,6 +129,84 @@ class WarPollingJobTest < ActiveJob::TestCase
     end
   end
 
+  test "polls for scheduled wars" do
+    # Create a scheduled war (starts in the future)
+    @war.update!(ended_at: Time.current) # End the current war
+    scheduled_war = @faction.ranked_wars.create!(
+      torn_war_id: 2002,
+      opponent_faction_id: 77777,
+      opponent_faction_name: "Future Enemy",
+      started_at: 2.days.from_now,
+      target_score: 18000,
+      our_score: 0,
+      their_score: 0
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      assert_not_nil cached
+      assert_equal 77777, cached[:enemy_faction_id]
+      assert_equal "Future Enemy", cached[:enemy_faction_name]
+    end
+  end
+
+  test "first time travelers have no travel_started_at to avoid false estimates" do
+    traveling_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Traveling to Japan", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ traveling_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      member_data = cached[:members][6666666]
+
+      assert_equal "Traveling", member_data[:status][:state]
+      assert_equal "Japan", member_data[:status][:destination]
+      # First time seeing traveler — no departure time (avoids false countdown)
+      assert_nil member_data[:status][:travel_started_at]
+    end
+  end
+
+  test "carries forward travel_started_at for ongoing travelers" do
+    traveling_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Traveling to Japan", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ traveling_member ])
+
+    with_memory_cache do
+      # First poll — no travel_started_at
+      WarPollingJob.perform_now(@faction.id)
+      cached = Rails.cache.read(@faction.war_cache_key)
+      assert_nil cached[:members][6666666][:status][:travel_started_at]
+
+      # Simulate time passing — member starts new trip, we catch departure
+      # Write cache with travel_started_at set
+      departure_time = Time.current.iso8601
+      cached[:members][6666666][:status][:travel_started_at] = departure_time
+      Rails.cache.write(@faction.war_cache_key, cached)
+
+      # Second poll — should carry forward departure time
+      WarPollingJob.perform_now(@faction.id)
+      cached = Rails.cache.read(@faction.war_cache_key)
+
+      assert_equal departure_time, cached[:members][6666666][:status][:travel_started_at]
+    end
+  end
+
   private
 
   def with_memory_cache
