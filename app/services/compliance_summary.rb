@@ -43,12 +43,14 @@ class ComplianceSummary
     missions_stats = calculate_stat(all_snapshots, :missions_contracts_total)
     crimes_stats = calculate_stat(all_snapshots, :crimes_offenses_total)
     activity_stats = calculate_stat(all_snapshots, :other_activity_time)
+    networth_stats = calculate_stat(all_snapshots, :networth_total)
 
     return if xanax_stats[:days].zero? && energy_stats[:days].zero? && nerve_stats[:days].zero?
 
     days_tracked = [
       xanax_stats[:days], energy_stats[:days], nerve_stats[:days],
-      missions_stats[:days], crimes_stats[:days], activity_stats[:days]
+      missions_stats[:days], crimes_stats[:days], activity_stats[:days],
+      networth_stats[:days]
     ].max
 
     xanax_daily = xanax_stats[:daily]
@@ -94,13 +96,16 @@ class ComplianceSummary
       activity_time_gained: activity_stats[:gained],
       activity_time_daily: activity_time_daily,
 
+      networth_gained: networth_stats[:gained],
+      networth_current: networth_stats[:current],
+
       days_tracked: days_tracked
     }
   end
 
   def calculate_stat(all_snapshots, field)
     snapshots = all_snapshots.where.not(field => nil)
-    return { gained: 0, daily: 0.0, days: 0 } if snapshots.size < 2
+    return { gained: 0, daily: 0.0, days: 0, current: 0 } if snapshots.size < 2
 
     first = snapshots.first
     last = snapshots.last
@@ -109,6 +114,6 @@ class ComplianceSummary
     actual_days = (last.date - first.date).to_i
     daily = actual_days > 0 ? (gained.to_f / actual_days).round(2) : 0.0
 
-    { gained: gained, daily: daily, days: actual_days }
+    { gained: gained, daily: daily, days: actual_days, current: last[field] || 0 }
   end
 end

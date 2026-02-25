@@ -1,0 +1,179 @@
+<section class="dashboard-hero">
+  <div class="dashboard-hero-content">
+    <!-- Faction Header -->
+    <div class="dashboard-hero-header">
+      <h1 class="dashboard-hero-title"><%= @faction.name %></h1>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="dashboard-stats-grid">
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value"><%= @member_count %></span>
+        <span class="dashboard-stat-label">Members</span>
+      </div>
+
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value">
+          <span class="stat-wins"><%= @war_wins %></span><span class="stat-divider">W</span>
+          <span class="stat-separator">/</span>
+          <span class="stat-losses"><%= @war_losses %></span><span class="stat-divider">L</span>
+        </span>
+        <span class="dashboard-stat-label">War Record</span>
+      </div>
+
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value">
+          <span class="stat-compliant"><%= @compliant_members_count %></span>
+          <span class="stat-separator">/</span>
+          <span class="stat-warning"><%= @warning_members_count %></span>
+          <span class="stat-separator">/</span>
+          <span class="stat-danger"><%= @non_compliant_members_count %></span>
+        </span>
+        <span class="dashboard-stat-label">Compliance</span>
+      </div>
+
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value"><%= @xanax_target %></span>
+        <span class="dashboard-stat-label">Xanax Target/day</span>
+      </div>
+    </div>
+
+    <!-- Weekly Top Performers -->
+    <div class="dashboard-performers-card">
+      <div class="dashboard-performers-header">
+        <div class="dashboard-performers-title">
+          <h3>Top Performers Last Week</h3>
+          <span class="dashboard-performers-period"><%= @week_start.strftime("%b %d") %> - <%= @week_end.strftime("%b %d, %Y") %></span>
+        </div>
+        <% if @weekly_top_performers.any? %>
+          <button type="button"
+                  class="dashboard-performers-copy"
+                  data-controller="clipboard"
+                  data-clipboard-text-value="<%= top_performers_clipboard_text(@weekly_top_performers, @faction, start_date: @week_start, end_date: @week_end) %>"
+                  data-action="click->clipboard#copy"
+                  title="Copy to clipboard">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        <% end %>
+      </div>
+      <% if @weekly_top_performers.any? %>
+        <div class="dashboard-performers-list">
+          <% @weekly_top_performers.each_with_index do |performer, index| %>
+            <div class="dashboard-performer-row">
+              <span class="dashboard-performer-rank <%= 'top-three' if index < 3 %>"><%= index + 1 %></span>
+              <a href="https://www.torn.com/profiles.php?XID=<%= performer[:torn_id] %>" target="_blank" rel="noopener" class="dashboard-performer-name"><%= performer[:name] %></a>
+              <span class="dashboard-performer-stat"><%= performer[:xanax_daily] %> xan/day</span>
+              <span class="dashboard-performer-badge <%= performer[:compliance_level] %>">
+                <% case performer[:compliance_level] %>
+                <% when :compliant %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <% when :warning %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+                <% else %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <% end %>
+              </span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div class="dashboard-performers-empty">
+          <p>No data available for this week yet.</p>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- Scroll Cards -->
+    <div class="dashboard-scroll-cards">
+      <button class="dashboard-scroll-card" data-controller="scroll-to" data-action="click->scroll-to#scroll" data-scroll-to-target-value="ranked-war">
+        <div class="dashboard-scroll-card-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+            <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+            <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+            <path d="M14 14.5c0-.83.67-1.5 1.5-1.5h5c.83 0 1.5.67 1.5 1.5s-.67 1.5-1.5 1.5h-5c-.83 0-1.5-.67-1.5-1.5z"/>
+            <path d="M15.5 22H14v-1.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+            <path d="M10 9.5C10 10.33 9.33 11 8.5 11h-5C2.67 11 2 10.33 2 9.5S2.67 8 3.5 8h5c.83 0 1.5.67 1.5 1.5z"/>
+            <path d="M8.5 2H10v1.5c0 .83-.67 1.5-1.5 1.5S7 4.33 7 3.5 7.67 2 8.5 2z"/>
+          </svg>
+        </div>
+        <div class="dashboard-scroll-card-content">
+          <h4>Ranked War</h4>
+          <% if @current_war %>
+            <p class="scroll-card-status scroll-card-status-live">
+              <span class="status-dot live"></span>
+              vs <%= @current_war.opponent_faction_name %>
+            </p>
+          <% elsif @latest_war %>
+            <p class="scroll-card-status">
+              Latest: <%= @latest_war.won? ? "Won" : "Lost" %> vs <%= @latest_war.opponent_faction_name %>
+            </p>
+          <% else %>
+            <p class="scroll-card-status scroll-card-status-muted">No wars recorded</p>
+          <% end %>
+        </div>
+        <div class="dashboard-scroll-indicator">
+          <div class="scroll-mouse">
+            <div class="scroll-mouse-dot"></div>
+          </div>
+        </div>
+      </button>
+
+      <button class="dashboard-scroll-card" data-controller="scroll-to" data-action="click->scroll-to#scroll" data-scroll-to-target-value="training">
+        <div class="dashboard-scroll-card-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+            <line x1="8" y1="7" x2="16" y2="7"/>
+            <line x1="8" y1="11" x2="14" y2="11"/>
+          </svg>
+        </div>
+        <div class="dashboard-scroll-card-content">
+          <h4>Training Compliance</h4>
+          <p class="scroll-card-status">
+            <span class="compliance-mini compliant"><%= @compliant_members_count %></span>
+            <span class="compliance-mini warning"><%= @warning_members_count %></span>
+            <span class="compliance-mini danger"><%= @non_compliant_members_count %></span>
+            <span class="compliance-mini-label">members</span>
+          </p>
+        </div>
+        <div class="dashboard-scroll-indicator">
+          <div class="scroll-mouse">
+            <div class="scroll-mouse-dot"></div>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+</section>

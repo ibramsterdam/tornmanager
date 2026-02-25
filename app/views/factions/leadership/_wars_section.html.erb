@@ -1,0 +1,16 @@
+<section class="dashboard-fullpage" id="wars">
+  <div class="dashboard-fullpage-content">
+    <div class="training-section-header">
+      <h2>War History</h2>
+    </div>
+
+    <div class="leadership-wars-content" data-controller="skeleton-loader">
+      <div data-skeleton-loader-target="content">
+        <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
+      </div>
+      <div data-skeleton-loader-target="skeleton" style="display: none;">
+        <%= render "factions/ranked_wars/war_history_skeleton" %>
+      </div>
+    </div>
+  </div>
+</section>

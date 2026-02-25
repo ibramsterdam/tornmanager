@@ -7,9 +7,10 @@
     </div>
   </div>
 <% else %>
-  <div class="faction-dashboard">
-    <%= render "factions/hero_section" %>
-    <%= render "factions/war_section" %>
-    <%= render "factions/training_section" %>
+  <div class="leadership-dashboard">
+    <%= render "factions/leadership/hero_section" %>
+    <%= render "factions/leadership/wars_section" %>
+    <%= render "factions/leadership/spies_section" %>
+    <%= render "factions/leadership/settings_section" %>
   </div>
 <% end %>

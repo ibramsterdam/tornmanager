@@ -263,10 +263,15 @@ export default class extends Controller {
   updateConnectionStatus(state, text) {
     if (!this.hasConnectionStatusTarget) return
 
-    this.connectionStatusTarget.innerHTML = `
-      <span class="connection-dot ${state}"></span>
-      <span class="connection-text">${text}</span>
-    `
+    // Update class on the container
+    this.connectionStatusTarget.classList.remove("connected", "connecting", "offline")
+    this.connectionStatusTarget.classList.add(state)
+
+    // Update the text
+    const textEl = this.connectionStatusTarget.querySelector(".live-polling-text")
+    if (textEl) {
+      textEl.textContent = text
+    }
   }
 
   // --- Last updated & countdown ---

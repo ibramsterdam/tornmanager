@@ -1,0 +1,53 @@
+<div class="centered-content">
+  <div class="setup-card">
+    <div class="setup-header">
+      <h1>Setup Leadership Dashboard</h1>
+      <p class="setup-subtitle"><%= @faction.name %></p>
+    </div>
+
+    <div class="setup-intro">
+      <p>The leadership dashboard provides war history, spy stats, and faction management tools.</p>
+      <p>To get started, you'll need to configure a <strong>Torn API key</strong> with Limited Access permissions.</p>
+    </div>
+
+    <%= form_with model: @faction_setting, url: complete_setup_faction_leadership_path(@faction), method: :patch, class: "setup-form" do |form| %>
+      <div class="setup-field">
+        <label class="setup-label">Torn API Key <span class="required">*</span></label>
+        <%= form.text_field :torn_api_key,
+            class: "setup-input",
+            placeholder: "Enter your Limited Access API key",
+            autocomplete: "off",
+            required: true %>
+        <p class="setup-hint">Must be a Limited Access key. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">Create one in your Torn settings</a>.</p>
+      </div>
+
+      <div class="setup-field">
+        <label class="setup-label">TornStats API Key <span class="optional">(Optional)</span></label>
+        <%= form.text_field :tornstats_api_key,
+            class: "setup-input",
+            placeholder: "Enter your TornStats API key",
+            autocomplete: "off" %>
+        <p class="setup-hint">Required for spy data imports. Get your key from <a href="https://www.tornstats.com/settings" target="_blank">tornstats.com/settings</a>.</p>
+      </div>
+
+      <div class="setup-actions">
+        <%= form.submit "Complete Setup", class: "btn-primary btn-lg" %>
+        <%= link_to "Cancel", faction_path(@faction), class: "btn-secondary" %>
+      </div>
+    <% end %>
+
+    <details class="setup-details">
+      <summary>What are these keys used for?</summary>
+      <div class="setup-details-content">
+        <div class="setup-detail-item">
+          <h4>Torn API Key (Limited Access)</h4>
+          <p>Used to fetch live member status (hospital, traveling, jail) during ranked wars. A Limited Access key is required to ensure minimal permissions. Your key is stored securely and is never shared with other factions.</p>
+        </div>
+        <div class="setup-detail-item">
+          <h4>TornStats API Key</h4>
+          <p>Used to import spy reports (battle stats) for enemy factions via TornStats. This allows your faction to view estimated strength, defense, speed, and dexterity of opponents.</p>
+        </div>
+      </div>
+    </details>
+  </div>
+</div>

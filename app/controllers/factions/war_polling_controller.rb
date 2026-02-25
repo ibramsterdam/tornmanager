@@ -11,7 +11,7 @@ class Factions::WarPollingController < ApplicationController
     end
 
     unless @faction.faction_setting&.torn_api_key?
-      redirect_to faction_settings_path(@faction), alert: "Torn API key must be configured before starting war polling."
+      redirect_to setup_faction_leadership_path(@faction), alert: "Torn API key must be configured before starting war polling."
       return
     end
 
@@ -21,6 +21,6 @@ class Factions::WarPollingController < ApplicationController
 
   def stop
     @faction.stop_war_polling!
-    redirect_to faction_settings_path(@faction), notice: "War polling stopped."
+    redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "War polling stopped."
   end
 end

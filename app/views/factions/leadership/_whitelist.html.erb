@@ -1,6 +1,6 @@
 <!-- Add member to whitelist -->
 <% if @faction_members.any? %>
-  <%= form_with url: add_whitelist_faction_settings_path(@faction), method: :post, class: "whitelist-add-form" do |form| %>
+  <%= form_with url: add_whitelist_faction_leadership_path(@faction), method: :post, class: "whitelist-add-form" do |form| %>
     <div class="api-key-form-inline">
       <%= form.select :user_id,
           options_from_collection_for_select(@faction_members, :id, :name),
@@ -21,7 +21,7 @@
         <div class="whitelist-item">
           <span class="whitelist-user-name"><%= user.name %> [<%= user.torn_id %>]</span>
           <%= button_to "Remove",
-              remove_whitelist_faction_settings_path(@faction, user_id: user.id),
+              remove_whitelist_faction_leadership_path(@faction, user_id: user.id),
               method: :delete,
               class: "whitelist-remove-btn" %>
         </div>

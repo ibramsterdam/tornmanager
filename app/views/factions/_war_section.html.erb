@@ -1,0 +1,85 @@
+<section class="dashboard-fullpage" id="ranked-war">
+  <div class="dashboard-fullpage-content">
+    <% if @current_war %>
+      <!-- Ongoing War - Live Dashboard -->
+      <% if @api_keys_configured %>
+        <%= render "factions/ranked_wars/live_dashboard", war: @current_war, faction: @faction, war_data: @war_data %>
+      <% else %>
+        <div class="dashboard-fullpage-center">
+          <div class="dashboard-placeholder-card">
+            <div class="dashboard-placeholder-icon">
+              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+                <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+                <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+                <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+              </svg>
+            </div>
+            <h2>War in Progress</h2>
+            <p class="dashboard-placeholder-opponent">vs <%= @current_war.opponent_faction_name %></p>
+            <div class="dashboard-placeholder-scores">
+              <span class="score-ours"><%= @current_war.our_score %></span>
+              <span class="score-divider">-</span>
+              <span class="score-theirs"><%= @current_war.their_score %></span>
+              <span class="score-target">/ <%= @current_war.target_score %></span>
+            </div>
+            <p class="dashboard-placeholder-message">Live tracking is not available. Ask your faction leadership to configure API keys to enable live war tracking.</p>
+          </div>
+        </div>
+      <% end %>
+    <% elsif @latest_war %>
+      <!-- Latest Completed War Summary -->
+      <div class="dashboard-fullpage-center">
+        <div class="dashboard-war-summary-card <%= @latest_war.won? ? 'war-won' : 'war-lost' %>">
+          <div class="war-summary-badge <%= @latest_war.won? ? 'won' : 'lost' %>">
+            <%= @latest_war.won? ? "Victory" : "Defeat" %>
+          </div>
+          <h2>Latest Ranked War</h2>
+          <p class="war-summary-opponent">
+            vs 
+            <a href="https://www.torn.com/factions.php?step=profile&ID=<%= @latest_war.opponent_faction_id %>" target="_blank" class="faction-link">
+              <%= @latest_war.opponent_faction_name %>
+            </a>
+          </p>
+          <div class="war-summary-scores">
+            <div class="war-summary-score ours <%= @latest_war.won? ? 'winner' : '' %>">
+              <span class="score-label"><%= @faction.name %></span>
+              <span class="score-value"><%= @latest_war.our_score %></span>
+            </div>
+            <div class="war-summary-divider">
+              <span class="target-label">Target</span>
+              <span class="target-value"><%= @latest_war.target_score %></span>
+            </div>
+            <div class="war-summary-score theirs <%= @latest_war.lost? ? 'winner' : '' %>">
+              <span class="score-label"><%= @latest_war.opponent_faction_name %></span>
+              <span class="score-value"><%= @latest_war.their_score %></span>
+            </div>
+          </div>
+          <div class="war-summary-meta">
+            <span class="war-summary-date"><%= @latest_war.started_at.strftime("%B %d, %Y") %></span>
+            <span class="war-summary-duration"><%= @latest_war.duration_formatted %></span>
+          </div>
+          <% if @faction.whitelisted?(Current.user) || Current.user.admin? %>
+            <%= link_to "View War History", faction_leadership_path(@faction, anchor: "wars"), class: "btn btn-secondary btn-sm" %>
+          <% end %>
+        </div>
+      </div>
+    <% else %>
+      <!-- No Wars Placeholder -->
+      <div class="dashboard-fullpage-center">
+        <div class="dashboard-placeholder-card">
+          <div class="dashboard-placeholder-icon muted">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
+              <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
+              <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
+              <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+            </svg>
+          </div>
+          <h2>No Ranked Wars</h2>
+          <p class="dashboard-placeholder-message">No ranked war data has been recorded yet. Wars will appear here once your faction participates in ranked warfare.</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</section>
