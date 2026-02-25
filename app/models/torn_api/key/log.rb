@@ -18,7 +18,6 @@ module TornApi
       def fetch
         all_entries = []
 
-        # Fetch 3 batches of 100 logs (300 total)
         [ 0, 100, 200 ].each do |offset|
           data = get("v2/key/log", { limit: 100, offset: offset })
 

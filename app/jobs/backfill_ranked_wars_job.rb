@@ -8,7 +8,6 @@ class BackfillRankedWarsJob < ApplicationJob
     api_key = faction.faction_setting&.torn_api_key || OwnerCredentials.api_key
     return unless api_key.present?
 
-    # Fetch ranked wars
     wars = TornApi::Faction::RankedWars.new(api_key, faction.torn_id).fetch(limit: limit)
     wars_needing_reports = []
 
@@ -31,7 +30,6 @@ class BackfillRankedWarsJob < ApplicationJob
         winner_faction_id: war_data["winner"]
       )
 
-      # Track completed wars that need detailed reports
       if ranked_war.completed? && ranked_war.our_members.empty?
         wars_needing_reports << war_data["id"]
       end
@@ -39,7 +37,6 @@ class BackfillRankedWarsJob < ApplicationJob
       ranked_war.save!
     end
 
-    # Fetch detailed reports with delay between requests
     wars_needing_reports.each do |torn_war_id|
       sleep 1
       fetch_war_report(faction, api_key, torn_war_id)

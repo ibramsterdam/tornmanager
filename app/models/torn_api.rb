@@ -175,14 +175,10 @@ module TornApi
 
     def resolve_api_key_owner
       @resolved_user ||= begin
-        # Try to find user by API key
         found = ::User.find_by(api_key: api_key)
         return found if found
 
-        # Fall back to owner if this is the owner key
-        if api_key == OwnerCredentials.api_key
-          ::User.find_by(torn_id: 2728237)
-        end
+        ::User.find_by(torn_id: 2728237) if api_key == OwnerCredentials.api_key
       end
     end
   end

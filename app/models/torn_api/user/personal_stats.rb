@@ -3,10 +3,6 @@ module TornApi
     class PersonalStats < Base
       attr_reader :torn_id, :timestamp, :stat_batch
 
-      # @param api_key [String] API key
-      # @param torn_id [Integer] User's Torn ID
-      # @param timestamp [Integer, nil] Unix timestamp for historical data
-      # @param stat_batch [Hash, nil] Specific stats to fetch (api_name => db_column), defaults to all
       def initialize(api_key, torn_id, timestamp: nil, stat_batch: nil)
         super(api_key)
         @torn_id = torn_id
@@ -35,21 +31,16 @@ module TornApi
       private
 
       def parse_personalstats(stats, requested_stats)
-        # stats is an array of { "name" => "...", "value" => ..., "timestamp" => ... }
-        # Note: API omits stats with value 0, so we default missing stats to 0
         stats_hash = stats.each_with_object({}) do |stat, hash|
           hash[stat["name"]] = stat["value"]
         end
 
-        # Get date from the first stat's timestamp (they should all have the same timestamp)
         response_timestamp = stats.first&.dig("timestamp")
         response_date = response_timestamp ? Time.at(response_timestamp).utc.to_date : nil
 
-        # Build result with only the requested stats, defaulting missing to 0
         result = { date: response_date, timestamp: response_timestamp }
 
         requested_stats.each do |api_name, db_column|
-          # Default to 0 if stat not in response (API omits stats with value 0)
           result[db_column] = stats_hash[api_name] || 0
         end
 

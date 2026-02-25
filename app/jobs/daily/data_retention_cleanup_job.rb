@@ -2,7 +2,6 @@ module Daily
   class DataRetentionCleanupJob < ApplicationJob
     queue_as :default
 
-    # Retention periods (matching Privacy Policy)
     SESSION_RETENTION_DAYS = 90
     API_CALL_RETENTION_DAYS = 30
 

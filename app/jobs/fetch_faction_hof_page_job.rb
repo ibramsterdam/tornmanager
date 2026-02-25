@@ -1,10 +1,7 @@
-# Fetches a single page of faction HOF rankings from the Torn API
 class FetchFactionHofPageJob < OwnerApiJob
-  # @param offset [Integer] The offset for pagination (0, 100, 200, etc.)
   def perform(offset)
     factions = TornApi::Torn::Factionhof.new(OwnerCredentials.api_key, offset:).fetch
 
-    # Schedule individual member fetch jobs for each faction
     factions.each do |faction|
       FetchFactionMembersJob.perform_later(faction.torn_id)
     end

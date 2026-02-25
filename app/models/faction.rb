@@ -15,7 +15,6 @@ class Faction < ApplicationRecord
 
   scope :tracked, -> { where(track_stats: true) }
 
-  # Use torn_id in URLs instead of database id
   def to_param
     torn_id.to_s
   end
@@ -24,7 +23,6 @@ class Faction < ApplicationRecord
     users.count
   end
 
-  # Backfill status
   def backfill_in_progress?
     backfill_ends_at.present? && backfill_ends_at > Time.current
   end
@@ -38,8 +36,6 @@ class Faction < ApplicationRecord
     update!(backfill_ends_at: nil, backfill_target_date: nil)
   end
 
-  # War polling
-  # Returns the current active war (in progress) or the next scheduled war
   def current_war
     ranked_wars.ongoing.order(started_at: :desc).first
   end

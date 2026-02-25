@@ -2,8 +2,6 @@ class WarPollingJob < ApplicationJob
   POLL_INTERVAL = 6.seconds
   CACHE_TTL = 30.seconds
 
-  # Destination regex patterns for extracting travel destination from status description
-  # Examples: "Traveling to China", "Returning to Torn from China", "In China"
   DESTINATION_PATTERN = /(?:Traveling to |Returning to Torn from |In )(.+)/i
 
   queue_as :faction_polling
@@ -25,7 +23,6 @@ class WarPollingJob < ApplicationJob
       return
     end
 
-    # Read previous cache to carry forward travel departure times
     @previous_data = Rails.cache.read(faction.war_cache_key) || {}
 
     war_data = build_war_data(faction, war, setting)
@@ -97,7 +94,6 @@ class WarPollingJob < ApplicationJob
       status[:description] = member.status_description if member.status_description.present?
       status[:until] = Time.at(member.status_until.to_i).iso8601 if member.status_until.to_i > 0
 
-      # Track travel departure time for Traveling members
       if state == "Traveling"
         status[:plane_type] = member.plane_image_type
         status[:destination] = extract_destination(member.status_description)
@@ -118,7 +114,6 @@ class WarPollingJob < ApplicationJob
   end
 
   def resolve_travel_started_at(member)
-    # Check if this member was already traveling in the previous poll — carry forward their departure time
     previous_members = @previous_data[:members] || @previous_data["members"] || {}
     member_key = member.id.to_s
     previous_member = previous_members[member_key] || previous_members[member.id]
@@ -133,8 +128,6 @@ class WarPollingJob < ApplicationJob
       end
     end
 
-    # First time seeing this member traveling — return nil to indicate unknown departure time
-    # The frontend will show destination without a timer
     nil
   end
 end
