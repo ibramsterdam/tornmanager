@@ -28,6 +28,15 @@
     </label>
   </td>
   <td>
+    <label class="toggle-switch">
+      <input type="checkbox" 
+             <%= "checked" if faction.public_wars %>
+             id="public-wars-toggle-<%= faction.torn_id %>"
+             onchange="togglePublicWars(<%= faction.torn_id %>, this.checked)">
+      <span class="toggle-slider"></span>
+    </label>
+  </td>
+  <td>
     <%= link_to "Edit Targets", edit_admin_faction_path(faction), class: "btn-small" %>
     <%= link_to "Sync", sync_members_admin_faction_path(faction), method: :post, class: "btn-small", data: { turbo_method: :post } %>
     <button type="button" class="btn-small" onclick="document.getElementById('backfill-modal-<%= faction.id %>').style.display='flex'">Backfill Stats</button>
@@ -38,7 +47,7 @@
 
 <% if faction.users.any? %>
 <tr id="users-list-<%= faction.id %>" style="display:none;">
-  <td colspan="6" style="padding:0;">
+  <td colspan="7" style="padding:0;">
     <div style="background:#0a0a0a; padding:16px; border-top:1px solid #262626;">
       <h4 style="margin:0 0 12px 0; color:#e5e5e5; font-size:0.875rem; font-weight:600;">Active Members (<%= faction.users.active.count %>)</h4>
       <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px;">

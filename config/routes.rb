@@ -66,6 +66,7 @@ Rails.application.routes.draw do
         post :backfill_user_stats
         post :backfill_wars
         patch :toggle_ssl
+        patch :toggle_public_wars
       end
     end
     resources :api_logs, only: [ :index ]

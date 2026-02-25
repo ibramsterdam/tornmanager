@@ -154,4 +154,38 @@ class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
     # Should render the live dashboard partial
     assert_select "[data-controller='war-dashboard']"
   end
+
+  test "index requires authentication by default" do
+    sign_out
+    get faction_ranked_wars_path(@faction)
+    assert_redirected_to new_session_path
+  end
+
+  test "index allows public access when public_wars is enabled" do
+    @faction.update!(public_wars: true)
+    sign_out
+
+    get faction_ranked_wars_path(@faction)
+    assert_response :success
+  end
+
+  test "show allows public access when public_wars is enabled" do
+    @faction.update!(public_wars: true)
+    sign_out
+
+    war = @faction.ranked_wars.create!(
+      torn_war_id: 12345,
+      opponent_faction_id: 88888,
+      opponent_faction_name: "Enemy Faction",
+      started_at: 1.day.ago,
+      ended_at: 1.hour.ago,
+      target_score: 100,
+      our_score: 100,
+      their_score: 50,
+      winner_faction_id: @faction.torn_id
+    )
+
+    get faction_ranked_war_path(@faction, war)
+    assert_response :success
+  end
 end
