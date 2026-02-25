@@ -1,7 +1,8 @@
 class Factions::RankedWarsController < ApplicationController
   include FactionAccess
 
-  before_action :require_faction_whitelisted
+  skip_before_action :require_authentication, if: :public_wars_enabled?
+  before_action :require_faction_whitelisted, unless: :public_wars_enabled?
   before_action :check_tracking_enabled
 
   def index
@@ -74,6 +75,11 @@ class Factions::RankedWarsController < ApplicationController
     unless @faction.track_stats
       @tracking_disabled = true
     end
+  end
+
+  def public_wars_enabled?
+    find_faction unless @faction
+    @faction&.public_wars?
   end
 
   def refresh_latest_wars

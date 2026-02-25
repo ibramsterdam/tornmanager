@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats, :backfill_wars, :toggle_ssl ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :sync_members, :backfill_stats, :backfill_user_stats, :backfill_wars, :toggle_ssl, :toggle_public_wars ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -194,6 +194,13 @@ module Admin
 
       user.update!(ssl_user: !user.ssl_user)
       render json: { success: true, ssl_user: user.ssl_user, user_name: user.name }
+    rescue StandardError => e
+      render json: { success: false, error: e.message }, status: :unprocessable_entity
+    end
+
+    def toggle_public_wars
+      @faction.update!(public_wars: !@faction.public_wars)
+      render json: { success: true, public_wars: @faction.public_wars }
     rescue StandardError => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
