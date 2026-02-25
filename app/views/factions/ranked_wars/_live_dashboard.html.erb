@@ -9,60 +9,62 @@
      data-war-dashboard-enemy-name-value="<%= war.opponent_faction_name %>"
      data-war-dashboard-started-at-value="<%= war.started_at.iso8601 %>"
      data-war-dashboard-scheduled-value="<%= war.scheduled? %>"
-     data-war-dashboard-poll-url-value="<%= war_data_faction_ranked_war_path(faction, war) %>">
+     data-war-dashboard-poll-url-value="<%= war_data_faction_path(faction) %>">
 
-  <!-- Header -->
-  <div class="live-war-header">
-    <div class="live-war-title">
-      <% if war.scheduled? %>
-        <span class="war-status scheduled">SOON</span>
-      <% else %>
-        <span class="war-status ongoing">LIVE</span>
-      <% end %>
-      <span>vs <%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
+  <!-- Score Overview - Minimal -->
+  <div class="live-war-scores-minimal">
+    <div class="live-war-score-side our-side">
+      <span class="live-score-value" data-war-dashboard-target="ourScore"><%= war.our_score %></span>
+      <span class="live-score-label"><%= link_to faction.name, "https://www.torn.com/factions.php?step=profile&ID=#{faction.torn_id}", target: "_blank", class: "faction-link" %></span>
     </div>
-    <%= link_to "Back to Wars", faction_ranked_wars_path(faction), class: "btn btn-secondary btn-sm" %>
+
+      <div class="live-war-score-center">
+      <div class="live-war-status-badge">
+        <% if war.scheduled? %>
+          <span class="war-status-dot scheduled"></span>
+          <span data-war-dashboard-target="warTimer"></span>
+        <% else %>
+          <span class="war-status-dot live"></span>
+          <span>Live</span>
+        <% end %>
+      </div>
+      <div class="live-war-target">
+        <span class="target-current" data-war-dashboard-target="currentLead"><%= war.our_score - war.their_score %></span>
+        <span class="target-separator">/</span>
+        <span class="target-goal" data-war-dashboard-target="targetScore"><%= war.target_score %></span>
+      </div>
+      <div class="live-war-progress">
+        <div class="live-war-progress-fill" data-war-dashboard-target="leadProgress" style="width: <%= [(war.our_score - war.their_score).to_f / war.target_score * 100, 100].min %>%"></div>
+      </div>
+    </div>
+
+    <div class="live-war-score-side their-side">
+      <span class="live-score-value" data-war-dashboard-target="theirScore"><%= war.their_score %></span>
+      <span class="live-score-label"><%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
+    </div>
   </div>
 
-  <!-- Score Overview -->
-  <div class="live-war-scores">
-    <div class="live-war-faction our-side">
-      <span class="live-faction-label"><%= link_to faction.name, "https://www.torn.com/factions.php?step=profile&ID=#{faction.torn_id}", target: "_blank", class: "faction-link" %></span>
-      <span class="live-faction-score" data-war-dashboard-target="ourScore"><%= war.our_score %></span>
-    </div>
-
-    <div class="live-war-center">
-      <div class="live-war-lead">
-        <span class="lead-label">Lead Target</span>
-        <span class="lead-values">
-          <span data-war-dashboard-target="currentLead"><%= war.our_score - war.their_score %></span>
-          <span class="lead-separator">/</span>
-          <span data-war-dashboard-target="targetScore"><%= war.target_score %></span>
+  <!-- Enemy Members Table with Integrated Filters -->
+  <div class="live-war-table-card">
+    <!-- Table Header with Filters -->
+    <div class="live-war-table-header">
+      <div class="live-war-table-title">
+        <span class="table-title-text">Enemy Members</span>
+        <span class="table-title-count">(<span data-war-dashboard-target="visibleCount">0</span>/<span data-war-dashboard-target="totalCount">0</span>)</span>
+        <span class="table-title-filter-count" data-war-dashboard-target="filterCount"></span>
+      </div>
+      <div class="live-war-table-status">
+        <span class="live-war-updated" data-war-dashboard-target="lastUpdated"></span>
+        <span class="live-war-countdown" data-war-dashboard-target="updateCountdown"></span>
+        <span class="live-polling-status" data-war-dashboard-target="connectionStatus">
+          <span class="live-polling-dot"></span>
+          <span class="live-polling-text">Live</span>
         </span>
-        <div class="lead-progress-bar">
-          <div class="lead-progress-fill" data-war-dashboard-target="leadProgress" style="width: <%= [(war.our_score - war.their_score).to_f / war.target_score * 100, 100].min %>%"></div>
-        </div>
-      </div>
-      <div class="live-war-timer" data-war-dashboard-target="warTimer"></div>
-      <div class="live-war-connection" data-war-dashboard-target="connectionStatus">
-        <span class="connection-dot connecting"></span>
-        <span class="connection-text">Connecting...</span>
       </div>
     </div>
 
-    <div class="live-war-faction their-side">
-      <span class="live-faction-label"><%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
-      <span class="live-faction-score" data-war-dashboard-target="theirScore"><%= war.their_score %></span>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <div class="war-filters-card">
-    <div class="war-filters-header">
-      <span class="war-filters-title">Filters</span>
-      <span class="war-filters-count" data-war-dashboard-target="filterCount"></span>
-    </div>
-    <div class="war-filters-body">
+    <!-- Inline Filters -->
+    <div class="live-war-filters">
       <div class="war-filter-group">
         <span class="war-filter-label">Status</span>
         <div class="war-filter-options">
@@ -81,8 +83,8 @@
           <span class="action-badge action-offline war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterActionOffline" data-filter-active="true">Offline</span>
         </div>
       </div>
-      <div class="war-filter-group">
-        <span class="war-filter-label">Max Total Stats</span>
+      <div class="war-filter-group war-filter-stats">
+        <span class="war-filter-label">Max Stats</span>
         <div class="war-filter-slider">
           <input type="range" min="0" max="50000000000" step="100000000" value="50000000000"
                  data-action="input->war-dashboard#applyFilters"
@@ -91,19 +93,9 @@
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Enemy Members Table -->
-  <div class="table-container live-war-table">
-    <div class="table-info">
-      <span class="info-label">Enemy Members (<span data-war-dashboard-target="visibleCount">0</span>/<span data-war-dashboard-target="totalCount">0</span>)</span>
-      <span class="live-war-update-status">
-        <span class="live-war-updated" data-war-dashboard-target="lastUpdated"></span>
-        <span class="live-war-countdown" data-war-dashboard-target="updateCountdown"></span><span class="ping-dot"><span class="ping-ring"></span></span>
-      </span>
-    </div>
-
-    <div class="table-scroll-wrapper live-war-scroll">
+    <!-- Table -->
+    <div class="live-war-table-scroll">
       <table>
         <thead>
           <tr>

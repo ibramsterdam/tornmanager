@@ -21,7 +21,6 @@
           <th>Rank</th>
           <th>Rewards</th>
           <th>Date</th>
-          <th></th>
         </tr>
       </thead>
       <tbody>
@@ -105,13 +104,7 @@
                 <span class="muted"><%= war.started_at.strftime("%H:%M") %></span>
               </div>
             </td>
-            <td>
-              <%= link_to faction_ranked_war_path(faction, war), class: "view-link" do %>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M9 18l6-6-6-6"/>
-                </svg>
-              <% end %>
-            </td>
+
           </tr>
         <% end %>
       </tbody>

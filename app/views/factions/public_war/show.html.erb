@@ -1,0 +1,10 @@
+<div class="page-header">
+  <div class="page-header-content">
+    <div>
+      <h1><%= @faction.name %> - Live War</h1>
+      <p class="page-subtitle">Public war dashboard</p>
+    </div>
+  </div>
+</div>
+
+<%= render "factions/ranked_wars/live_dashboard", war: @current_war, faction: @faction, war_data: @war_data %>

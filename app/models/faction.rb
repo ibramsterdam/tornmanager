@@ -53,4 +53,9 @@ class Faction < ApplicationRecord
   def war_cache_key
     "faction:#{id}:war_data"
   end
+
+  def whitelisted?(user)
+    return false unless user
+    faction_whitelists.exists?(user: user)
+  end
 end

@@ -31,14 +31,14 @@ class Factions::WarPollingControllerTest < ActionDispatch::IntegrationTest
     assert_match /No active ranked war/, flash[:alert]
   end
 
-  test "start redirects to settings when no torn api key configured" do
+  test "start redirects to leadership setup when no torn api key configured" do
     @faction.faction_setting.update!(torn_api_key: nil)
     create_active_war
     sign_in_as_faction_leader(@bram)
 
     post start_faction_war_polling_path(@faction)
 
-    assert_redirected_to faction_settings_path(@faction)
+    assert_redirected_to setup_faction_leadership_path(@faction)
     assert_match /Torn API key must be configured/, flash[:alert]
   end
 
@@ -53,7 +53,7 @@ class Factions::WarPollingControllerTest < ActionDispatch::IntegrationTest
 
       assert_not @faction.reload.war_polling_active?
       assert_nil Rails.cache.read(@faction.war_cache_key)
-      assert_redirected_to faction_settings_path(@faction)
+      assert_redirected_to faction_leadership_path(@faction, anchor: "settings")
       assert_equal "War polling stopped.", flash[:notice]
     end
   end

@@ -109,4 +109,53 @@ module FactionHelper
     lines << "- Been active for #{number_with_delimiter(row[:activity_time_daily])} min/day"
     lines.join("\n")
   end
+
+  def top_performers_clipboard_text(performers, faction, start_date:, end_date:)
+    lines = []
+
+    formatted_start = start_date.strftime("%d %b %Y")
+    formatted_end = end_date.strftime("%d %b %Y")
+
+    lines << "Top Performers for #{faction.name}"
+    lines << "#{formatted_start} - #{formatted_end}"
+    lines << ""
+
+    performers.each_with_index do |performer, index|
+      networth_current = format_networth(performer[:networth_current])
+      networth_gained = performer[:networth_gained] || 0
+      networth_gained_formatted = format_networth_with_sign(networth_gained)
+      activity_mins = performer[:activity_time_gained].to_i / 60
+
+      lines << "#{index + 1}. #{performer[:name]}"
+      lines << "   Xanax: #{performer[:xanax_daily]}/day (#{performer[:xanax_gained]} total)"
+      lines << "   Energy: #{performer[:energy_refills_daily]}/day (#{performer[:energy_refills_gained]} total)"
+      lines << "   Activity: #{activity_mins} mins"
+      lines << "   Networth: #{networth_current} (#{networth_gained_formatted})"
+      lines << ""
+    end
+
+    lines.join("\n")
+  end
+
+  def format_networth(amount)
+    return "$0" if amount.nil? || amount == 0
+
+    abs_amount = amount.abs
+    if abs_amount >= 1_000_000_000
+      "$#{(abs_amount / 1_000_000_000.0).round(2)}B"
+    elsif abs_amount >= 1_000_000
+      "$#{(abs_amount / 1_000_000.0).round(2)}M"
+    elsif abs_amount >= 1_000
+      "$#{(abs_amount / 1_000.0).round(1)}K"
+    else
+      "$#{number_with_delimiter(abs_amount)}"
+    end
+  end
+
+  def format_networth_with_sign(amount)
+    return "$0" if amount.nil? || amount == 0
+
+    sign = amount >= 0 ? "+" : "-"
+    "#{sign}#{format_networth(amount)}"
+  end
 end

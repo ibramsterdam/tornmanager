@@ -12,27 +12,29 @@ Rails.application.routes.draw do
   resource :session
   resources :stocks, only: [ :index ]
   resources :factions, only: [ :index, :show ], param: :torn_id do
-    resource :training, only: [ :show ], controller: "factions/training" do
-      get "members/:torn_id", to: "factions/training#member", as: "member"
+    member do
+      get :war_data
     end
-    resources :ranked_wars, only: [ :index, :show ], controller: "factions/ranked_wars" do
-      member do
-        get :war_data
-      end
-    end
-    resource :settings, only: [ :show, :update ], controller: "factions/settings" do
-      post :import_spies
-      post :add_whitelist
-      post :share_subscription
-      delete :remove_whitelist
+
+    resource :leadership, only: [ :show ], controller: "factions/leadership" do
+      get :setup
+      patch :complete_setup
+      get :war_data
+      patch :update_keys
       delete :delete_torn_key
       delete :delete_tornstats_key
+      post :add_whitelist
+      delete :remove_whitelist
+      post :share_subscription
+      post :import_spies
     end
-    resource :spy_stats, only: [ :show ], controller: "factions/spy_stats"
+
     resource :war_polling, only: [], controller: "factions/war_polling" do
       post :start
       delete :stop
     end
+
+    get :public_war, controller: "factions/public_war", action: :show
   end
   resources :welcome, only: [ :index ]
 

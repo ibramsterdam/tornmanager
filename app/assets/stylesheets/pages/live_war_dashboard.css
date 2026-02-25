@@ -6,131 +6,245 @@
 .live-war-dashboard {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
 }
 
-/* Header */
-.live-war-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.live-war-title {
+/* Minimal Score Bar */
+.live-war-scores-minimal {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--gray-100);
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-4) 0;
 }
 
-/* Score Bar */
-.live-war-scores {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: var(--space-6);
-  align-items: center;
-  background: var(--gray-900);
-  border: 1px solid var(--gray-800);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6) var(--space-8);
-}
-
-.live-war-faction {
+.live-war-score-side {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  align-items: center;
+  gap: 2px;
+  min-width: 120px;
 }
 
-.live-war-faction.our-side {
-  text-align: left;
+.live-war-score-side.our-side {
+  align-items: flex-end;
 }
 
-.live-war-faction.their-side {
-  text-align: right;
+.live-war-score-side.their-side {
+  align-items: flex-start;
 }
 
-.live-faction-label {
-  font-size: 0.875rem;
-  font-weight: 500;
-  color: var(--gray-300);
-}
-
-.live-faction-score {
-  font-size: 2.5rem;
+.live-score-value {
+  font-size: 3rem;
   font-weight: 700;
   font-family: "Geist Mono", monospace;
   line-height: 1;
+  color: var(--gray-100);
   transition: color 0.3s ease;
 }
 
-.live-faction-score.winning {
+.live-score-value.winning {
   color: rgb(34, 197, 94);
 }
 
-.live-faction-score.losing {
+.live-score-value.losing {
   color: rgb(239, 68, 68);
 }
 
-.live-faction-score.tied {
+.live-score-value.tied {
   color: var(--gray-300);
 }
 
-.live-war-center {
+.live-score-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-400);
+}
+
+.live-score-label .faction-link {
+  color: var(--gray-400);
+  text-decoration: none;
+}
+
+.live-score-label .faction-link:hover {
+  color: var(--gray-200);
+}
+
+.live-war-score-center {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  min-width: 180px;
+  min-width: 280px;
 }
 
-.live-war-lead {
+.live-war-status-badge {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-1);
-  width: 100%;
+  gap: var(--space-2);
+  font-size: 0.75rem;
+  color: var(--gray-400);
 }
 
-.lead-label {
-  font-size: 0.6875rem;
+.war-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.war-status-dot.live {
+  background: rgb(34, 197, 94);
+  box-shadow: 0 0 8px rgba(34, 197, 94, 0.5);
+  animation: pulse-dot 2s infinite;
+}
+
+.war-status-dot.scheduled {
+  background: rgb(234, 179, 8);
+}
+
+.live-war-target {
+  font-family: "Geist Mono", monospace;
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+
+.target-current {
+  color: var(--gray-100);
+}
+
+.target-separator {
+  color: var(--gray-600);
+  margin: 0 4px;
+}
+
+.target-goal {
   color: var(--gray-500);
+}
+
+.live-war-progress {
+  width: 100%;
+  height: 4px;
+  background: var(--gray-800);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.live-war-progress-fill {
+  height: 100%;
+  background: rgb(34, 197, 94);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.live-war-progress-fill.losing {
+  background: rgb(239, 68, 68);
+}
+
+/* Table Card with Integrated Filters */
+.live-war-table-card {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.live-war-table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-800);
+}
+
+.live-war-table-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.table-title-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.table-title-count {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-family: "Geist Mono", monospace;
+}
+
+.table-title-filter-count {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.live-war-table-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  font-family: "Geist Mono", monospace;
+}
+
+/* Inline Filters */
+.live-war-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--gray-800);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.live-war-filters .war-filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.live-war-filters .war-filter-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-600);
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
 
-.lead-values {
-  font-size: 1rem;
-  font-weight: 600;
-  font-family: "Geist Mono", monospace;
-  color: var(--gray-200);
+.live-war-filters .war-filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
 }
 
-.lead-separator {
-  color: var(--gray-600);
-  margin: 0 2px;
+.live-war-filters .war-filter-stats {
+  margin-left: auto;
 }
 
-.lead-progress-bar {
+.live-war-filters .war-filter-slider {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.live-war-filters .war-filter-slider input[type="range"] {
+  width: 120px;
+}
+
+/* Table Scroll */
+.live-war-table-scroll {
+  max-height: calc(100vh - 320px);
+  min-height: 300px;
+  overflow-y: auto;
+}
+
+.live-war-table-scroll table {
   width: 100%;
-  height: 6px;
-  background: var(--gray-800);
-  border-radius: 3px;
-  overflow: hidden;
 }
 
-.lead-progress-fill {
-  height: 100%;
-  background: rgb(34, 197, 94);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.lead-progress-fill.losing {
-  background: rgb(239, 68, 68);
-}
-
+/* Legacy styles for backwards compatibility */
 .live-war-timer {
   font-size: 0.8125rem;
   color: var(--gray-500);
@@ -138,7 +252,7 @@
 }
 
 .live-war-connection {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-1);
   font-size: 0.6875rem;
@@ -174,28 +288,7 @@
   color: var(--gray-500);
 }
 
-/* Live War Table */
-.live-war-table {
-  border: 1px solid var(--gray-800);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.live-war-table .table-info {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--gray-800);
-  background: var(--gray-900);
-}
-
-.live-war-update-status {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
+/* Live War Update Status */
 .live-war-updated {
   font-size: 0.75rem;
   color: var(--gray-400);
@@ -208,9 +301,75 @@
   font-family: "Geist Mono", monospace;
 }
 
-.live-war-scroll {
-  max-height: calc(100vh - 480px);
-  min-height: 400px;
+/* Live Polling Status */
+.live-polling-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.live-polling-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(34, 197, 94);
+}
+
+.live-polling-dot::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgb(34, 197, 94);
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ping {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 0.8;
+  }
+  75%, 100% {
+    transform: translate(-50%, -50%) scale(2.5);
+    opacity: 0;
+  }
+}
+
+.live-polling-text {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: rgb(34, 197, 94);
+}
+
+/* Connecting state */
+.live-polling-status.connecting .live-polling-dot {
+  background: rgb(234, 179, 8);
+}
+
+.live-polling-status.connecting .live-polling-dot::before {
+  background: rgb(234, 179, 8);
+}
+
+.live-polling-status.connecting .live-polling-text {
+  color: rgb(234, 179, 8);
+}
+
+/* Offline state */
+.live-polling-status.offline .live-polling-dot {
+  background: var(--gray-600);
+}
+
+.live-polling-status.offline .live-polling-dot::before {
+  display: none;
+}
+
+.live-polling-status.offline .live-polling-text {
+  color: var(--gray-500);
 }
 
 /* Sortable headers */
@@ -437,41 +596,7 @@ tr.row-updated {
   border: 1px solid rgba(107, 114, 128, 0.3);
 }
 
-/* Filter card */
-.war-filters-card {
-  background: var(--gray-900);
-  border: 1px solid var(--gray-800);
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-}
-
-.war-filters-header {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--gray-800);
-}
-
-.war-filters-title {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--gray-300);
-}
-
-.war-filters-count {
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  font-family: "Geist Mono", monospace;
-}
-
-.war-filters-body {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-6);
-  padding: var(--space-4);
-}
-
+/* Filter styles */
 .war-filter-group {
   display: flex;
   flex-direction: column;
@@ -616,34 +741,31 @@ tr.row-updated {
 
 /* Responsive */
 @media (max-width: 768px) {
-  .live-war-scores {
-    grid-template-columns: 1fr;
-    text-align: center;
-    gap: var(--space-4);
-    padding: var(--space-4);
-  }
-
-  .live-war-faction.our-side,
-  .live-war-faction.their-side {
-    text-align: center;
-  }
-
-  .live-war-center {
-    padding: var(--space-3) 0;
-    border-top: 1px solid var(--gray-800);
-    border-bottom: 1px solid var(--gray-800);
-  }
-
-  .live-faction-score {
-    font-size: 2rem;
-  }
-
-  .war-filters-body {
+  .live-war-scores-minimal {
     flex-direction: column;
     gap: var(--space-4);
   }
 
-  .war-filter-slider input[type="range"] {
+  .live-war-score-side.our-side,
+  .live-war-score-side.their-side {
+    align-items: center;
+  }
+
+  .live-score-value {
+    font-size: 2.5rem;
+  }
+
+  .live-war-filters {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .live-war-filters .war-filter-stats {
+    margin-left: 0;
+  }
+
+  .live-war-filters .war-filter-slider input[type="range"] {
     width: 140px;
   }
 }
