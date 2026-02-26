@@ -106,6 +106,29 @@
             </div>
           <% end %>
         </div>
+      <% elsif @faction.backfill_in_progress? %>
+        <div class="performers-backfill-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @faction.backfill_seconds_remaining %>">
+          <div class="performers-backfill-content">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <div class="performers-backfill-text">
+              <strong>Fetching historical data</strong>
+              <span>Stats will appear once backfill completes in <strong data-backfill-countdown-target="countdown"></strong></span>
+            </div>
+          </div>
+        </div>
+        <div class="dashboard-performers-list">
+          <% 5.times do %>
+            <div class="dashboard-performer-row">
+              <span class="skeleton" style="width: 24px; height: 24px; border-radius: 50%;"></span>
+              <span class="skeleton" style="flex: 1; height: 14px; border-radius: 4px;"></span>
+              <span class="skeleton" style="width: 64px; height: 12px; border-radius: 4px;"></span>
+              <span class="skeleton" style="width: 20px; height: 20px; border-radius: 50%;"></span>
+            </div>
+          <% end %>
+        </div>
       <% else %>
         <div class="dashboard-performers-empty">
           <p>No data available for this week yet.</p>

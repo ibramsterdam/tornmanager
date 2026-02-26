@@ -109,7 +109,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     get faction_path(torn_id: 55555)
     assert_response :success
     assert_select "h1", "Set Up Your Faction"
-    assert_select ".setup-info-list li", 4
+    assert_select ".setup-info-list li", 5
   end
 
   test "redirects to root when faction not in DB and torn_faction_id does not match" do
@@ -146,7 +146,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "BAD_KEY" }
     assert_response :unprocessable_entity
-    assert_select ".setup-error", /Invalid API key/
+    assert_match /Invalid API key/, flash[:alert]
   end
 
   test "setup shows error when key is not limited access" do
@@ -161,7 +161,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "PUBLIC_KEY" }
     assert_response :unprocessable_entity
-    assert_select ".setup-error", /Limited Access key is required/
+    assert_match /Limited Access key is required/, flash[:alert]
   end
 
   test "setup shows error when key belongs to different user" do
@@ -176,7 +176,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "OTHER_KEY" }
     assert_response :unprocessable_entity
-    assert_select ".setup-error", /does not belong to you/
+    assert_match /does not belong to you/, flash[:alert]
   end
 
   test "setup shows error when key is for different faction" do
@@ -191,7 +191,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "WRONG_FACTION_KEY" }
     assert_response :unprocessable_entity
-    assert_select ".setup-error", /different faction/
+    assert_match /different faction/, flash[:alert]
   end
 
   # -- Setup create: success --

@@ -13,12 +13,6 @@
       <p class="setup-subtitle">Faction #<%= @torn_faction_id %></p>
     </div>
 
-    <% if @error.present? %>
-      <div class="setup-error">
-        <%= @error %>
-      </div>
-    <% end %>
-
     <div class="setup-info">
       <p>You're the first person from your faction to use TornManager. Once you complete this setup:</p>
 
@@ -34,6 +28,9 @@
         </li>
         <li>
           <strong>Personal stats will be backfilled</strong> for all members from January 1st, 2026. This requires approximately 2 API calls per member per day and may take a while at the rate limit of 60 calls/min.
+        </li>
+        <li>
+          <strong>Everyone gets a 14-day free trial.</strong> All faction members receive a 2-week subscription to try out TornManager. After the trial ends, a subscription is required to continue accessing faction features.
         </li>
       </ul>
     </div>
