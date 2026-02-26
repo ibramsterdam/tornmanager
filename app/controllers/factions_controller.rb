@@ -41,25 +41,25 @@ class FactionsController < ApplicationController
     begin
       key_info = TornApi::Key::Info.new(api_key).fetch
     rescue TornApi::InvalidKeyError
-      @error = "Invalid API key. Please check and try again."
+      flash.now[:alert] = "Invalid API key. Please check and try again."
       return render :setup, status: :unprocessable_entity
     end
 
     # Must be Limited Access
     unless key_info.access.type == "Limited Access"
-      @error = "This key is #{key_info.access.type}. A Limited Access key is required."
+      flash.now[:alert] = "This key is #{key_info.access.type}. A Limited Access key is required."
       return render :setup, status: :unprocessable_entity
     end
 
     # Must belong to the current user
     unless key_info.user.id == Current.user.torn_id
-      @error = "This API key does not belong to you."
+      flash.now[:alert] = "This API key does not belong to you."
       return render :setup, status: :unprocessable_entity
     end
 
     # Must be for the correct faction
     unless key_info.user.faction_id == torn_faction_id
-      @error = "This API key is for a different faction."
+      flash.now[:alert] = "This API key is for a different faction."
       return render :setup, status: :unprocessable_entity
     end
 
@@ -72,7 +72,7 @@ class FactionsController < ApplicationController
         faction_data = TornApi::Faction::Basic.new(api_key, torn_faction_id).fetch
         faction_name = faction_data["name"]
       rescue StandardError => e
-        @error = "Could not fetch faction info: #{e.message}"
+        flash.now[:alert] = "Could not fetch faction info: #{e.message}"
         return render :setup, status: :unprocessable_entity
       end
 
@@ -213,15 +213,9 @@ class FactionsController < ApplicationController
 
   def ensure_war_polling_active
     return unless @faction.faction_setting&.torn_api_key?
+    return if @faction.war_polling_active?
 
-    if @faction.war_polling_active?
-      unless Rails.cache.exist?(@faction.war_cache_key)
-        Rails.logger.info("Restarting dead war polling for faction #{@faction.torn_id}")
-        @faction.start_war_polling!
-      end
-    else
-      @faction.start_war_polling!
-    end
+    @faction.start_war_polling!
   end
 
   def refresh_current_war_scores
