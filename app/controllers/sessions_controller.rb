@@ -3,6 +3,7 @@ class SessionsController < ApplicationController
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: "Try again later." }
 
   def new
+    redirect_to root_path if authenticated?
   end
 
   def create
@@ -27,19 +28,28 @@ class SessionsController < ApplicationController
         profile_image: profile.image
       )
 
-      # Assign user to their faction if it exists in our DB
+      # Assign user to their faction, creating it if needed
       torn_faction_id = key_info.user.faction_id
       if torn_faction_id.present? && torn_faction_id > 0
         faction = Faction.find_by(torn_id: torn_faction_id)
+
+        unless faction
+          begin
+            faction_name = TornApi::Faction::Basic.new(api_key, torn_faction_id).name
+            faction = Faction.create!(torn_id: torn_faction_id, name: faction_name, setup_completed: false)
+            sync_faction_members(faction)
+          rescue StandardError => e
+            Rails.logger.warn("Failed to create faction #{torn_faction_id} on login: #{e.message}")
+            faction = nil
+          end
+        end
+
         user.faction_id = faction.id if faction
       end
 
       user.save!
 
       start_new_session_for user
-
-      # Store Torn faction ID in session for setup wizard (even if faction doesn't exist in DB yet)
-      session[:torn_faction_id] = torn_faction_id if torn_faction_id.present? && torn_faction_id > 0
 
       redirect_to after_authentication_url
     rescue TornApi::InvalidKeyError
@@ -56,5 +66,24 @@ class SessionsController < ApplicationController
   def destroy
     terminate_session
     redirect_to root_path, status: :see_other
+  end
+
+  private
+
+  # Light member sync for new factions during login.
+  # Only upserts members — no backfill scheduling.
+  def sync_faction_members(faction)
+    members = TornApi::Faction::Members.new(OwnerCredentials.api_key, faction.torn_id).fetch
+
+    members.each do |member|
+      user = User.find_or_initialize_by(torn_id: member.id)
+      user.assign_attributes(
+        name: member.name,
+        level: member.level,
+        faction_id: faction.id,
+        fallen: member.status_state == "Fallen"
+      )
+      user.save!
+    end
   end
 end

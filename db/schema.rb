@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_25_190326) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_26_194738) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -69,6 +69,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_25_190326) do
     t.string "name", null: false
     t.decimal "nerve_refill_target", default: "0.0", null: false
     t.boolean "public_wars", default: false, null: false
+    t.boolean "setup_completed", default: true, null: false
     t.integer "torn_id", null: false
     t.boolean "track_stats", default: true, null: false
     t.datetime "updated_at", null: false

@@ -1,0 +1,25 @@
+<div class="setup-page">
+  <div class="setup-container">
+    <div class="setup-header">
+      <h1>Subscription Expired</h1>
+      <p class="setup-subtitle"><%= @faction.name %></p>
+    </div>
+
+    <div class="setup-info">
+      <p>Your subscription has expired. An active subscription is required to access faction features like the training dashboard, ranked wars, and personal stats tracking.</p>
+
+      <ul class="setup-info-list">
+        <li>
+          <strong>Ask your faction leadership</strong> to share subscription time with you from the Leadership dashboard.
+        </li>
+        <li>
+          <strong>Check the roadmap</strong> for upcoming payment and subscription options.
+        </li>
+      </ul>
+    </div>
+
+    <div class="setup-actions">
+      <%= link_to "Go to Settings", settings_path, class: "btn btn-primary btn-lg setup-submit" %>
+    </div>
+  </div>
+</div>

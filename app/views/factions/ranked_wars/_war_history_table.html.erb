@@ -6,108 +6,117 @@
   <% if wars.empty? %>
     <div class="table-empty">
       <div class="table-empty-icon">&#9876;</div>
-      <p class="table-empty-text">No ranked wars found. Click "Sync Wars" to fetch your faction's war history.</p>
+      <p class="table-empty-text">No ranked wars found.</p>
     </div>
   <% else %>
-    <table>
-      <thead>
-        <tr>
-          <th>Status</th>
-          <th>Opponent</th>
-          <th>Score</th>
-          <th>Duration</th>
-          <th>Attacks</th>
-          <th>Avg Respect</th>
-          <th>Rank</th>
-          <th>Rewards</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% wars.each do |war| %>
-          <tr class="<%= war.ongoing? ? 'row-ongoing' : (war.won? ? 'row-compliant' : 'row-danger') %>">
-            <td class="status-cell">
-              <% if war.scheduled? %>
-                <span class="war-status scheduled">SOON</span>
-              <% elsif war.in_progress? %>
-                <span class="war-status ongoing">LIVE</span>
-              <% elsif war.won? %>
-                <span class="war-status won">WIN</span>
-              <% else %>
-                <span class="war-status lost">LOSS</span>
-              <% end %>
-            </td>
-            <td>
-              <div class="opponent-cell">
-                <span class="opponent-name"><%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
-                <span class="opponent-id muted">[<%= war.opponent_faction_id %>]</span>
-              </div>
-            </td>
-            <td>
-              <div class="score-cell">
-                <span class="score-value"><%= war.our_score %> - <%= war.their_score %></span>
-                <span class="score-target muted">/ <%= war.target_score %></span>
-              </div>
-            </td>
-            <td>
-              <% if war.scheduled? %>
-                <span class="countdown-cell" data-seconds="<%= war.starts_in_seconds %>">Starts in <%= distance_of_time_in_words(war.starts_in_seconds) %></span>
-              <% else %>
-                <%= war.duration_formatted %>
-              <% end %>
-            </td>
-            <td>
-              <div class="attacks-cell">
-                <span><%= war.our_attacks %></span>
-                <span class="muted">vs</span>
-                <span><%= war.their_attacks %></span>
-              </div>
-            </td>
-            <td>
-              <div class="avg-respect-cell">
-                <% if war.our_attacks.to_i > 0 && war.their_attacks.to_i > 0 %>
-                  <span class="<%= war.score_per_attack >= war.their_score_per_attack ? 'avg-better' : 'avg-worse' %>"><%= war.score_per_attack %></span>
+    <div class="table-scroll-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Opponent</th>
+            <th>Score</th>
+            <th>Duration</th>
+            <th>Attacks</th>
+            <th>Avg Respect</th>
+            <th>Rank</th>
+            <th>Rewards</th>
+            <th>Date</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% wars.each do |war| %>
+            <tr class="<%= war.ongoing? ? 'row-ongoing' : (war.won? ? 'row-compliant' : 'row-danger') %>">
+              <td class="status-cell">
+                <% if war.scheduled? %>
+                  <span class="war-status scheduled">SOON</span>
+                <% elsif war.in_progress? %>
+                  <span class="war-status ongoing">LIVE</span>
+                <% elsif war.won? %>
+                  <span class="war-status won">WIN</span>
+                <% else %>
+                  <span class="war-status lost">LOSS</span>
+                <% end %>
+              </td>
+              <td>
+                <div class="opponent-cell">
+                  <span class="opponent-name"><%= link_to war.opponent_faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{war.opponent_faction_id}", target: "_blank", class: "faction-link" %></span>
+                  <span class="opponent-id muted">[<%= war.opponent_faction_id %>]</span>
+                </div>
+              </td>
+              <td>
+                <div class="score-cell">
+                  <span class="score-value"><%= war.our_score %> &ndash; <%= war.their_score %></span>
+                  <span class="score-target muted">/ <%= war.target_score %></span>
+                </div>
+              </td>
+              <td>
+                <% if war.scheduled? %>
+                  <span class="countdown-cell" data-seconds="<%= war.starts_in_seconds %>">Starts in <%= distance_of_time_in_words(war.starts_in_seconds) %></span>
+                <% else %>
+                  <%= war.duration_formatted %>
+                <% end %>
+              </td>
+              <td>
+                <div class="attacks-cell">
+                  <span><%= war.our_attacks %></span>
                   <span class="muted">vs</span>
-                  <span class="<%= war.their_score_per_attack >= war.score_per_attack ? 'avg-better' : 'avg-worse' %>"><%= war.their_score_per_attack %></span>
+                  <span><%= war.their_attacks %></span>
+                </div>
+              </td>
+              <td>
+                <div class="avg-respect-cell">
+                  <% if war.our_attacks.to_i > 0 && war.their_attacks.to_i > 0 %>
+                    <span class="<%= war.score_per_attack >= war.their_score_per_attack ? 'avg-better' : 'avg-worse' %>"><%= war.score_per_attack %></span>
+                    <span class="muted">vs</span>
+                    <span class="<%= war.their_score_per_attack >= war.score_per_attack ? 'avg-better' : 'avg-worse' %>"><%= war.their_score_per_attack %></span>
+                  <% else %>
+                    <span class="muted">-</span>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <% if war.rank_before && war.rank_after %>
+                  <div class="rank-cell">
+                    <span><%= war.rank_before %></span>
+                    <span class="rank-arrow <%= war.won? ? 'rank-up' : 'rank-down' %>"><%= war.rank_change %></span>
+                    <span><%= war.rank_after %></span>
+                  </div>
                 <% else %>
                   <span class="muted">-</span>
                 <% end %>
-              </div>
-            </td>
-            <td>
-              <% if war.rank_before && war.rank_after %>
-                <div class="rank-cell">
-                  <span><%= war.rank_before %></span>
-                  <span class="rank-arrow <%= war.won? ? 'rank-up' : 'rank-down' %>"><%= war.rank_change %></span>
-                  <span><%= war.rank_after %></span>
+              </td>
+              <td>
+                <div class="rewards-cell">
+                  <% if war.respect_gained && war.respect_gained > 0 %>
+                    <span class="reward-item">+<%= number_with_delimiter(war.respect_gained) %> respect</span>
+                  <% end %>
+                  <% if war.points_gained && war.points_gained > 0 %>
+                    <span class="reward-item">+<%= war.points_gained %> points</span>
+                  <% end %>
+                  <% if (war.respect_gained.nil? || war.respect_gained == 0) && (war.points_gained.nil? || war.points_gained == 0) %>
+                    <span class="muted">-</span>
+                  <% end %>
                 </div>
-              <% else %>
-                <span class="muted">-</span>
-              <% end %>
-            </td>
-            <td>
-              <div class="rewards-cell">
-                <% if war.respect_gained && war.respect_gained > 0 %>
-                  <span class="reward-item">+<%= number_with_delimiter(war.respect_gained) %> respect</span>
+              </td>
+              <td>
+                <div class="date-cell">
+                  <span><%= war.started_at.strftime("%d %b %Y") %></span>
+                  <span class="muted"><%= war.started_at.strftime("%H:%M") %></span>
+                </div>
+              </td>
+              <td>
+                <%= link_to faction_ranked_war_path(faction, war), class: "view-link", title: "View details" do %>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6"/>
+                  </svg>
                 <% end %>
-                <% if war.points_gained && war.points_gained > 0 %>
-                  <span class="reward-item">+<%= war.points_gained %> points</span>
-                <% end %>
-                <% if (war.respect_gained.nil? || war.respect_gained == 0) && (war.points_gained.nil? || war.points_gained == 0) %>
-                  <span class="muted">-</span>
-                <% end %>
-              </div>
-            </td>
-            <td>
-              <div class="date-cell">
-                <span><%= war.started_at.strftime("%d %b %Y") %></span>
-                <span class="muted"><%= war.started_at.strftime("%H:%M") %></span>
-              </div>
-            </td>
-
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
 </div>

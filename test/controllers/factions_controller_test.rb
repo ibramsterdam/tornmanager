@@ -8,12 +8,13 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
       track_stats: true,
       xanax_target: 2.5,
       energy_refill_target: 1.0,
-      nerve_refill_target: 1.0
+      nerve_refill_target: 1.0,
+      setup_completed: true
     )
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction)
-    @bert.update!(faction: @faction)
+    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
   end
 
   # -- Access control --
@@ -85,6 +86,63 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".dashboard-stats-grid"
   end
 
+  # -- War record shows only current year --
+
+  test "war record card only counts wars from current year" do
+    # 2026 wars
+    @faction.ranked_wars.create!(
+      torn_war_id: 1001, opponent_faction_id: 88888, opponent_faction_name: "Enemy A",
+      started_at: Date.new(2026, 1, 15).to_time, ended_at: Date.new(2026, 1, 16).to_time,
+      target_score: 100, our_score: 100, their_score: 50,
+      winner_faction_id: @faction.torn_id
+    )
+    @faction.ranked_wars.create!(
+      torn_war_id: 1002, opponent_faction_id: 77777, opponent_faction_name: "Enemy B",
+      started_at: Date.new(2026, 2, 10).to_time, ended_at: Date.new(2026, 2, 11).to_time,
+      target_score: 100, our_score: 50, their_score: 100,
+      winner_faction_id: 77777
+    )
+    # 2025 war (should be excluded)
+    @faction.ranked_wars.create!(
+      torn_war_id: 999, opponent_faction_id: 66666, opponent_faction_name: "Old Enemy",
+      started_at: Date.new(2025, 6, 1).to_time, ended_at: Date.new(2025, 6, 2).to_time,
+      target_score: 100, our_score: 100, their_score: 50,
+      winner_faction_id: @faction.torn_id
+    )
+
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+
+    # Should show 1W / 1L (only 2026 wars), not 2W / 1L
+    assert_select ".stat-wins", "1"
+    assert_select ".stat-losses", "1"
+  end
+
+  # -- Compliance card during backfill --
+
+  test "compliance card shows placeholder during backfill" do
+    @faction.update!(backfill_ends_at: 1.hour.from_now, backfill_target_date: Date.new(2026, 1, 1))
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+
+    # Should show dashes instead of numbers
+    assert_select ".stat-compliant", "--"
+    assert_select ".stat-warning", "--"
+    assert_select ".stat-danger", "--"
+  end
+
+  test "compliance card shows real numbers when backfill is complete" do
+    @faction.update!(backfill_ends_at: nil, backfill_target_date: nil)
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+
+    # Should show actual numbers (may be 0, but as "0" not "--")
+    assert_select ".stat-compliant", /\d+/
+  end
+
   # -- Index redirect --
 
   test "index redirects to faction page for member with faction" do
@@ -93,55 +151,90 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to faction_path(@faction)
   end
 
-  test "index redirects to root when user has no faction" do
+  test "index redirects to stocks when user has no faction" do
     @bram.update!(faction: nil)
     sign_in_as(@bram)
     get factions_path
-    assert_redirected_to root_path
+    assert_redirected_to stocks_path
   end
 
-  # -- Setup wizard (faction not in DB) --
+  # -- Subscription check --
 
-  test "shows setup wizard when faction not in DB and torn_faction_id in session" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
-
-    get faction_path(torn_id: 55555)
+  test "shows subscription expired page when user has no subscription" do
+    @bert.update!(subscription_expires_at: 1.day.ago)
+    sign_in_as(@bert)
+    get faction_path(@faction)
     assert_response :success
-    assert_select "h1", "Set Up Your Faction"
-    assert_select ".setup-info-list li", 5
+    assert_select "h1", "Subscription Expired"
   end
 
-  test "redirects to root when faction not in DB and torn_faction_id does not match" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
-
-    get faction_path(torn_id: 77777)
-    assert_redirected_to root_path
-  end
-
-  test "shows dashboard when faction exists in DB even with setup session" do
-    sign_in_with_faction_id(@bert, @faction.torn_id)
-
+  test "admin bypasses subscription check" do
+    @bram.update!(subscription_expires_at: nil)
+    sign_in_as(@bram)
     get faction_path(@faction)
     assert_response :success
     assert_select ".dashboard-hero"
   end
 
-  test "prefills api key on setup when user has limited access" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555, access_type: "Limited Access")
+  # -- Setup wizard (faction exists but setup_completed: false) --
 
-    get faction_path(torn_id: 55555)
+  test "dashboard redirects to setup when faction setup not completed" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
+
+    get faction_path(setup_faction)
+    assert_redirected_to setup_faction_path(setup_faction)
+  end
+
+  test "setup page shows setup wizard" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
+
+    get setup_faction_path(setup_faction)
+    assert_response :success
+    assert_select "h1", "Set Up Your Faction"
+    assert_select ".setup-subtitle", "New Faction"
+  end
+
+  test "prefills api key on setup when user has limited access" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, api_access_type: "Limited Access")
+    sign_in_as(@bert)
+
+    get setup_faction_path(setup_faction)
     assert_response :success
     assert_select "input[value='#{@bert.api_key}']"
+  end
+
+  test "shows dashboard when faction setup is completed" do
+    sign_in_as(@bert)
+    get faction_path(@faction)
+    assert_response :success
+    assert_select ".dashboard-hero"
+  end
+
+  test "setup page redirects to dashboard when already completed" do
+    sign_in_as(@bert)
+    get setup_faction_path(@faction)
+    assert_redirected_to root_path
   end
 
   # -- Setup create: validation errors --
 
   test "setup shows error for invalid api key" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError)
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "BAD_KEY" }
@@ -150,8 +243,11 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "setup shows error when key is not limited access" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
 
     minimal_key = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(level: 1, type: "Public Only", faction: false, company: false),
@@ -165,8 +261,11 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "setup shows error when key belongs to different user" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
 
     other_user_key = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
@@ -180,8 +279,11 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "setup shows error when key is for different faction" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
 
     wrong_faction_key = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
@@ -196,19 +298,20 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
   # -- Setup create: success --
 
-  test "setup creates faction, setting, whitelist and queues jobs" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
+  test "setup completes faction setup, creates setting, whitelist and queues jobs" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
 
     key_info = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
       user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
     )
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
-    TornApi::Faction::Basic.any_instance.stubs(:fetch).returns({ "name" => "New Faction" })
-    SyncFactionMembersJob.stubs(:perform_now)
 
-    assert_difference "Faction.count", 1 do
+    assert_no_difference "Faction.count" do
       assert_difference "FactionSetting.count", 1 do
         assert_difference "FactionWhitelist.count", 1 do
           post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
@@ -216,40 +319,58 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
       end
     end
 
-    faction = Faction.find_by(torn_id: 55555)
-    assert_not_nil faction
-    assert_equal "New Faction", faction.name
-    assert faction.track_stats
+    setup_faction.reload
+    assert setup_faction.setup_completed, "Faction should be marked as setup completed"
+    assert_equal "VALID_LIMITED_KEY", setup_faction.faction_setting.torn_api_key
+    assert_equal "Limited Access", setup_faction.faction_setting.torn_api_access_type
+    assert setup_faction.faction_whitelists.exists?(user: @bert)
 
-    assert_equal "VALID_LIMITED_KEY", faction.faction_setting.torn_api_key
-    assert_equal "Limited Access", faction.faction_setting.torn_api_access_type
-
-    assert_equal faction.id, @bert.reload.faction_id
-    assert faction.faction_whitelists.exists?(user: @bert)
-
-    assert_redirected_to faction_path(faction)
+    assert_redirected_to faction_path(setup_faction)
     assert_match /Welcome to TornManager/, flash[:notice]
   end
 
-  test "setup handles race condition when faction created between show and create" do
-    @bert.update!(faction: nil)
-    sign_in_with_faction_id(@bert, 55555)
-
-    existing = Faction.create!(torn_id: 55555, name: "Race Condition Faction", track_stats: true, xanax_target: 2.5)
+  test "setup sets backfill_ends_at immediately before background job runs" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
 
     key_info = TornApi::Key::Info::InfoData.new(
       access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
       user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
     )
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
-    SyncFactionMembersJob.stubs(:perform_now)
 
-    assert_no_difference "Faction.count" do
-      post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
-    end
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
 
-    assert_equal existing.id, @bert.reload.faction_id
-    assert existing.faction_whitelists.exists?(user: @bert)
-    assert_redirected_to faction_path(existing)
+    setup_faction.reload
+    assert_not_nil setup_faction.backfill_ends_at, "backfill_ends_at should be set immediately"
+    assert setup_faction.backfill_ends_at > Time.current, "backfill_ends_at should be in the future"
+    assert_not_nil setup_faction.backfill_target_date, "backfill_target_date should be set immediately"
+  end
+
+  test "setup rejects when user is not a member of the faction" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    # bert is NOT a member of setup_faction
+    sign_in_as(@bert)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+    assert_redirected_to root_path
+  end
+
+  test "setup rejects when faction is already set up" do
+    sign_in_as(@bert)
+
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: @faction.torn_id, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+
+    post setup_faction_path(torn_id: @faction.torn_id), params: { api_key: "VALID_LIMITED_KEY" }
+    assert_redirected_to root_path
   end
 end

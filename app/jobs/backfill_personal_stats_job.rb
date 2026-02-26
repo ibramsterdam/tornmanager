@@ -5,6 +5,7 @@ class BackfillPersonalStatsJob < ApplicationJob
 
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
+    api_key = faction.faction_setting&.torn_api_key || OwnerCredentials.api_key
     users = faction.users.active.to_a
     dates = (start_date.to_date..end_date.to_date).to_a
 
@@ -21,23 +22,18 @@ class BackfillPersonalStatsJob < ApplicationJob
       dates.each do |date|
         next if existing_dates.include?(date)
 
-        BackfillSingleStatJob.perform_later(user.id, date.to_s)
+        BackfillSingleStatJob.perform_later(user.id, date.to_s, api_key: api_key)
         jobs_scheduled += 1
       end
     end
 
-    existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
+    # Schedule cleanup job based on the faction's existing backfill ETA
+    # (backfill_ends_at is already set by the controller at setup time)
+    if faction.backfill_ends_at.present?
+      wait_seconds = [ (faction.backfill_ends_at - Time.current).to_i, 1 ].max
+      ClearBackfillStatusJob.set(wait: wait_seconds.seconds).perform_later(faction.id)
+    end
 
-    total_api_calls = existing_queued_jobs + (jobs_scheduled * 2)
-    estimated_seconds = [ total_api_calls * SECONDS_PER_API_CALL, 1 ].max.to_i
-
-    faction.update!(
-      backfill_ends_at: Time.current + estimated_seconds.seconds,
-      backfill_target_date: start_date.to_date
-    )
-
-    ClearBackfillStatusJob.set(wait: estimated_seconds.seconds).perform_later(faction.id)
-
-    Rails.logger.info("Scheduled #{jobs_scheduled} stat fetch jobs for faction #{faction.name} (#{existing_queued_jobs} jobs already queued), completing in ~#{estimated_seconds}s")
+    Rails.logger.info("Scheduled #{jobs_scheduled} stat fetch jobs for faction #{faction.name}")
   end
 end

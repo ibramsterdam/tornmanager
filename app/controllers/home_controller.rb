@@ -8,8 +8,6 @@ class HomeController < ApplicationController
 
     if faction
       redirect_to faction_path(faction)
-    elsif session[:torn_faction_id].present?
-      redirect_to faction_path(torn_id: session[:torn_faction_id])
     else
       redirect_to stocks_path
     end

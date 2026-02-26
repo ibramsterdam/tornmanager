@@ -800,3 +800,16 @@ tr.row-inactive {
     border-bottom: 1px solid var(--gray-800);
   }
 }
+
+/* War Detail Page */
+.war-detail-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6) var(--space-4);
+}
+
+.war-detail-footer {
+  text-align: center;
+  padding: var(--space-6) 0;
+  font-size: 0.8125rem;
+}

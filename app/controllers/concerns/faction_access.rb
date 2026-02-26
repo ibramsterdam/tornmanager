@@ -12,6 +12,15 @@ module FactionAccess
     end
   end
 
+  def require_setup_completed
+    find_faction
+    return if performed?
+
+    unless @faction.setup_completed?
+      redirect_to setup_faction_path(@faction)
+    end
+  end
+
   def require_faction_whitelisted
     find_faction
     return if performed?
@@ -19,7 +28,7 @@ module FactionAccess
     return if Current.user.admin?
     return if @faction.faction_whitelists.exists?(user: Current.user)
 
-    redirect_to stocks_path, alert: "You don't have access to this faction's dashboard. Ask your faction leader for access."
+    redirect_to faction_path(@faction), notice: "You don't have access to the Leadership dashboard. Ask your faction leader for access."
   end
 
   def require_faction_leader
