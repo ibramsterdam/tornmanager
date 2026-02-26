@@ -14,9 +14,12 @@ Rails.application.routes.draw do
 
   resources :factions, only: [ :index, :show ], param: :torn_id do
     member do
+      get :setup
       post :setup, action: :create
       get :war_data
     end
+
+    resources :ranked_wars, only: [ :show ], controller: "factions/ranked_wars"
 
     resource :leadership, only: [ :show ], controller: "factions/leadership" do
       get :setup

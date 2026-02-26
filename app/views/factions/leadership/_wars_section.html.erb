@@ -7,6 +7,7 @@
     <div class="leadership-wars-content" data-controller="skeleton-loader">
       <div data-skeleton-loader-target="content">
         <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
+        <%= render "factions/ranked_wars/member_performance_table", member_performance: @member_performance %>
       </div>
       <div data-skeleton-loader-target="skeleton" style="display: none;">
         <%= render "factions/ranked_wars/war_history_skeleton" %>

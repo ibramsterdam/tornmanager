@@ -42,38 +42,42 @@
 
 /* Setup Page - Modern Design */
 .setup-page {
-  min-height: calc(100vh - 60px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: var(--space-6);
+  padding: var(--space-6) var(--space-6) var(--space-8);
 }
 
 .setup-container {
   width: 100%;
-  max-width: 480px;
+  max-width: 640px;
 }
 
 .setup-header {
   text-align: center;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
 }
 
 .setup-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 80px;
-  height: 80px;
+  width: 64px;
+  height: 64px;
   background: var(--gray-900);
   border: 1px solid var(--gray-800);
   border-radius: var(--radius-xl);
   color: var(--gray-400);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.setup-icon svg {
+  width: 32px;
+  height: 32px;
 }
 
 .setup-header h1 {
-  font-size: 1.75rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--gray-100);
   margin: 0 0 var(--space-1);
@@ -360,11 +364,9 @@
 
 /* Wars Section */
 .leadership-wars-content {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  overflow: auto;
+  gap: var(--space-6);
 }
 
 /* Import Bar for Spies */
@@ -747,7 +749,6 @@
   padding-bottom: var(--space-4);
 }
 
-#wars .dashboard-fullpage-content,
 #spies .dashboard-fullpage-content {
   display: flex;
   flex-direction: column;

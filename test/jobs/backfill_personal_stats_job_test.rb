@@ -12,7 +12,7 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     OwnerCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
-    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { batch: 2 } ]) do
+    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { batch: 2, api_key: "test_key" } ]) do
       BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1)
     end
 
@@ -53,5 +53,92 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     end
 
     assert_nil @user.personal_stat_snapshots.find_by(date: @date_str)
+  end
+
+  test "uses passed api_key instead of OwnerCredentials" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
+
+    # Should NOT call OwnerCredentials.api_key when api_key is passed
+    OwnerCredentials.expects(:api_key).never
+
+    BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1, api_key: "faction_key_123")
+
+    snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
+    assert snapshot, "Expected snapshot to be saved"
+  end
+
+  test "falls back to OwnerCredentials when no api_key passed" do
+    OwnerCredentials.stubs(:api_key).returns("owner_key")
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
+
+    BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1)
+
+    snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
+    assert snapshot, "Expected snapshot to be saved"
+  end
+
+  test "chains batch 2 with the same api_key" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
+
+    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { batch: 2, api_key: "faction_key_123" } ]) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1, api_key: "faction_key_123")
+    end
+  end
+end
+
+class BackfillPersonalStatsJobTest < ActiveJob::TestCase
+  setup do
+    @faction = Faction.create!(
+      torn_id: 77777, name: "Test Faction", xanax_target: 2.5,
+      energy_refill_target: 1.0, nerve_refill_target: 1.0
+    )
+    @faction.create_faction_setting!(torn_api_key: "faction_api_key_abc", torn_api_access_type: "Limited Access")
+    @user = users(:bram)
+    @user.update!(faction: @faction)
+  end
+
+  test "passes faction api_key to BackfillSingleStatJob" do
+    start_date = Date.new(2026, 2, 20)
+    end_date = Date.new(2026, 2, 20)
+
+    assert_enqueued_with(
+      job: BackfillSingleStatJob,
+      args: [ @user.id, "2026-02-20", { api_key: "faction_api_key_abc" } ]
+    ) do
+      BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
+    end
+  end
+
+  test "falls back to OwnerCredentials api_key when faction has no setting" do
+    @faction.faction_setting.destroy!
+    @faction.reload
+    OwnerCredentials.stubs(:api_key).returns("owner_fallback_key")
+
+    start_date = Date.new(2026, 2, 20)
+    end_date = Date.new(2026, 2, 20)
+
+    assert_enqueued_with(
+      job: BackfillSingleStatJob,
+      args: [ @user.id, "2026-02-20", { api_key: "owner_fallback_key" } ]
+    ) do
+      BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
+    end
+  end
+
+  test "does not recalculate backfill_ends_at (already set by controller)" do
+    @faction.update!(
+      backfill_ends_at: 1.hour.from_now,
+      backfill_target_date: Date.new(2026, 1, 1)
+    )
+    original_ends_at = @faction.backfill_ends_at
+
+    start_date = Date.new(2026, 2, 20)
+    end_date = Date.new(2026, 2, 20)
+
+    BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
+
+    @faction.reload
+    assert_equal original_ends_at.to_i, @faction.backfill_ends_at.to_i,
+      "backfill_ends_at should not be overwritten by the job"
   end
 end

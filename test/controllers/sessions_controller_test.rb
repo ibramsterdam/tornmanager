@@ -120,6 +120,9 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
     TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+    TornApi::Faction::Basic.any_instance.stubs(:name).returns("Full Access Faction")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([])
+    OwnerCredentials.stubs(:api_key).returns("owner_key")
 
     assert_difference "User.count", 1 do
       assert_difference "Session.count", 1 do
@@ -289,6 +292,138 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     user = User.find_by(torn_id: 8888888)
     assert_not_nil user
     assert_equal "trimmed_key", user.api_key
+  end
+
+  # -- Faction creation on login --
+
+  test "create creates faction and syncs members when faction not in DB" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 77777, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "NewFactionUser", level: 40, image: nil
+    )
+    mock_members = [
+      TornApi::Faction::Members::Member.new(8888888, "MemberOne", 30, 100, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil),
+      TornApi::Faction::Members::Member.new(9999999, "NewFactionUser", 40, 50, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil)
+    ]
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+    TornApi::Faction::Basic.any_instance.stubs(:name).returns("Nuclear Wolves")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns(mock_members)
+    OwnerCredentials.stubs(:api_key).returns("owner_key")
+
+    assert_difference "Faction.count", 1 do
+      post session_path, params: { api_key: @valid_api_key }
+    end
+
+    faction = Faction.find_by(torn_id: 77777)
+    assert_not_nil faction
+    assert_equal "Nuclear Wolves", faction.name
+    assert_not faction.setup_completed, "Faction should not be marked as setup completed"
+
+    user = User.find_by(torn_id: 9999999)
+    assert_equal faction.id, user.faction_id
+
+    # Verify members were synced
+    member = User.find_by(torn_id: 8888888)
+    assert_not_nil member
+    assert_equal faction.id, member.faction_id
+    assert_equal "MemberOne", member.name
+  end
+
+  test "create syncs members without scheduling backfills for new faction on login" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 77777, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "NewFactionUser", level: 40, image: nil
+    )
+    mock_members = [
+      TornApi::Faction::Members::Member.new(8888888, "MemberOne", 30, 100, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil)
+    ]
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+    TornApi::Faction::Basic.any_instance.stubs(:name).returns("Nuclear Wolves")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns(mock_members)
+    OwnerCredentials.stubs(:api_key).returns("owner_key")
+
+    # Backfill jobs should NOT be enqueued during login sync
+    BackfillUserStatsJob.expects(:perform_later).never
+
+    post session_path, params: { api_key: @valid_api_key }
+
+    member = User.find_by(torn_id: 8888888)
+    assert_nil member.backfill_ends_at, "No backfill should be scheduled during login sync"
+  end
+
+  test "create assigns user to existing faction without creating a new one" do
+    existing_faction = Faction.create!(torn_id: 88888, name: "Existing Faction", xanax_target: 2.5, setup_completed: true)
+
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 88888, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "ExistingFactionUser", level: 40, image: nil
+    )
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+
+    assert_no_difference "Faction.count" do
+      post session_path, params: { api_key: @valid_api_key }
+    end
+
+    user = User.find_by(torn_id: 9999999)
+    assert_equal existing_faction.id, user.faction_id
+  end
+
+  test "create still succeeds when faction API call fails during login" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 77777, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "FailedFactionUser", level: 40, image: nil
+    )
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+    TornApi::Faction::Basic.any_instance.stubs(:name).raises(TornApi::ApiError.new("API down"))
+
+    assert_no_difference "Faction.count" do
+      post session_path, params: { api_key: @valid_api_key }
+    end
+
+    assert_redirected_to root_url
+    user = User.find_by(torn_id: 9999999)
+    assert_not_nil user
+    assert_nil user.faction_id
+  end
+
+  test "create does not create faction when user has no faction in Torn" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 1, type: "Limited Access", faction: false, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: nil, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "NoFactionUser", level: 40, image: nil
+    )
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+
+    assert_no_difference "Faction.count" do
+      post session_path, params: { api_key: @valid_api_key }
+    end
+
+    user = User.find_by(torn_id: 9999999)
+    assert_nil user.faction_id
   end
 
   test "destroy terminates session and redirects to root" do

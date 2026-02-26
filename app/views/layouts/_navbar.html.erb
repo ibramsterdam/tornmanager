@@ -15,15 +15,11 @@
           </button>
           <div class="navbar-dropdown navbar-dropdown-left" data-dropdown-target="menu">
             <%= link_to "Dashboard", faction_path(navbar_faction), class: "navbar-dropdown-item" %>
-            <% if navbar_faction.whitelisted?(Current.user) || Current.user&.admin? %>
-              <%= link_to "Leadership", faction_leadership_path(navbar_faction), class: "navbar-dropdown-item" %>
-            <% else %>
-              <span class="navbar-dropdown-item navbar-dropdown-item-disabled" title="Ask leadership for access">Leadership</span>
-            <% end %>
+            <%= link_to "Leadership", faction_leadership_path(navbar_faction), class: "navbar-dropdown-item" %>
           </div>
         </div>
       <% else %>
-        <span class="navbar-link navbar-link-disabled" title="Set up your faction first">My Faction</span>
+        <%= link_to "My Faction", factions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/factions')}" %>
       <% end %>
       <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
       <% if Current.user&.admin? %>
@@ -69,13 +65,9 @@
           <% if navbar_faction %>
             <span class="navbar-mobile-menu-label"><%= viewing_other_faction? ? navbar_faction.name : "My Faction" %></span>
             <%= link_to "Dashboard", faction_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path == faction_path(navbar_faction)}" %>
-            <% if navbar_faction.whitelisted?(Current.user) || Current.user&.admin? %>
-              <%= link_to "Leadership", faction_leadership_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path.include?('/leadership')}" %>
-            <% else %>
-              <span class="navbar-mobile-menu-item navbar-mobile-menu-item-nested disabled" title="Ask leadership for access">Leadership</span>
-            <% end %>
+            <%= link_to "Leadership", faction_leadership_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path.include?('/leadership')}" %>
           <% else %>
-            <span class="navbar-mobile-menu-item disabled">My Faction</span>
+            <%= link_to "My Faction", factions_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/factions')}" %>
           <% end %>
           <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/hall-of-famers')}" %>
           <% if Current.user&.admin? %>

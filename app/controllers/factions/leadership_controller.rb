@@ -4,6 +4,7 @@ class Factions::LeadershipController < ApplicationController
 
   IMPORT_COOLDOWN = 1.minute
 
+  before_action :require_setup_completed, except: [ :setup, :complete_setup ]
   before_action :require_faction_whitelisted, except: [ :setup, :complete_setup, :share_subscription ]
   before_action :require_faction_leader, only: [ :setup, :complete_setup, :update_keys, :delete_torn_key, :delete_tornstats_key, :add_whitelist, :remove_whitelist, :import_spies ]
   before_action :require_faction_whitelisted, only: [ :share_subscription ]
@@ -305,14 +306,14 @@ class Factions::LeadershipController < ApplicationController
 
     @wars = @faction.ranked_wars.recent.includes(:faction)
 
-    completed_wars = @wars.completed
-    @wins = completed_wars.won.count
-    @losses = completed_wars.lost.count
+    current_year_wars = @wars.completed.where(started_at: Date.current.beginning_of_year..)
+    @wins = current_year_wars.won.count
+    @losses = current_year_wars.lost.count
 
     @ongoing_war = @wars.ongoing.select(&:in_progress?).first
     @scheduled_war = @wars.ongoing.select(&:scheduled?).first
 
-    @member_performance = calculate_member_performance(completed_wars)
+    @member_performance = calculate_member_performance(current_year_wars)
   end
 
   def load_spy_stats_data

@@ -1,41 +1,15 @@
 <div class="setup-page">
   <div class="setup-container">
     <div class="setup-header">
-      <div class="setup-icon">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-          <circle cx="9" cy="7" r="4"/>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-        </svg>
-      </div>
       <h1>Set Up Your Faction</h1>
-      <p class="setup-subtitle">Faction #<%= @torn_faction_id %></p>
+      <p class="setup-subtitle"><%= @faction.name %></p>
     </div>
 
     <div class="setup-info">
-      <p>You're the first person from your faction to use TornManager. Once you complete this setup:</p>
-
-      <ul class="setup-info-list">
-        <li>
-          <strong>You'll receive leadership permissions</strong> since you're setting up the faction. Under the Leadership dashboard you can invite others. Users with the role Leader or Co-leader are automatically added.
-        </li>
-        <li>
-          <strong>Faction members will be synced</strong> from the Torn API so everyone can access the dashboard.
-        </li>
-        <li>
-          <strong>Ranked war history</strong> will be fetched in the background (~20 API calls).
-        </li>
-        <li>
-          <strong>Personal stats will be backfilled</strong> for all members from January 1st, 2026. This requires approximately 2 API calls per member per day and may take a while at the rate limit of 60 calls/min.
-        </li>
-        <li>
-          <strong>Everyone gets a 14-day free trial.</strong> All faction members receive a 2-week subscription to try out TornManager. After the trial ends, a subscription is required to continue accessing faction features.
-        </li>
-      </ul>
+      <p>Welcome! You're the first person from your faction to use TornManager. Everyone in your faction will receive a <strong>14-day free trial</strong> to explore all features. This key will be stored as the faction's API key and used to fetch member stats, ranked wars, and other faction data.</p>
     </div>
 
-    <%= form_with url: setup_faction_path(torn_id: @torn_faction_id), method: :post, class: "setup-form" do |form| %>
+    <%= form_with url: setup_faction_path(torn_id: @faction.torn_id), method: :post, class: "setup-form" do |form| %>
       <div class="setup-fields">
         <div class="setup-field">
           <label class="setup-label">
@@ -49,8 +23,8 @@
               autocomplete: "off",
               required: true %>
           <p class="setup-hint">
-            This key is used to fetch faction data (members, wars, personal stats). It must be a <strong>Limited Access</strong> key that belongs to you.
-            You can <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">create one in Torn</a> and revoke it at any time.
+            Must be a <strong>Limited Access</strong> key that belongs to you.
+            <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">Create one in Torn</a>
           </p>
         </div>
       </div>
@@ -67,24 +41,28 @@
           <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
           <line x1="12" y1="17" x2="12.01" y2="17"/>
         </svg>
-        What does the API key do?
+        What happens during setup?
       </summary>
       <div class="setup-details-content">
         <div class="setup-detail-item">
-          <h4>Faction member sync</h4>
-          <p>Fetches the full member list so everyone in your faction can access the dashboard and track their stats.</p>
+          <h4>Leadership permissions</h4>
+          <p>You'll be granted leadership access since you're setting up the faction. You can invite others from the Leadership dashboard. Leaders and Co-leaders are added automatically.</p>
         </div>
         <div class="setup-detail-item">
-          <h4>Personal stats tracking</h4>
-          <p>Collects daily training stats (xanax, energy refills, etc.) for compliance tracking. Uses ~2 API calls per member per day.</p>
+          <h4>Member sync</h4>
+          <p>All faction members are synced from the Torn API so everyone can access the dashboard (1 API call, instant).</p>
         </div>
         <div class="setup-detail-item">
-          <h4>Ranked war data</h4>
-          <p>Fetches war history and live war status for the war dashboard.</p>
+          <h4>Ranked war history</h4>
+          <p>War history is fetched in the background (~20 API calls).</p>
         </div>
         <div class="setup-detail-item">
-          <h4>Security</h4>
-          <p>Your key is stored securely and only used for faction-related API calls. Limited Access keys cannot perform actions on your account. You can revoke it from your Torn settings at any time.</p>
+          <h4>Personal stats backfill</h4>
+          <p>Stats are backfilled for all members from January 1st, 2026. This requires ~2 API calls per member per day and may take a while at the rate limit of 60 calls/min.</p>
+        </div>
+        <div class="setup-detail-item">
+          <h4>API key security</h4>
+          <p>Your key is stored securely and only used for faction-related API calls. Limited Access keys cannot perform actions on your account. You can revoke it at any time.</p>
         </div>
       </div>
     </details>

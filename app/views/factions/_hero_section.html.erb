@@ -33,7 +33,7 @@
           <span class="stat-separator">/</span>
           <span class="stat-losses"><%= @war_losses %></span><span class="stat-divider">L</span>
         </span>
-        <span class="dashboard-stat-label">War Record</span>
+        <span class="dashboard-stat-label">War Record <%= Date.current.year %></span>
       </div>
 
       <div class="dashboard-stat-card">
@@ -44,11 +44,19 @@
           </svg>
         </span>
         <span class="dashboard-stat-value">
-          <span class="stat-compliant"><%= @compliant_members_count %></span>
-          <span class="stat-separator">/</span>
-          <span class="stat-warning"><%= @warning_members_count %></span>
-          <span class="stat-separator">/</span>
-          <span class="stat-danger"><%= @non_compliant_members_count %></span>
+          <% if @faction.backfill_in_progress? %>
+            <span class="stat-compliant">--</span>
+            <span class="stat-separator">/</span>
+            <span class="stat-warning">--</span>
+            <span class="stat-separator">/</span>
+            <span class="stat-danger">--</span>
+          <% else %>
+            <span class="stat-compliant"><%= @compliant_members_count %></span>
+            <span class="stat-separator">/</span>
+            <span class="stat-warning"><%= @warning_members_count %></span>
+            <span class="stat-separator">/</span>
+            <span class="stat-danger"><%= @non_compliant_members_count %></span>
+          <% end %>
         </span>
         <span class="dashboard-stat-label">Compliance</span>
       </div>
@@ -86,27 +94,7 @@
           </button>
         <% end %>
       </div>
-      <% if @weekly_top_performers.any? %>
-        <div class="dashboard-performers-list">
-          <% @weekly_top_performers.each_with_index do |performer, index| %>
-            <div class="dashboard-performer-row">
-              <span class="dashboard-performer-rank <%= 'top-three' if index < 3 %>"><%= index + 1 %></span>
-              <a href="https://www.torn.com/profiles.php?XID=<%= performer[:torn_id] %>" target="_blank" rel="noopener" class="dashboard-performer-name"><%= performer[:name] %></a>
-              <span class="dashboard-performer-stat"><%= performer[:xanax_daily] %> xan/day</span>
-              <span class="dashboard-performer-badge <%= performer[:compliance_level] %>">
-                <% case performer[:compliance_level] %>
-                <% when :compliant %>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
-                <% when :warning %>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
-                <% else %>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                <% end %>
-              </span>
-            </div>
-          <% end %>
-        </div>
-      <% elsif @faction.backfill_in_progress? %>
+      <% if @faction.backfill_in_progress? %>
         <div class="performers-backfill-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @faction.backfill_seconds_remaining %>">
           <div class="performers-backfill-content">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -126,6 +114,26 @@
               <span class="skeleton" style="flex: 1; height: 14px; border-radius: 4px;"></span>
               <span class="skeleton" style="width: 64px; height: 12px; border-radius: 4px;"></span>
               <span class="skeleton" style="width: 20px; height: 20px; border-radius: 50%;"></span>
+            </div>
+          <% end %>
+        </div>
+      <% elsif @weekly_top_performers.any? %>
+        <div class="dashboard-performers-list">
+          <% @weekly_top_performers.each_with_index do |performer, index| %>
+            <div class="dashboard-performer-row">
+              <span class="dashboard-performer-rank <%= 'top-three' if index < 3 %>"><%= index + 1 %></span>
+              <a href="https://www.torn.com/profiles.php?XID=<%= performer[:torn_id] %>" target="_blank" rel="noopener" class="dashboard-performer-name"><%= performer[:name] %></a>
+              <span class="dashboard-performer-stat"><%= performer[:xanax_daily] %> xan/day</span>
+              <span class="dashboard-performer-badge <%= performer[:compliance_level] %>">
+                <% case performer[:compliance_level] %>
+                <% when :compliant %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <% when :warning %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5" fill="currentColor"/></svg>
+                <% else %>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                <% end %>
+              </span>
             </div>
           <% end %>
         </div>
@@ -184,12 +192,16 @@
         </div>
         <div class="dashboard-scroll-card-content">
           <h4>Training Compliance</h4>
-          <p class="scroll-card-status">
-            <span class="compliance-mini compliant"><%= @compliant_members_count %></span>
-            <span class="compliance-mini warning"><%= @warning_members_count %></span>
-            <span class="compliance-mini danger"><%= @non_compliant_members_count %></span>
-            <span class="compliance-mini-label">members</span>
-          </p>
+          <% if @faction.backfill_in_progress? %>
+            <p class="scroll-card-status scroll-card-status-muted">Backfill in progress</p>
+          <% else %>
+            <p class="scroll-card-status">
+              <span class="compliance-mini compliant"><%= @compliant_members_count %></span>
+              <span class="compliance-mini warning"><%= @warning_members_count %></span>
+              <span class="compliance-mini danger"><%= @non_compliant_members_count %></span>
+              <span class="compliance-mini-label">members</span>
+            </p>
+          <% end %>
         </div>
         <div class="dashboard-scroll-indicator">
           <div class="scroll-mouse">
