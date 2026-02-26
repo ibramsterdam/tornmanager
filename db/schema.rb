@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_26_194738) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_26_215010) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -215,6 +215,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_26_194738) do
     t.boolean "ssl_user", default: false, null: false
     t.datetime "subscription_expires_at"
     t.integer "torn_id", null: false
+    t.datetime "trial_granted_at"
     t.datetime "updated_at", null: false
     t.index ["api_key"], name: "index_users_on_api_key", unique: true
     t.index ["faction_id"], name: "index_users_on_faction_id"

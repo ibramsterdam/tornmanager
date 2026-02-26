@@ -171,16 +171,30 @@
     <p>
       <strong>You can delete the data collected with your API key at any time</strong> through the Settings page when logged in. 
       You can also <strong>export all your data</strong> in JSON format from the Settings page. 
-      Data deletion will permanently remove:
+      Personal data deletion will permanently remove:
     </p>
     <ul>
       <li>All login sessions and session history</li>
       <li>All API call logs and monitoring data</li>
       <li>Your stored API key</li>
     </ul>
+
+    <h4>Faction Data Deletion</h4>
     <p>
-      Your subscription status is tied to your Torn ID and will be preserved even after data deletion. 
-      You can log back in anytime using your Torn API key, and your subscription time will still be active.
+      Faction leaders can delete all collected faction data through the Leadership dashboard Settings section.
+      Faction data deletion will permanently remove:
+    </p>
+    <ul>
+      <li>All personal stat snapshots for faction members</li>
+      <li>All spy reports collected for the faction</li>
+      <li>All ranked war history</li>
+      <li>The faction API keys</li>
+      <li>The leadership whitelist</li>
+      <li>All scheduled background jobs related to the faction (backfill, war polling, etc.)</li>
+    </ul>
+    <p>
+      <strong>Subscription time will NOT be revoked</strong> when faction data is deleted. Members keep their 
+      remaining subscription time. You can set up the faction again at any time by providing a new API key.
     </p>
   </section>
 
@@ -236,6 +250,12 @@
       This key is stored securely alongside your personal API key and is used exclusively for faction-related 
       API calls. The faction API key allows TornManager to fetch faction data independently of individual 
       member keys, improving reliability and reducing API load on member keys.
+    </p>
+    <p>
+      When a faction is first set up, TornManager uses the provided faction API key to backfill historical 
+      personal statistics for all faction members from the tracking start date. This involves fetching past 
+      daily stat snapshots via the Torn API so that training compliance and progress charts are available 
+      immediately rather than only from the setup date forward.
     </p>
     
     <h3>User API Calls</h3>
@@ -382,6 +402,7 @@
       TornManager includes features that allow controlled sharing of faction data between factions:
     </p>
     <ul>
+      <li><strong>Leadership Access:</strong> When a faction is set up, TornManager fetches faction member data from the Torn API to identify Leaders and Co-leaders. These members are automatically granted access to the Leadership dashboard. The faction leader can modify this whitelist at any time through the Settings section.</li>
       <li><strong>Faction Whitelists:</strong> Faction leaders can configure whitelists to allow members of other factions to view their faction's training compliance data. Only whitelisted faction members can access this data, and the faction leader maintains full control over the whitelist.</li>
       <li><strong>Subscription Sharing:</strong> Faction leaders with active subscriptions can share subscription weeks with their faction members. This is an opt-in feature that helps faction leaders provide TornManager access to their members.</li>
     </ul>

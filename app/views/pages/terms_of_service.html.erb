@@ -155,6 +155,7 @@
       which can be obtained through:
     </p>
     <ul>
+      <li><strong>Trial Subscription:</strong> When a faction is first set up on TornManager, all current faction members receive a 14-day trial subscription. This allows the entire faction to explore TornManager's features before committing to a subscription.</li>
       <li><strong>Xanax Payment:</strong> Send Xanax to <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>. Each Xanax sent equals 1 week of subscription. Payments are automatically processed daily at 12 PM TCT.</li>
       <li><strong>Subscription Sharing:</strong> Faction leaders with active subscriptions can share subscription weeks with their faction members through the faction settings. This allows leaders to extend access to their members without individual payments.</li>
     </ul>
@@ -170,6 +171,14 @@
       TornManager offers enhanced features for faction leaders and members of tracked factions:
     </p>
     
+    <h3>Faction Setup</h3>
+    <p>
+      When a faction is set up, TornManager uses the provided API key to fetch faction member data. Leaders 
+      and Co-leaders are automatically granted access to the Leadership dashboard. All faction members receive 
+      a 14-day trial subscription. The faction API key is used to backfill historical personal statistics for 
+      all members from the tracking start date.
+    </p>
+
     <h3>Faction API Keys</h3>
     <p>
       Faction leaders may optionally provide a separate faction API key to enable enhanced faction features. 
@@ -190,6 +199,15 @@
       hospital timers, and spy data sourced from public APIs (TornStats). This information is intended to 
       assist with tactical decision-making during wars. The accuracy of spy data depends on third-party sources 
       and may not reflect current battle stats.
+    </p>
+
+    <h3>Faction Data Deletion</h3>
+    <p>
+      Faction leaders can permanently delete all collected faction data through the Leadership dashboard. This 
+      removes all personal stat snapshots for faction members, spy reports, ranked war history, API keys, and the 
+      leadership whitelist. It also cancels all scheduled background jobs for the faction. Subscription time is 
+      preserved for all members. The faction can be set up again at any time. See the 
+      <%= link_to "Privacy Policy", privacy_policy_path %> for the full list of data removed.
     </p>
   </section>
 
@@ -222,7 +240,8 @@
       <li>Involves fraudulent or illegal activity</li>
     </ul>
     <p>
-      You may delete your collected data at any time through the Settings page when logged in.
+      You may delete your personal data at any time through the Settings page. Faction leaders may also 
+      delete all collected faction data through the Leadership dashboard Settings section.
     </p>
   </section>
 
