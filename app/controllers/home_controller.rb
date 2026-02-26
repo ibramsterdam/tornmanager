@@ -1,19 +1,17 @@
 class HomeController < ApplicationController
   allow_unauthenticated_access
+
   def index
-    if authenticated?
-      faction = Current.user.faction
-      if faction&.track_stats && can_access_faction?(faction)
-        redirect_to faction_path(faction)
-      else
-        redirect_to stocks_path
-      end
+    return unless authenticated?
+
+    faction = Current.user.faction
+
+    if faction
+      redirect_to faction_path(faction)
+    elsif session[:torn_faction_id].present?
+      redirect_to faction_setup_path
+    else
+      redirect_to stocks_path
     end
-  end
-
-  private
-
-  def can_access_faction?(faction)
-    Current.user.admin? || faction.faction_whitelists.exists?(user: Current.user)
   end
 end

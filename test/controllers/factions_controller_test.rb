@@ -31,11 +31,10 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "non-whitelisted member is blocked from faction dashboard" do
+  test "non-whitelisted member can access faction dashboard" do
     sign_in_as(@bert)
     get faction_path(@faction)
-    assert_redirected_to stocks_path
-    assert_equal "You don't have access to this faction's dashboard. Ask your faction leader for access.", flash[:alert]
+    assert_response :success
   end
 
   test "unauthenticated user is redirected to login" do
@@ -49,17 +48,17 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
     get faction_path(@faction)
     assert_response :success
-    assert_select ".dashboard-stats-row"
+    assert_select ".dashboard-stats-grid"
     assert_select ".dashboard-stat-card", 4
-    assert_select ".dashboard-targets"
+    assert_select ".compliance-summary"
   end
 
   test "dashboard shows faction targets" do
     sign_in_as(@bram)
     get faction_path(@faction)
-    assert_match /Xanax: 2\.5\/day/, response.body
-    assert_match /Energy: 1\.0\/day/, response.body
-    assert_match /Nerve: 1\.0\/day/, response.body
+    assert_select ".target-info li", /Xanax.*2\.5\/day/
+    assert_select ".target-info li", /Energy Refills.*1\.0\/day/
+    assert_select ".target-info li", /Nerve Refills.*1\.0\/day/
   end
 
   test "dashboard shows tracking disabled when faction not tracked" do
@@ -71,19 +70,19 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".dashboard-stats-row", count: 0
   end
 
-  test "dashboard shows more tools section with coming soon badges for non-admin" do
-    @faction.faction_whitelists.create!(user: @bert)
+  test "dashboard shows scroll cards for navigation" do
     sign_in_as(@bert)
     get faction_path(@faction)
     assert_response :success
-    assert_select ".coming-soon-badge", 2
+    assert_select ".dashboard-scroll-card", 2
   end
 
-  test "dashboard shows linked feature cards for admin" do
+  test "dashboard shows hero section with stats grid for admin" do
     sign_in_as(@bram)
     get faction_path(@faction)
     assert_response :success
-    assert_select ".coming-soon-badge", count: 0
+    assert_select ".dashboard-hero"
+    assert_select ".dashboard-stats-grid"
   end
 
   # -- Index redirect --
