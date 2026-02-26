@@ -72,6 +72,25 @@
         </span>
         <span class="dashboard-stat-label">War Polling</span>
       </div>
+
+      <div class="dashboard-stat-card">
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value">
+          <% coverage_class = if @data_coverage_rate >= 90
+                                "stat-compliant"
+                              elsif @data_coverage_rate >= 70
+                                "stat-warning"
+                              else
+                                "stat-danger"
+                              end %>
+          <span class="<%= coverage_class %>"><%= @data_coverage_rate %>%</span>
+        </span>
+        <span class="dashboard-stat-label">Data Coverage</span>
+      </div>
     </div>
 
     <!-- Ongoing War Banner -->

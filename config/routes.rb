@@ -32,6 +32,7 @@ Rails.application.routes.draw do
       delete :remove_whitelist
       post :share_subscription
       post :import_spies
+      delete :delete_faction_data
     end
 
     resource :war_polling, only: [], controller: "factions/war_polling" do
