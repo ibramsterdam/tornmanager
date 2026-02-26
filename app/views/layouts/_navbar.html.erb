@@ -1,11 +1,11 @@
 <nav data-controller="navbar" data-navbar-admin-value="<%= Current.user&.admin? ? 'true' : 'false' %>">
   <% if authenticated? %>
     <div class="navbar-left">
-      <%= link_to "TornManager", Current.user&.faction&.track_stats ? factions_path : stocks_path, class: "navbar-link navbar-title" %>
+      <%= link_to "TornManager", Current.user&.faction ? factions_path : root_path, class: "navbar-link navbar-title" %>
     </div>
     
     <div class="navbar-center">
-      <% if navbar_faction&.track_stats %>
+      <% if navbar_faction %>
         <div class="navbar-faction-dropdown" data-controller="dropdown">
           <button class="navbar-link navbar-link-button #{'navbar-link-active' if request.path.start_with?('/factions')}" data-action="click->dropdown#toggle">
             <%= viewing_other_faction? ? navbar_faction.name : "My Faction" %>
@@ -23,7 +23,7 @@
           </div>
         </div>
       <% else %>
-        <span class="navbar-link navbar-link-disabled" title="Join a tracked faction to access">My Faction</span>
+        <span class="navbar-link navbar-link-disabled" title="Set up your faction first">My Faction</span>
       <% end %>
       <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
       <% if Current.user&.admin? %>
@@ -66,7 +66,7 @@
       </button>
       <div class="navbar-mobile-menu" data-dropdown-target="menu">
         <div class="navbar-mobile-menu-section">
-          <% if navbar_faction&.track_stats %>
+          <% if navbar_faction %>
             <span class="navbar-mobile-menu-label"><%= viewing_other_faction? ? navbar_faction.name : "My Faction" %></span>
             <%= link_to "Dashboard", faction_path(navbar_faction), class: "navbar-mobile-menu-item navbar-mobile-menu-item-nested #{'active' if request.path == faction_path(navbar_faction)}" %>
             <% if navbar_faction.whitelisted?(Current.user) || Current.user&.admin? %>

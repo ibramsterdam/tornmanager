@@ -26,9 +26,20 @@ class SessionsController < ApplicationController
         level: profile.level,
         profile_image: profile.image
       )
+
+      # Assign user to their faction if it exists in our DB
+      torn_faction_id = key_info.user.faction_id
+      if torn_faction_id.present? && torn_faction_id > 0
+        faction = Faction.find_by(torn_id: torn_faction_id)
+        user.faction_id = faction.id if faction
+      end
+
       user.save!
 
       start_new_session_for user
+
+      # Store Torn faction ID in session for setup wizard (even if faction doesn't exist in DB yet)
+      session[:torn_faction_id] = torn_faction_id if torn_faction_id.present? && torn_faction_id > 0
 
       redirect_to after_authentication_url
     rescue TornApi::InvalidKeyError
