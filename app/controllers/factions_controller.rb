@@ -4,7 +4,9 @@ class FactionsController < ApplicationController
 
   SORTABLE_COLUMNS = %w[name xanax_daily energy_refills_daily nerve_refills_daily missions_daily crimes_daily activity_time_daily compliance_score].freeze
 
-  before_action :require_faction_member, only: [ :show, :war_data ]
+  before_action :require_faction_member, only: [ :war_data ]
+  before_action :find_faction_or_setup, only: [ :show ]
+  before_action :find_faction_for_setup, only: [ :create ]
 
   def index
     if Current.user.faction.present?
@@ -15,6 +17,12 @@ class FactionsController < ApplicationController
   end
 
   def show
+    # Setup wizard: faction doesn't exist in DB yet
+    if @setup_mode
+      @api_key_prefill = Current.user.has_limited_access? ? Current.user.api_key : nil
+      return render :setup
+    end
+
     unless @faction.track_stats
       @tracking_disabled = true
       return
@@ -23,6 +31,79 @@ class FactionsController < ApplicationController
     load_hero_data
     load_training_data
     load_war_data
+  end
+
+  def create
+    api_key = params[:api_key].to_s.strip
+    torn_faction_id = @torn_faction_id
+
+    # Validate the API key
+    begin
+      key_info = TornApi::Key::Info.new(api_key).fetch
+    rescue TornApi::InvalidKeyError
+      @error = "Invalid API key. Please check and try again."
+      return render :setup, status: :unprocessable_entity
+    end
+
+    # Must be Limited Access
+    unless key_info.access.type == "Limited Access"
+      @error = "This key is #{key_info.access.type}. A Limited Access key is required."
+      return render :setup, status: :unprocessable_entity
+    end
+
+    # Must belong to the current user
+    unless key_info.user.id == Current.user.torn_id
+      @error = "This API key does not belong to you."
+      return render :setup, status: :unprocessable_entity
+    end
+
+    # Must be for the correct faction
+    unless key_info.user.faction_id == torn_faction_id
+      @error = "This API key is for a different faction."
+      return render :setup, status: :unprocessable_entity
+    end
+
+    # Race condition: faction may have been created between show and create
+    faction = Faction.find_by(torn_id: torn_faction_id)
+
+    unless faction
+      # Fetch faction name from Torn API
+      begin
+        faction_data = TornApi::Faction::Basic.new(api_key, torn_faction_id).fetch
+        faction_name = faction_data["name"]
+      rescue StandardError => e
+        @error = "Could not fetch faction info: #{e.message}"
+        return render :setup, status: :unprocessable_entity
+      end
+
+      faction = Faction.create!(torn_id: torn_faction_id, name: faction_name)
+    end
+
+    # Create faction setting with the API key
+    setting = faction.faction_setting || faction.build_faction_setting
+    setting.update!(torn_api_key: api_key, torn_api_access_type: "Limited Access")
+
+    # Assign user to faction
+    Current.user.update!(faction_id: faction.id)
+
+    # Grant leadership access to the setup user
+    faction.faction_whitelists.find_or_create_by!(user: Current.user)
+
+    # Sync faction members (synchronous — fast, single API call)
+    SyncFactionMembersJob.perform_now(faction.id)
+
+    # Queue background jobs
+    BackfillRankedWarsJob.perform_later(faction.id)
+    BackfillPersonalStatsJob.perform_later(
+      faction.id,
+      PersonalStatSnapshot.tracking_start_date.to_s,
+      Date.yesterday.to_s
+    )
+
+    # Clear the session flag
+    session.delete(:torn_faction_id)
+
+    redirect_to faction_path(faction), notice: "Your faction has been set up. Welcome to TornManager!"
   end
 
   def war_data
@@ -38,6 +119,36 @@ class FactionsController < ApplicationController
   helper_method :sort_link
 
   private
+
+  def find_faction_or_setup
+    torn_id = params[:torn_id]
+    @faction = Faction.find_by(torn_id: torn_id)
+
+    if @faction
+      # Normal dashboard — check membership
+      unless Current.user.admin? || Current.user.faction == @faction
+        redirect_to root_path, alert: "You don't have access to this faction."
+      end
+    elsif session[:torn_faction_id].to_s == torn_id.to_s
+      # Faction not in DB, but this is the user's own faction — show setup wizard
+      @setup_mode = true
+      @torn_faction_id = session[:torn_faction_id]
+    else
+      redirect_to root_path, alert: "Faction not found."
+    end
+  end
+
+  def find_faction_for_setup
+    torn_id = params[:torn_id]
+
+    # Must have this faction in session
+    unless session[:torn_faction_id].to_s == torn_id.to_s
+      redirect_to root_path, alert: "You cannot set up this faction."
+      return
+    end
+
+    @torn_faction_id = session[:torn_faction_id]
+  end
 
   def load_hero_data
     # Member count

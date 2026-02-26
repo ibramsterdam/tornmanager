@@ -12,12 +12,9 @@ Rails.application.routes.draw do
   resource :session
   resources :stocks, only: [ :index ]
 
-  # Faction setup wizard (before faction exists in DB)
-  get "factions/setup", to: "factions/setup#show", as: :faction_setup
-  post "factions/setup", to: "factions/setup#create"
-
   resources :factions, only: [ :index, :show ], param: :torn_id do
     member do
+      post :setup, action: :create
       get :war_data
     end
 

@@ -99,4 +99,157 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     get factions_path
     assert_redirected_to root_path
   end
+
+  # -- Setup wizard (faction not in DB) --
+
+  test "shows setup wizard when faction not in DB and torn_faction_id in session" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    get faction_path(torn_id: 55555)
+    assert_response :success
+    assert_select "h1", "Set Up Your Faction"
+    assert_select ".setup-info-list li", 4
+  end
+
+  test "redirects to root when faction not in DB and torn_faction_id does not match" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    get faction_path(torn_id: 77777)
+    assert_redirected_to root_path
+  end
+
+  test "shows dashboard when faction exists in DB even with setup session" do
+    sign_in_with_faction_id(@bert, @faction.torn_id)
+
+    get faction_path(@faction)
+    assert_response :success
+    assert_select ".dashboard-hero"
+  end
+
+  test "prefills api key on setup when user has limited access" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555, access_type: "Limited Access")
+
+    get faction_path(torn_id: 55555)
+    assert_response :success
+    assert_select "input[value='#{@bert.api_key}']"
+  end
+
+  # -- Setup create: validation errors --
+
+  test "setup shows error for invalid api key" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+    TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "BAD_KEY" }
+    assert_response :unprocessable_entity
+    assert_select ".setup-error", /Invalid API key/
+  end
+
+  test "setup shows error when key is not limited access" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    minimal_key = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 1, type: "Public Only", faction: false, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(minimal_key)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "PUBLIC_KEY" }
+    assert_response :unprocessable_entity
+    assert_select ".setup-error", /Limited Access key is required/
+  end
+
+  test "setup shows error when key belongs to different user" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    other_user_key = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 55555, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(other_user_key)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "OTHER_KEY" }
+    assert_response :unprocessable_entity
+    assert_select ".setup-error", /does not belong to you/
+  end
+
+  test "setup shows error when key is for different faction" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    wrong_faction_key = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 99999, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(wrong_faction_key)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "WRONG_FACTION_KEY" }
+    assert_response :unprocessable_entity
+    assert_select ".setup-error", /different faction/
+  end
+
+  # -- Setup create: success --
+
+  test "setup creates faction, setting, whitelist and queues jobs" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+    TornApi::Faction::Basic.any_instance.stubs(:fetch).returns({ "name" => "New Faction" })
+    SyncFactionMembersJob.stubs(:perform_now)
+
+    assert_difference "Faction.count", 1 do
+      assert_difference "FactionSetting.count", 1 do
+        assert_difference "FactionWhitelist.count", 1 do
+          post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+        end
+      end
+    end
+
+    faction = Faction.find_by(torn_id: 55555)
+    assert_not_nil faction
+    assert_equal "New Faction", faction.name
+    assert faction.track_stats
+
+    assert_equal "VALID_LIMITED_KEY", faction.faction_setting.torn_api_key
+    assert_equal "Limited Access", faction.faction_setting.torn_api_access_type
+
+    assert_equal faction.id, @bert.reload.faction_id
+    assert faction.faction_whitelists.exists?(user: @bert)
+
+    assert_redirected_to faction_path(faction)
+    assert_match /Welcome to TornManager/, flash[:notice]
+  end
+
+  test "setup handles race condition when faction created between show and create" do
+    @bert.update!(faction: nil)
+    sign_in_with_faction_id(@bert, 55555)
+
+    existing = Faction.create!(torn_id: 55555, name: "Race Condition Faction", track_stats: true, xanax_target: 2.5)
+
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+    SyncFactionMembersJob.stubs(:perform_now)
+
+    assert_no_difference "Faction.count" do
+      post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+    end
+
+    assert_equal existing.id, @bert.reload.faction_id
+    assert existing.faction_whitelists.exists?(user: @bert)
+    assert_redirected_to faction_path(existing)
+  end
 end
