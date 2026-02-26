@@ -394,11 +394,48 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert leader.reload.subscribed?, "Leader should have a subscription"
     assert member.reload.subscribed?, "Member should have a subscription"
 
-    # All should expire around 14 days from now
+    # All should expire around 14 days from now and have trial_granted_at set
     [ @bert, leader, member ].each do |user|
       assert_in_delta 14.days.from_now.to_i, user.subscription_expires_at.to_i, 5,
         "#{user.name} subscription should expire in ~14 days"
+      assert_not_nil user.trial_granted_at, "#{user.name} should have trial_granted_at set"
     end
+  end
+
+  test "setup does not re-grant trial to users who already received one" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    # Member already received trial previously
+    existing_expiry = 3.days.from_now
+    member = User.create!(
+      torn_id: 222222, name: "OldMember", level: 30, faction: setup_faction,
+      trial_granted_at: 10.days.ago, subscription_expires_at: existing_expiry
+    )
+    # New member never received trial
+    new_member = User.create!(torn_id: 333333, name: "NewMember", level: 20, faction: setup_faction)
+    @bert.update!(faction: setup_faction, subscription_expires_at: nil, trial_granted_at: nil)
+    sign_in_as(@bert)
+
+    stub_valid_key_info(@bert, 55555)
+    stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Member"),
+      build_member(member.torn_id, member.name, member.level, "Member"),
+      build_member(new_member.torn_id, new_member.name, new_member.level, "Member")
+    ])
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+
+    # Bert and new_member should get the trial
+    assert @bert.reload.subscribed?, "Bert should have a subscription"
+    assert_not_nil @bert.trial_granted_at
+    assert new_member.reload.subscribed?, "New member should have a subscription"
+    assert_not_nil new_member.trial_granted_at
+
+    # Existing member should keep their original subscription, NOT get a new 14-day trial
+    member.reload
+    assert_in_delta existing_expiry.to_i, member.subscription_expires_at.to_i, 5,
+      "Existing member's subscription should not be overwritten"
   end
 
   test "setup whitelists Leaders and Co-leaders from faction members API" do
