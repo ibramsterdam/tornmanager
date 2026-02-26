@@ -108,7 +108,7 @@
         <p class="leadership-settings-description">Share your subscription time with faction members.</p>
         
         <div class="leadership-subscription-info">
-          <span>Your balance: <strong><%= @subscription_weeks_remaining %> weeks</strong></span>
+          <span>Your balance: <strong><%= pluralize(@subscription_weeks_remaining, "week") %></strong></span>
           <span>Faction members: <strong><%= @faction_member_count %></strong></span>
         </div>
 
@@ -134,7 +134,7 @@
               <%= form.hidden_field :total_weeks, value: 0, data: { share_subscription_target: "hidden" } %>
               <div class="leadership-share-labels">
                 <span>0</span>
-                <span><%= max_total %> weeks</span>
+                <span><%= pluralize(max_total, "week") %></span>
               </div>
             </div>
             <p class="leadership-share-preview" data-share-subscription-target="preview">

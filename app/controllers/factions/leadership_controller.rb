@@ -302,8 +302,6 @@ class Factions::LeadershipController < ApplicationController
   end
 
   def load_wars_data
-    refresh_latest_wars
-
     @wars = @faction.ranked_wars.recent.includes(:faction)
 
     current_year_wars = @wars.completed.where(started_at: Date.current.beginning_of_year..)

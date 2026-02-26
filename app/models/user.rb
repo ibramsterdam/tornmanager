@@ -34,7 +34,7 @@ class User < ApplicationRecord
 
   def subscription_weeks_remaining
     return 0 unless subscribed?
-    ((subscription_expires_at - Time.current) / 1.week).floor
+    ((subscription_expires_at - Time.current) / 1.week).round
   end
 
   def extend_subscription!(weeks)

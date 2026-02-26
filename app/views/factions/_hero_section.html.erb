@@ -80,7 +80,7 @@
           <h3>Top Performers Last Week</h3>
           <span class="dashboard-performers-period"><%= @week_start.strftime("%b %d") %> - <%= @week_end.strftime("%b %d, %Y") %></span>
         </div>
-        <% if @weekly_top_performers.any? %>
+        <% if @weekly_top_performers.any? && !@faction.backfill_in_progress? %>
           <button type="button"
                   class="dashboard-performers-copy"
                   data-controller="clipboard"
