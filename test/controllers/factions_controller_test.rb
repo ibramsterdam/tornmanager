@@ -305,17 +305,14 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     @bert.update!(faction: setup_faction)
     sign_in_as(@bert)
 
-    key_info = TornApi::Key::Info::InfoData.new(
-      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
-      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
-    )
-    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+    stub_valid_key_info(@bert, 55555)
+    stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Member")
+    ])
 
     assert_no_difference "Faction.count" do
       assert_difference "FactionSetting.count", 1 do
-        assert_difference "FactionWhitelist.count", 1 do
-          post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
-        end
+        post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
       end
     end
 
@@ -336,11 +333,10 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     @bert.update!(faction: setup_faction)
     sign_in_as(@bert)
 
-    key_info = TornApi::Key::Info::InfoData.new(
-      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
-      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
-    )
-    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+    stub_valid_key_info(@bert, 55555)
+    stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Member")
+    ])
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
 
@@ -372,5 +368,88 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: @faction.torn_id), params: { api_key: "VALID_LIMITED_KEY" }
     assert_redirected_to root_path
+  end
+
+  # -- Setup: subscription trial and leadership whitelist --
+
+  test "setup grants 14-day trial subscription to all faction members" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    leader = User.create!(torn_id: 111111, name: "Leader", level: 50, faction: setup_faction)
+    member = User.create!(torn_id: 222222, name: "Member", level: 30, faction: setup_faction)
+    @bert.update!(faction: setup_faction, subscription_expires_at: nil)
+    sign_in_as(@bert)
+
+    stub_valid_key_info(@bert, 55555)
+    stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Member"),
+      build_member(leader.torn_id, leader.name, leader.level, "Leader"),
+      build_member(member.torn_id, member.name, member.level, "Member")
+    ])
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+
+    assert @bert.reload.subscribed?, "Setup user should have a subscription"
+    assert leader.reload.subscribed?, "Leader should have a subscription"
+    assert member.reload.subscribed?, "Member should have a subscription"
+
+    # All should expire around 14 days from now
+    [ @bert, leader, member ].each do |user|
+      assert_in_delta 14.days.from_now.to_i, user.subscription_expires_at.to_i, 5,
+        "#{user.name} subscription should expire in ~14 days"
+    end
+  end
+
+  test "setup whitelists Leaders and Co-leaders from faction members API" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    leader = User.create!(torn_id: 111111, name: "TheLeader", level: 80, faction: setup_faction)
+    co_leader = User.create!(torn_id: 333333, name: "TheCoLeader", level: 70, faction: setup_faction)
+    regular = User.create!(torn_id: 222222, name: "Regular", level: 30, faction: setup_faction)
+    @bert.update!(faction: setup_faction)
+    sign_in_as(@bert)
+
+    stub_valid_key_info(@bert, 55555)
+    stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Member"),
+      build_member(leader.torn_id, leader.name, leader.level, "Leader"),
+      build_member(co_leader.torn_id, co_leader.name, co_leader.level, "Co-leader"),
+      build_member(regular.torn_id, regular.name, regular.level, "Member")
+    ])
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
+
+    # Setup user, leader, and co-leader should be whitelisted
+    assert setup_faction.faction_whitelists.exists?(user: @bert), "Setup user should be whitelisted"
+    assert setup_faction.faction_whitelists.exists?(user: leader), "Leader should be whitelisted"
+    assert setup_faction.faction_whitelists.exists?(user: co_leader), "Co-leader should be whitelisted"
+    assert_not setup_faction.faction_whitelists.exists?(user: regular), "Regular member should NOT be whitelisted"
+  end
+
+  private
+
+  def stub_valid_key_info(user, faction_torn_id)
+    key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: user.torn_id, faction_id: faction_torn_id, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
+  end
+
+  def stub_faction_members_api(api_key, faction_torn_id, members)
+    members_api = mock
+    members_api.stubs(:fetch).returns(members)
+    TornApi::Faction::Members.stubs(:new).with(api_key, faction_torn_id).returns(members_api)
+  end
+
+  def build_member(torn_id, name, level, position)
+    TornApi::Faction::Members::Member.new(
+      torn_id, name, level, 100,
+      "Online", Time.current.to_i, "0 seconds ago",
+      "Okay", "", "Okay", "green", 0, nil,
+      "Everyone", position, true, false, false, false
+    )
   end
 end
