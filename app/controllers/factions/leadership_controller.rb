@@ -6,7 +6,7 @@ class Factions::LeadershipController < ApplicationController
 
   before_action :require_setup_completed, except: [ :setup, :complete_setup ]
   before_action :require_faction_whitelisted, except: [ :setup, :complete_setup, :share_subscription ]
-  before_action :require_faction_leader, only: [ :setup, :complete_setup, :update_keys, :delete_torn_key, :delete_tornstats_key, :add_whitelist, :remove_whitelist, :import_spies ]
+  before_action :require_faction_leader, only: [ :setup, :complete_setup, :update_keys, :delete_torn_key, :delete_tornstats_key, :add_whitelist, :remove_whitelist, :import_spies, :delete_faction_data ]
   before_action :require_faction_whitelisted, only: [ :share_subscription ]
   before_action :require_api_keys_configured, only: [ :show ]
   before_action :check_tracking_enabled
@@ -17,6 +17,7 @@ class Factions::LeadershipController < ApplicationController
     load_wars_data
     load_spy_stats_data
     load_settings_data
+    load_data_coverage
   end
 
   def setup
@@ -282,7 +283,75 @@ class Factions::LeadershipController < ApplicationController
     end
   end
 
+  def delete_faction_data
+    user_ids = @faction.users.pluck(:id)
+
+    ActiveRecord::Base.transaction do
+      # Stop war polling
+      @faction.stop_war_polling! if @faction.war_polling_active?
+
+      # Clear backfill status
+      @faction.clear_backfill_status! if @faction.backfill_in_progress?
+
+      # Delete personal stat snapshots for all faction members
+      PersonalStatSnapshot.where(user_id: user_ids).delete_all if user_ids.any?
+
+      # Delete spy reports (faction-scoped)
+      @faction.spy_reports.delete_all
+
+      # Delete ranked wars
+      @faction.ranked_wars.delete_all
+
+      # Clear whitelist
+      @faction.faction_whitelists.delete_all
+
+      # Delete API keys (destroy the faction_setting)
+      @faction.faction_setting&.destroy!
+
+      # Mark setup as incomplete and disable stat tracking
+      @faction.update!(setup_completed: false, track_stats: false)
+    end
+
+    # Cancel scheduled Solid Queue jobs for this faction (outside transaction — separate DB)
+    cancel_faction_jobs(user_ids)
+
+    redirect_to faction_path(@faction), notice: "All faction data has been deleted. Subscription time has been preserved."
+  rescue => e
+    Rails.logger.error("Delete faction data failed for faction #{@faction.torn_id}: #{e.class} - #{e.message}")
+    redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Failed to delete faction data: #{e.message}"
+  end
+
   private
+
+  def cancel_faction_jobs(user_ids)
+    faction_id = @faction.id
+
+    # Jobs with faction_id as first argument
+    SolidQueue::Job
+      .where(finished_at: nil)
+      .where(class_name: %w[
+        BackfillPersonalStatsJob
+        BackfillRankedWarsJob
+        ClearBackfillStatusJob
+        WarPollingJob
+      ])
+      .where("arguments LIKE ?", "%\"arguments\":[#{faction_id},%")
+      .destroy_all
+
+    # BackfillSingleStatJob / BackfillUserStatsJob — user_id as first argument
+    if user_ids.any?
+      SolidQueue::Job
+        .where(finished_at: nil)
+        .where(class_name: %w[BackfillSingleStatJob BackfillUserStatsJob])
+        .where(user_ids.map { |uid| "arguments LIKE '%\"arguments\":[#{uid},%'" }.join(" OR "))
+        .destroy_all
+    end
+
+    # Clean up war polling concurrency semaphore
+    SolidQueue::Semaphore.where(key: "war_polling_faction_#{faction_id}").delete_all
+  rescue => e
+    Rails.logger.warn("Failed to cancel faction jobs for faction #{@faction.torn_id}: #{e.class} - #{e.message}")
+  end
 
   def check_tracking_enabled
     return if performed?
@@ -331,6 +400,37 @@ class Factions::LeadershipController < ApplicationController
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
     @faction_member_count = @faction.users.active.count
     @war_polling_active = @faction.war_polling_active?
+  end
+
+  def load_data_coverage
+    faction_user_ids = @faction.users.active.pluck(:id)
+
+    if faction_user_ids.empty?
+      @data_coverage_rate = 0.0
+      @data_missing_yesterday = 0
+      @data_total_missing_days = 0
+      return
+    end
+
+    start_date = PersonalStatSnapshot.tracking_start_date
+    end_date = PersonalStatSnapshot.tracking_end_date
+    expected_days = (start_date..end_date).count
+
+    total_expected = faction_user_ids.size * expected_days
+    total_existing = PersonalStatSnapshot
+      .where(user_id: faction_user_ids)
+      .where(date: start_date..end_date)
+      .count
+
+    @data_coverage_rate = total_expected > 0 ? (total_existing.to_f / total_expected * 100).round(1) : 0.0
+
+    yesterday_user_ids = PersonalStatSnapshot
+      .where(user_id: faction_user_ids, date: Date.yesterday)
+      .distinct
+      .pluck(:user_id)
+    @data_missing_yesterday = faction_user_ids.size - yesterday_user_ids.size
+
+    @data_total_missing_days = total_expected - total_existing
   end
 
   def refresh_latest_wars

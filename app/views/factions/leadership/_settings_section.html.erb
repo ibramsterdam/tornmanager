@@ -146,6 +146,33 @@
           <% end %>
         <% end %>
       </div>
+
+      <!-- Coming Soon Card -->
+      <div class="leadership-settings-card leadership-settings-card-muted">
+        <h3>Coming Soon</h3>
+        <p class="leadership-settings-description">More features are on the way. Stay tuned for updates.</p>
+      </div>
+
+      <!-- Delete Faction Data Card -->
+      <div class="leadership-settings-card leadership-settings-card-danger">
+        <h3 class="leadership-danger-title">Delete Faction Data</h3>
+        <p class="leadership-settings-description">This will permanently delete:</p>
+        <ul class="leadership-danger-list">
+          <li>All personal stat snapshots for faction members</li>
+          <li>All spy reports collected for this faction</li>
+          <li>All ranked war history</li>
+          <li>The faction API keys</li>
+          <li>The leadership whitelist</li>
+        </ul>
+        <p class="leadership-danger-preserve">
+          <strong>Subscription time will NOT be revoked.</strong> Members keep their remaining subscription. You can set up the faction again at any time.
+        </p>
+        <%= button_to "Delete Collected Data",
+            delete_faction_data_faction_leadership_path(@faction),
+            method: :delete,
+            class: "btn btn-danger",
+            data: { turbo_confirm: "Are you sure? This will permanently delete all faction data. This action cannot be undone." } %>
+      </div>
     </div>
   </div>
 </section>
