@@ -38,7 +38,7 @@
       </ul>
     </div>
 
-    <%= form_with url: faction_setup_path, method: :post, class: "setup-form" do |form| %>
+    <%= form_with url: setup_faction_path(torn_id: @torn_faction_id), method: :post, class: "setup-form" do |form| %>
       <div class="setup-fields">
         <div class="setup-field">
           <label class="setup-label">
