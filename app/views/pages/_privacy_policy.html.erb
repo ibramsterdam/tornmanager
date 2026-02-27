@@ -1,11 +1,8 @@
-<div class="page-header">
-  <h1>Privacy Policy</h1>
-  <p class="page-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
-</div>
-
-<div class="content-wrapper">
+<div class="legal-document" id="privacy-policy">
+  <h1 class="legal-document-title">Privacy Policy</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
   <section class="content-section">
-    <h2>Introduction</h2>
+    <h2 id="pp-introduction">Introduction</h2>
     <p>
       Hi, I'm Bram, the creator of TornManager. I respect your privacy and am committed to protecting your personal information. 
       This Privacy Policy explains how I collect, use, and safeguard your data when you use my service.
@@ -13,38 +10,58 @@
     <p>
       TornManager is available as a web application at tornmanager.com and as a browser userscript that runs on Torn.com.
       Both use the same backend and this policy applies equally to both.
-      The userscript stores your user profile locally in your browser's localStorage and communicates with tornmanager.com to authenticate your API key.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>Information I Collect</h2>
+    <h2 id="pp-information-i-collect">Information I Collect</h2>
     <p>
-      When you sign in, you provide your Torn API key. I securely store this key in my database and use it 
-      exclusively to fetch your personal game data from Torn's official API. I require a minimum of Public Only level 
-      permissions. Limited Access is required for stock portfolio features.
+      When you sign in (either on the web application or through the browser userscript), you provide your 
+      Torn API key. I securely store this key in my database and use it to fetch your game data from Torn's 
+      official API. I require a minimum of Public Only level permissions. Limited Access is required for stock 
+      portfolio features.
     </p>
     <div class="data-collection-cards">
       <div class="data-card">
-        <h4>Your API Key</h4>
+        <h4>Your Account</h4>
         <ul>
+          <li>Torn API key</li>
           <li>Torn user ID, name, and level</li>
           <li>Stock portfolio information</li>
-          <li>Faction API key (if you are a faction leader and choose to provide one)</li>
         </ul>
       </div>
       <div class="data-card">
-        <h4>Application</h4>
+        <h4>Personal Data</h4>
         <ul>
           <li>Personal statistics (stat enhancer usage, networth, energy drinks, etc.)</li>
           <li>Daily snapshots for historical tracking</li>
           <li>Xanax payments sent</li>
-          <li>Faction grants received</li>
+          <li>Subscription expiration dates</li>
+        </ul>
+      </div>
+      <div class="data-card">
+        <h4>Faction Data</h4>
+        <ul>
           <li>Faction member statistics (for tracked factions)</li>
           <li>Faction ranked war history and member performance</li>
-          <li>Spy reports for enemy faction members (battle stat estimates from TornStats)</li>
           <li>Faction whitelist settings (which factions can view your faction's data)</li>
-          <li>Subscription expiration dates</li>
+          <li>TornStats API key</li>
+        </ul>
+      </div>
+      <div class="data-card">
+        <h4>Live War Data (Temporary)</h4>
+        <ul>
+          <li>Enemy faction member status (okay, hospital, traveling, abroad, jail)</li>
+          <li>Enemy hospital countdown timers</li>
+          <li>Enemy travel destinations and abroad locations</li>
+          <li>Enemy online/idle/offline activity and last action timestamps</li>
+          <li>Spy reports for enemy faction members (battle stat estimates)</li>
+          <li>War scores and target scores</li>
+        </ul>
+      </div>
+      <div class="data-card">
+        <h4>Technical Data</h4>
+        <ul>
           <li>IP address</li>
           <li>Browser type and version</li>
           <li>Pages visited and features used</li>
@@ -52,10 +69,15 @@
         </ul>
       </div>
     </div>
+    <p>
+      Live war data is cached temporarily on the server (refreshed every 6 seconds during active wars) and is 
+      not permanently stored. It is discarded when the war ends or polling stops. All other data is stored 
+      persistently as described in the Data Retention section.
+    </p>
   </section>
 
   <section class="content-section">
-    <h2>How I Use Your Information</h2>
+    <h2 id="pp-how-i-use-your-information">How I Use Your Information</h2>
     <p>I use the collected information for the following purposes:</p>
     <ul>
       <li><strong>Service Provision:</strong> To provide and maintain TornManager's features, including progress tracking, statistics analysis, and stock investment recommendations</li>
@@ -67,7 +89,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Data Sharing and Disclosure</h2>
+    <h2 id="pp-data-sharing">Data Sharing and Disclosure</h2>
     <p>
       <strong>I do not share, sell, or disclose your personal data to third parties.</strong> Your Torn API key 
       and game data remain private and are only accessible to you when logged in.
@@ -82,10 +104,10 @@
   </section>
 
   <section class="content-section">
-    <h2>Data Security</h2>
+    <h2 id="pp-data-security">Data Security</h2>
     <p>
       I implement appropriate security measures to protect your information from unauthorized access, alteration, 
-      disclosure, or destruction. Your Torn API key is stored securely in my encrypted database and transmitted 
+      disclosure, or destruction. Your Torn API key is stored in my database and transmitted 
       over secure HTTPS connections.
     </p>
     <p>
@@ -101,7 +123,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Data Retention</h2>
+    <h2 id="pp-data-retention">Data Retention</h2>
     <p>
       I retain your data as long as your account is active. Historical statistics are maintained to provide 
       long-term progress tracking and trend analysis.
@@ -150,12 +172,12 @@
           </tr>
           <tr>
             <td>Faction ranked war data</td>
-            <td>Indefinitely</td>
+            <td>Until faction is removed from tracking</td>
             <td>Historical war performance tracking</td>
           </tr>
           <tr>
             <td>Enemy spy reports</td>
-            <td>Until war ends or data becomes stale</td>
+            <td>Until faction is removed from tracking</td>
             <td>Live war tactical information</td>
           </tr>
           <tr>
@@ -199,7 +221,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Your API Key Security</h2>
+    <h2 id="pp-api-key-security">Your API Key Security</h2>
     <p>
       <strong>Important:</strong> Your Torn API key grants access to your game data. Please follow these best practices:
     </p>
@@ -214,7 +236,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Torn API Usage & Compliance</h2>
+    <h2 id="pp-api-usage">Torn API Usage & Compliance</h2>
     <p>
       TornManager is built in accordance with the Torn API Terms of Service. I use the Torn API to provide 
       gameplay enhancement features while ensuring fair play and data security.
@@ -237,7 +259,7 @@
             <td>Persistent - until account deletion</td>
             <td>Nobody (data is private to you)</td>
             <td>Track personal progress, statistics, and stock investments</td>
-            <td>Stored securely / Used only for automation</td>
+            <td>Stored in database / Used only for automation</td>
             <td>Public Only (minimum); Limited Access (for stock features)</td>
           </tr>
         </tbody>
@@ -354,6 +376,72 @@
       </table>
     </div>
 
+    <h3>Faction API Calls (Torn)</h3>
+    <p>These endpoints are called using the faction's Torn API key, provided by the faction leader during setup. This key is used for faction-specific data that requires faction-level API access:</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>v2/faction/{id}/members</code></td>
+            <td>Fetch enemy faction members during live ranked wars (status, hospital timers, travel info, online activity)</td>
+            <td>Every 6 seconds during active war polling</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{id}/rankedwars</code></td>
+            <td>Refresh current war scores; backfill ranked war history</td>
+            <td>On war page load; once during faction setup</td>
+          </tr>
+          <tr>
+            <td><code>v2/faction/{war_id}/rankedwarreport</code></td>
+            <td>Fetch detailed war reports with member performance data</td>
+            <td>Once per completed war during backfill</td>
+          </tr>
+          <tr>
+            <td><code>v2/user/{id}/personalstats</code></td>
+            <td>Backfill historical personal statistics for faction members</td>
+            <td>Once per member per day during initial backfill</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      If no faction API key is configured, some of these calls fall back to the application's owner API key. 
+      The faction API key is never used for non-faction purposes.
+    </p>
+
+    <h3>Faction API Calls (TornStats)</h3>
+    <p>These requests are made using the faction's TornStats API key, optionally provided by the faction leader. This key is only used for importing spy reports:</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>api/v2/{key}/spy/faction/{id}</code></td>
+            <td>Import spy reports (battle stat estimates) for enemy faction members</td>
+            <td>On-demand when a faction leader triggers a spy import</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      Spy data retrieved includes estimated battle stats (strength, defense, speed, dexterity, total) and the 
+      spy report timestamp. This data is stored in the TornManager database and displayed during ranked wars. 
+      No data is sent to TornStats — only publicly available spy information is retrieved.
+    </p>
+
     <h3>API Request Identification</h3>
     <p>
       All API requests made by TornManager include the comment parameter <code class="highlight-pulse">tmanager</code> to identify 
@@ -384,7 +472,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Cookies and Tracking</h2>
+    <h2 id="pp-cookies">Cookies and Tracking</h2>
     <p>
       I use essential cookies to maintain your login session. These cookies are necessary for the service to 
       function and cannot be disabled.
@@ -397,7 +485,76 @@
   </section>
 
   <section class="content-section">
-    <h2>Faction Data Sharing</h2>
+    <h2 id="pp-browser-userscript">Browser Userscript</h2>
+    <p>
+      The TornManager browser userscript (installed via Tampermonkey or Greasemonkey) runs directly on Torn.com 
+      and enhances the game interface with additional information. The userscript communicates with the TornManager 
+      backend at tornmanager.com and stores a small amount of data locally in your browser.
+    </p>
+
+    <h3>Local Storage (Browser)</h3>
+    <p>The userscript stores the following data in your browser's localStorage on the torn.com domain:</p>
+    <ul>
+      <li><strong>User profile and API key</strong> (<code>tm_user</code>) — Your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript settings.</li>
+      <li><strong>Error log</strong> (<code>tm_errors</code>) — Up to 50 error entries for debugging purposes, including timestamps and error messages. You can copy or clear these from the userscript settings panel.</li>
+      <li><strong>UI state</strong> (<code>tm_open_popover</code>) — The ID of any currently open player detail popover, so it persists across data refreshes. Removed when the popover is closed.</li>
+    </ul>
+
+    <h3>Backend Communication</h3>
+    <p>The userscript makes the following requests to tornmanager.com using <code>GM.xmlHttpRequest</code> (which bypasses standard browser CORS restrictions):</p>
+    <div class="tos-table">
+      <table>
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Purpose</th>
+            <th>Frequency</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>POST /api/session</code></td>
+            <td>Authenticate your Torn API key and retrieve your user profile</td>
+            <td>Once when you sign in</td>
+          </tr>
+          <tr>
+            <td><code>POST /api/subscription</code></td>
+            <td>Check your subscription status and expiration date</td>
+            <td>When opening the settings panel; on manual refresh</td>
+          </tr>
+          <tr>
+            <td><code>POST /api/current_war</code></td>
+            <td>Fetch live war data including enemy member status, battle stats, hospital timers, and online indicators</td>
+            <td>Every 6 seconds while viewing the ranked war page; once when opening the settings panel</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      All requests include your API key for authentication. The userscript does not send any other data to the backend.
+      No data is sent to any third party — all communication is exclusively between your browser and tornmanager.com.
+    </p>
+
+    <h3>War Page Enhancement</h3>
+    <p>
+      When you visit Torn's ranked war page, the userscript modifies the page to display additional information 
+      about enemy faction members. This includes:
+    </p>
+    <ul>
+      <li>Estimated battle stats from spy reports (sourced from the TornManager backend)</li>
+      <li>Hospital countdown timers and status indicators</li>
+      <li>Travel destinations and abroad locations</li>
+      <li>Online/Idle/Offline activity indicators with relative timestamps</li>
+      <li>A settings panel overlay showing war overview (score, enemy status breakdown, online activity)</li>
+    </ul>
+    <p>
+      This data is fetched from the TornManager backend (which aggregates it from the Torn API and spy report sources) 
+      and is displayed only to you in your browser. The userscript does not share this information with anyone else.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="pp-faction-data-sharing">Faction Data Sharing</h2>
     <p>
       TornManager includes features that allow controlled sharing of faction data between factions:
     </p>
@@ -413,7 +570,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Third-Party Data (Spy Reports)</h2>
+    <h2 id="pp-spy-reports">Third-Party Data (Spy Reports)</h2>
     <p>
       During live ranked wars, TornManager stores and displays spy reports for enemy faction members. This data includes:
     </p>
@@ -421,17 +578,23 @@
       <li>Estimated battle stats (strength, speed, defense, dexterity)</li>
       <li>Spy report timestamp and source</li>
       <li>Player status and hospital timers</li>
+      <li>Online activity and last seen timestamps</li>
+      <li>Travel destinations and abroad locations</li>
     </ul>
     <p>
-      This information is sourced from the TornStats API and represents publicly available spy data. 
-      It is used solely to assist faction members during ranked wars and is cached temporarily. 
+      This information is sourced from the TornStats API and the Torn API, and represents publicly available spy data. 
+      It is used solely to assist faction members during ranked wars and is displayed both on the TornManager web 
+      application and through the browser userscript's war page overlay. The data is cached temporarily on the server 
+      (refreshed every 6 seconds during active wars) and is not permanently stored.
+    </p>
+    <p>
       If you are an enemy faction member whose data is displayed, this data is retrieved from public 
       sources and is not obtained through any unauthorized means.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>Third-Party Services</h2>
+    <h2 id="pp-third-party-services">Third-Party Services</h2>
     <p>TornManager integrates with the following third-party services:</p>
     <ul>
       <li><strong>Torn API:</strong> The official Torn.com API is used to fetch your game data. Your information is shared with Torn's servers only when fetching updates via the API.</li>
@@ -442,7 +605,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Age Requirement</h2>
+    <h2 id="pp-age-requirement">Age Requirement</h2>
     <p>
       TornManager is intended for users of Torn.com. In accordance with Torn's Terms of Service, you must be 
       at least 13 years old to use this service. I do not knowingly collect information from children under 13. 
@@ -451,7 +614,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Changes to This Privacy Policy</h2>
+    <h2 id="pp-changes">Changes to This Privacy Policy</h2>
     <p>
       I may update this Privacy Policy from time to time. I will notify users of any material changes by 
       updating the "Last updated" date at the top of this policy. Your continued use of TornManager after 
@@ -460,7 +623,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Contact Me</h2>
+    <h2 id="pp-contact">Contact Me</h2>
     <p>
       If you have questions about this Privacy Policy or how I handle your data, please reach out to me on Torn:
     </p>

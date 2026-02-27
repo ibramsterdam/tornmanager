@@ -1,19 +1,16 @@
-<div class="page-header">
-  <h1>Terms of Service</h1>
-  <p class="page-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
-</div>
-
-<div class="content-wrapper">
+<div class="legal-document" id="terms-of-service">
+  <h1 class="legal-document-title">Terms of Service</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
   <section class="content-section">
-    <h2>Acceptance of Terms</h2>
+    <h2 id="tos-acceptance">Acceptance of Terms</h2>
     <p>
       By accessing and using TornManager, you accept and agree to be bound by these Terms of Service and my 
-      <%= link_to "Privacy Policy", privacy_policy_path %>. If you do not agree to these terms, please do not use my service.
+      <a href="#privacy-policy">Privacy Policy</a>. If you do not agree to these terms, please do not use my service.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>Description of Service</h2>
+    <h2 id="tos-description">Description of Service</h2>
     <p>
       TornManager is a tool I created for players of Torn.com, available as a web application at tornmanager.com
       and as a browser userscript that runs directly on Torn.com. My service uses the official Torn API to help you:
@@ -26,6 +23,8 @@
       <li>Monitor faction member training compliance (for tracked factions)</li>
       <li>View faction ranked war history and member performance</li>
       <li>View live war dashboards with enemy status and spy data during ranked wars</li>
+      <li>Enhance Torn's ranked war page with real-time enemy stats, hospital timers, travel info, and online indicators (via the browser userscript)</li>
+      <li>View war overview status (score, enemy breakdown) from anywhere on Torn.com (via the browser userscript)</li>
       <li>Configure faction whitelists for controlled data sharing between factions</li>
       <li>Share subscription time with faction members (faction leaders only)</li>
     </ul>
@@ -36,7 +35,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Torn API Terms of Service Compliance</h2>
+    <h2 id="tos-api-compliance">Torn API Terms of Service Compliance</h2>
     <p>
       I built TornManager in full compliance with Torn's API Terms of Service. Below is my complete disclosure 
       of how I use your API key and data:
@@ -59,7 +58,7 @@
             <td>Persistent - until account deletion</td>
             <td>Nobody (your data is private)</td>
             <td>Track personal progress, statistics, and investment analysis</td>
-            <td>Stored securely in encrypted database / Used only for automation</td>
+            <td>Stored in database / Used only for automation</td>
             <td>Public Only (minimum); Limited Access (for stock features)</td>
           </tr>
         </tbody>
@@ -68,12 +67,12 @@
     
     <p>
       For a complete list of API endpoints used and detailed information about data collection, please see my 
-      <%= link_to "Privacy Policy", privacy_policy_path %>.
+      <a href="#pp-api-usage">Privacy Policy</a>.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>User Responsibilities</h2>
+    <h2 id="tos-user-responsibilities">User Responsibilities</h2>
     
     <h3>API Key Management</h3>
     <p>You are responsible for:</p>
@@ -98,7 +97,7 @@
   </section>
 
   <section class="content-section">
-    <h2>API Key Security</h2>
+    <h2 id="tos-api-key-security">API Key Security</h2>
     <p>
       <strong>Never share your Torn password with anyone, including me.</strong> I only require your 
       API key for authentication. Your Torn password should never be entered into any third-party service.
@@ -115,7 +114,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Service Availability</h2>
+    <h2 id="tos-service-availability">Service Availability</h2>
     <p>
       I strive to maintain TornManager's availability but do not guarantee uninterrupted service. I may:
     </p>
@@ -131,32 +130,34 @@
   </section>
 
   <section class="content-section">
-    <h2>No Unfair Advantage</h2>
+    <h2 id="tos-no-unfair-advantage">No Unfair Advantage</h2>
     <p>
-      TornManager is designed to enhance gameplay by providing data visualization and progress tracking. 
-      It does not:
+      TornManager is designed to enhance gameplay by providing data visualization, progress tracking, and 
+      tactical information during ranked wars. It does not:
     </p>
     <ul>
-      <li>Automate gameplay actions</li>
-      <li>Provide real-time competitive advantages</li>
+      <li>Automate gameplay actions (no auto-attacking, auto-healing, or similar automation)</li>
       <li>Violate Torn's fair play policies</li>
       <li>Offer features that bypass game mechanics</li>
+      <li>Perform any actions on your Torn account</li>
     </ul>
     <p>
-      All data displayed is historical or publicly available through the Torn API. I comply with Torn's 
-      guidelines on maintaining fair gameplay.
+      The war features display real-time data sourced from the Torn API (enemy status, hospital timers, 
+      online activity) and publicly available spy data. This is the same data available to any player through 
+      the Torn API or public spy services — TornManager simply presents it in a more accessible format. 
+      I comply with Torn's guidelines on maintaining fair gameplay.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>Subscription Model</h2>
+    <h2 id="tos-subscription">Subscription Model</h2>
     <p>
       TornManager uses an in-game subscription model. Access to certain features requires an active subscription, 
       which can be obtained through:
     </p>
     <ul>
       <li><strong>Trial Subscription:</strong> When a faction is first set up on TornManager, all current faction members receive a 14-day trial subscription. This allows the entire faction to explore TornManager's features before committing to a subscription.</li>
-      <li><strong>Xanax Payment:</strong> Send Xanax to <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>. Each Xanax sent equals 1 week of subscription. Payments are automatically processed daily at 12 PM TCT.</li>
+      <li><strong>Xanax Payment:</strong> Send Xanax to <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>. Each Xanax sent equals 1 week of subscription. Payments are automatically processed daily at 4 AM TCT.</li>
       <li><strong>Subscription Sharing:</strong> Faction leaders with active subscriptions can share subscription weeks with their faction members through the faction settings. This allows leaders to extend access to their members without individual payments.</li>
     </ul>
     <p>
@@ -166,7 +167,31 @@
   </section>
 
   <section class="content-section">
-    <h2>Faction Features</h2>
+    <h2 id="tos-browser-userscript">Browser Userscript</h2>
+    <p>
+      The TornManager browser userscript is an optional companion that runs on Torn.com via a userscript 
+      manager (such as Tampermonkey or Greasemonkey). By installing and using the userscript, you agree to:
+    </p>
+    <ul>
+      <li>Allow the userscript to modify the visual appearance of Torn.com pages in your browser</li>
+      <li>Allow the userscript to communicate with tornmanager.com to fetch your war data and subscription status</li>
+      <li>Allow the userscript to store authentication data and preferences in your browser's localStorage</li>
+    </ul>
+    <p>
+      The userscript requires an active TornManager subscription to access war features. It authenticates using 
+      the same Torn API key you provide when signing in. The userscript's behavior can be 
+      inspected at any time via the distributed script.
+    </p>
+    <p>
+      The userscript uses <code>GM.xmlHttpRequest</code> to communicate with tornmanager.com, which bypasses 
+      standard browser cross-origin restrictions. This is a standard capability of userscript managers and is 
+      required for the userscript to function. The userscript only communicates with tornmanager.com and 
+      torn.com — no other domains.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="tos-faction-features">Faction Features</h2>
     <p>
       TornManager offers enhanced features for faction leaders and members of tracked factions:
     </p>
@@ -200,6 +225,22 @@
       assist with tactical decision-making during wars. The accuracy of spy data depends on third-party sources 
       and may not reflect current battle stats.
     </p>
+    <p>
+      The browser userscript enhances Torn's ranked war page with a real-time overlay that displays:
+    </p>
+    <ul>
+      <li>Enemy member battle stats from spy reports (where available)</li>
+      <li>Hospital countdown timers with live updates</li>
+      <li>Travel destinations and abroad locations</li>
+      <li>Online, idle, and offline activity indicators</li>
+      <li>Sortable columns for tactical prioritization</li>
+      <li>Detail popovers with full stat breakdowns and attack links</li>
+    </ul>
+    <p>
+      The userscript also adds a settings panel accessible from Torn's sidebar, which displays a war overview 
+      including the current score, enemy status breakdown (okay, hospital, traveling, jail), and online activity 
+      counts. War data is refreshed every 6 seconds to match the backend polling interval.
+    </p>
 
     <h3>Faction Data Deletion</h3>
     <p>
@@ -207,12 +248,12 @@
       removes all personal stat snapshots for faction members, spy reports, ranked war history, API keys, and the 
       leadership whitelist. It also cancels all scheduled background jobs for the faction. Subscription time is 
       preserved for all members. The faction can be set up again at any time. See the 
-      <%= link_to "Privacy Policy", privacy_policy_path %> for the full list of data removed.
+      <a href="#pp-data-retention">Privacy Policy</a> for the full list of data removed.
     </p>
   </section>
 
   <section class="content-section">
-    <h2>No Monetization</h2>
+    <h2 id="tos-no-monetization">No Monetization</h2>
     <p>
       TornManager is provided free of charge in terms of real-world currency. I do not:
     </p>
@@ -228,7 +269,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Account Termination</h2>
+    <h2 id="tos-account-termination">Account Termination</h2>
     <p>
       I reserve the right to suspend or terminate your access to TornManager at my discretion, without 
       notice, for conduct that I believe:
@@ -246,7 +287,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Intellectual Property</h2>
+    <h2 id="tos-intellectual-property">Intellectual Property</h2>
     <p>
       TornManager and its original content, features, and functionality are owned by me and protected by 
       international copyright, trademark, and other intellectual property laws.
@@ -258,7 +299,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Disclaimer of Warranties</h2>
+    <h2 id="tos-disclaimer">Disclaimer of Warranties</h2>
     <p>
       TornManager is provided "as is" and "as available" without warranties of any kind, either express or 
       implied, including but not limited to warranties of merchantability, fitness for a particular purpose, 
@@ -276,7 +317,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Limitation of Liability</h2>
+    <h2 id="tos-limitation-of-liability">Limitation of Liability</h2>
     <p>
       To the maximum extent permitted by law, I shall not be liable for any indirect, incidental, special, 
       consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or 
@@ -292,7 +333,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Indemnification</h2>
+    <h2 id="tos-indemnification">Indemnification</h2>
     <p>
       You agree to indemnify and hold harmless me and TornManager from any claims, damages, 
       obligations, losses, liabilities, costs, or expenses arising from:
@@ -306,7 +347,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Age Requirement</h2>
+    <h2 id="tos-age-requirement">Age Requirement</h2>
     <p>
       You must be at least 13 years old to use TornManager. This aligns with Torn.com's age requirement. 
       By using this service, you confirm that you meet this age requirement.
@@ -314,7 +355,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Changes to Terms</h2>
+    <h2 id="tos-changes">Changes to Terms</h2>
     <p>
       I reserve the right to modify these Terms of Service at any time. Material changes will be indicated 
       by updating the "Last updated" date at the top of this document.
@@ -326,7 +367,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Governing Law</h2>
+    <h2 id="tos-governing-law">Governing Law</h2>
     <p>
       These Terms of Service are governed by and construed in accordance with applicable laws, without regard 
       to conflict of law principles.
@@ -334,7 +375,7 @@
   </section>
 
   <section class="content-section">
-    <h2>Contact Me</h2>
+    <h2 id="tos-contact">Contact Me</h2>
     <p>
       If you have questions about these Terms of Service, please reach out to me on Torn:
     </p>

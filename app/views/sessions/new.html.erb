@@ -25,7 +25,7 @@
         data-login-target="checkbox"
         data-action="change->login#toggle" />
       <label for="terms_checkbox" class="login-checkbox-label">
-        I agree to the <%= link_to "Privacy Policy", privacy_policy_path, class: "login-checkbox-link", target: "_blank" %> and <%= link_to "Terms of Service", terms_of_service_path, class: "login-checkbox-link", target: "_blank" %>, including use of essential cookies and anonymous analytics
+        I agree to the <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy"), class: "login-checkbox-link", target: "_blank" %> and <%= link_to "Terms of Service", legal_path(anchor: "terms-of-service"), class: "login-checkbox-link", target: "_blank" %>, including use of essential cookies and anonymous analytics
       </label>
     </div>
     

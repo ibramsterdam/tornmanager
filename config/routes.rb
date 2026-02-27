@@ -90,8 +90,9 @@ Rails.application.routes.draw do
   patch "roadmap/:id", to: "roadmap#update", as: :roadmap_item
   delete "roadmap/:id", to: "roadmap#destroy"
 
-  get "privacy-policy", to: "pages#privacy_policy", as: :privacy_policy
-  get "terms-of-service", to: "pages#terms_of_service", as: :terms_of_service
+  get "legal", to: "pages#legal", as: :legal
+  get "privacy-policy", to: redirect("/legal#privacy-policy")
+  get "terms-of-service", to: redirect("/legal#terms-of-service")
 
   get "key-log", to: "key_log#index", as: :key_log
   post "key-log/show", to: "key_log#show", as: :key_log_show
