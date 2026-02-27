@@ -55,7 +55,7 @@ footer {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-12) var(--space-6);
+  padding: var(--space-6) var(--space-6);
   border-top: 1px solid var(--gray-900);
   font-size: 0.875rem;
   color: var(--gray-500);

@@ -11,6 +11,7 @@ export default class extends Controller {
 
     this.onScroll = this.highlight.bind(this)
     window.addEventListener("scroll", this.onScroll, { passive: true })
+
     this.highlight()
   }
 
@@ -36,7 +37,11 @@ export default class extends Controller {
 
     for (const link of this.linkTargets) {
       const id = link.getAttribute("href").slice(1)
-      link.classList.toggle("active", id === activeId)
+      const isActive = id === activeId
+      link.classList.toggle("active", isActive)
+      if (isActive) {
+        link.scrollIntoView({ block: "nearest", behavior: "smooth" })
+      }
     }
   }
 }

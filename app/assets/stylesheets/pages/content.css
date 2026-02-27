@@ -5,40 +5,50 @@
 /* ── Layout: sidebar + content ── */
 
 .legal-layout {
-  display: flex;
-  gap: var(--space-16);
   max-width: 1200px;
   margin: 0 auto;
+  padding-left: 250px;
 }
 
 .legal-sidebar {
-  flex-shrink: 0;
+  position: fixed;
+  top: 80px;
+  left: max(var(--space-6), calc((100vw - 1200px) / 2));
   width: 220px;
-  position: sticky;
-  top: var(--space-4);
-  align-self: flex-start;
-  max-height: calc(100vh - var(--space-8));
-  overflow-y: auto;
-  padding-right: var(--space-4);
 }
-
-.legal-sidebar::-webkit-scrollbar {
-  width: 0;
-}
-
-.legal-content {
-  flex: 1;
-  min-width: 0;
-  max-width: 800px;
-}
-
-/* ── Sidebar ToC ── */
 
 .legal-toc {
   list-style: none;
   padding: 0;
   margin: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 240px);
 }
+
+.legal-toc::-webkit-scrollbar {
+  width: 4px;
+}
+
+.legal-toc::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.legal-toc::-webkit-scrollbar-thumb {
+  background: var(--gray-800);
+  border-radius: 2px;
+}
+
+.legal-toc::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-700);
+}
+
+.legal-content {
+  min-width: 0;
+  max-width: 800px;
+}
+
+/* ── Sidebar ToC ── */
 
 .legal-toc-group {
   margin-bottom: var(--space-6);
@@ -240,17 +250,20 @@
 
 @media (max-width: 1024px) {
   .legal-layout {
-    flex-direction: column;
-    gap: var(--space-8);
+    padding-left: 0;
   }
 
   .legal-sidebar {
     position: static;
     width: 100%;
-    max-height: none;
-    padding-right: 0;
-    border-bottom: 1px solid var(--gray-800);
     padding-bottom: var(--space-6);
+    border-bottom: 1px solid var(--gray-800);
+    margin-bottom: var(--space-8);
+  }
+
+  .legal-toc {
+    max-height: none;
+    overflow-y: visible;
   }
 
   .legal-toc-group {
