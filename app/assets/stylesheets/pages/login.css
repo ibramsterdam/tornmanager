@@ -242,22 +242,32 @@
 
 .hero-signin-button {
   position: absolute;
-  top: -8px;
-  right: -80px;
-  background: #e63946;
+  top: -12px;
+  right: -100px;
+  background: linear-gradient(135deg, #e63946 0%, #c0212e 100%);
   color: #ffffff;
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.4rem;
   border-radius: 999px;
   font-size: 0.875rem;
   font-weight: 600;
+  letter-spacing: 0.02em;
   text-decoration: none;
   opacity: 0;
-  animation: fadeInPulse 1s ease-out 1.8s forwards, pulse 2s infinite 2.8s;
+  animation: fadeInPulse 1s ease-out 1.8s forwards, pulse 2.5s ease-in-out infinite 2.8s;
   box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7);
+  transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
 }
 
 .hero-signin-button:hover {
-  background: #d32f3c;
+  background: linear-gradient(135deg, #ff4d5a 0%, #e63946 100%);
+  transform: translateY(-1px) scale(1.05);
+  box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
+  animation: none;
+}
+
+.hero-signin-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.3);
 }
 
 @keyframes fadeInUp {
@@ -287,10 +297,10 @@
 
 @keyframes pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.7);
+    box-shadow: 0 0 0 0 rgba(230, 57, 70, 0.6);
   }
-  50% {
-    box-shadow: 0 0 0 8px rgba(230, 57, 70, 0);
+  40% {
+    box-shadow: 0 0 0 12px rgba(230, 57, 70, 0);
   }
   100% {
     box-shadow: 0 0 0 0 rgba(230, 57, 70, 0);
@@ -305,7 +315,7 @@
   .hero-signin-button {
     position: static;
     margin-top: 2rem;
-    animation: fadeInPulse 1s ease-out 1.8s forwards, pulse 2s infinite 2.8s;
+    animation: fadeInPulse 1s ease-out 1.8s forwards, pulse 2.5s ease-in-out infinite 2.8s;
   }
 }
 
