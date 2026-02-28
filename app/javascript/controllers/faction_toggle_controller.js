@@ -19,18 +19,15 @@ export default class extends Controller {
       const data = await response.json()
       
       if (data.success) {
-        // Update member count in the row
         const memberCountCell = row.querySelector(".member-count")
         if (memberCountCell) {
           memberCountCell.textContent = data.member_count
         }
       } else {
-        // Revert checkbox on error
         checkbox.checked = !checkbox.checked
         alert(`Error: ${data.error}`)
       }
     } catch (error) {
-      // Revert checkbox on error
       checkbox.checked = !checkbox.checked
       alert(`Failed to update: ${error.message}`)
     }

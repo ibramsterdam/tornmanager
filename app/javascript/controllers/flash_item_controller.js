@@ -4,12 +4,10 @@ export default class extends Controller {
   static values = { duration: { type: Number, default: 3000 } }
 
   connect() {
-    // Animate in
     requestAnimationFrame(() => {
       this.element.classList.add("flash-notification-visible")
     })
     
-    // Auto-dismiss after duration
     this.timeout = setTimeout(() => {
       this.dismiss()
     }, this.durationValue)

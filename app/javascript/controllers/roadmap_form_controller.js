@@ -5,9 +5,7 @@ export default class extends Controller {
   static values = { editing: Boolean }
 
   connect() {
-    // Auto-open the panel if we're in editing mode (from ?edit=ID param)
     if (this.editingValue && this.hasPanelTarget) {
-      // Small delay so the CSS transition is visible
       requestAnimationFrame(() => {
         this.open()
       })
@@ -25,7 +23,6 @@ export default class extends Controller {
     this.overlayTarget.classList.remove("roadmap-form-overlay--visible")
     document.body.style.overflow = ""
 
-    // If we were in edit mode, clean the URL
     if (this.editingValue) {
       const url = new URL(window.location)
       url.searchParams.delete("edit")
@@ -38,8 +35,6 @@ export default class extends Controller {
       this.hide()
     }
   }
-
-  // Private
 
   open() {
     this.panelTarget.classList.add("roadmap-form-panel--open")

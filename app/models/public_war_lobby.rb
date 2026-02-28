@@ -25,6 +25,10 @@ class PublicWarLobby < ApplicationRecord
     "public_war_lobby:#{id}:api_key"
   end
 
+  def spy_stats_cache_key
+    "public_war_lobby:#{id}:spy_stats"
+  end
+
   def active?
     Rails.cache.exist?(api_key_cache_key)
   end
@@ -40,6 +44,7 @@ class PublicWarLobby < ApplicationRecord
   def terminate!
     Rails.cache.delete(war_cache_key)
     Rails.cache.delete(api_key_cache_key)
+    Rails.cache.delete(spy_stats_cache_key)
     destroy!
   end
 

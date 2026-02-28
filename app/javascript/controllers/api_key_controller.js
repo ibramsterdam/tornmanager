@@ -5,7 +5,6 @@ export default class extends Controller {
 
   validateInput() {
     const value = this.inputTarget.value.trim()
-    // Torn API keys are 16 characters
     const isValid = value.length === 16 && /^[a-zA-Z0-9]+$/.test(value)
     this.submitTarget.disabled = !isValid
   }
@@ -36,7 +35,6 @@ export default class extends Controller {
         this.inputTarget.value = ""
         this.submitTarget.textContent = "Update"
         this.submitTarget.disabled = true
-        // Refresh just the Turbo Frame to update masked key and access level
         this.refreshApiKeyCard()
       } else {
         this.showFlash("alert", data.message)

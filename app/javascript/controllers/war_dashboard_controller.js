@@ -1,7 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Flight times in seconds per destination, by ticket type (without travel book)
-// Source: https://wiki.torn.com/wiki/Travel
 const FLIGHT_TIMES = {
   "Mexico":           { standard: 1560,  airstrip: 1080, wlt: 780,  bct: 480  },
   "Cayman Islands":   { standard: 2100,  airstrip: 1500, wlt: 1080, bct: 660  },
@@ -16,8 +14,6 @@ const FLIGHT_TIMES = {
   "South Africa":     { standard: 17820, airstrip: 12480, wlt: 8940, bct: 5340 }
 }
 
-// Map API plane_image_type to flight time keys
-// "airliner" is ambiguous: could be Standard or BCT
 const PLANE_TYPE_MAP = {
   "private_jet":    ["wlt"],
   "light_aircraft": ["airstrip"],
@@ -37,6 +33,8 @@ export default class extends Controller {
     pollUrl: String,
     pollInterval: { type: Number, default: 6000 },
     hideStats: { type: Boolean, default: false },
+    editableStats: { type: Boolean, default: false },
+    statsUrl: { type: String, default: "" },
     terminatedUrl: { type: String, default: "" }
   }
 
@@ -62,26 +60,20 @@ export default class extends Controller {
     this.countdownInterval = null
     this.secondsUntilUpdate = this.pollIntervalValue / 1000
 
-    // Load initial data from cache if available
     if (this.initialDataValue && Object.keys(this.initialDataValue).length > 0) {
       this.handleData(this.initialDataValue)
       this.updateConnectionStatus("connected", "Live")
     }
 
-    // Start war duration timer
     this.startWarTimer()
-
-    // Start HTTP polling for war data
     this.startPolling()
-
-    // Start hospital countdown ticker
     this.timerInterval = setInterval(() => this.tickTimers(), 1000)
-
-    // Start update countdown ticker
     this.startUpdateCountdown()
-
-    // Update sort indicator for default sort
     this.updateSortIndicators()
+
+    if (this.editableStatsValue) {
+      this.element.addEventListener("click", this.#handleStatClick)
+    }
   }
 
   disconnect() {
@@ -101,14 +93,12 @@ export default class extends Controller {
       clearInterval(this.countdownInterval)
       this.countdownInterval = null
     }
+    this.element.removeEventListener("click", this.#handleStatClick)
   }
-
-  // --- HTTP Polling ---
 
   startPolling() {
     if (!this.pollUrlValue) return
 
-    // Fetch immediately, then every pollInterval
     this.fetchWarData()
     this.pollInterval = setInterval(() => this.fetchWarData(), this.pollIntervalValue)
   }
@@ -138,10 +128,7 @@ export default class extends Controller {
     }
   }
 
-  // --- Data handling ---
-
   handleData(data) {
-    // Update scores (targets may not exist in public lobbies)
     if (data.our_score !== undefined) {
       this.ourScoreValue = data.our_score
       if (this.hasOurScoreTarget) this.ourScoreTarget.textContent = data.our_score
@@ -160,7 +147,6 @@ export default class extends Controller {
     }
     this.updateLeadProgress()
 
-    // Update members (filter out Fallen)
     if (data.members) {
       const previousMembers = { ...this.members }
       this.members = {}
@@ -178,7 +164,6 @@ export default class extends Controller {
       this.renderTable()
     }
 
-    // Update last updated timestamp
     if (data.cached_at) {
       this.updateLastUpdated(data.cached_at)
     }
@@ -192,8 +177,6 @@ export default class extends Controller {
     if (prev.last_action?.status !== current.last_action?.status) return true
     return false
   }
-
-  // --- Score display ---
 
   updateScoreClasses() {
     if (!this.hasOurScoreTarget || !this.hasTheirScoreTarget) return
@@ -229,13 +212,9 @@ export default class extends Controller {
     if (this.hasLeadProgressTarget) {
       const percentage = Math.min(Math.max((lead / target) * 100, 0), 100)
       this.leadProgressTarget.style.width = `${percentage}%`
-
-      // Update color based on winning/losing
       this.leadProgressTarget.classList.toggle("losing", lead < 0)
     }
   }
-
-  // --- War timer ---
 
   startWarTimer() {
     if (!this.startedAtValue) return
@@ -245,10 +224,8 @@ export default class extends Controller {
       const now = new Date()
 
       if (this.scheduledValue) {
-        // Countdown to war start
         const remaining = Math.floor((startedAt - now) / 1000)
         if (remaining <= 0) {
-          // War has started! Reload the page to switch to live mode
           window.location.reload()
           return
         }
@@ -256,7 +233,6 @@ export default class extends Controller {
           this.warTimerTarget.textContent = `Starts in ${this.formatDuration(remaining)}`
         }
       } else {
-        // Elapsed time since war started
         const elapsed = Math.floor((now - startedAt) / 1000)
         if (this.hasWarTimerTarget) {
           this.warTimerTarget.textContent = this.formatDuration(elapsed)
@@ -268,23 +244,17 @@ export default class extends Controller {
     this.warTimerInterval = setInterval(updateTimer, 1000)
   }
 
-  // --- Connection status ---
-
   updateConnectionStatus(state, text) {
     if (!this.hasConnectionStatusTarget) return
 
-    // Update class on the container
     this.connectionStatusTarget.classList.remove("connected", "connecting", "offline")
     this.connectionStatusTarget.classList.add(state)
 
-    // Update the text
     const textEl = this.connectionStatusTarget.querySelector(".live-polling-text")
     if (textEl) {
       textEl.textContent = text
     }
   }
-
-  // --- Last updated & countdown ---
 
   updateLastUpdated(isoString) {
     if (!this.hasLastUpdatedTarget) return
@@ -295,7 +265,6 @@ export default class extends Controller {
     const seconds = date.getSeconds().toString().padStart(2, "0")
     this.lastUpdatedTarget.textContent = `Updated ${hours}:${minutes}:${seconds}`
 
-    // Reset countdown when data is updated
     this.secondsUntilUpdate = this.pollIntervalValue / 1000
     this.updateCountdownDisplay()
   }
@@ -313,8 +282,6 @@ export default class extends Controller {
     this.updateCountdownTarget.textContent = `Next update in ${this.secondsUntilUpdate}s`
   }
 
-  // --- Filtering ---
-
   toggleFilter({ currentTarget }) {
     const isActive = currentTarget.dataset.filterActive === "true"
     currentTarget.dataset.filterActive = isActive ? "false" : "true"
@@ -327,7 +294,6 @@ export default class extends Controller {
   }
 
   applyFilters() {
-    // Update slider label
     if (this.hasFilterMaxStatsTarget && this.hasFilterMaxStatsLabelTarget) {
       const maxVal = parseInt(this.filterMaxStatsTarget.value)
       const sliderMax = parseInt(this.filterMaxStatsTarget.max)
@@ -342,7 +308,6 @@ export default class extends Controller {
   }
 
   getFilteredMembers(members) {
-    // Status filters
     const statusFilters = {}
     if (this.hasFilterStatusOkayTarget) statusFilters["Okay"] = this.isFilterActive(this.filterStatusOkayTarget)
     if (this.hasFilterStatusHospitalTarget) statusFilters["Hospital"] = this.isFilterActive(this.filterStatusHospitalTarget)
@@ -350,13 +315,11 @@ export default class extends Controller {
     if (this.hasFilterStatusTravelingTarget) statusFilters["Traveling"] = this.isFilterActive(this.filterStatusTravelingTarget)
     if (this.hasFilterStatusAbroadTarget) statusFilters["Abroad"] = this.isFilterActive(this.filterStatusAbroadTarget)
 
-    // Last action filters
     const actionFilters = {}
     if (this.hasFilterActionOnlineTarget) actionFilters["Online"] = this.isFilterActive(this.filterActionOnlineTarget)
     if (this.hasFilterActionIdleTarget) actionFilters["Idle"] = this.isFilterActive(this.filterActionIdleTarget)
     if (this.hasFilterActionOfflineTarget) actionFilters["Offline"] = this.isFilterActive(this.filterActionOfflineTarget)
 
-    // Max stats filter
     let maxStats = Infinity
     if (this.hasFilterMaxStatsTarget) {
       const val = parseInt(this.filterMaxStatsTarget.value)
@@ -365,15 +328,12 @@ export default class extends Controller {
     }
 
     return members.filter(member => {
-      // Status filter
       const state = member.status?.state || "Unknown"
       if (statusFilters[state] === false) return false
 
-      // Last action filter
       const actionStatus = member.last_action?.status || "Offline"
       if (actionFilters[actionStatus] === false) return false
 
-      // Max stats filter
       const total = member.stats?.total || 0
       if (total > 0 && total > maxStats) return false
 
@@ -393,8 +353,6 @@ export default class extends Controller {
       }
     }
   }
-
-  // --- Sorting ---
 
   sort({ params: { sortKey } }) {
     if (this.sortKey === sortKey) {
@@ -418,7 +376,6 @@ export default class extends Controller {
 
       if (target) {
         target.classList.remove("asc", "desc")
-        // Convert key to camelCase for comparison (e.g. "LastAction" -> "lastAction")
         const sortKeyMatch = key.charAt(0).toLowerCase() + key.slice(1)
         if (this.sortKey === sortKeyMatch) {
           target.classList.add(this.sortDirection)
@@ -453,7 +410,6 @@ export default class extends Controller {
           aVal = this.actionSortOrder(a.last_action?.status)
           bVal = this.actionSortOrder(b.last_action?.status)
           if (aVal !== bVal) return (aVal - bVal) * dir
-          // Secondary sort by timestamp (most recent first)
           aVal = a.last_action?.timestamp || 0
           bVal = b.last_action?.timestamp || 0
           return (bVal - aVal) * dir
@@ -508,16 +464,13 @@ export default class extends Controller {
     const status = member.status
     if (!status) return -1
 
-    // Travel timer — only if we have departure time
     if (status.state === "Traveling") {
       if (!status.travel_started_at || !status.destination) {
-        // Unknown departure time — sort these after timed travelers but before non-travelers
         return 999999
       }
       const flightData = FLIGHT_TIMES[status.destination]
       if (flightData) {
         const ticketTypes = PLANE_TYPE_MAP[status.plane_type] || ["standard"]
-        // Use the fastest estimate for sorting
         const duration = flightData[ticketTypes[0]]
         const elapsed = Math.floor((new Date() - new Date(status.travel_started_at)) / 1000)
         const remaining = duration - elapsed
@@ -525,14 +478,11 @@ export default class extends Controller {
       }
     }
 
-    // Hospital/Jail timer
     if (!status.until) return -1
     const expiresAt = new Date(status.until)
     const remaining = Math.floor((expiresAt - new Date()) / 1000)
     return remaining > 0 ? remaining : -1
   }
-
-  // --- Render ---
 
   renderTable() {
     if (!this.hasMembersBodyTarget) return
@@ -541,6 +491,8 @@ export default class extends Controller {
     const filtered = this.getFilteredMembers(sorted)
 
     this.updateFilterCount(filtered.length, sorted.length)
+
+    const activeEdit = this.#captureActiveEdit()
 
     if (filtered.length === 0) {
       this.membersBodyTarget.innerHTML = `
@@ -553,6 +505,8 @@ export default class extends Controller {
 
     const rows = filtered.map(member => this.renderRow(member)).join("")
     this.membersBodyTarget.innerHTML = rows
+
+    if (activeEdit) this.#restoreActiveEdit(activeEdit)
   }
 
   renderRow(member) {
@@ -606,19 +560,16 @@ export default class extends Controller {
     const status = member.status
     if (!status) return '<span class="stat-value no-data">-</span>'
 
-    // Travel timer — only show countdown if we tracked departure time
     if (status.state === "Traveling") {
       return this.renderTravelTimer(status)
     }
 
-    // Abroad — show location in purple
     if (status.state === "Abroad") {
       const description = status.description || ""
       const location = description.replace(/^In\s+/i, "") || "Abroad"
       return `<span class="abroad-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(location)}</span>`
     }
 
-    // Hospital/Jail timer — use the `until` timestamp
     if (!status.until) return '<span class="stat-value no-data">-</span>'
 
     const expiresAt = new Date(status.until)
@@ -640,8 +591,6 @@ export default class extends Controller {
     const directionPrefix = isReturning ? "\u2190 " : ""
     const directionSuffix = isReturning ? "" : " \u2192"
 
-    // If we don't have travel_started_at, we caught this traveler mid-flight
-    // Show destination with direction arrow but no countdown timer
     if (!status.travel_started_at) {
       const destText = destination || "Unknown"
       const displayText = isReturning ? `\u2190 Torn` : `${destText} \u2192`
@@ -655,7 +604,6 @@ export default class extends Controller {
 
     const flightData = FLIGHT_TIMES[destination]
     if (!flightData) {
-      // Unknown destination — show destination for outbound, "Torn" for returning
       const displayText = isReturning ? `\u2190 Torn` : `${destination} \u2192`
       return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
@@ -663,9 +611,8 @@ export default class extends Controller {
     const ticketTypes = PLANE_TYPE_MAP[planeType] || ["standard"]
 
     if (ticketTypes.length === 2) {
-      // Ambiguous plane type (airliner) — show dual estimate (BCT / Standard)
-      const fastDuration = flightData[ticketTypes[0]] // bct
-      const slowDuration = flightData[ticketTypes[1]] // standard
+      const fastDuration = flightData[ticketTypes[0]]
+      const slowDuration = flightData[ticketTypes[1]]
       const fastRemaining = Math.max(0, fastDuration - elapsed)
       const slowRemaining = Math.max(0, slowDuration - elapsed)
 
@@ -686,7 +633,6 @@ export default class extends Controller {
         + `<span class="travel-slow">${slowText}${directionSuffix}</span>`
         + `</span>`
     } else {
-      // Unambiguous plane type — show single estimate
       const duration = flightData[ticketTypes[0]]
       const remaining = Math.max(0, duration - elapsed)
       const eta = new Date(startedAt.getTime() + duration * 1000).toISOString()
@@ -703,31 +649,32 @@ export default class extends Controller {
 
   renderStats(member) {
     const stats = member.stats
+    const editable = this.editableStatsValue
+    const fields = ["total", "strength", "defense", "speed", "dexterity"]
+
     if (!stats) {
-      return `
-        <td class="stat-value no-data">-</td>
-        <td class="stat-value no-data">-</td>
-        <td class="stat-value no-data">-</td>
-        <td class="stat-value no-data">-</td>
-        <td class="stat-value no-data">-</td>
-      `
+      return fields.map(field => {
+        if (editable && field !== "total") {
+          return `<td class="stat-value stat-editable no-data" data-member-id="${member.torn_id}" data-stat-field="${field}" title="Click to enter ${field}">-</td>`
+        }
+        return `<td class="stat-value no-data">-</td>`
+      }).join("")
     }
 
-    return `
-      <td class="stat-value stat-total">${this.formatStat(stats.total)}</td>
-      <td class="stat-value">${this.formatStat(stats.strength)}</td>
-      <td class="stat-value">${this.formatStat(stats.defense)}</td>
-      <td class="stat-value">${this.formatStat(stats.speed)}</td>
-      <td class="stat-value">${this.formatStat(stats.dexterity)}</td>
-    `
-  }
+    return fields.map(field => {
+      const value = stats[field]
+      const extraClass = field === "total" ? " stat-total" : ""
 
-  // --- Timer tick ---
+      if (editable && field !== "total") {
+        return `<td class="stat-value stat-editable${extraClass}" data-member-id="${member.torn_id}" data-stat-field="${field}" data-stat-raw="${value || ""}" title="Click to edit">${this.formatStat(value)}</td>`
+      }
+      return `<td class="stat-value${extraClass}">${this.formatStat(value)}</td>`
+    }).join("")
+  }
 
   tickTimers() {
     if (!this.hasMembersBodyTarget) return
 
-    // Hospital/Jail timers
     const timerElements = this.membersBodyTarget.querySelectorAll("[data-timer-until]")
     timerElements.forEach(el => {
       const expiresAt = new Date(el.dataset.timerUntil)
@@ -748,7 +695,6 @@ export default class extends Controller {
       }
     })
 
-    // Single-estimate travel timers
     const travelTimers = this.membersBodyTarget.querySelectorAll("[data-travel-eta]")
     travelTimers.forEach(el => {
       const eta = new Date(el.dataset.travelEta)
@@ -767,7 +713,6 @@ export default class extends Controller {
       }
     })
 
-    // Dual-estimate travel timers (airliner: BCT / Standard)
     const dualTimers = this.membersBodyTarget.querySelectorAll("[data-travel-fast-eta]")
     dualTimers.forEach(el => {
       const fastEta = new Date(el.dataset.travelFastEta)
@@ -794,7 +739,156 @@ export default class extends Controller {
     })
   }
 
-  // --- Helpers ---
+  #handleStatClick = (event) => {
+    const cell = event.target.closest(".stat-editable")
+    if (!cell || cell.querySelector("input")) return
+
+    const memberId = cell.dataset.memberId
+    const field = cell.dataset.statField
+    const rawValue = cell.dataset.statRaw || ""
+
+    const input = document.createElement("input")
+    input.type = "text"
+    input.className = "stat-edit-input"
+    input.value = rawValue
+    input.placeholder = "e.g. 1.5B"
+    input.dataset.memberId = memberId
+    input.dataset.statField = field
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        this.#saveStat(input, cell)
+      } else if (e.key === "Escape") {
+        e.preventDefault()
+        this.#cancelEdit(cell, rawValue)
+      }
+    })
+
+    input.addEventListener("blur", () => {
+      setTimeout(() => {
+        if (document.body.contains(input)) {
+          this.#saveStat(input, cell)
+        }
+      }, 100)
+    })
+
+    cell.textContent = ""
+    cell.appendChild(input)
+    input.focus()
+    input.select()
+  }
+
+  #parseStat(value) {
+    if (!value || value.trim() === "") return 0
+
+    const cleaned = value.trim().toUpperCase()
+    const match = cleaned.match(/^([\d.]+)\s*([KMBT]?)$/)
+    if (!match) return parseInt(cleaned.replace(/[^0-9]/g, ""), 10) || 0
+
+    const num = parseFloat(match[1])
+    const suffix = match[2]
+    const multipliers = { "K": 1_000, "M": 1_000_000, "B": 1_000_000_000, "T": 1_000_000_000_000 }
+
+    return Math.round(num * (multipliers[suffix] || 1))
+  }
+
+  async #saveStat(input, cell) {
+    const memberId = input.dataset.memberId
+    const field = input.dataset.statField
+    const parsed = this.#parseStat(input.value)
+
+    if (parsed <= 0) {
+      this.#cancelEdit(cell, cell.dataset.statRaw || "")
+      return
+    }
+
+    cell.dataset.statRaw = parsed
+    cell.textContent = this.formatStat(parsed)
+
+    const member = this.members[memberId]
+    if (member) {
+      if (!member.stats) member.stats = {}
+      member.stats[field] = parsed
+
+      const s = member.stats
+      if (s.strength && s.defense && s.speed && s.dexterity) {
+        member.stats.total = s.strength + s.defense + s.speed + s.dexterity
+      }
+    }
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
+    try {
+      const body = { torn_id: memberId, [field]: parsed }
+      await fetch(this.statsUrlValue, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "X-CSRF-Token": csrfToken
+        },
+        body: JSON.stringify(body)
+      })
+    } catch {
+    }
+
+    this.renderTable()
+  }
+
+  #cancelEdit(cell, rawValue) {
+    cell.textContent = rawValue ? this.formatStat(parseInt(rawValue, 10)) : "-"
+  }
+
+  #captureActiveEdit() {
+    const input = this.membersBodyTarget.querySelector(".stat-edit-input")
+    if (!input) return null
+
+    return {
+      memberId: input.dataset.memberId,
+      field: input.dataset.statField,
+      value: input.value,
+      selectionStart: input.selectionStart,
+      selectionEnd: input.selectionEnd
+    }
+  }
+
+  #restoreActiveEdit(edit) {
+    const cell = this.membersBodyTarget.querySelector(
+      `.stat-editable[data-member-id="${edit.memberId}"][data-stat-field="${edit.field}"]`
+    )
+    if (!cell) return
+
+    const input = document.createElement("input")
+    input.type = "text"
+    input.className = "stat-edit-input"
+    input.value = edit.value
+    input.placeholder = "e.g. 1.5B"
+    input.dataset.memberId = edit.memberId
+    input.dataset.statField = edit.field
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault()
+        this.#saveStat(input, cell)
+      } else if (e.key === "Escape") {
+        e.preventDefault()
+        this.#cancelEdit(cell, cell.dataset.statRaw || "")
+      }
+    })
+
+    input.addEventListener("blur", () => {
+      setTimeout(() => {
+        if (document.body.contains(input)) {
+          this.#saveStat(input, cell)
+        }
+      }, 100)
+    })
+
+    cell.textContent = ""
+    cell.appendChild(input)
+    input.focus()
+    input.setSelectionRange(edit.selectionStart, edit.selectionEnd)
+  }
 
   statusCssClass(state) {
     const map = {

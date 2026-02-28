@@ -1,7 +1,7 @@
 class PublicWarsController < ApplicationController
   allow_unauthenticated_access
 
-  before_action :find_lobby, only: [ :show, :war_data, :unlock, :destroy ]
+  before_action :find_lobby, only: [ :show, :war_data, :unlock, :destroy, :stats ]
 
   def index
     @lobbies = PublicWarLobby.order(created_at: :desc)
@@ -147,6 +147,33 @@ class PublicWarsController < ApplicationController
         end
       end
     end
+  end
+
+  STAT_FIELDS = %w[strength defense speed dexterity total].freeze
+
+  def stats
+    torn_id = params[:torn_id].to_s
+    stat_params = params.permit(:strength, :defense, :speed, :dexterity, :total)
+
+    stats = stat_params.to_h.transform_values { |v| v.to_s.gsub(/[^0-9]/, "").to_i }
+    stats.reject! { |_, v| v <= 0 }
+
+    if torn_id.blank? || stats.empty?
+      return render json: { error: "Invalid stats data." }, status: :unprocessable_entity
+    end
+
+    spy_stats = Rails.cache.read(@lobby.spy_stats_cache_key) || {}
+    spy_stats[torn_id] = (spy_stats[torn_id] || {}).merge(stats.symbolize_keys)
+
+    # Auto-calculate total if individual stats are present
+    individual = spy_stats[torn_id]
+    if individual[:strength] && individual[:defense] && individual[:speed] && individual[:dexterity]
+      spy_stats[torn_id][:total] = individual[:strength] + individual[:defense] + individual[:speed] + individual[:dexterity]
+    end
+
+    Rails.cache.write(@lobby.spy_stats_cache_key, spy_stats)
+
+    render json: { stats: spy_stats[torn_id] }
   end
 
   def destroy
