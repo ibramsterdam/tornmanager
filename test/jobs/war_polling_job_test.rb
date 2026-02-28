@@ -154,6 +154,72 @@ class WarPollingJobTest < ActiveJob::TestCase
     end
   end
 
+  test "outbound traveler includes destination and description" do
+    traveling_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Traveling to Switzerland", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ traveling_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      status = cached[:members][6666666][:status]
+
+      assert_equal "Traveling", status[:state]
+      assert_equal "Switzerland", status[:destination]
+      assert_equal "Traveling to Switzerland", status[:description]
+    end
+  end
+
+  test "returning traveler includes destination and description with returning text" do
+    returning_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Returning to Torn from Switzerland", "", "Traveling", "green", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ returning_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      status = cached[:members][6666666][:status]
+
+      assert_equal "Traveling", status[:state]
+      assert_equal "Switzerland", status[:destination]
+      assert_equal "Returning to Torn from Switzerland", status[:description]
+    end
+  end
+
+  test "abroad member includes description but no destination" do
+    abroad_member = TornApi::Faction::Members::Member.new(
+      6666666, "AbroadPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "In Switzerland", "", "Abroad", "blue", nil, nil,
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ abroad_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      status = cached[:members][6666666][:status]
+
+      assert_equal "Abroad", status[:state]
+      assert_equal "In Switzerland", status[:description]
+      assert_nil status[:destination]
+    end
+  end
+
   test "first time travelers have no travel_started_at to avoid false estimates" do
     traveling_member = TornApi::Faction::Members::Member.new(
       6666666, "TravelingPlayer", 50, 30,
@@ -174,6 +240,43 @@ class WarPollingJobTest < ActiveJob::TestCase
       assert_equal "Japan", member_data[:status][:destination]
       # First time seeing traveler — no departure time (avoids false countdown)
       assert_nil member_data[:status][:travel_started_at]
+    end
+  end
+
+  test "stamps travel_started_at when member transitions to traveling" do
+    hospital_member = TornApi::Faction::Members::Member.new(
+      6666666, "HospitalPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "In hospital for 30 minutes", "", "Hospital", "red", (Time.current + 30.minutes).to_i, nil,
+      "Everyone", "Member", true, false, false, false
+    )
+
+    traveling_member = TornApi::Faction::Members::Member.new(
+      6666666, "HospitalPlayer", 50, 30,
+      "Online", 1708000000, "1 minute ago",
+      "Traveling to Japan", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    with_memory_cache do
+      # First poll — member is in hospital
+      TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ hospital_member ])
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      assert_equal "Hospital", cached[:members][6666666][:status][:state]
+
+      # Second poll — member is now traveling (state transition)
+      TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ traveling_member ])
+      freeze_time do
+        WarPollingJob.perform_now(@faction.id)
+
+        cached = Rails.cache.read(@faction.war_cache_key)
+        status = cached[:members][6666666][:status]
+
+        assert_equal "Traveling", status[:state]
+        assert_equal Time.current.iso8601, status[:travel_started_at]
+      end
     end
   end
 

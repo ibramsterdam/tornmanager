@@ -601,6 +601,13 @@ export default class extends Controller {
       return this.renderTravelTimer(status)
     }
 
+    // Abroad — show location in purple
+    if (status.state === "Abroad") {
+      const description = status.description || ""
+      const location = description.replace(/^In\s+/i, "") || "Abroad"
+      return `<span class="abroad-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(location)}</span>`
+    }
+
     // Hospital/Jail timer — use the `until` timestamp
     if (!status.until) return '<span class="stat-value no-data">-</span>'
 
@@ -618,12 +625,17 @@ export default class extends Controller {
 
   renderTravelTimer(status) {
     const destination = status.destination
+    const description = status.description || ""
+    const isReturning = description.toLowerCase().includes("returning")
+    const directionPrefix = isReturning ? "\u2190 " : ""
+    const directionSuffix = isReturning ? "" : " \u2192"
 
     // If we don't have travel_started_at, we caught this traveler mid-flight
     // Just show destination without a (potentially inaccurate) timer
     if (!status.travel_started_at) {
       const destText = destination || "Unknown"
-      return `<span class="travel-timer travel-unknown" title="${this.escapeHtml(status.description || "")}">${this.escapeHtml(destText)}</span>`
+      const displayText = isReturning ? `${directionPrefix}${destText}` : `${destText}${directionSuffix}`
+      return `<span class="travel-timer travel-unknown" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 
     const planeType = status.plane_type
@@ -634,7 +646,8 @@ export default class extends Controller {
     const flightData = FLIGHT_TIMES[destination]
     if (!flightData) {
       // Unknown destination — show description only
-      return `<span class="travel-timer" title="${this.escapeHtml(status.description || "")}">${this.escapeHtml(destination)}</span>`
+      const displayText = isReturning ? `${directionPrefix}${destination}` : `${destination}${directionSuffix}`
+      return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 
     const ticketTypes = PLANE_TYPE_MAP[planeType] || ["standard"]
@@ -657,8 +670,8 @@ export default class extends Controller {
       const slowText = this.formatCountdown(slowRemaining)
       const expiringSoon = fastRemaining > 0 && fastRemaining < 60
 
-      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-fast-eta="${fastEta}" data-travel-slow-eta="${slowEta}" title="${this.escapeHtml(status.description || "")}">`
-        + `<span class="travel-fast">${fastText}</span>`
+      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-fast-eta="${fastEta}" data-travel-slow-eta="${slowEta}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">`
+        + `<span class="travel-fast">${directionPrefix}${fastText}</span>`
         + `<span class="travel-separator"> / </span>`
         + `<span class="travel-slow">${slowText}</span>`
         + `</span>`
@@ -674,7 +687,7 @@ export default class extends Controller {
 
       const expiringSoon = remaining < 60
 
-      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-eta="${eta}" title="${this.escapeHtml(status.description || "")}">${this.formatCountdown(remaining)}</span>`
+      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-eta="${eta}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">${directionPrefix}${this.formatCountdown(remaining)}</span>`
     }
   }
 
@@ -730,13 +743,15 @@ export default class extends Controller {
     travelTimers.forEach(el => {
       const eta = new Date(el.dataset.travelEta)
       const remaining = Math.max(0, Math.floor((eta - new Date()) / 1000))
+      const isReturning = el.dataset.travelReturning === "true"
+      const returnPrefix = isReturning ? "\u2190 " : ""
 
       if (remaining <= 0) {
         el.textContent = "Landed"
         el.className = "stat-value no-data"
         el.removeAttribute("data-travel-eta")
       } else {
-        el.textContent = this.formatCountdown(remaining)
+        el.textContent = `${returnPrefix}${this.formatCountdown(remaining)}`
         el.className = remaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
     })
@@ -749,6 +764,8 @@ export default class extends Controller {
       const now = new Date()
       const fastRemaining = Math.max(0, Math.floor((fastEta - now) / 1000))
       const slowRemaining = Math.max(0, Math.floor((slowEta - now) / 1000))
+      const isReturning = el.dataset.travelReturning === "true"
+      const returnPrefix = isReturning ? "\u2190 " : ""
 
       if (slowRemaining <= 0) {
         el.textContent = "Landed"
@@ -758,7 +775,7 @@ export default class extends Controller {
       } else {
         const fastEl = el.querySelector(".travel-fast")
         const slowEl = el.querySelector(".travel-slow")
-        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : this.formatCountdown(fastRemaining)
+        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : `${returnPrefix}${this.formatCountdown(fastRemaining)}`
         if (slowEl) slowEl.textContent = this.formatCountdown(slowRemaining)
         el.className = fastRemaining > 0 && fastRemaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
@@ -773,7 +790,7 @@ export default class extends Controller {
       "Hospital": "status-hospital",
       "Jail": "status-jail",
       "Traveling": "status-traveling",
-      "Abroad": "status-traveling",
+      "Abroad": "status-abroad",
       "Fallen": "status-fallen"
     }
     return map[state] || "status-unknown"
