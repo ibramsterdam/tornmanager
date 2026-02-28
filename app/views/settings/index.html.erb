@@ -69,65 +69,63 @@
   </div>
 </div>
 
-<!-- Section 2: Data Overview -->
+<!-- Section 2: Browser Extension -->
 <div class="settings-section">
-  <h2>Your Data</h2>
-  
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Login Sessions</div>
-      <div class="stat-value"><%= @sessions_count %></div>
-      <div class="stat-description">Active and past login sessions with IP addresses</div>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-label">API Call Logs</div>
-      <div class="stat-value"><%= @api_calls_count %></div>
-      <div class="stat-description">Recorded API requests with timestamps and responses</div>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-label">Subscription Payments</div>
-      <div class="stat-value"><%= @payments_count %></div>
-      <div class="stat-description">Xanax payments made to extend your subscription</div>
-    </div>
-    
-    <div class="stat-card">
-      <div class="stat-label">Subscription Shares Received</div>
-      <div class="stat-value"><%= @faction_grants_count %></div>
-      <div class="stat-description">Subscription time shared with you by faction members</div>
-    </div>
-  </div>
-  
-  <div class="info-card mt-4">
-    <p><strong>What TornManager collects with your API key:</strong> Your Torn profile data (name, level, profile image), login sessions (IP address, browser info), and API request logs.</p>
-    <p>See the <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy") %> for complete details.</p>
+  <h2>Browser Extension</h2>
+  <div class="info-card">
+    <h3>Torn Manager Userscript</h3>
+    <p>Install the Torn Manager companion script to enhance your Torn experience directly in the browser. It adds ranked war stats overlays, member details, and more — right on torn.com.</p>
+    <p>Requires <%= link_to "Tampermonkey", "https://www.tampermonkey.net/", target: "_blank" %> or <%= link_to "Violentmonkey", "https://violentmonkey.github.io/", target: "_blank" %>.</p>
+    <%= link_to "Install from Greasy Fork", "https://greasyfork.org/en/scripts/TODO", target: "_blank", class: "btn-primary" %>
   </div>
 </div>
 
-<!-- Section 3: Data Management -->
+<!-- Section 3: Your Data -->
 <div class="settings-section">
-  <h2>Data Management</h2>
-  
-  <div class="info-card mb-4">
-    <h3>Export Your Data</h3>
-    <p>Download a complete copy of all your data stored by TornManager in JSON format. This includes your profile, sessions, and API call logs.</p>
-    <%= link_to "Download My Data", settings_export_data_path, class: "btn-secondary", data: { turbo: false } %>
-  </div>
-  
-  <div class="danger-zone">
-    <h3>Delete Your Data</h3>
-    <p>This will permanently delete:</p>
-    <ul>
-      <li>All login sessions and session history</li>
-      <li>All API call logs and monitoring data</li>
-      <li>Your stored API key</li>
-    </ul>
-    <p><strong>Your subscription will NOT be revoked.</strong> You can log back in anytime using your Torn API key, and we'll reconnect your account using your Torn ID. Your subscription time will be preserved.</p>
-    
-    <%= button_to "Delete Collected Data", settings_purge_data_path, 
-        method: :delete, 
-        class: "btn-danger",
-        data: { turbo_confirm: "Are you sure? This will delete all your collected data and sign you out. Your subscription will be preserved." } %>
+  <h2>Your Data</h2>
+
+  <div class="settings-top-grid">
+    <!-- Left: Stats overview -->
+    <div class="info-card">
+      <div class="data-stats-list">
+        <div class="data-stats-row">
+          <span class="data-stats-label">Login Sessions</span>
+          <span class="data-stats-value"><%= @sessions_count %></span>
+        </div>
+        <div class="data-stats-row">
+          <span class="data-stats-label">API Call Logs</span>
+          <span class="data-stats-value"><%= @api_calls_count %></span>
+        </div>
+        <div class="data-stats-row">
+          <span class="data-stats-label">Subscription Payments</span>
+          <span class="data-stats-value"><%= @payments_count %></span>
+        </div>
+        <div class="data-stats-row">
+          <span class="data-stats-label">Subscription Shares Received</span>
+          <span class="data-stats-value"><%= @faction_grants_count %></span>
+        </div>
+      </div>
+
+      <p class="data-stats-footer">
+        See the <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy") %> for details on what we collect.
+      </p>
+    </div>
+
+    <!-- Right: Management actions -->
+    <div class="info-card">
+      <h3>Manage Your Data</h3>
+      <p>Download a complete copy of all your data in JSON format, or permanently delete everything we've collected.</p>
+
+      <div class="data-actions">
+        <%= link_to "Export Data", settings_export_data_path, class: "btn-outline", data: { turbo: false } %>
+
+        <%= button_to "Delete Data", settings_purge_data_path,
+            method: :delete,
+            class: "btn-danger",
+            data: { turbo_confirm: "Are you sure? This will delete all your collected data and sign you out. Your subscription will be preserved." } %>
+      </div>
+
+      <p class="data-stats-footer">Deleting data will sign you out. Your subscription will be preserved.</p>
+    </div>
   </div>
 </div>
