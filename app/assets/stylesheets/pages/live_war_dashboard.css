@@ -487,6 +487,16 @@ th.sortable:hover {
   animation: pulse-timer 1s infinite;
 }
 
+.travel-timer.about-to-land {
+  color: rgb(34, 197, 94);
+  animation: pulse-land 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-land {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
 /* Abroad timer in table */
 .abroad-timer {
   font-family: "Geist Mono", monospace;
