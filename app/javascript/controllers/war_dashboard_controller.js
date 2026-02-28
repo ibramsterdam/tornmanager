@@ -634,7 +634,7 @@ export default class extends Controller {
     // Show destination with direction arrow but no countdown timer
     if (!status.travel_started_at) {
       const destText = destination || "Unknown"
-      const displayText = isReturning ? `${directionPrefix}${destText}` : `${destText}${directionSuffix}`
+      const displayText = isReturning ? `\u2190 Torn` : `${destText} \u2192`
       return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 
@@ -645,8 +645,8 @@ export default class extends Controller {
 
     const flightData = FLIGHT_TIMES[destination]
     if (!flightData) {
-      // Unknown destination — show description only
-      const displayText = isReturning ? `${directionPrefix}${destination}` : `${destination}${directionSuffix}`
+      // Unknown destination — show destination for outbound, "Torn" for returning
+      const displayText = isReturning ? `\u2190 Torn` : `${destination} \u2192`
       return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 
