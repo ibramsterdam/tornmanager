@@ -65,17 +65,19 @@ Four SQLite databases, each with their own migrations directory:
 ## Development Commands
 
 ```bash
-bin/rails server          # Start dev server (also runs Solid Queue)
-bin/rails test            # Run unit/controller/job tests
-bin/rails test:system     # Run system tests (Capybara + Selenium)
-bin/rubocop               # Lint (rubocop-rails-omakase style)
-bin/brakeman --no-pager   # Security scan
-bin/bundler-audit         # Gem vulnerability scan
-bin/importmap audit       # JS dependency audit
+mise exec -- bin/rails server          # Start dev server (also runs Solid Queue)
+mise exec -- bin/rails test            # Run full test suite (always run all tests)
+mise exec -- bin/rails test:system     # Run system tests (Capybara + Selenium)
+mise exec -- bin/rubocop               # Lint (rubocop-rails-omakase style)
+mise exec -- bin/brakeman --no-pager   # Security scan
+mise exec -- bin/bundler-audit         # Gem vulnerability scan
+mise exec -- bin/importmap audit       # JS dependency audit
 ```
 
 ## Testing
 
+- **Run tests**: `mise exec -- bin/rails test`
+- **Always run the full suite** after making changes. The suite is fast (~4 seconds) so there's no reason to run individual test files.
 - **Framework**: Minitest with Mocha for mocking
 - **Fixtures**: Used for test data (`test/fixtures/`)
 - **Parallelization**: Enabled (`parallelize(workers: :number_of_processors)`)
