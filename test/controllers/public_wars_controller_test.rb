@@ -282,6 +282,79 @@ class PublicWarsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".public-wars-create-form"
   end
 
+  # -- Stats --
+
+  test "stats saves spy stats to cache" do
+    with_memory_cache do
+      post stats_public_war_path(@open_lobby),
+        params: { torn_id: "5555555", strength: "100000000" }.to_json,
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      assert_response :success
+
+      spy_stats = Rails.cache.read(@open_lobby.spy_stats_cache_key)
+      assert_equal 100_000_000, spy_stats["5555555"][:strength]
+    end
+  end
+
+  test "stats auto-calculates total when all four stats are provided" do
+    with_memory_cache do
+      post stats_public_war_path(@open_lobby),
+        params: { torn_id: "5555555", strength: "100", defense: "200", speed: "300", dexterity: "400" }.to_json,
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      assert_response :success
+      json = JSON.parse(response.body)
+      assert_equal 1000, json["stats"]["total"]
+    end
+  end
+
+  test "stats merges with existing stats for same member" do
+    with_memory_cache do
+      Rails.cache.write(@open_lobby.spy_stats_cache_key, {
+        "5555555" => { strength: 100, defense: 200 }
+      })
+
+      post stats_public_war_path(@open_lobby),
+        params: { torn_id: "5555555", speed: "300" }.to_json,
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      assert_response :success
+      spy_stats = Rails.cache.read(@open_lobby.spy_stats_cache_key)
+      assert_equal 100, spy_stats["5555555"][:strength]
+      assert_equal 200, spy_stats["5555555"][:defense]
+      assert_equal 300, spy_stats["5555555"][:speed]
+    end
+  end
+
+  test "stats rejects missing torn_id" do
+    post stats_public_war_path(@open_lobby),
+      params: { strength: "100" }.to_json,
+      headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+  end
+
+  test "stats rejects zero values" do
+    post stats_public_war_path(@open_lobby),
+      params: { torn_id: "5555555", strength: "0" }.to_json,
+      headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+  end
+
+  test "stats strips non-numeric characters from values" do
+    with_memory_cache do
+      post stats_public_war_path(@open_lobby),
+        params: { torn_id: "5555555", strength: "1,500,000" }.to_json,
+        headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+      assert_response :success
+      spy_stats = Rails.cache.read(@open_lobby.spy_stats_cache_key)
+      assert_equal 1_500_000, spy_stats["5555555"][:strength]
+    end
+  end
+
   # -- Destroy --
 
   test "destroy with correct confirmation terminates lobby" do

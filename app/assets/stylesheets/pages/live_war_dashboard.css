@@ -536,6 +536,42 @@ th.sortable:hover {
   font-weight: 600;
 }
 
+/* Editable stat cells */
+.stat-editable {
+  cursor: pointer;
+  transition: background 0.15s ease;
+  position: relative;
+}
+
+.stat-editable:hover {
+  background: var(--gray-800);
+}
+
+.stat-editable.no-data:hover::after {
+  content: "click to add";
+  position: absolute;
+  font-size: 0.5625rem;
+  color: var(--gray-500);
+  white-space: nowrap;
+  bottom: 1px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.stat-edit-input {
+  width: 100%;
+  min-width: 60px;
+  background: var(--gray-800);
+  border: 1px solid var(--blue-500);
+  border-radius: 3px;
+  color: var(--gray-100);
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  outline: none;
+  text-align: right;
+}
+
 /* Attack link */
 .attack-link {
   display: inline-flex;

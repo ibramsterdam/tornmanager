@@ -35,9 +35,11 @@ class PublicWarPollingJob < ApplicationJob
 
   def build_war_data(api_key, lobby)
     enemy_members = fetch_enemy_members(api_key, lobby.faction_torn_id)
+    spy_stats = Rails.cache.read(lobby.spy_stats_cache_key) || {}
 
     members = enemy_members.transform_values do |member|
-      build_member_data(member)
+      data = build_member_data(member)
+      merge_spy_stats(data, spy_stats)
     end
 
     {
@@ -95,6 +97,17 @@ class PublicWarPollingJob < ApplicationJob
 
     match = description.match(DESTINATION_PATTERN)
     match&.[](1)
+  end
+
+  def merge_spy_stats(member_data, spy_stats)
+    torn_id = member_data[:torn_id].to_s
+    stats = spy_stats[torn_id] || spy_stats[member_data[:torn_id]]
+
+    if stats
+      member_data[:stats] = stats
+    end
+
+    member_data
   end
 
   def resolve_travel_started_at(member)

@@ -1,8 +1,6 @@
 import { Controller } from "@hotwired/stimulus"
 import consumer from "channels/consumer"
 
-// Lightweight controller for the faction dashboard war card.
-// Only updates the score numbers via WebSocket — no table, no timers.
 export default class extends Controller {
   static values = {
     ourScore: Number,

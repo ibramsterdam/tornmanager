@@ -201,6 +201,40 @@ class PublicWarPollingJobTest < ActiveJob::TestCase
     end
   end
 
+  # -- Spy stats merging --
+
+  test "merges spy stats from cache into member data" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+
+    with_memory_cache do
+      Rails.cache.write(@lobby.api_key_cache_key, "test_api_key")
+      Rails.cache.write(@lobby.spy_stats_cache_key, {
+        "5555555" => { strength: 100_000, defense: 200_000, speed: 300_000, dexterity: 400_000, total: 1_000_000 }
+      })
+
+      PublicWarPollingJob.perform_now(@lobby.id)
+
+      cached = Rails.cache.read(@lobby.war_cache_key)
+      member_data = cached[:members][5555555]
+      assert_equal 1_000_000, member_data[:stats][:total]
+      assert_equal 100_000, member_data[:stats][:strength]
+    end
+  end
+
+  test "member data has no stats when spy stats cache is empty" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+
+    with_memory_cache do
+      Rails.cache.write(@lobby.api_key_cache_key, "test_api_key")
+
+      PublicWarPollingJob.perform_now(@lobby.id)
+
+      cached = Rails.cache.read(@lobby.war_cache_key)
+      member_data = cached[:members][5555555]
+      assert_nil member_data[:stats]
+    end
+  end
+
   test "carries forward travel_started_at for ongoing travelers" do
     traveling_member = TornApi::Faction::Members::Member.new(
       6666666, "TravelingPlayer", 50, 30,

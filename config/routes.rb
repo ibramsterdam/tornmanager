@@ -50,6 +50,7 @@ Rails.application.routes.draw do
     member do
       post :unlock
       get :war_data
+      post :stats
     end
   end
 

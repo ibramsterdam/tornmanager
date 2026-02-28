@@ -1,4 +1,4 @@
-<!-- Public War Live Dashboard (no scores) -->
+<!-- Public War Live Dashboard -->
 <div class="live-war-dashboard"
      data-controller="war-dashboard"
      data-war-dashboard-initial-data-value="<%= (war_data || {}).to_json %>"
@@ -11,7 +11,9 @@
      data-war-dashboard-scheduled-value="false"
      data-war-dashboard-poll-url-value="<%= war_data_public_war_path(lobby) %>"
      data-war-dashboard-poll-interval-value="3000"
-     data-war-dashboard-hide-stats-value="true"
+     data-war-dashboard-hide-stats-value="false"
+     data-war-dashboard-editable-stats-value="true"
+     data-war-dashboard-stats-url-value="<%= stats_public_war_path(lobby) %>"
      data-war-dashboard-terminated-url-value="<%= public_wars_path(terminated: 1) %>">
 
   <!-- Faction Names Header -->
@@ -76,6 +78,15 @@
           <span class="action-badge action-offline war-filter-toggle" data-action="click->war-dashboard#toggleFilter" data-war-dashboard-target="filterActionOffline" data-filter-active="true">Offline</span>
         </div>
       </div>
+      <div class="war-filter-group war-filter-stats">
+        <span class="war-filter-label">Max Stats</span>
+        <div class="war-filter-slider">
+          <input type="range" min="0" max="50000000000" step="100000000" value="50000000000"
+                 data-action="input->war-dashboard#applyFilters"
+                 data-war-dashboard-target="filterMaxStats">
+          <span class="war-filter-slider-value" data-war-dashboard-target="filterMaxStatsLabel">No limit</span>
+        </div>
+      </div>
     </div>
 
     <!-- Table -->
@@ -108,6 +119,21 @@
               </span>
               <span class="sort-indicator" data-war-dashboard-target="sortIndicatorTimer"></span>
             </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="total">
+              Total Stats <span class="sort-indicator" data-war-dashboard-target="sortIndicatorTotal"></span>
+            </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="strength">
+              STR <span class="sort-indicator" data-war-dashboard-target="sortIndicatorStrength"></span>
+            </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="defense">
+              DEF <span class="sort-indicator" data-war-dashboard-target="sortIndicatorDefense"></span>
+            </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="speed">
+              SPD <span class="sort-indicator" data-war-dashboard-target="sortIndicatorSpeed"></span>
+            </th>
+            <th class="sortable" data-action="click->war-dashboard#sort" data-war-dashboard-sort-key-param="dexterity">
+              DEX <span class="sort-indicator" data-war-dashboard-target="sortIndicatorDexterity"></span>
+            </th>
             <th>
               Actions
             </th>
@@ -115,7 +141,7 @@
         </thead>
         <tbody data-war-dashboard-target="membersBody">
           <tr>
-            <td colspan="6" class="table-empty-text">Loading enemy members...</td>
+            <td colspan="11" class="table-empty-text">Loading enemy members...</td>
           </tr>
         </tbody>
       </table>

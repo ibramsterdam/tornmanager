@@ -30,7 +30,6 @@ export default class extends Controller {
       }
     }
 
-    // If we haven't scrolled past any heading yet, activate the first one
     if (!activeId && this.headings.length > 0) {
       activeId = this.headings[0].id
     }

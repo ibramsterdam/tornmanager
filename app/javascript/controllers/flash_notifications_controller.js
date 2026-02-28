@@ -2,7 +2,6 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   connect() {
-    // Listen for custom flash events from other controllers
     window.addEventListener("flash:show", this.handleFlashEvent.bind(this))
   }
 
