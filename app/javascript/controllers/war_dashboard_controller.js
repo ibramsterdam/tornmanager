@@ -663,10 +663,10 @@ export default class extends Controller {
       const slowEta = new Date(startedAt.getTime() + slowDuration * 1000).toISOString()
 
       if (slowRemaining <= 0) {
-        return '<span class="stat-value no-data">Landed</span>'
+        return '<span class="travel-timer about-to-land">About to land</span>'
       }
 
-      const fastText = fastRemaining <= 0 ? "Landed" : this.formatCountdown(fastRemaining)
+      const fastText = fastRemaining <= 0 ? "About to land" : this.formatCountdown(fastRemaining)
       const slowText = this.formatCountdown(slowRemaining)
       const expiringSoon = fastRemaining > 0 && fastRemaining < 60
 
@@ -682,7 +682,7 @@ export default class extends Controller {
       const eta = new Date(startedAt.getTime() + duration * 1000).toISOString()
 
       if (remaining <= 0) {
-        return '<span class="stat-value no-data">Landed</span>'
+        return '<span class="travel-timer about-to-land">About to land</span>'
       }
 
       const expiringSoon = remaining < 60
@@ -748,8 +748,8 @@ export default class extends Controller {
       const suffix = isReturning ? "" : " \u2192"
 
       if (remaining <= 0) {
-        el.textContent = "Landed"
-        el.className = "stat-value no-data"
+        el.textContent = "About to land"
+        el.className = "travel-timer about-to-land"
         el.removeAttribute("data-travel-eta")
       } else {
         el.textContent = `${prefix}${this.formatCountdown(remaining)}${suffix}`
@@ -770,14 +770,14 @@ export default class extends Controller {
       const suffix = isReturning ? "" : " \u2192"
 
       if (slowRemaining <= 0) {
-        el.textContent = "Landed"
-        el.className = "stat-value no-data"
+        el.textContent = "About to land"
+        el.className = "travel-timer about-to-land"
         el.removeAttribute("data-travel-fast-eta")
         el.removeAttribute("data-travel-slow-eta")
       } else {
         const fastEl = el.querySelector(".travel-fast")
         const slowEl = el.querySelector(".travel-slow")
-        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : `${prefix}${this.formatCountdown(fastRemaining)}`
+        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "About to land" : `${prefix}${this.formatCountdown(fastRemaining)}`
         if (slowEl) slowEl.textContent = `${this.formatCountdown(slowRemaining)}${suffix}`
         el.className = fastRemaining > 0 && fastRemaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
