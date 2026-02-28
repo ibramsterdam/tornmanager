@@ -863,7 +863,140 @@
     gap: var(--space-2);
   }
 
+  .training-section-header {
+    margin-bottom: var(--space-2);
+  }
+
   .training-section-header h2 {
-    font-size: 1.5rem;
+    font-size: 1.125rem;
+  }
+
+  #training {
+    height: auto;
+    min-height: auto;
+    max-height: none;
+    overflow: visible;
+    padding-top: var(--space-3);
+    padding-bottom: var(--space-3);
+  }
+
+  #training .dashboard-fullpage-content {
+    overflow: visible;
+  }
+
+  #training .table-container:not(.table-disabled) {
+    overflow: visible;
+  }
+
+  #training .compliance-summary {
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+
+  #training .stat-box {
+    padding: var(--space-2);
+  }
+
+  #training .stat-box .count {
+    font-size: 1.125rem;
+    margin-bottom: 0;
+  }
+
+  #training .stat-box .label {
+    font-size: 0.5625rem;
+  }
+
+  #training .table-info {
+    padding: var(--space-3);
+  }
+
+  .filter-inline {
+    gap: var(--space-2);
+  }
+
+  .date-inputs-inline {
+    width: 100%;
+  }
+
+  .date-input-inline {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.75rem;
+    padding: var(--space-2);
+  }
+
+  .info-label {
+    font-size: 0.75rem;
+  }
+
+  .info-days {
+    font-size: 0.75rem;
+  }
+
+  .training-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Hide Contracts, Crimes, Activity columns on mobile (cols 6, 7, 8 in 9-col table) */
+  .training-table-wrapper th:nth-child(6),
+  .training-table-wrapper td:nth-child(6),
+  .training-table-wrapper th:nth-child(7),
+  .training-table-wrapper td:nth-child(7),
+  .training-table-wrapper th:nth-child(8),
+  .training-table-wrapper td:nth-child(8) {
+    display: none;
+  }
+
+  .training-table-wrapper .copy-cell {
+    width: auto;
+    padding: var(--space-1);
+  }
+
+  .training-table-wrapper .copy-stats-button {
+    width: 24px;
+    height: 24px;
+  }
+
+  .training-table-wrapper .copy-stats-button svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .training-table-wrapper th,
+  .training-table-wrapper td {
+    padding: var(--space-2) var(--space-2);
+    font-size: 0.6875rem;
+  }
+
+  .training-table-wrapper th small {
+    font-size: 0.5625rem;
+  }
+
+  .training-table-wrapper .stat-cell .stat-value {
+    font-size: 0.75rem;
+  }
+
+  .training-table-wrapper .stat-cell .stat-daily {
+    font-size: 0.625rem;
+  }
+
+  .training-table-wrapper .compliance-badge {
+    width: 20px;
+    height: 20px;
+    font-size: 0.75rem;
+  }
+
+  .training-table-wrapper .compliance-badge-cell {
+    width: 28px;
+  }
+
+  .training-table-wrapper .player-link {
+    font-size: 0.75rem;
+  }
+
+  .training-table-wrapper .ssl-badge {
+    font-size: 0.5625rem;
+    padding: 0 3px;
   }
 }

@@ -24,69 +24,71 @@
   </div>
 </div>
 
-<table>
-  <thead>
-    <tr>
-      <th>Status</th>
-      <th>MEMBER</th>
-      <th>XANAX<br><small>Target: <%= @faction.xanax_target %>/day</small></th>
-      <th>ENERGY REFILLS<br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
-      <th>NERVE REFILLS<br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
-      <th>CONTRACTS</th>
-      <th>CRIMES</th>
-      <th>ACTIVITY<br><small>min/day</small></th>
-      <th></th>
-    </tr>
-  </thead>
-  <tbody>
-    <% 10.times do %>
-      <tr class="skeleton-row">
-        <td class="compliance-badge-cell">
-          <div class="skeleton skeleton-badge" style="width: 28px; height: 28px; border-radius: 50%;"></div>
-        </td>
-        <td>
-          <div class="skeleton skeleton-text" style="width: 100px;"></div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 50px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
-          </div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 50px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
-          </div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 50px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
-          </div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 50px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
-          </div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 50px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
-          </div>
-        </td>
-        <td>
-          <div class="skeleton-cell">
-            <div class="skeleton skeleton-text" style="width: 60px;"></div>
-            <div class="skeleton skeleton-text-sm" style="width: 50px;"></div>
-          </div>
-        </td>
-        <td class="copy-cell">
-          <div class="skeleton skeleton-badge" style="width: 32px; height: 32px;"></div>
-        </td>
+<div class="training-table-wrapper">
+  <table>
+    <thead>
+      <tr>
+        <th>Status</th>
+        <th>MEMBER</th>
+        <th>XANAX<br><small>Target: <%= @faction.xanax_target %>/day</small></th>
+        <th>ENERGY REFILLS<br><small>Target: <%= @faction.energy_refill_target %>/day</small></th>
+        <th>NERVE REFILLS<br><small>Target: <%= @faction.nerve_refill_target %>/day</small></th>
+        <th>CONTRACTS</th>
+        <th>CRIMES</th>
+        <th>ACTIVITY<br><small>min/day</small></th>
+        <th></th>
       </tr>
-    <% end %>
-  </tbody>
-</table>
+    </thead>
+    <tbody>
+      <% 10.times do %>
+        <tr class="skeleton-row">
+          <td class="compliance-badge-cell">
+            <div class="skeleton skeleton-badge" style="width: 28px; height: 28px; border-radius: 50%;"></div>
+          </td>
+          <td>
+            <div class="skeleton skeleton-text" style="width: 100px;"></div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 50px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 40px;"></div>
+            </div>
+          </td>
+          <td>
+            <div class="skeleton-cell">
+              <div class="skeleton skeleton-text" style="width: 60px;"></div>
+              <div class="skeleton skeleton-text-sm" style="width: 50px;"></div>
+            </div>
+          </td>
+          <td class="copy-cell">
+            <div class="skeleton skeleton-badge" style="width: 32px; height: 32px;"></div>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
