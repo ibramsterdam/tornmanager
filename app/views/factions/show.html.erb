@@ -1,15 +1,5 @@
-<% if @tracking_disabled %>
-  <div class="centered-content">
-    <div class="info-card">
-      <h2>Stats Tracking Disabled</h2>
-      <p>This faction (<strong><%= @faction.name %></strong>) does not have stats tracking enabled.</p>
-      <p>Contact an administrator to enable stats tracking for your faction.</p>
-    </div>
-  </div>
-<% else %>
-  <div class="faction-dashboard">
-    <%= render "factions/hero_section" %>
-    <%= render "factions/war_section" %>
-    <%= render "factions/training_section" %>
-  </div>
-<% end %>
+<div class="faction-dashboard">
+  <%= render "factions/hero_section" %>
+  <%= render "factions/war_section" %>
+  <%= render "factions/training_section" %>
+</div>

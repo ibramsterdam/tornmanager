@@ -22,7 +22,7 @@ class User < ApplicationRecord
   scope :tracked_for_stats, -> {
     left_joins(:faction)
       .where(fallen: false)
-      .where("hof_stats_user = ? OR factions.track_stats = ?", true, true)
+      .where("hof_stats_user = ? OR factions.id IS NOT NULL", true)
       .distinct
   }
 

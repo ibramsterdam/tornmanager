@@ -2,7 +2,7 @@ require "test_helper"
 
 class WarPollingJobTest < ActiveJob::TestCase
   setup do
-    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5, war_polling_active: true)
+    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5, war_polling_active: true)
     @faction.create_faction_setting!(torn_api_key: "faction_limited_key", torn_api_access_type: "Limited Access")
 
     @war = @faction.ranked_wars.create!(

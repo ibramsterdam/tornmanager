@@ -3,7 +3,7 @@ module Daily
     queue_as :default
 
     def perform
-      Faction.tracked.find_each do |faction|
+      Faction.find_each do |faction|
         SyncFactionMembersJob.perform_later(faction.id)
       end
     end

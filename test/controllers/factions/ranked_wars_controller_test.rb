@@ -3,7 +3,7 @@ require "test_helper"
 class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @faction = Faction.create!(
-      torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5,
+      torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
     @bram = users(:bram)

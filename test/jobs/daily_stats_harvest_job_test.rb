@@ -6,7 +6,7 @@ class DailyPersonalStatsJobTest < ActiveJob::TestCase
   end
 
   test "enqueues a FetchPersonalStatsJob for each tracked user" do
-    faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     bram = users(:bram)
     bert = users(:bert)
     bram.update!(faction: faction, fallen: false)
@@ -22,19 +22,9 @@ class DailyPersonalStatsJobTest < ActiveJob::TestCase
   end
 
   test "skips fallen users" do
-    faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     bram = users(:bram)
     bram.update!(faction: faction, fallen: true)
-
-    assert_no_enqueued_jobs(only: FetchPersonalStatsJob) do
-      Daily::PersonalStatsJob.perform_now
-    end
-  end
-
-  test "skips users in untracked factions" do
-    faction = Faction.create!(torn_id: 99999, name: "Untracked Faction", track_stats: false, xanax_target: 2.5)
-    bram = users(:bram)
-    bram.update!(faction: faction, hof_stats_user: false)
 
     assert_no_enqueued_jobs(only: FetchPersonalStatsJob) do
       Daily::PersonalStatsJob.perform_now

@@ -2,7 +2,7 @@ require "test_helper"
 
 class SyncFactionMembersJobTest < ActiveJob::TestCase
   setup do
-    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @bram = users(:bram)
     @bram.update!(faction: @faction)
 
@@ -111,22 +111,6 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
   test "does not schedule backfill for existing members" do
     AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
-
-    assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
-      SyncFactionMembersJob.perform_now(@faction.id)
-    end
-  end
-
-  test "does not schedule backfill when faction does not track stats" do
-    @faction.update!(track_stats: false)
-    new_member = TornApi::Faction::Members::Member.new(
-      9999999, "NewPlayer", 15, 5,
-      "Online", 1708000000, "1 minute ago",
-      "Okay", "", "Okay", "green", 0, nil,
-      "Everyone", "Member", true, false, false, false
-    )
-    AdminCredentials.stubs(:api_key).returns("test_key")
-    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
 
     assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
       SyncFactionMembersJob.perform_now(@faction.id)

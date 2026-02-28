@@ -2,7 +2,7 @@ require "test_helper"
 
 class Admin::FactionsControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @admin = users(:bram) # torn_id 2728237 = admin
     sign_in_as(@admin)
   end

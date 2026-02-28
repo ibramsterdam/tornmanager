@@ -3,7 +3,7 @@ require "test_helper"
 class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   setup do
     @faction = Faction.create!(
-      torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5,
+      torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
     FactionSetting.create!(faction: @faction, torn_api_key: "FACTION_KEY")
@@ -185,15 +185,6 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     delete delete_faction_data_faction_leadership_path(@faction)
 
     assert_not @faction.reload.setup_completed?
-  end
-
-  test "delete_faction_data disables stat tracking" do
-    assert @faction.track_stats?, "Precondition: track_stats should be true"
-
-    sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
-
-    assert_not @faction.reload.track_stats?, "track_stats should be false after deletion"
   end
 
   test "delete_faction_data redirects to faction dashboard with notice" do
