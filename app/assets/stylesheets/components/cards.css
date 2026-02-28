@@ -214,6 +214,10 @@
   text-decoration: underline;
 }
 
+.info-card a[class*="btn-"]:hover {
+  text-decoration: none;
+}
+
 /* Data Collection Cards (Privacy Policy) */
 .data-collection-cards {
   display: grid;

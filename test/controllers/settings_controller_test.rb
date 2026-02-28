@@ -58,10 +58,10 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
     get settings_path
     assert_response :success
-    assert_select ".stat-value", text: @user.sessions.count.to_s
-    assert_select ".stat-value", text: @user.api_calls.count.to_s
-    assert_select ".stat-value", text: @user.sent_xanax_payments.count.to_s
-    assert_select ".stat-value", text: @user.subscription_grants.count.to_s
+    assert_select ".data-stats-value", text: @user.sessions.count.to_s
+    assert_select ".data-stats-value", text: @user.api_calls.count.to_s
+    assert_select ".data-stats-value", text: @user.sent_xanax_payments.count.to_s
+    assert_select ".data-stats-value", text: @user.subscription_grants.count.to_s
   end
 
   test "purge_data deletes all user sessions" do

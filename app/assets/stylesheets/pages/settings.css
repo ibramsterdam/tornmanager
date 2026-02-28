@@ -18,10 +18,6 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
-  align-items: start;
-}
-
-.settings-top-grid-stretch {
   align-items: stretch;
 }
 
@@ -110,52 +106,69 @@
 
 
 
-/* Settings Page Stat Cards */
-.settings-section .stat-card .stat-label {
-  color: #ffffff;
+/* Data Stats List */
+.data-stats-list {
+  display: flex;
+  flex-direction: column;
 }
 
-.settings-section .stat-card .stat-value {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--gray-100);
-  margin-bottom: 0.25rem;
+.data-stats-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--gray-800);
 }
 
-.settings-section .stat-card .stat-description {
-  font-size: 0.75rem;
-  color: var(--gray-600);
-  line-height: 1.4;
+.data-stats-row:last-child {
+  border-bottom: none;
 }
 
-/* Danger Zone */
-.danger-zone {
-  background: rgba(239, 68, 68, 0.1);
-  border: 2px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
-  padding: 2rem;
+.data-stats-label {
+  font-size: 0.875rem;
+  color: var(--gray-400);
 }
 
-.danger-zone h3 {
-  font-size: 1.125rem;
+.data-stats-value {
+  font-size: 0.875rem;
   font-weight: 600;
-  color: #fca5a5;
-  margin-bottom: 1rem;
+  color: var(--gray-100);
 }
 
-.danger-zone ul {
-  margin-left: 1.5rem;
-  margin-bottom: 1rem;
-  color: var(--gray-300);
+.data-stats-footer {
+  margin-top: 1rem;
+  margin-bottom: 0;
+  font-size: 0.8125rem;
+  color: var(--gray-500);
+  line-height: 1.5;
 }
 
-.danger-zone li {
-  margin-bottom: 0.5rem;
+.data-stats-footer a {
+  color: var(--blue-500);
+  text-decoration: none;
 }
 
-.danger-zone p {
-  color: var(--gray-300);
-  margin-bottom: 0.75rem;
+.data-stats-footer a:hover {
+  text-decoration: underline;
+}
+
+/* Data Management Actions */
+.data-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.data-actions form {
+  display: flex;
+  align-items: stretch;
+}
+
+.data-actions .btn-outline,
+.data-actions .btn-danger {
+  display: inline-flex;
+  align-items: center;
 }
 
 /* War polling active indicator */
