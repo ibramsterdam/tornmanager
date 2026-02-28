@@ -1,0 +1,86 @@
+<h1 class="public-wars-title">Public Ranked Wars</h1>
+
+<div class="public-wars-layout">
+  <%# Create form card — spans 1 col, 2 rows %>
+  <div class="public-wars-create-card">
+    <div class="public-wars-create-info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <p>
+        <strong>Your API key is never stored in our database.</strong>
+        Held in memory only for polling. Lost on termination or server restart.
+      </p>
+    </div>
+
+    <%= form_with url: public_wars_path, method: :post, class: "public-wars-create-form" do %>
+      <div class="public-wars-create-row">
+        <div class="public-wars-create-field">
+          <label class="public-wars-create-label">API Key</label>
+          <input type="text" name="api_key" class="setup-input" placeholder="Public Only key" autocomplete="off" required value="<%= params[:api_key] %>">
+        </div>
+        <div class="public-wars-create-field">
+          <label class="public-wars-create-label">Faction ID</label>
+          <input type="number" name="faction_torn_id" class="setup-input" placeholder="e.g. 9055" required value="<%= params[:faction_torn_id] %>">
+        </div>
+      </div>
+
+      <div class="public-wars-create-field">
+        <label class="public-wars-create-label">Password <span class="public-wars-optional">optional</span></label>
+        <input type="password" name="password" class="setup-input" placeholder="Leave blank for open access" autocomplete="new-password">
+      </div>
+
+      <label class="public-wars-tos-label">
+        <input type="checkbox" name="accept_terms" value="1" required>
+        <span>I accept the <%= link_to "TOS", legal_path(anchor: "terms-of-service"), target: "_blank" %> and <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy"), target: "_blank" %></span>
+      </label>
+
+      <button type="submit" class="btn btn-primary">Create Lobby</button>
+
+      <p class="public-wars-api-note">
+        Only <strong>Public Only</strong> keys accepted. ~20 API calls/min.
+      </p>
+    <% end %>
+  </div>
+
+  <% remaining_slots = PublicWarLobby::MAX_LOBBIES - @lobbies.size %>
+
+  <%# Active lobby cards %>
+  <% @lobbies.each do |lobby| %>
+    <%= link_to public_war_path(lobby), class: "public-war-card" do %>
+      <div class="public-war-card-matchup">
+        <span class="public-war-faction"><%= lobby.faction_name %></span>
+        <span class="public-war-vs">vs</span>
+        <span class="public-war-faction"><%= lobby.opponent_faction_name %></span>
+      </div>
+      <div class="public-war-card-bottom">
+        <span class="public-war-card-meta-text">by <strong><%= lobby.created_by_name %></strong> · <%= time_ago_in_words(lobby.created_at) %> ago</span>
+        <div class="public-war-card-badges">
+          <% if lobby.active? %>
+            <span class="public-war-badge public-war-badge--active">
+              <span class="public-war-badge-dot"></span>
+              Live
+            </span>
+          <% else %>
+            <span class="public-war-badge public-war-badge--inactive">Inactive</span>
+          <% end %>
+          <% if lobby.password_protected? %>
+            <span class="public-war-badge public-war-badge--locked" title="Password protected">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  <% end %>
+
+  <%# Empty placeholder slots %>
+  <% remaining_slots.times do %>
+    <div class="public-war-card-empty">
+      <span class="public-war-empty-label">Available</span>
+    </div>
+  <% end %>
+</div>

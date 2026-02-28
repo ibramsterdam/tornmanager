@@ -1,0 +1,376 @@
+/*
+ * Public War Lobbies styles
+ */
+
+/* Page title */
+.public-wars-title {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+/* Main grid layout — 4 columns, fixed row heights */
+.public-wars-layout {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+/* Create lobby card — spans 1 col, 2 rows */
+.public-wars-create-card {
+  grid-row: span 2;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+}
+
+.public-wars-create-info {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--gray-800);
+}
+
+.public-wars-create-info svg {
+  flex-shrink: 0;
+  color: rgb(59, 130, 246);
+  margin-top: 1px;
+}
+
+.public-wars-create-info p {
+  margin: 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--gray-500);
+}
+
+/* Create form */
+.public-wars-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  flex: 1;
+}
+
+.public-wars-create-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.public-wars-create-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.public-wars-create-label {
+  font-size: 0.625rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.public-wars-optional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--gray-600);
+}
+
+.public-wars-create-form .setup-input {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.public-wars-api-note {
+  margin: 0;
+  font-size: 0.625rem;
+  color: var(--gray-600);
+  line-height: 1.4;
+  margin-top: auto;
+}
+
+.public-wars-api-note a {
+  color: var(--blue-500);
+}
+
+.public-wars-tos-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.625rem;
+  color: var(--gray-500);
+  cursor: pointer;
+}
+
+.public-wars-tos-label input[type="checkbox"] {
+  accent-color: var(--blue-500);
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+}
+
+.public-wars-tos-label a {
+  color: var(--blue-500);
+}
+
+.public-wars-create-form .btn {
+  font-size: 0.75rem;
+  padding: 8px 16px;
+}
+
+/* Lobby card (clickable link) */
+a.public-war-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+a.public-war-card:hover {
+  border-color: var(--gray-600);
+  background: var(--gray-800);
+}
+
+.public-war-card-matchup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0;
+}
+
+.public-war-faction {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-100);
+}
+
+.public-war-vs {
+  font-size: 0.625rem;
+  color: var(--gray-500);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+.public-war-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.public-war-card-meta-text {
+  font-size: 0.625rem;
+  color: var(--gray-500);
+}
+
+.public-war-card-meta-text strong {
+  color: var(--gray-400);
+}
+
+.public-war-card-badges {
+  display: flex;
+  gap: var(--space-1);
+  flex-shrink: 0;
+}
+
+/* Empty lobby slot */
+.public-war-card-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--gray-800);
+  border-radius: var(--radius-md);
+}
+
+.public-war-empty-label {
+  font-size: 0.6875rem;
+  color: var(--gray-700);
+}
+
+/* Badges */
+.public-war-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.public-war-badge--active {
+  background: rgba(34, 197, 94, 0.12);
+  color: rgb(34, 197, 94);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+}
+
+.public-war-badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgb(34, 197, 94);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.public-war-badge--inactive {
+  background: rgba(107, 114, 128, 0.12);
+  color: rgb(156, 163, 175);
+  border: 1px solid rgba(107, 114, 128, 0.25);
+}
+
+.public-war-badge--locked {
+  background: rgba(234, 179, 8, 0.12);
+  color: rgb(234, 179, 8);
+  border: 1px solid rgba(234, 179, 8, 0.25);
+  padding: 2px 6px;
+}
+
+/* Danger zone (delete lobby) */
+.public-war-danger-zone {
+  margin-top: var(--space-8);
+  padding: var(--space-4);
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: var(--radius-lg);
+}
+
+.public-war-danger-zone h3 {
+  margin: 0 0 var(--space-2);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: rgb(239, 68, 68);
+}
+
+.public-war-danger-zone p {
+  margin: 0 0 var(--space-3);
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+}
+
+.public-war-delete-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.public-war-delete-field label {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  margin-bottom: var(--space-2);
+}
+
+.public-war-delete-field code {
+  background: rgba(239, 68, 68, 0.1);
+  color: rgb(239, 68, 68);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.8125rem;
+}
+
+.btn-danger {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgb(239, 68, 68);
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+  align-self: flex-start;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: rgb(220, 38, 38);
+}
+
+.btn-danger:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Public lobby dashboard table — more vertical space since no page header */
+.live-war-scores-minimal ~ .live-war-table-card .live-war-table-scroll {
+  max-height: calc(100vh - 220px);
+}
+
+/* Scores minimal header (public lobby dashboard) */
+.live-war-scores-minimal {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-4) 0;
+  margin-bottom: var(--space-4);
+}
+
+.live-war-scores-minimal .live-score-label {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--gray-200);
+}
+
+.live-war-scores-minimal .live-score-label .faction-link {
+  color: var(--gray-200);
+}
+
+.live-war-scores-minimal .live-score-label .faction-link:hover {
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .public-wars-layout {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto;
+  }
+}
+
+@media (max-width: 768px) {
+  .public-wars-layout {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto;
+  }
+
+  .public-wars-create-card {
+    grid-column: span 2;
+    grid-row: span 1;
+  }
+
+  .public-war-card-matchup {
+    gap: 2px;
+  }
+}
+
+@media (max-width: 480px) {
+  .public-wars-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .public-wars-create-card {
+    grid-column: span 1;
+  }
+}

@@ -1,0 +1,16 @@
+open_lobby:
+  slug: abc12345
+  faction_torn_id: 99999
+  faction_name: "Test Faction"
+  opponent_faction_name: "Enemy Faction"
+  created_by_name: "Bert"
+  created_by_torn_id: 1234567
+
+locked_lobby:
+  slug: locked99
+  faction_torn_id: 88888
+  faction_name: "Locked Faction"
+  opponent_faction_name: "Their Enemy"
+  created_by_name: "Kaneki"
+  created_by_torn_id: 2685512
+  password_digest: <%= BCrypt::Password.create("secret") %>

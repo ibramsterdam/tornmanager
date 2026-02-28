@@ -1,0 +1,27 @@
+<div class="page-header">
+  <div class="page-header-content">
+    <div>
+      <h1><%= @lobby.war_name %></h1>
+      <p class="page-subtitle">This lobby is password protected</p>
+    </div>
+  </div>
+</div>
+
+<div class="public-wars-form-container">
+  <%= form_with url: unlock_public_war_path(@lobby), method: :post, class: "public-wars-form" do |form| %>
+    <div class="setup-fields">
+      <div class="setup-field">
+        <label class="setup-label">
+          Password
+          <span class="setup-required">Required</span>
+        </label>
+        <input type="password" name="password" class="setup-input" placeholder="Enter the lobby password" required autofocus>
+      </div>
+    </div>
+
+    <div class="setup-actions">
+      <button type="submit" class="btn btn-primary btn-lg setup-submit">Unlock</button>
+      <%= link_to "Back to Lobbies", public_wars_path, class: "setup-cancel" %>
+    </div>
+  <% end %>
+</div>

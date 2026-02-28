@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_173306) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_191926) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -88,6 +88,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_173306) do
     t.integer "user_id", null: false
     t.index ["user_id", "date"], name: "index_personal_stat_snapshots_on_user_id_and_date", unique: true
     t.index ["user_id"], name: "index_personal_stat_snapshots_on_user_id"
+  end
+
+  create_table "public_war_lobbies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "created_by_name", null: false
+    t.integer "created_by_torn_id", null: false
+    t.string "faction_name", null: false
+    t.integer "faction_torn_id", null: false
+    t.string "opponent_faction_name", null: false
+    t.string "password_digest"
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_public_war_lobbies_on_slug", unique: true
   end
 
   create_table "ranked_wars", force: :cascade do |t|
