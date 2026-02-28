@@ -32,7 +32,7 @@
       </thead>
       <tbody>
         <% @active_subscribers.each do |user| %>
-          <tr data-controller="subscription-days" data-subscription-days-user-id-value="<%= user.id %>">
+          <tr data-controller="subscription-days" data-subscription-days-url-value="<%= update_days_admin_subscription_path(user) %>">
             <td>
               <a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a>
             </td>

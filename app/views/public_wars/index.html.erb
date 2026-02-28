@@ -1,14 +1,13 @@
 <h1 class="public-wars-title">Public Ranked Wars</h1>
 
 <div class="public-wars-layout" data-controller="lobby-unlock" data-lobby-unlock-csrf-value="<%= form_authenticity_token %>">
-  <%# Create form card — spans 1 col, 2 rows %>
   <div class="public-wars-create-card">
     <div class="public-wars-create-info">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
       </svg>
       <p>
-        <strong>Your API key is never stored in our database.</strong>
+        <strong>Your API key is never stored in my database.</strong>
         Held in memory only for polling. Lost on termination or server restart.
       </p>
     </div>
@@ -45,7 +44,6 @@
 
   <% remaining_slots = PublicWarLobby::MAX_LOBBIES - @lobbies.size %>
 
-  <%# Active lobby cards %>
   <% @lobbies.each do |lobby| %>
     <% locked = lobby.password_protected? && !lobby_unlocked?(lobby) %>
     <% if locked %>
@@ -62,14 +60,12 @@
     <% end %>
   <% end %>
 
-  <%# Empty placeholder slots %>
   <% remaining_slots.times do %>
     <div class="public-war-card-empty">
       <span class="public-war-empty-label">Available</span>
     </div>
   <% end %>
 
-  <%# Password unlock modal %>
   <div class="public-war-modal-backdrop" data-lobby-unlock-target="backdrop" data-action="click->lobby-unlock#backdropClose" hidden>
     <div class="public-war-modal" data-lobby-unlock-target="modal">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

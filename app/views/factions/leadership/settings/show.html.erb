@@ -2,11 +2,9 @@
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
   <div class="leadership-settings-grid">
-    <!-- API Keys Card -->
     <div class="leadership-settings-card leadership-settings-card-compact">
       <h3>API Configuration</h3>
 
-      <!-- Current Keys Display -->
       <div class="leadership-api-current">
         <div class="leadership-api-current-row">
           <div class="leadership-api-current-info">
@@ -50,7 +48,6 @@
         </div>
       </div>
 
-      <!-- Update Keys Form -->
       <%= form_with model: @faction_setting, url: faction_leadership_api_keys_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
         <div class="leadership-api-fields">
           <%= form.text_field :torn_api_key,
@@ -68,7 +65,6 @@
       <% end %>
     </div>
 
-    <!-- Leadership Access Card -->
     <div class="leadership-settings-card">
       <h3>Leadership Access</h3>
       <p class="leadership-settings-description">Control who can access this dashboard.</p>
@@ -78,7 +74,6 @@
       <% end %>
     </div>
 
-    <!-- Share Subscription Card -->
     <div class="leadership-settings-card">
       <h3>Share Subscription</h3>
       <p class="leadership-settings-description">Share your subscription time with faction members.</p>
@@ -123,13 +118,11 @@
       <% end %>
     </div>
 
-    <!-- Coming Soon Card -->
     <div class="leadership-settings-card leadership-settings-card-muted">
       <h3>Coming Soon</h3>
       <p class="leadership-settings-description">More features are on the way. Stay tuned for updates.</p>
     </div>
 
-    <!-- Delete Faction Data Card -->
     <div class="leadership-settings-card leadership-settings-card-danger">
       <h3 class="leadership-danger-title">Delete Faction Data</h3>
       <p class="leadership-settings-description">This will permanently delete:</p>

@@ -18,8 +18,6 @@
       </div>
     <% end %>
   </div>
-
-  <!-- Slide-in form panel -->
   <% if @is_admin %>
     <div class="roadmap-form-overlay" data-roadmap-form-target="overlay" data-action="click->roadmap-form#hide"></div>
     <div class="roadmap-form-panel" data-roadmap-form-target="panel">
@@ -80,8 +78,6 @@
       </div>
     </div>
   <% end %>
-
-  <!-- Board -->
   <div class="roadmap-board">
     <% RoadmapItem::STATUSES.each do |status| %>
       <div class="roadmap-lane">

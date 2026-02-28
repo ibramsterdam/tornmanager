@@ -1,5 +1,4 @@
 <div class="war-detail-page">
-  <!-- War Overview -->
   <div class="war-overview">
     <div class="war-overview-main">
       <div class="war-faction our-faction">
@@ -47,7 +46,6 @@
     <% end %>
   </div>
 
-  <!-- Stats Comparison -->
   <div class="war-stats-comparison">
     <h2>Stats Comparison</h2>
     <div class="stats-comparison-table">
@@ -82,9 +80,7 @@
     </div>
   </div>
 
-  <!-- Members Grid -->
   <div class="war-members-grid">
-    <!-- Our Members -->
     <div class="table-container">
       <div class="table-info">
         <span class="info-label"><%= @faction.name %> (<%= @our_members.count { |m| m["attacks"].to_i > 0 } %> fighters)</span>
@@ -134,7 +130,6 @@
       <% end %>
     </div>
 
-    <!-- Their Members -->
     <div class="table-container">
       <div class="table-info">
         <span class="info-label"><%= @war.opponent_faction_name %> (<%= @their_members.count { |m| m["attacks"].to_i > 0 } %> fighters)</span>

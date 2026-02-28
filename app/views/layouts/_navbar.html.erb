@@ -49,7 +49,6 @@
       </div>
     </div>
     
-    <!-- Mobile menu -->
     <div class="navbar-mobile" data-controller="dropdown">
       <% if Current.user.profile_image.present? %>
         <img src="<%= Current.user.profile_image %>" alt="<%= Current.user.name %>" class="navbar-user-avatar" />
@@ -103,7 +102,6 @@
       <%= link_to "Sign In", new_session_path, class: "navbar-signin" %>
     </div>
     
-    <!-- Mobile menu (unauthenticated) -->
     <div class="navbar-mobile" data-controller="dropdown">
       <button class="navbar-mobile-toggle" data-action="click->dropdown#toggle" aria-label="Toggle menu">
         <svg class="navbar-hamburger-icon" data-dropdown-target="arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
