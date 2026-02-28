@@ -1,7 +1,7 @@
 <div class="page-header">
   <%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
   <h1>API Logs (Application Owner Key)</h1>
-  <p class="page-subtitle">Monitor API calls made with the OwnerCredentials key</p>
+  <p class="page-subtitle">Monitor API calls made with the admin API key</p>
 </div>
 
 <div class="stats-grid">
@@ -97,7 +97,7 @@
       </tbody>
     </table>
   <% else %>
-    <p>No API logs found for the OwnerCredentials key.</p>
+    <p>No API logs found for the admin API key.</p>
   <% end %>
 </div>
 

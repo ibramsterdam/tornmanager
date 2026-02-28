@@ -13,12 +13,12 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
     )
   end
 
-  test "enqueues to the owner_api queue" do
-    assert_equal "owner_api", Daily::XanaxPaymentsJob.new.queue_name
+  test "enqueues to the admin queue" do
+    assert_equal "admin", Daily::XanaxPaymentsJob.new.queue_name
   end
 
   test "processes new xanax payment from existing user" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::Log.any_instance.stubs(:fetch_xanax_payments).returns([ @log_entry ])
 
     assert_difference "XanaxPayment.count", 1 do
@@ -33,7 +33,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
   end
 
   test "extends sender subscription" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::Log.any_instance.stubs(:fetch_xanax_payments).returns([ @log_entry ])
 
     Daily::XanaxPaymentsJob.perform_now
@@ -52,7 +52,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
       processed_at: Time.at(1708000000)
     )
 
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::Log.any_instance.stubs(:fetch_xanax_payments).returns([ @log_entry ])
 
     assert_no_difference "XanaxPayment.count" do
@@ -72,7 +72,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
       id: 7777777, name: "NewSender", level: 30, gender: "Male", status: "Okay"
     )
 
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::Log.any_instance.stubs(:fetch_xanax_payments).returns([ unknown_entry ])
     TornApi::User::Basic.any_instance.stubs(:fetch).returns(profile)
 
@@ -93,7 +93,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
       xanax_quantity: 2
     )
 
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::Log.any_instance.stubs(:fetch_xanax_payments).returns([ unknown_entry ])
     TornApi::User::Basic.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Not found")
 

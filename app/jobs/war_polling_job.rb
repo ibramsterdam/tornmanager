@@ -4,7 +4,7 @@ class WarPollingJob < ApplicationJob
 
   DESTINATION_PATTERN = /(?:Traveling to |Returning to Torn from |In )(.+)/i
 
-  queue_as :faction_polling
+  queue_as :war
   limits_concurrency to: 1, key: ->(faction_id) { "war_polling_faction_#{faction_id}" }
 
   def perform(faction_id)

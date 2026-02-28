@@ -1,4 +1,4 @@
-class FetchPersonalStatsJob < OwnerApiJob
+class FetchPersonalStatsJob < AdminApiJob
   MIN_STAT_ENHANCER = 200
 
   def perform(user, batch: 1, stats_date: Date.current.yesterday)
@@ -16,7 +16,7 @@ class FetchPersonalStatsJob < OwnerApiJob
     stat_batch = batch == 1 ? PersonalStatSnapshot::TRACKED_STATS_BATCH_1 : PersonalStatSnapshot::TRACKED_STATS_BATCH_2
 
     TornApi::User::PersonalStats.new(
-      OwnerCredentials.api_key,
+      AdminCredentials.api_key,
       user.torn_id,
       timestamp: stats_date.end_of_day.to_i,
       stat_batch: stat_batch

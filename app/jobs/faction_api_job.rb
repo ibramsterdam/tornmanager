@@ -1,5 +1,5 @@
-class OwnerApiJob < ApplicationJob
-  queue_as :owner_api
+class FactionApiJob < ApplicationJob
+  queue_as :faction
 
   RATE_LIMIT_SLEEP = 1.0
 

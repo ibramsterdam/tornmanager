@@ -73,7 +73,7 @@ class SessionsController < ApplicationController
   # Light member sync for new factions during login.
   # Only upserts members — no backfill scheduling.
   def sync_faction_members(faction)
-    members = TornApi::Faction::Members.new(OwnerCredentials.api_key, faction.torn_id).fetch
+    members = TornApi::Faction::Members.new(AdminCredentials.api_key, faction.torn_id).fetch
 
     members.each do |member|
       user = User.find_or_initialize_by(torn_id: member.id)

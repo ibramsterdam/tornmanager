@@ -1,5 +1,5 @@
 module Daily
-  class XanaxPaymentsJob < OwnerApiJob
+  class XanaxPaymentsJob < AdminApiJob
     PAYMENT_RECIPIENT_TORN_ID = 2728237
 
     def perform
@@ -9,7 +9,7 @@ module Daily
     private
 
     def fetch_and_process_payments
-      log_entries = TornApi::User::Log.new(OwnerCredentials.api_key).fetch_xanax_payments(limit: 100)
+      log_entries = TornApi::User::Log.new(AdminCredentials.api_key).fetch_xanax_payments(limit: 100)
 
       log_entries.each do |entry|
         process_payment(entry) unless XanaxPayment.exists?(log_id: entry.id)
@@ -42,7 +42,7 @@ module Daily
     end
 
     def create_sender(torn_id)
-      profile = TornApi::User::Basic.new(OwnerCredentials.api_key, torn_id).fetch
+      profile = TornApi::User::Basic.new(AdminCredentials.api_key, torn_id).fetch
 
       User.create!(
         torn_id: profile.id,

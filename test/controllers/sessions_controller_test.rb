@@ -122,7 +122,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
     TornApi::Faction::Basic.any_instance.stubs(:name).returns("Full Access Faction")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([])
-    OwnerCredentials.stubs(:api_key).returns("owner_key")
+    AdminCredentials.stubs(:api_key).returns("owner_key")
 
     assert_difference "User.count", 1 do
       assert_difference "Session.count", 1 do
@@ -313,7 +313,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
     TornApi::Faction::Basic.any_instance.stubs(:name).returns("Nuclear Wolves")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns(mock_members)
-    OwnerCredentials.stubs(:api_key).returns("owner_key")
+    AdminCredentials.stubs(:api_key).returns("owner_key")
 
     assert_difference "Faction.count", 1 do
       post session_path, params: { api_key: @valid_api_key }
@@ -350,7 +350,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
     TornApi::Faction::Basic.any_instance.stubs(:name).returns("Nuclear Wolves")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns(mock_members)
-    OwnerCredentials.stubs(:api_key).returns("owner_key")
+    AdminCredentials.stubs(:api_key).returns("owner_key")
 
     # Backfill jobs should NOT be enqueued during login sync
     BackfillUserStatsJob.expects(:perform_later).never

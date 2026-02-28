@@ -1,5 +1,5 @@
 class ClearBackfillStatusJob < ApplicationJob
-  queue_as :default
+  queue_as :faction
 
   def perform(faction_id)
     faction = Faction.find(faction_id)

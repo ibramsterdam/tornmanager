@@ -1,8 +1,10 @@
-class BackfillSingleStatJob < OwnerApiJob
-  def perform(user_id, date_str, batch: 1, api_key: nil)
+class BackfillSingleStatJob < FactionApiJob
+  limits_concurrency to: 1, key: ->(user_id, date_str, faction_id:, **) { faction_id }, group: "FactionApiCalls"
+
+  def perform(user_id, date_str, faction_id:, batch: 1, api_key: nil)
     user = User.find(user_id)
     date = Date.parse(date_str)
-    api_key = api_key.presence || OwnerCredentials.api_key
+    api_key = api_key.presence || AdminCredentials.api_key
 
     return Rails.logger.error("No API key found") if api_key.blank?
 
@@ -11,7 +13,7 @@ class BackfillSingleStatJob < OwnerApiJob
 
     save_snapshot(user, stats, date)
 
-    BackfillSingleStatJob.perform_later(user_id, date_str, batch: 2, api_key: api_key) if batch == 1
+    BackfillSingleStatJob.perform_later(user_id, date_str, faction_id: faction_id, batch: 2, api_key: api_key) if batch == 1
   end
 
   private

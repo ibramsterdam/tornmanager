@@ -13,10 +13,10 @@ module Admin
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
 
-      existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
+      existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction", finished_at: nil).count
 
       missing_dates.each_with_index do |date, index|
-        BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s)
+        BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s, faction_id: user.faction_id)
       end
 
       total_api_calls = existing_queued_jobs + (missing_dates.size * 2)

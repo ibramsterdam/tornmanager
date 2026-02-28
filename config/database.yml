@@ -1,6 +1,11 @@
 default: &default
   adapter: sqlite3
-  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  timeout: 5000
+
+queue_default: &queue_default
+  adapter: sqlite3
+  pool: 15
   timeout: 5000
 
 development:
@@ -12,7 +17,7 @@ development:
     database: storage/development_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
-    <<: *default
+    <<: *queue_default
     database: storage/development_queue.sqlite3
     migrations_paths: db/queue_migrate
 
@@ -21,7 +26,7 @@ test:
     <<: *default
     database: storage/test.sqlite3
   queue:
-    <<: *default
+    <<: *queue_default
     database: storage/test_queue.sqlite3
     migrations_paths: db/queue_migrate
 
@@ -34,7 +39,7 @@ production:
     database: storage/production_cache.sqlite3
     migrations_paths: db/cache_migrate
   queue:
-    <<: *default
+    <<: *queue_default
     database: storage/production_queue.sqlite3
     migrations_paths: db/queue_migrate
   cable:

@@ -178,7 +178,7 @@ module TornApi
         found = ::User.find_by(api_key: api_key)
         return found if found
 
-        ::User.find_by(torn_id: 2728237) if api_key == OwnerCredentials.api_key
+        ::User.find_by(torn_id: 2728237) if api_key == AdminCredentials.api_key
       end
     end
   end

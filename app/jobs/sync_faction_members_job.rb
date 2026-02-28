@@ -1,7 +1,7 @@
-class SyncFactionMembersJob < OwnerApiJob
+class SyncFactionMembersJob < AdminApiJob
   def perform(faction_id)
     faction = Faction.find(faction_id)
-    api_key = OwnerCredentials.api_key
+    api_key = AdminCredentials.api_key
     members = TornApi::Faction::Members.new(api_key, faction.torn_id).fetch
 
     member_torn_ids = members.map(&:id)
