@@ -1,5 +1,4 @@
 class Factions::Leadership::SubscriptionsController < Factions::Leadership::BaseController
-
   def create
     total_weeks = params[:total_weeks].to_i
     members = @faction.users.active

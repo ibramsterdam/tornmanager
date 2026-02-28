@@ -1,5 +1,4 @@
 class Factions::Leadership::FactionDataController < Factions::Leadership::BaseController
-
   def destroy
     @faction.delete_all_data!
 

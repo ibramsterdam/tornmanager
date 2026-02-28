@@ -741,6 +741,4 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     )
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
   end
-
-
 end
