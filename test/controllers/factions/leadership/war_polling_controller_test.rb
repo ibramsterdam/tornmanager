@@ -39,7 +39,7 @@ class Factions::Leadership::WarPollingControllerTest < ActionDispatch::Integrati
 
     post start_faction_leadership_war_polling_path(@faction)
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
   end
 
   test "stop deactivates war polling" do

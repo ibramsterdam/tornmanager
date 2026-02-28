@@ -22,9 +22,9 @@ Rails.application.routes.draw do
     resources :ranked_wars, only: [ :show ], controller: "factions/ranked_wars"
 
     resource :leadership, only: [ :show ], controller: "factions/leadership" do
-      get :setup
-      patch :complete_setup
       get :war_data
+
+      resource :setup, only: [ :show, :update ], controller: "factions/leadership/setup"
 
       resource :api_keys, only: [ :update, :destroy ], controller: "factions/leadership/api_keys"
       resource :leadership_access, only: [ :create, :destroy ], controller: "factions/leadership/leadership_access"
