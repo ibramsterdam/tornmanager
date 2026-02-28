@@ -9,11 +9,8 @@ class Factions::LeadershipController < ApplicationController
   before_action :require_faction_leader, only: [ :setup, :complete_setup, :update_keys, :delete_torn_key, :delete_tornstats_key, :add_whitelist, :remove_whitelist, :import_spies, :delete_faction_data ]
   before_action :require_faction_whitelisted, only: [ :share_subscription ]
   before_action :require_api_keys_configured, only: [ :show ]
-  before_action :check_tracking_enabled
 
   def show
-    return if @tracking_disabled
-
     load_wars_data
     load_spy_stats_data
     load_settings_data
@@ -308,8 +305,8 @@ class Factions::LeadershipController < ApplicationController
       # Delete API keys (destroy the faction_setting)
       @faction.faction_setting&.destroy!
 
-      # Mark setup as incomplete and disable stat tracking
-      @faction.update!(setup_completed: false, track_stats: false)
+      # Mark setup as incomplete
+      @faction.update!(setup_completed: false)
     end
 
     # Cancel scheduled Solid Queue jobs for this faction (outside transaction — separate DB)
@@ -353,13 +350,7 @@ class Factions::LeadershipController < ApplicationController
     Rails.logger.warn("Failed to cancel faction jobs for faction #{@faction.torn_id}: #{e.class} - #{e.message}")
   end
 
-  def check_tracking_enabled
-    return if performed?
 
-    unless @faction.track_stats
-      @tracking_disabled = true
-    end
-  end
 
   def require_api_keys_configured
     return if performed?

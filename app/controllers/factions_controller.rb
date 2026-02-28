@@ -23,11 +23,6 @@ class FactionsController < ApplicationController
       return render :subscription_expired
     end
 
-    unless @faction.track_stats
-      @tracking_disabled = true
-      return
-    end
-
     load_hero_data
     load_training_data
     load_war_data

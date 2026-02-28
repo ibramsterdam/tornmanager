@@ -21,7 +21,7 @@ class SyncFactionMembersJob < AdminApiJob
       )
       user.save!
 
-      schedule_backfill(user) if new_member && faction.track_stats?
+      schedule_backfill(user) if new_member
     end
 
     Rails.logger.info "SyncFactionMembersJob: Synced #{members.size} members for faction #{faction.name} [#{faction.torn_id}]"

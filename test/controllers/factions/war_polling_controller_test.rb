@@ -2,7 +2,7 @@ require "test_helper"
 
 class Factions::WarPollingControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @bram = users(:bram)
     @bram.update!(faction: @faction)
     @faction.create_faction_setting!(torn_api_key: "faction_limited_key", torn_api_access_type: "Limited Access")

@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_tracking, :toggle_ssl, :toggle_public_wars ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_ssl, :toggle_public_wars ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -67,20 +67,6 @@ module Admin
       else
         render :edit, status: :unprocessable_entity
       end
-    end
-
-    def toggle_tracking
-      @faction.update!(track_stats: !@faction.track_stats)
-
-      if @faction.track_stats
-        SyncFactionMembersJob.perform_now(@faction.id)
-        @faction.reload
-      end
-
-      render json: { success: true, track_stats: @faction.track_stats, member_count: @faction.users.active.count }
-    rescue StandardError => e
-      Rails.logger.error("Toggle tracking failed: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
-      render json: { success: false, error: e.message }, status: :unprocessable_entity
     end
 
     def toggle_ssl

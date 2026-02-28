@@ -13,8 +13,6 @@ class Faction < ApplicationRecord
   validates :energy_refill_target, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :nerve_refill_target, presence: true, numericality: { greater_than_or_equal_to: 0 }
 
-  scope :tracked, -> { where(track_stats: true) }
-
   def to_param
     torn_id.to_s
   end

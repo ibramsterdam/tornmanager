@@ -2,7 +2,7 @@ require "test_helper"
 
 class Api::CurrentWarControllerTest < ActionDispatch::IntegrationTest
   setup do
-    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", track_stats: true, xanax_target: 2.5)
+    @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @bram = users(:bram)
     @bram.update!(faction: @faction)
   end

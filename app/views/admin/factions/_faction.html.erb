@@ -19,17 +19,6 @@
   <td>
     <label class="toggle-switch">
       <input type="checkbox" 
-             <%= "checked" if faction.track_stats %>
-             data-controller="faction-toggle"
-             data-action="change->faction-toggle#toggle"
-             data-faction-toggle-url-value="<%= toggle_tracking_admin_faction_path(faction) %>"
-             data-faction-toggle-row-value="<%= dom_id(faction) %>">
-      <span class="toggle-slider"></span>
-    </label>
-  </td>
-  <td>
-    <label class="toggle-switch">
-      <input type="checkbox" 
              <%= "checked" if faction.public_wars %>
              id="public-wars-toggle-<%= faction.torn_id %>"
              onchange="togglePublicWars(<%= faction.torn_id %>, this.checked)">
@@ -44,7 +33,7 @@
 
 <% if faction.users.any? %>
 <tr id="users-list-<%= faction.id %>" style="display:none;">
-  <td colspan="7" style="padding:0;">
+    <td colspan="6" style="padding:0;">
     <div style="background:#0a0a0a; padding:16px; border-top:1px solid #262626;">
       <h4 style="margin:0 0 12px 0; color:#e5e5e5; font-size:0.875rem; font-weight:600;">Active Members (<%= faction.users.active.count %>)</h4>
       <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(250px, 1fr)); gap:8px;">

@@ -5,7 +5,6 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     @faction = Faction.create!(
       torn_id: 99999,
       name: "Test Faction",
-      track_stats: true,
       xanax_target: 2.5,
       energy_refill_target: 1.0,
       nerve_refill_target: 1.0,
@@ -60,15 +59,6 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".target-info li", /Xanax.*2\.5\/day/
     assert_select ".target-info li", /Energy Refills.*1\.0\/day/
     assert_select ".target-info li", /Nerve Refills.*1\.0\/day/
-  end
-
-  test "dashboard shows tracking disabled when faction not tracked" do
-    @faction.update!(track_stats: false)
-    sign_in_as(@bram)
-    get faction_path(@faction)
-    assert_response :success
-    assert_select ".info-card", /Stats Tracking Disabled/
-    assert_select ".dashboard-stats-row", count: 0
   end
 
   test "dashboard shows scroll cards for navigation" do

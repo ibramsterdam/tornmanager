@@ -68,7 +68,6 @@ Rails.application.routes.draw do
     end
     resources :factions, only: [ :index, :new, :create, :edit, :update, :destroy ] do
       member do
-        patch :toggle_tracking
         patch :toggle_ssl
         patch :toggle_public_wars
       end
