@@ -9,9 +9,8 @@ module Admin
       @hof_stats_users = User.hof_stats_users.count
 
       @total_factions = Faction.count
-      @tracked_factions = Faction.tracked.count
       @factions_with_backfill = Faction.where("backfill_ends_at > ?", Time.current).count
-      @faction_stats = Faction.tracked.left_joins(:users).group("factions.id", "factions.name").count("users.id")
+      @faction_stats = Faction.left_joins(:users).group("factions.id", "factions.name").count("users.id")
 
       @total_snapshots = PersonalStatSnapshot.count
       @earliest_snapshot = PersonalStatSnapshot.minimum(:timestamp)
