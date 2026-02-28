@@ -51,6 +51,12 @@ class User < ApplicationRecord
     torn_id == 2728237
   end
 
+  HOF_STAT_ENHANCER_THRESHOLD = 200
+
+  def check_hof_eligibility!(stat_enhancer_count)
+    update!(hof_stats_user: true) if stat_enhancer_count.to_i > HOF_STAT_ENHANCER_THRESHOLD
+  end
+
   def has_limited_access?
     LIMITED_ACCESS_TYPES.include?(api_access_type)
   end
