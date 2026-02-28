@@ -22,6 +22,7 @@
         <%= link_to "My Faction", factions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/factions')}" %>
       <% end %>
       <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
+      <%= link_to "Public Wars", public_wars_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/public_wars')}" %>
       <% if Current.user&.admin? %>
         <%= link_to "Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
       <% end %>
@@ -70,6 +71,7 @@
             <%= link_to "My Faction", factions_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/factions')}" %>
           <% end %>
           <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/hall-of-famers')}" %>
+          <%= link_to "Public Wars", public_wars_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/public_wars')}" %>
           <% if Current.user&.admin? %>
             <%= link_to "Admin", admin_dashboard_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/admin')}" %>
           <% end %>
@@ -93,6 +95,7 @@
       <%= link_to "TornManager", root_path, class: "navbar-link navbar-title" %>
     </div>
     <div class="navbar-center">
+      <%= link_to "Public Wars", public_wars_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/public_wars')}" %>
       <%= link_to "Key Activity Log", key_log_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/key-log')}" %>
       <%= link_to "Roadmap", roadmap_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/roadmap')}" %>
     </div>
@@ -111,6 +114,7 @@
       </button>
       <div class="navbar-mobile-menu" data-dropdown-target="menu">
         <div class="navbar-mobile-menu-section">
+          <%= link_to "Public Wars", public_wars_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/public_wars')}" %>
           <%= link_to "Key Activity Log", key_log_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/key-log')}" %>
           <%= link_to "Roadmap", roadmap_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/roadmap')}" %>
           <%= link_to "Sign In", new_session_path, class: "navbar-mobile-menu-item" %>

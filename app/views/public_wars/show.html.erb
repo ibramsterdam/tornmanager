@@ -1,0 +1,13 @@
+<%= render "public_wars/live_dashboard", lobby: @lobby, war_data: @war_data %>
+
+<div class="public-war-danger-zone">
+  <h3>Terminate Lobby</h3>
+  <p>This will permanently stop polling and remove the lobby. All data will be lost.</p>
+  <%= form_with url: public_war_path(@lobby), method: :delete, class: "public-war-delete-form", data: { controller: "lobby-delete", lobby_delete_confirmation_value: "terminate" } do %>
+    <div class="public-war-delete-field">
+      <label>Type <code>terminate</code> to confirm:</label>
+      <input type="text" name="confirmation" class="setup-input" placeholder="terminate" autocomplete="off" data-lobby-delete-target="input" data-action="input->lobby-delete#validate">
+    </div>
+    <button type="submit" class="btn btn-danger" disabled data-lobby-delete-target="button">Terminate Lobby</button>
+  <% end %>
+</div>

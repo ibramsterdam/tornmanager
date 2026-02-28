@@ -1,7 +1,5 @@
 import { Controller } from "@hotwired/stimulus"
 
-const POLL_INTERVAL = 6000 // Match WarPollingJob interval
-
 // Flight times in seconds per destination, by ticket type (without travel book)
 // Source: https://wiki.torn.com/wiki/Travel
 const FLIGHT_TIMES = {
@@ -36,7 +34,10 @@ export default class extends Controller {
     enemyName: String,
     startedAt: String,
     scheduled: Boolean,
-    pollUrl: String
+    pollUrl: String,
+    pollInterval: { type: Number, default: 6000 },
+    hideStats: { type: Boolean, default: false },
+    terminatedUrl: { type: String, default: "" }
   }
 
   static targets = [
@@ -59,7 +60,7 @@ export default class extends Controller {
     this.timerInterval = null
     this.pollInterval = null
     this.countdownInterval = null
-    this.secondsUntilUpdate = 6
+    this.secondsUntilUpdate = this.pollIntervalValue / 1000
 
     // Load initial data from cache if available
     if (this.initialDataValue && Object.keys(this.initialDataValue).length > 0) {
@@ -107,9 +108,9 @@ export default class extends Controller {
   startPolling() {
     if (!this.pollUrlValue) return
 
-    // Fetch immediately, then every POLL_INTERVAL
+    // Fetch immediately, then every pollInterval
     this.fetchWarData()
-    this.pollInterval = setInterval(() => this.fetchWarData(), POLL_INTERVAL)
+    this.pollInterval = setInterval(() => this.fetchWarData(), this.pollIntervalValue)
   }
 
   async fetchWarData() {
@@ -119,6 +120,11 @@ export default class extends Controller {
       })
 
       if (response.status === 204) return
+
+      if (response.status === 410 && this.terminatedUrlValue) {
+        window.location.href = this.terminatedUrlValue
+        return
+      }
 
       if (response.ok) {
         const data = await response.json()
@@ -135,21 +141,23 @@ export default class extends Controller {
   // --- Data handling ---
 
   handleData(data) {
-    // Update scores
+    // Update scores (targets may not exist in public lobbies)
     if (data.our_score !== undefined) {
       this.ourScoreValue = data.our_score
-      this.ourScoreTarget.textContent = data.our_score
+      if (this.hasOurScoreTarget) this.ourScoreTarget.textContent = data.our_score
     }
     if (data.their_score !== undefined) {
       this.theirScoreValue = data.their_score
-      this.theirScoreTarget.textContent = data.their_score
+      if (this.hasTheirScoreTarget) this.theirScoreTarget.textContent = data.their_score
     }
     if (data.target_score !== undefined) {
       this.targetScoreValue = data.target_score
-      this.targetScoreTarget.textContent = data.target_score
+      if (this.hasTargetScoreTarget) this.targetScoreTarget.textContent = data.target_score
     }
 
-    this.updateScoreClasses()
+    if (this.hasOurScoreTarget && this.hasTheirScoreTarget) {
+      this.updateScoreClasses()
+    }
     this.updateLeadProgress()
 
     // Update members (filter out Fallen)
@@ -188,6 +196,8 @@ export default class extends Controller {
   // --- Score display ---
 
   updateScoreClasses() {
+    if (!this.hasOurScoreTarget || !this.hasTheirScoreTarget) return
+
     const ours = this.ourScoreValue
     const theirs = this.theirScoreValue
     const ourEl = this.ourScoreTarget
@@ -286,7 +296,7 @@ export default class extends Controller {
     this.lastUpdatedTarget.textContent = `Updated ${hours}:${minutes}:${seconds}`
 
     // Reset countdown when data is updated
-    this.secondsUntilUpdate = POLL_INTERVAL / 1000
+    this.secondsUntilUpdate = this.pollIntervalValue / 1000
     this.updateCountdownDisplay()
   }
 
@@ -535,7 +545,7 @@ export default class extends Controller {
     if (filtered.length === 0) {
       this.membersBodyTarget.innerHTML = `
         <tr>
-          <td colspan="11" class="table-empty-text">${sorted.length === 0 ? "No member data available." : "No members match the current filters."}</td>
+          <td colspan="${this.hideStatsValue ? 6 : 11}" class="table-empty-text">${sorted.length === 0 ? "No member data available." : "No members match the current filters."}</td>
         </tr>
       `
       return
@@ -553,7 +563,7 @@ export default class extends Controller {
 
     const timerHtml = this.renderTimer(member)
     const lastActionHtml = this.renderLastAction(member)
-    const statsHtml = this.renderStats(member)
+    const statsHtml = this.hideStatsValue ? "" : this.renderStats(member)
     const attackUrl = `https://www.torn.com/loader.php?sid=attack&user2ID=${member.torn_id}`
     const profileUrl = `https://www.torn.com/profiles.php?XID=${member.torn_id}`
 

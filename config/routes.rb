@@ -46,6 +46,13 @@ Rails.application.routes.draw do
 
     get :public_war, controller: "factions/public_war", action: :show
   end
+  resources :public_wars, only: [ :index, :create, :show, :destroy ], param: :slug do
+    member do
+      post :unlock
+      get :war_data
+    end
+  end
+
   resources :welcome, only: [ :index ]
 
   get "hall-of-famers", to: "hall_of_famers#index", as: :hall_of_famers
