@@ -1,5 +1,5 @@
 class BackfillUserStatsJob < ApplicationJob
-  queue_as :faction_api
+  queue_as :default
 
   def perform(user_id, start_date, end_date)
     user = User.find(user_id)
@@ -17,7 +17,7 @@ class BackfillUserStatsJob < ApplicationJob
     dates.each do |date|
       next if existing_dates.include?(date)
 
-      BackfillSingleStatJob.perform_later(user.id, date.to_s, faction_id: user.faction_id)
+      BackfillSingleStatJob.perform_later(user.id, date.to_s)
       jobs_scheduled += 1
     end
 
