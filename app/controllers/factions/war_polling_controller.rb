@@ -6,7 +6,7 @@ class Factions::WarPollingController < ApplicationController
   def start
     war = @faction.current_war
     unless war
-      redirect_to faction_path(@faction), alert: "No active ranked war to poll."
+      redirect_to faction_leadership_path(@faction), alert: "No active ranked war to poll."
       return
     end
 
@@ -16,11 +16,11 @@ class Factions::WarPollingController < ApplicationController
     end
 
     @faction.start_war_polling!
-    redirect_to faction_path(@faction), notice: "War polling started."
+    redirect_to faction_leadership_path(@faction), notice: "War polling started."
   end
 
   def stop
     @faction.stop_war_polling!
-    redirect_to faction_leadership_settings_path(@faction), notice: "War polling stopped."
+    redirect_to faction_leadership_path(@faction), notice: "War polling stopped."
   end
 end
