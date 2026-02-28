@@ -119,16 +119,16 @@ class WarPollingJob < ApplicationJob
     member_key = member.id.to_s
     previous_member = previous_members[member_key] || previous_members[member.id]
 
-    if previous_member
-      previous_status = previous_member[:status] || previous_member["status"] || {}
-      previous_state = previous_status[:state] || previous_status["state"]
-      previous_started = previous_status[:travel_started_at] || previous_status["travel_started_at"]
+    return nil unless previous_member
 
-      if previous_state == "Traveling" && previous_started.present?
-        return previous_started
-      end
+    previous_status = previous_member[:status] || previous_member["status"] || {}
+    previous_state = previous_status[:state] || previous_status["state"]
+    previous_started = previous_status[:travel_started_at] || previous_status["travel_started_at"]
+
+    if previous_state == "Traveling" && previous_started.present?
+      previous_started
+    elsif previous_state != "Traveling"
+      Time.current.iso8601
     end
-
-    nil
   end
 end
