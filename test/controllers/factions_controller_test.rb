@@ -18,20 +18,20 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
   # -- Access control --
 
-  test "admin can access any faction dashboard without whitelist" do
+  test "admin can access any faction dashboard without leadership access" do
     sign_in_as(@bram)
     get faction_path(@faction)
     assert_response :success
   end
 
-  test "whitelisted member can access faction dashboard" do
-    @faction.faction_whitelists.create!(user: @bert)
+  test "leadership member can access faction dashboard" do
+    @bert.update!(leadership_access: true)
     sign_in_as(@bert)
     get faction_path(@faction)
     assert_response :success
   end
 
-  test "non-whitelisted member can access faction dashboard" do
+  test "member without leadership access can access faction dashboard" do
     sign_in_as(@bert)
     get faction_path(@faction)
     assert_response :success
@@ -327,7 +327,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
   # -- Setup create: success --
 
-  test "setup completes faction setup, creates setting, whitelist and queues jobs" do
+  test "setup completes faction setup, creates setting, grants leadership access and queues jobs" do
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
@@ -349,7 +349,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert setup_faction.setup_completed, "Faction should be marked as setup completed"
     assert_equal "VALID_LIMITED_KEY", setup_faction.faction_setting.torn_api_key
     assert_equal "Limited Access", setup_faction.faction_setting.torn_api_access_type
-    assert setup_faction.faction_whitelists.exists?(user: @bert)
+    assert @bert.reload.leadership_access?
 
     assert_redirected_to faction_path(setup_faction)
     assert_match /Welcome to TornManager/, flash[:notice]
@@ -399,7 +399,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  # -- Setup: subscription trial and leadership whitelist --
+  # -- Setup: subscription trial and leadership access --
 
   test "setup grants 14-day trial subscription to all faction members" do
     setup_faction = Faction.create!(
@@ -467,7 +467,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
       "Existing member's subscription should not be overwritten"
   end
 
-  test "setup whitelists Leaders and Co-leaders from faction members API" do
+  test "setup grants leadership access to Leaders and Co-leaders from faction members API" do
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
@@ -487,11 +487,11 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_LIMITED_KEY" }
 
-    # Setup user, leader, and co-leader should be whitelisted
-    assert setup_faction.faction_whitelists.exists?(user: @bert), "Setup user should be whitelisted"
-    assert setup_faction.faction_whitelists.exists?(user: leader), "Leader should be whitelisted"
-    assert setup_faction.faction_whitelists.exists?(user: co_leader), "Co-leader should be whitelisted"
-    assert_not setup_faction.faction_whitelists.exists?(user: regular), "Regular member should NOT be whitelisted"
+    # Setup user, leader, and co-leader should have leadership access
+    assert @bert.reload.leadership_access?, "Setup user should have leadership access"
+    assert leader.reload.leadership_access?, "Leader should have leadership access"
+    assert co_leader.reload.leadership_access?, "Co-leader should have leadership access"
+    assert_not regular.reload.leadership_access?, "Regular member should NOT have leadership access"
   end
 
   private

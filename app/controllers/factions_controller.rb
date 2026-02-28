@@ -67,9 +67,9 @@ class FactionsController < ApplicationController
     setting.update!(torn_api_key: api_key, torn_api_access_type: "Limited Access")
 
     # Grant leadership access to the setup user
-    @faction.faction_whitelists.find_or_create_by!(user: Current.user)
+    Current.user.update!(leadership_access: true)
 
-    # Fetch faction members to grant trial subscriptions and whitelist leaders
+    # Fetch faction members to grant trial subscriptions and leadership access to leaders
     members = TornApi::Faction::Members.new(api_key, @faction.torn_id).fetch
 
     # Grant 14-day trial subscription to members who haven't received one yet
@@ -79,11 +79,11 @@ class FactionsController < ApplicationController
       trial_granted_at: Time.current
     )
 
-    # Whitelist Leaders and Co-leaders
+    # Grant leadership access to Leaders and Co-leaders
     leader_ids = members.select { |m| %w[Leader Co-leader].include?(m.position) }.map(&:id)
     leader_ids.each do |torn_id|
       user = User.find_by(torn_id: torn_id)
-      @faction.faction_whitelists.find_or_create_by!(user: user) if user
+      user&.update!(leadership_access: true)
     end
 
     # Calculate backfill ETA immediately so the banner shows right away

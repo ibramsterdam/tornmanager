@@ -13,7 +13,7 @@ class Factions::Leadership::ApiLogsControllerTest < ActionDispatch::IntegrationT
     @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
     @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
 
-    @faction.faction_whitelists.create!(user: @bram)
+    @bram.update!(leadership_access: true)
   end
 
   test "requires authentication" do
@@ -21,13 +21,13 @@ class Factions::Leadership::ApiLogsControllerTest < ActionDispatch::IntegrationT
     assert_redirected_to new_session_path
   end
 
-  test "requires whitelist access" do
+  test "requires leadership access" do
     sign_in_as(@bert)
     get faction_leadership_api_logs_path(@faction)
     assert_redirected_to faction_path(@faction)
   end
 
-  test "shows page for whitelisted member" do
+  test "shows page for leadership member" do
     sign_in_as(@bram)
     get faction_leadership_api_logs_path(@faction)
     assert_response :success

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_153953) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_173306) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -51,16 +51,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_153953) do
     t.index ["faction_id"], name: "index_faction_subscription_grants_on_faction_id"
     t.index ["granted_by_id"], name: "index_faction_subscription_grants_on_granted_by_id"
     t.index ["torn_faction_id"], name: "index_faction_subscription_grants_on_torn_faction_id"
-  end
-
-  create_table "faction_whitelists", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.integer "faction_id", null: false
-    t.datetime "updated_at", null: false
-    t.integer "user_id", null: false
-    t.index ["faction_id", "user_id"], name: "index_faction_whitelists_on_faction_id_and_user_id", unique: true
-    t.index ["faction_id"], name: "index_faction_whitelists_on_faction_id"
-    t.index ["user_id"], name: "index_faction_whitelists_on_user_id"
   end
 
   create_table "factions", force: :cascade do |t|
@@ -219,6 +209,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_153953) do
     t.integer "faction_id"
     t.boolean "fallen", default: false, null: false
     t.boolean "hof_stats_user", default: false, null: false
+    t.boolean "leadership_access", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
     t.string "profile_image"
@@ -253,8 +244,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_153953) do
   add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
-  add_foreign_key "faction_whitelists", "factions"
-  add_foreign_key "faction_whitelists", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "ranked_wars", "factions"

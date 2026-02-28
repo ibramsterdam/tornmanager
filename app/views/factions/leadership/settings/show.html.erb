@@ -18,7 +18,7 @@
           <div class="leadership-api-current-value">
             <code><%= @torn_api_key_masked || "Not set" %></code>
             <% if @faction_setting.torn_api_key? %>
-              <%= button_to delete_torn_key_faction_leadership_path(@faction),
+              <%= button_to faction_leadership_api_keys_path(@faction, key: "torn"),
                   method: :delete,
                   class: "leadership-key-delete-btn",
                   data: { turbo_confirm: "Delete the Torn API key?" } do %>
@@ -37,7 +37,7 @@
           <div class="leadership-api-current-value">
             <code><%= @tornstats_api_key_masked || "Not set" %></code>
             <% if @faction_setting.tornstats_api_key? %>
-              <%= button_to delete_tornstats_key_faction_leadership_path(@faction),
+              <%= button_to faction_leadership_api_keys_path(@faction, key: "tornstats"),
                   method: :delete,
                   class: "leadership-key-delete-btn",
                   data: { turbo_confirm: "Delete the TornStats API key?" } do %>
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Update Keys Form -->
-      <%= form_with model: @faction_setting, url: update_keys_faction_leadership_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
+      <%= form_with model: @faction_setting, url: faction_leadership_api_keys_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
         <div class="leadership-api-fields">
           <%= form.text_field :torn_api_key,
               class: "leadership-api-input",
@@ -73,8 +73,8 @@
       <h3>Leadership Access</h3>
       <p class="leadership-settings-description">Control who can access this dashboard.</p>
 
-      <%= turbo_frame_tag "whitelist" do %>
-        <%= render "factions/leadership/whitelist" %>
+      <%= turbo_frame_tag "leadership-access" do %>
+        <%= render "factions/leadership/leadership_access" %>
       <% end %>
     </div>
 
@@ -95,7 +95,7 @@
       <% else %>
         <% max_steps = @subscription_weeks_remaining / @faction_member_count %>
         <% max_total = max_steps * @faction_member_count %>
-        <%= form_with url: share_subscription_faction_leadership_path(@faction), method: :post,
+        <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post,
             data: { controller: "share-subscription",
                     share_subscription_member_count_value: @faction_member_count,
                     share_subscription_max_total_value: max_total } do |form| %>
@@ -138,13 +138,13 @@
         <li>All spy reports collected for this faction</li>
         <li>All ranked war history</li>
         <li>The faction API keys</li>
-        <li>The leadership whitelist</li>
+        <li>Leadership access for all members</li>
       </ul>
       <p class="leadership-danger-preserve">
         <strong>Subscription time will NOT be revoked.</strong> Members keep their remaining subscription. You can set up the faction again at any time.
       </p>
       <%= button_to "Delete Collected Data",
-          delete_faction_data_faction_leadership_path(@faction),
+          faction_leadership_faction_data_path(@faction),
           method: :delete,
           class: "btn btn-danger",
           data: { turbo_confirm: "Are you sure? This will permanently delete all faction data. This action cannot be undone." } %>
