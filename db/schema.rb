@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_103540) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_142818) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -136,6 +136,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_103540) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["status", "position"], name: "index_roadmap_items_on_status_and_position"
+  end
+
+  create_table "script_versions", force: :cascade do |t|
+    t.text "changelog"
+    t.datetime "created_at", null: false
+    t.date "released_at", null: false
+    t.text "script_content"
+    t.datetime "updated_at", null: false
+    t.string "version", null: false
+    t.index ["version"], name: "index_script_versions_on_version", unique: true
   end
 
   create_table "sessions", force: :cascade do |t|
