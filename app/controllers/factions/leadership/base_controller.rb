@@ -13,7 +13,7 @@ class Factions::Leadership::BaseController < ApplicationController
     return if performed?
     return if @faction.faction_setting&.torn_api_key?
 
-    redirect_to setup_faction_leadership_path(@faction)
+    redirect_to faction_leadership_setup_path(@faction)
   end
 
   def load_wars_data

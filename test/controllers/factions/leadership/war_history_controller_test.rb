@@ -50,6 +50,6 @@ class Factions::Leadership::WarHistoryControllerTest < ActionDispatch::Integrati
     @faction.faction_setting.update!(torn_api_key: nil)
     sign_in_as(@bram)
     get faction_leadership_war_history_path(@faction)
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
   end
 end

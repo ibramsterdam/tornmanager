@@ -83,7 +83,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @faction.faction_setting.destroy!
 
     sign_in_as(@bram)
-    get setup_faction_leadership_path(@faction)
+    get faction_leadership_setup_path(@faction)
 
     assert_response :success
   end
@@ -94,7 +94,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @bram.update!(leadership_access: false)
 
     sign_in_as(@bram)
-    get setup_faction_leadership_path(@faction)
+    get faction_leadership_setup_path(@faction)
 
     assert_response :success
   end
@@ -106,7 +106,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     stub_valid_key_info(@bram, @faction.torn_id)
 
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "NEW_LIMITED_KEY" }
     }
 
@@ -121,7 +121,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     stub_valid_key_info(@bram, @faction.torn_id)
 
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "NEW_LIMITED_KEY", tornstats_api_key: "TORNSTATS_KEY" }
     }
 
@@ -133,11 +133,11 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "complete_setup rejects missing torn api key" do
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "" }
     }
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
     assert_match /required/, flash[:alert]
   end
 
@@ -145,11 +145,11 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     stub_key_info(@bram, @faction.torn_id, access_type: "Public Only")
 
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "PUBLIC_KEY" }
     }
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
     assert_match /Limited Access/, flash[:alert]
   end
 
@@ -157,11 +157,11 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     stub_key_info_for_different_user(@faction.torn_id)
 
     sign_in_as(@bert)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "WRONG_USER_KEY" }
     }
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
     assert_match /does not belong to you/, flash[:alert]
   end
 
@@ -169,11 +169,11 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError)
 
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "BAD_KEY" }
     }
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
     assert_match /Invalid/, flash[:alert]
   end
 
@@ -181,11 +181,11 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::ApiError, "timeout")
 
     sign_in_as(@bram)
-    patch complete_setup_faction_leadership_path(@faction), params: {
+    patch faction_leadership_setup_path(@faction), params: {
       faction_setting: { torn_api_key: "TIMEOUT_KEY" }
     }
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
     assert_match /Could not validate/, flash[:alert]
   end
 
@@ -292,7 +292,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "torn")
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
   end
 
   # -- Delete TornStats Key --
@@ -314,7 +314,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "tornstats")
 
-    assert_redirected_to setup_faction_leadership_path(@faction)
+    assert_redirected_to faction_leadership_setup_path(@faction)
   end
 
   # -- Grant Leadership Access --

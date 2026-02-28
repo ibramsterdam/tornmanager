@@ -11,7 +11,7 @@
       <p class="setup-subtitle">Leadership Dashboard Setup</p>
     </div>
 
-    <%= form_with model: @faction_setting, url: complete_setup_faction_leadership_path(@faction), method: :patch, class: "setup-form" do |form| %>
+    <%= form_with model: @faction_setting, url: faction_leadership_setup_path(@faction), method: :patch, class: "setup-form" do |form| %>
       <div class="setup-fields">
         <div class="setup-field">
           <label class="setup-label">
