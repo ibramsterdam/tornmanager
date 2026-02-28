@@ -261,13 +261,10 @@
 .hero-signin-button:hover {
   background: linear-gradient(135deg, #ff4d5a 0%, #e63946 100%);
   transform: translateY(-1px) scale(1.05);
-  box-shadow: 0 4px 20px rgba(230, 57, 70, 0.4);
-  animation: none;
 }
 
 .hero-signin-button:active {
   transform: translateY(0) scale(0.98);
-  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.3);
 }
 
 @keyframes fadeInUp {
