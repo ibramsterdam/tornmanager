@@ -3,16 +3,13 @@
   <p class="page-subtitle">Manage your account and subscription</p>
 </div>
 
-<!-- Section 1: API Key + Subscription side by side -->
 <div class="settings-section">
   <div class="settings-top-grid">
-    <!-- API Key Card -->
     <div>
       <h2>API Key</h2>
       <%= render "api_key_card" %>
     </div>
 
-    <!-- Subscription Status Card -->
     <div>
       <h2>Subscription Status</h2>
       <div class="subscription-card">
@@ -29,7 +26,6 @@
           </div>
         <% end %>
 
-        <!-- Refresh Button -->
         <%= form_with url: settings_refresh_subscription_path, method: :post do |form| %>
           <% if @can_refresh %>
             <%= form.submit "Check for New Payments", 
@@ -46,7 +42,6 @@
           <% end %>
         <% end %>
 
-        <!-- How to Subscribe (collapsible) -->
         <details class="subscribe-details">
           <summary>How to subscribe<span class="ping-dot"><span class="ping-ring"></span></span></summary>
           <div class="subscribe-details-content">
@@ -69,7 +64,6 @@
   </div>
 </div>
 
-<!-- Section 2: Browser Extension -->
 <div class="settings-section">
   <h2>Browser Extension</h2>
   <div class="info-card">
@@ -80,12 +74,10 @@
   </div>
 </div>
 
-<!-- Section 3: Your Data -->
 <div class="settings-section">
   <h2>Your Data</h2>
 
   <div class="settings-top-grid">
-    <!-- Left: Stats overview -->
     <div class="info-card">
       <div class="data-stats-list">
         <div class="data-stats-row">
@@ -111,7 +103,6 @@
       </p>
     </div>
 
-    <!-- Right: Management actions -->
     <div class="info-card">
       <h3>Manage Your Data</h3>
       <p>Download a complete copy of all your data in JSON format, or permanently delete everything we've collected.</p>

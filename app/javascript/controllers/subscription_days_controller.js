@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = ["display", "input", "button", "expiresAt"]
-  static values = { userId: Number }
+  static values = { url: String }
 
   edit(event) {
     event.preventDefault()
@@ -37,7 +37,7 @@ export default class extends Controller {
     this.buttonTarget.textContent = "Saving..."
 
     try {
-      const response = await fetch(`/admin/subscriptions/${this.userIdValue}/update_days`, {
+      const response = await fetch(this.urlValue, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",

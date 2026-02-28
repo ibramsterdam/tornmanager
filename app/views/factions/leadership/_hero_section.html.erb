@@ -1,11 +1,9 @@
 <section class="dashboard-hero">
   <div class="dashboard-hero-content">
-    <!-- Header -->
     <div class="dashboard-hero-header">
       <h1 class="dashboard-hero-title"><%= @faction.name %> Leadership</h1>
     </div>
 
-    <!-- Stats Grid -->
     <div class="dashboard-stats-grid">
       <%= link_to faction_leadership_war_history_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">

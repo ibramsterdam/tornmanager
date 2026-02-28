@@ -1,4 +1,3 @@
-<!-- Public War Live Dashboard -->
 <div class="live-war-dashboard"
      data-controller="war-dashboard"
      data-war-dashboard-initial-data-value="<%= (war_data || {}).to_json %>"
@@ -16,7 +15,6 @@
      data-war-dashboard-stats-url-value="<%= stats_public_war_path(lobby) %>"
      data-war-dashboard-terminated-url-value="<%= public_wars_path(terminated: 1) %>">
 
-  <!-- Faction Names Header -->
   <div class="live-war-scores-minimal">
     <div class="live-war-score-side our-side">
       <span class="live-score-label"><%= link_to lobby.faction_name, "https://www.torn.com/factions.php?step=profile&ID=#{lobby.faction_torn_id}", target: "_blank", class: "faction-link" %></span>
@@ -39,9 +37,7 @@
     </div>
   </div>
 
-  <!-- Enemy Members Table with Integrated Filters -->
   <div class="live-war-table-card">
-    <!-- Table Header -->
     <div class="live-war-table-header">
       <div class="live-war-table-title">
         <span class="table-title-text">Enemy Members</span>
@@ -58,7 +54,6 @@
       </div>
     </div>
 
-    <!-- Inline Filters -->
     <div class="live-war-filters">
       <div class="war-filter-group">
         <span class="war-filter-label">Status</span>
@@ -89,7 +84,6 @@
       </div>
     </div>
 
-    <!-- Table -->
     <div class="live-war-table-scroll">
       <table>
         <thead>

@@ -1,7 +1,6 @@
 <div class="leadership-page">
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
-  <!-- Import Form -->
   <div class="leadership-import-bar">
     <% unless @faction_setting.tornstats_api_key? %>
       <p class="leadership-import-hint">Configure your TornStats API key in <%= link_to "Settings", faction_leadership_settings_path(@faction) %> to import spy data.</p>
@@ -28,7 +27,6 @@
     <% end %>
   </div>
 
-  <!-- Spy Reports Table -->
   <div class="leadership-table-wrapper">
     <table>
       <thead>

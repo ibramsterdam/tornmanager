@@ -1,7 +1,6 @@
 <section class="dashboard-fullpage" id="ranked-war">
   <div class="dashboard-fullpage-content">
     <% if @current_war %>
-      <!-- Ongoing War - Live Dashboard -->
       <% if @api_keys_configured %>
         <%= render "factions/ranked_wars/live_dashboard", war: @current_war, faction: @faction, war_data: @war_data %>
       <% else %>
@@ -28,7 +27,6 @@
         </div>
       <% end %>
     <% elsif @latest_war %>
-      <!-- Latest Completed War Summary -->
       <div class="dashboard-fullpage-center">
         <div class="dashboard-war-summary-card <%= @latest_war.won? ? 'war-won' : 'war-lost' %>">
           <div class="war-summary-badge <%= @latest_war.won? ? 'won' : 'lost' %>">
@@ -65,7 +63,6 @@
         </div>
       </div>
     <% else %>
-      <!-- No Wars Placeholder -->
       <div class="dashboard-fullpage-center">
         <div class="dashboard-placeholder-card">
           <div class="dashboard-placeholder-icon muted">
