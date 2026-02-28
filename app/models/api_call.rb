@@ -2,6 +2,7 @@ class ApiCall < ApplicationRecord
   MINUTE_BUCKET = Arel.sql("strftime('%Y-%m-%d %H:%M', created_at)")
 
   belongs_to :user
+  belongs_to :faction, optional: true
 
   validates :endpoint, presence: true
   validates :status, presence: true

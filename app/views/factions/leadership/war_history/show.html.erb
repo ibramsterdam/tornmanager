@@ -1,0 +1,8 @@
+<div class="leadership-page">
+  <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
+
+  <div class="leadership-wars-content">
+    <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
+    <%= render "factions/ranked_wars/member_performance_table", member_performance: @member_performance %>
+  </div>
+</div>
