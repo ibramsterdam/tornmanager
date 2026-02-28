@@ -1,6 +1,6 @@
 <h1 class="public-wars-title">Public Ranked Wars</h1>
 
-<div class="public-wars-layout">
+<div class="public-wars-layout" data-controller="lobby-unlock" data-lobby-unlock-csrf-value="<%= form_authenticity_token %>">
   <%# Create form card — spans 1 col, 2 rows %>
   <div class="public-wars-create-card">
     <div class="public-wars-create-info">
@@ -47,33 +47,18 @@
 
   <%# Active lobby cards %>
   <% @lobbies.each do |lobby| %>
-    <%= link_to public_war_path(lobby), class: "public-war-card" do %>
-      <div class="public-war-card-matchup">
-        <span class="public-war-faction"><%= lobby.faction_name %></span>
-        <span class="public-war-vs">vs</span>
-        <span class="public-war-faction"><%= lobby.opponent_faction_name %></span>
+    <% locked = lobby.password_protected? && !lobby_unlocked?(lobby) %>
+    <% if locked %>
+      <div class="public-war-card public-war-card--locked"
+           role="button" tabindex="0"
+           data-action="click->lobby-unlock#open keydown.enter->lobby-unlock#open"
+           data-lobby-unlock-url-param="<%= unlock_public_war_path(lobby) %>">
+        <%= render "public_wars/lobby_card_content", lobby: lobby %>
       </div>
-      <div class="public-war-card-bottom">
-        <span class="public-war-card-meta-text">by <strong><%= lobby.created_by_name %></strong> · <%= time_ago_in_words(lobby.created_at) %> ago</span>
-        <div class="public-war-card-badges">
-          <% if lobby.active? %>
-            <span class="public-war-badge public-war-badge--active">
-              <span class="public-war-badge-dot"></span>
-              Live
-            </span>
-          <% else %>
-            <span class="public-war-badge public-war-badge--inactive">Inactive</span>
-          <% end %>
-          <% if lobby.password_protected? %>
-            <span class="public-war-badge public-war-badge--locked" title="Password protected">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-              </svg>
-            </span>
-          <% end %>
-        </div>
-      </div>
+    <% else %>
+      <%= link_to public_war_path(lobby), class: "public-war-card" do %>
+        <%= render "public_wars/lobby_card_content", lobby: lobby %>
+      <% end %>
     <% end %>
   <% end %>
 
@@ -83,4 +68,22 @@
       <span class="public-war-empty-label">Available</span>
     </div>
   <% end %>
+
+  <%# Password unlock modal %>
+  <div class="public-war-modal-backdrop" data-lobby-unlock-target="backdrop" data-action="click->lobby-unlock#backdropClose" hidden>
+    <div class="public-war-modal" data-lobby-unlock-target="modal">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+      </svg>
+      <h3>Password Required</h3>
+      <p class="public-war-modal-error" data-lobby-unlock-target="error" hidden></p>
+      <form data-action="submit->lobby-unlock#submit">
+        <div class="public-war-modal-input">
+          <input type="password" data-lobby-unlock-target="password" class="setup-input" placeholder="Enter lobby password" autocomplete="off">
+          <button type="submit" class="btn btn-primary" data-lobby-unlock-target="submitButton">Unlock</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

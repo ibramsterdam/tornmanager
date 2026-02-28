@@ -26,6 +26,19 @@ class PublicWarsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='accept_terms']"
   end
 
+  test "index shows locked lobbies as non-link cards with modal trigger" do
+    get public_wars_path
+    assert_response :success
+    assert_select ".public-war-card--locked[data-action*='lobby-unlock#open']", minimum: 1
+  end
+
+  test "index includes password unlock modal" do
+    get public_wars_path
+    assert_response :success
+    assert_select ".public-war-modal-backdrop"
+    assert_select ".public-war-modal"
+  end
+
   # -- Show --
 
   test "show renders open lobby without authentication" do
@@ -33,10 +46,10 @@ class PublicWarsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "show renders unlock form for locked lobby" do
+  test "show redirects to index for locked lobby" do
     get public_war_path(@locked_lobby)
-    assert_response :success
-    assert_select "form[action*='unlock']"
+    assert_redirected_to public_wars_path
+    assert_match /password protected/, flash[:alert]
   end
 
   test "show renders dashboard when locked lobby is unlocked via session" do
@@ -90,17 +103,40 @@ class PublicWarsControllerTest < ActionDispatch::IntegrationTest
     assert_match /terminated/, flash[:alert]
   end
 
-  # -- Unlock --
+  # -- Unlock (HTML) --
 
   test "unlock with correct password redirects to show" do
     post unlock_public_war_path(@locked_lobby), params: { password: "secret" }
     assert_redirected_to public_war_path(@locked_lobby)
   end
 
-  test "unlock with incorrect password renders unlock form with error" do
+  test "unlock with incorrect password re-renders index with error" do
     post unlock_public_war_path(@locked_lobby), params: { password: "wrong" }
     assert_response :unprocessable_entity
     assert_match /Incorrect password/, flash[:alert]
+    assert_select ".public-wars-create-form"
+  end
+
+  # -- Unlock (JSON / AJAX) --
+
+  test "unlock via JSON with correct password returns redirect URL" do
+    post unlock_public_war_path(@locked_lobby),
+      params: { password: "secret" }.to_json,
+      headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert_equal public_war_path(@locked_lobby), json["redirect_to"]
+  end
+
+  test "unlock via JSON with incorrect password returns error" do
+    post unlock_public_war_path(@locked_lobby),
+      params: { password: "wrong" }.to_json,
+      headers: { "Content-Type" => "application/json", "Accept" => "application/json" }
+
+    assert_response :unprocessable_entity
+    json = JSON.parse(response.body)
+    assert_equal "Incorrect password.", json["error"]
   end
 
   # -- Create: validation errors --

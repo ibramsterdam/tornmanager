@@ -112,8 +112,7 @@ class PublicWarsController < ApplicationController
 
   def show
     if @lobby.password_protected? && !lobby_unlocked?(@lobby)
-      render :unlock
-      return
+      return redirect_to public_wars_path, alert: "This lobby is password protected. Unlock it from the lobby list."
     end
 
     @war_data = Rails.cache.read(@lobby.war_cache_key)
@@ -133,10 +132,20 @@ class PublicWarsController < ApplicationController
     if @lobby.authenticate(params[:password].to_s)
       session[:unlocked_lobbies] ||= []
       session[:unlocked_lobbies] << @lobby.slug unless session[:unlocked_lobbies].include?(@lobby.slug)
-      redirect_to public_war_path(@lobby)
+
+      respond_to do |format|
+        format.json { render json: { redirect_to: public_war_path(@lobby) } }
+        format.html { redirect_to public_war_path(@lobby) }
+      end
     else
-      flash.now[:alert] = "Incorrect password."
-      render :unlock, status: :unprocessable_entity
+      respond_to do |format|
+        format.json { render json: { error: "Incorrect password." }, status: :unprocessable_entity }
+        format.html do
+          flash.now[:alert] = "Incorrect password."
+          @lobbies = PublicWarLobby.order(created_at: :desc)
+          render :index, status: :unprocessable_entity
+        end
+      end
     end
   end
 
