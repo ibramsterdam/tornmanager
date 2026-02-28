@@ -1,4 +1,4 @@
-class Daily::FactionhofMembersJob < ApplicationJob
+class FactionhofMembersJob < ApplicationJob
   queue_as :default
 
   TOP_FACTIONS_COUNT = 4000
