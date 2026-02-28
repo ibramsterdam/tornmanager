@@ -266,10 +266,16 @@ export default class extends Controller {
     this.lastUpdatedTarget.textContent = `Updated ${hours}:${minutes}:${seconds}`
 
     this.secondsUntilUpdate = this.pollIntervalValue / 1000
-    this.updateCountdownDisplay()
+    this.restartCountdownInterval()
   }
 
   startUpdateCountdown() {
+    this.updateCountdownDisplay()
+    this.restartCountdownInterval()
+  }
+
+  restartCountdownInterval() {
+    if (this.countdownInterval) clearInterval(this.countdownInterval)
     this.updateCountdownDisplay()
     this.countdownInterval = setInterval(() => {
       this.secondsUntilUpdate = Math.max(0, this.secondsUntilUpdate - 1)
@@ -599,8 +605,6 @@ export default class extends Controller {
 
     const planeType = status.plane_type
     const startedAt = new Date(status.travel_started_at)
-    const now = new Date()
-    const elapsed = Math.floor((now - startedAt) / 1000)
 
     const flightData = FLIGHT_TIMES[destination]
     if (!flightData) {
@@ -609,15 +613,16 @@ export default class extends Controller {
     }
 
     const ticketTypes = PLANE_TYPE_MAP[planeType] || ["standard"]
+    const now = Date.now()
 
     if (ticketTypes.length === 2) {
-      const fastDuration = flightData[ticketTypes[0]]
-      const slowDuration = flightData[ticketTypes[1]]
-      const fastRemaining = Math.max(0, fastDuration - elapsed)
-      const slowRemaining = Math.max(0, slowDuration - elapsed)
+      const fastEtaMs = startedAt.getTime() + flightData[ticketTypes[0]] * 1000
+      const slowEtaMs = startedAt.getTime() + flightData[ticketTypes[1]] * 1000
+      const fastRemaining = Math.max(0, Math.floor((fastEtaMs - now) / 1000))
+      const slowRemaining = Math.max(0, Math.floor((slowEtaMs - now) / 1000))
 
-      const fastEta = new Date(startedAt.getTime() + fastDuration * 1000).toISOString()
-      const slowEta = new Date(startedAt.getTime() + slowDuration * 1000).toISOString()
+      const fastEta = new Date(fastEtaMs).toISOString()
+      const slowEta = new Date(slowEtaMs).toISOString()
 
       if (slowRemaining <= 0) {
         return '<span class="travel-timer about-to-land">About to land</span>'
@@ -633,9 +638,9 @@ export default class extends Controller {
         + `<span class="travel-slow">${slowText}${directionSuffix}</span>`
         + `</span>`
     } else {
-      const duration = flightData[ticketTypes[0]]
-      const remaining = Math.max(0, duration - elapsed)
-      const eta = new Date(startedAt.getTime() + duration * 1000).toISOString()
+      const etaMs = startedAt.getTime() + flightData[ticketTypes[0]] * 1000
+      const remaining = Math.max(0, Math.floor((etaMs - now) / 1000))
+      const eta = new Date(etaMs).toISOString()
 
       if (remaining <= 0) {
         return '<span class="travel-timer about-to-land">About to land</span>'
