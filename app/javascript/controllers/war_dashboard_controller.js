@@ -631,11 +631,11 @@ export default class extends Controller {
     const directionSuffix = isReturning ? "" : " \u2192"
 
     // If we don't have travel_started_at, we caught this traveler mid-flight
-    // Just show destination without a (potentially inaccurate) timer
+    // Show destination with direction arrow but no countdown timer
     if (!status.travel_started_at) {
       const destText = destination || "Unknown"
       const displayText = isReturning ? `${directionPrefix}${destText}` : `${destText}${directionSuffix}`
-      return `<span class="travel-timer travel-unknown" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
+      return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 
     const planeType = status.plane_type
@@ -673,7 +673,7 @@ export default class extends Controller {
       return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-fast-eta="${fastEta}" data-travel-slow-eta="${slowEta}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">`
         + `<span class="travel-fast">${directionPrefix}${fastText}</span>`
         + `<span class="travel-separator"> / </span>`
-        + `<span class="travel-slow">${slowText}</span>`
+        + `<span class="travel-slow">${slowText}${directionSuffix}</span>`
         + `</span>`
     } else {
       // Unambiguous plane type — show single estimate
@@ -687,7 +687,7 @@ export default class extends Controller {
 
       const expiringSoon = remaining < 60
 
-      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-eta="${eta}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">${directionPrefix}${this.formatCountdown(remaining)}</span>`
+      return `<span class="travel-timer ${expiringSoon ? "expiring-soon" : ""}" data-travel-eta="${eta}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">${directionPrefix}${this.formatCountdown(remaining)}${directionSuffix}</span>`
     }
   }
 
@@ -744,14 +744,15 @@ export default class extends Controller {
       const eta = new Date(el.dataset.travelEta)
       const remaining = Math.max(0, Math.floor((eta - new Date()) / 1000))
       const isReturning = el.dataset.travelReturning === "true"
-      const returnPrefix = isReturning ? "\u2190 " : ""
+      const prefix = isReturning ? "\u2190 " : ""
+      const suffix = isReturning ? "" : " \u2192"
 
       if (remaining <= 0) {
         el.textContent = "Landed"
         el.className = "stat-value no-data"
         el.removeAttribute("data-travel-eta")
       } else {
-        el.textContent = `${returnPrefix}${this.formatCountdown(remaining)}`
+        el.textContent = `${prefix}${this.formatCountdown(remaining)}${suffix}`
         el.className = remaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
     })
@@ -765,7 +766,8 @@ export default class extends Controller {
       const fastRemaining = Math.max(0, Math.floor((fastEta - now) / 1000))
       const slowRemaining = Math.max(0, Math.floor((slowEta - now) / 1000))
       const isReturning = el.dataset.travelReturning === "true"
-      const returnPrefix = isReturning ? "\u2190 " : ""
+      const prefix = isReturning ? "\u2190 " : ""
+      const suffix = isReturning ? "" : " \u2192"
 
       if (slowRemaining <= 0) {
         el.textContent = "Landed"
@@ -775,8 +777,8 @@ export default class extends Controller {
       } else {
         const fastEl = el.querySelector(".travel-fast")
         const slowEl = el.querySelector(".travel-slow")
-        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : `${returnPrefix}${this.formatCountdown(fastRemaining)}`
-        if (slowEl) slowEl.textContent = this.formatCountdown(slowRemaining)
+        if (fastEl) fastEl.textContent = fastRemaining <= 0 ? "Landed" : `${prefix}${this.formatCountdown(fastRemaining)}`
+        if (slowEl) slowEl.textContent = `${this.formatCountdown(slowRemaining)}${suffix}`
         el.className = fastRemaining > 0 && fastRemaining < 60 ? "travel-timer expiring-soon" : "travel-timer"
       }
     })
