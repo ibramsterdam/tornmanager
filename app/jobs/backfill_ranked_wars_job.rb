@@ -1,5 +1,5 @@
-class BackfillRankedWarsJob < ApplicationJob
-  queue_as :default
+class BackfillRankedWarsJob < FactionApiJob
+  limits_concurrency to: 1, key: ->(faction_id, **) { faction_id }, duration: 15.minutes, group: "FactionApiCalls"
 
   def perform(faction_id, limit: 20)
     faction = Faction.find_by(id: faction_id)

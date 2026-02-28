@@ -1,5 +1,5 @@
 class BackfillPersonalStatsJob < ApplicationJob
-  queue_as :default
+  queue_as :faction_api
 
   SECONDS_PER_API_CALL = 1.1
 
@@ -22,7 +22,7 @@ class BackfillPersonalStatsJob < ApplicationJob
       dates.each do |date|
         next if existing_dates.include?(date)
 
-        BackfillSingleStatJob.perform_later(user.id, date.to_s, api_key: api_key)
+        BackfillSingleStatJob.perform_later(user.id, date.to_s, faction_id: faction.id, api_key: api_key)
         jobs_scheduled += 1
       end
     end

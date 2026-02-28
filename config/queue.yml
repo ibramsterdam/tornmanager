@@ -11,9 +11,16 @@ default: &default
       threads: 1
       processes: 1
       polling_interval: 1.1
+    # Faction API queue: backfill jobs triggered by faction setup.
+    # Multiple threads allow parallel backfills across factions.
+    # Concurrency controls (limits_concurrency) ensure only 1 job per faction
+    # runs at a time, with FactionApiJob's 1.0s sleep for rate limiting.
+    - queues: faction_api
+      threads: 5
+      processes: 1
+      polling_interval: 0.5
     # Faction polling queue: war status polling using each faction's own API key.
     # Multiple threads to support concurrent polling for multiple factions.
-    # Fast polling interval (0.5s) for 6-second responsiveness.
     - queues: faction_polling
       threads: 3
       processes: 1
