@@ -1,5 +1,4 @@
 class Factions::Leadership::SpyImportsController < Factions::Leadership::BaseController
-
   def create
     target_faction_id = params[:target_faction_id].to_s.strip
 

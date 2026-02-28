@@ -1,5 +1,4 @@
 class Factions::Leadership::ApiKeysController < Factions::Leadership::BaseController
-
   def update
     @faction_setting = @faction.faction_setting || @faction.build_faction_setting
 
