@@ -26,6 +26,7 @@ class FactionsController < ApplicationController
     load_hero_data
     load_training_data
     load_war_data
+    load_data_coverage
   end
 
   def setup
@@ -244,6 +245,28 @@ class FactionsController < ApplicationController
     )
   rescue TornApi::ApiError, TornApi::InvalidKeyError => e
     Rails.logger.warn("Failed to refresh war scores for faction #{@faction.torn_id}: #{e.message}")
+  end
+
+  def load_data_coverage
+    faction_user_ids = @faction.users.active.pluck(:id)
+
+    if faction_user_ids.empty?
+      @data_coverage_rate = 100.0
+      return
+    end
+
+    start_date = PersonalStatSnapshot.tracking_start_date
+    end_date = PersonalStatSnapshot.tracking_end_date
+    expected_days = (start_date..end_date).count
+
+    total_expected = faction_user_ids.size * expected_days
+    total_existing = PersonalStatSnapshot
+      .where(user_id: faction_user_ids)
+      .where(date: start_date..end_date)
+      .count
+
+    @data_coverage_rate = total_expected > 0 ? (total_existing.to_f / total_expected * 100).round(1) : 100.0
+    @data_total_missing_days = total_expected - total_existing
   end
 
   def sort_link(column, label)
