@@ -158,7 +158,6 @@ class FactionsController < ApplicationController
     # Must not already be set up
     if @faction.setup_completed?
       redirect_to root_path, alert: "This faction is already set up."
-      return
     end
   end
 
