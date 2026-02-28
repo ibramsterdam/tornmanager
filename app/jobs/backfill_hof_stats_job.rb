@@ -1,5 +1,5 @@
 class BackfillHofStatsJob < ApplicationJob
-  queue_as :default
+  queue_as :faction_api
 
   SECONDS_PER_API_CALL = 1.1
 
@@ -17,12 +17,12 @@ class BackfillHofStatsJob < ApplicationJob
     users.each_with_index do |user, user_index|
       dates.each_with_index do |date, date_index|
         delay = (user_index * dates.size) + date_index
-        BackfillSingleStatJob.set(wait: delay.seconds).perform_later(user.id, date.to_s)
+        BackfillSingleStatJob.set(wait: delay.seconds).perform_later(user.id, date.to_s, faction_id: user.faction_id)
         jobs_scheduled += 1
       end
     end
 
-    existing_queued_jobs = SolidQueue::Job.where(queue_name: "owner_api", finished_at: nil).count
+    existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction_api", finished_at: nil).count
     total_api_calls = existing_queued_jobs + (jobs_scheduled * 2)
     estimated_seconds = [ total_api_calls * SECONDS_PER_API_CALL, 1 ].max.to_i
 
