@@ -68,27 +68,6 @@
       <% end %>
     </div>
 
-    <!-- War Polling Card -->
-    <div class="leadership-settings-card">
-      <h3>War Polling</h3>
-      <p class="leadership-settings-description">Auto-starts during active ranked wars. Updates enemy status every 6 seconds.</p>
-
-      <div class="leadership-polling-status">
-        <% if @war_polling_active %>
-          <div class="leadership-polling-active">
-            <span class="status-dot live"></span>
-            <span>Polling active</span>
-          </div>
-          <%= button_to "Stop", stop_faction_war_polling_path(@faction),
-              method: :delete,
-              class: "btn btn-xs btn-danger",
-              data: { turbo_confirm: "Stop war polling?" } %>
-        <% else %>
-          <p class="leadership-polling-idle">Polling is idle. Starts automatically during active wars.</p>
-        <% end %>
-      </div>
-    </div>
-
     <!-- Leadership Access Card -->
     <div class="leadership-settings-card">
       <h3>Leadership Access</h3>

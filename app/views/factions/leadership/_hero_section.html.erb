@@ -49,31 +49,33 @@
         <span class="dashboard-stat-label">Whitelist</span>
       <% end %>
 
-      <%= link_to faction_leadership_settings_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
-        <span class="dashboard-stat-icon">
-          <% if @war_polling_active %>
+      <% if @war_polling_active %>
+        <%= button_to stop_faction_war_polling_path(@faction), method: :delete, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle", data: { turbo_confirm: "Stop war polling?" } do %>
+          <span class="dashboard-stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
             </svg>
-          <% else %>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <line x1="12" y1="8" x2="12" y2="12"/>
-              <line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-          <% end %>
-        </span>
-        <span class="dashboard-stat-value">
-          <% if @war_polling_active %>
+          </span>
+          <span class="dashboard-stat-value">
             <span class="stat-compliant">Active</span>
-          <% else %>
-            <span class="stat-muted">Idle</span>
-          <% end %>
-        </span>
-        <span class="dashboard-stat-label">War Polling</span>
+          </span>
+          <span class="dashboard-stat-label">War Polling <span class="live-polling-dot"></span></span>
+        <% end %>
+      <% else %>
+        <%= button_to start_faction_war_polling_path(@faction), method: :post, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle dashboard-stat-card-cta" do %>
+          <span class="dashboard-stat-icon">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </span>
+          <span class="dashboard-stat-value">
+            <span class="stat-muted">Start</span>
+          </span>
+          <span class="dashboard-stat-label">War Polling</span>
+        <% end %>
       <% end %>
 
-      <div class="dashboard-stat-card">
+      <%= link_to faction_leadership_data_coverage_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
@@ -90,7 +92,7 @@
           <span class="<%= coverage_class %>"><%= @data_coverage_rate %>%</span>
         </span>
         <span class="dashboard-stat-label">Data Coverage</span>
-      </div>
+      <% end %>
 
       <%= link_to faction_leadership_api_logs_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">

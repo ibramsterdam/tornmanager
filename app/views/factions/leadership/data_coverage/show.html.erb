@@ -1,0 +1,153 @@
+<div class="leadership-page">
+  <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
+
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Overall Coverage</div>
+      <div class="stat-value">
+        <% coverage_class = if @data_coverage_rate >= 90
+                              "stat-compliant"
+                            elsif @data_coverage_rate >= 70
+                              "stat-warning"
+                            else
+                              "stat-danger"
+                            end %>
+        <span class="<%= coverage_class %>"><%= @data_coverage_rate %>%</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Missing Yesterday</div>
+      <div class="stat-value"><%= @data_missing_yesterday %></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Total Missing Days</div>
+      <div class="stat-value"><%= number_with_delimiter(@data_total_missing_days) %></div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Tracking Period</div>
+      <div class="stat-value" style="font-size: 1rem;"><%= @tracking_start.strftime("%d %b") %> - <%= @tracking_end.strftime("%d %b %Y") %></div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <h2>Member Coverage (<%= @expected_days %> days tracked)</h2>
+
+    <% if @member_coverage.any? %>
+      <table>
+        <thead>
+          <tr>
+            <th>Member</th>
+            <th>Coverage</th>
+            <th>Days Present</th>
+            <th>Days Missing</th>
+            <th>Yesterday</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @member_coverage.each do |member| %>
+            <% coverage_class = if member[:rate] >= 90
+                                  ""
+                                elsif member[:rate] >= 70
+                                  "warning-row"
+                                else
+                                  "error-row"
+                                end %>
+            <tr class="<%= coverage_class %>">
+              <td>
+                <a href="https://www.torn.com/profiles.php?XID=<%= member[:user].torn_id %>" target="_blank" class="player-link">
+                  <%= member[:user].name %> [<%= member[:user].torn_id %>]
+                </a>
+              </td>
+              <td>
+                <% rate_class = if member[:rate] >= 90
+                                  "stat-compliant"
+                                elsif member[:rate] >= 70
+                                  "stat-warning"
+                                else
+                                  "stat-danger"
+                                end %>
+                <span class="<%= rate_class %>"><%= member[:rate] %>%</span>
+              </td>
+              <td><%= member[:existing] %></td>
+              <td>
+                <% if member[:missing] > 0 %>
+                  <span class="stat-danger"><%= member[:missing] %></span>
+                <% else %>
+                  0
+                <% end %>
+              </td>
+              <td>
+                <% if member[:has_yesterday] %>
+                  <span class="status-badge success">Yes</span>
+                <% else %>
+                  <span class="status-badge error">No</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p>No active faction members found.</p>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 1.5rem;
+    text-align: center;
+  }
+
+  .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--text-primary);
+  }
+
+  .warning-row {
+    background-color: rgba(234, 179, 8, 0.05);
+  }
+
+  .stat-compliant { color: #22c55e; }
+  .stat-warning { color: #eab308; }
+  .stat-danger { color: #ef4444; }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .status-badge.success {
+    background-color: #27ae60;
+    color: white;
+  }
+
+  .status-badge.error {
+    background-color: #e74c3c;
+    color: white;
+  }
+</style>
