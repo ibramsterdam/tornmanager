@@ -15,7 +15,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
   end
 
   test "syncs existing members from API response" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
 
     SyncFactionMembersJob.perform_now(@faction.id)
@@ -32,7 +32,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
       "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
 
     assert_difference "User.count", 1 do
@@ -49,7 +49,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
     bert.update!(faction: @faction)
 
     # API only returns bram, not bert — bert has departed
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
 
     SyncFactionMembersJob.perform_now(@faction.id)
@@ -65,7 +65,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
       "Fallen", "", "Fallen", "red", 0, nil,
       "Everyone", "Leader", false, false, false, false
     )
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ fallen_member ])
 
     SyncFactionMembersJob.perform_now(@faction.id)
@@ -80,7 +80,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
       "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
 
     assert_enqueued_with(job: BackfillUserStatsJob) do
@@ -99,7 +99,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
       "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
 
     SyncFactionMembersJob.perform_now(@faction.id)
@@ -109,7 +109,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
   end
 
   test "does not schedule backfill for existing members" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
 
     assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
@@ -125,7 +125,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
       "Okay", "", "Okay", "green", 0, nil,
       "Everyone", "Member", true, false, false, false
     )
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, new_member ])
 
     assert_no_enqueued_jobs(only: BackfillUserStatsJob) do
@@ -134,7 +134,7 @@ class SyncFactionMembersJobTest < ActiveJob::TestCase
   end
 
   test "handles API error gracefully" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Faction::Members.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
 
     assert_nothing_raised do

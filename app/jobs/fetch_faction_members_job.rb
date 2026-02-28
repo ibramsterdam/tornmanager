@@ -1,6 +1,6 @@
-class FetchFactionMembersJob < OwnerApiJob
+class FetchFactionMembersJob < AdminApiJob
   def perform(faction_torn_id)
-    members = TornApi::Faction::Members.new(OwnerCredentials.api_key, faction_torn_id).fetch
+    members = TornApi::Faction::Members.new(AdminCredentials.api_key, faction_torn_id).fetch
 
     members.each do |member|
       User.find_or_create_by(torn_id: member.id) do |user|

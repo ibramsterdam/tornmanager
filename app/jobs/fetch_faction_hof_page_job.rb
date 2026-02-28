@@ -1,6 +1,6 @@
-class FetchFactionHofPageJob < OwnerApiJob
+class FetchFactionHofPageJob < AdminApiJob
   def perform(offset)
-    factions = TornApi::Torn::Factionhof.new(OwnerCredentials.api_key, offset:).fetch
+    factions = TornApi::Torn::Factionhof.new(AdminCredentials.api_key, offset:).fetch
 
     factions.each do |faction|
       FetchFactionMembersJob.perform_later(faction.torn_id)

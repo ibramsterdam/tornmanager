@@ -69,10 +69,6 @@ Rails.application.routes.draw do
     resources :factions, only: [ :index, :new, :create, :edit, :update, :destroy ] do
       member do
         patch :toggle_tracking
-        post :sync_members
-        post :backfill_stats
-        post :backfill_user_stats
-        post :backfill_wars
         patch :toggle_ssl
         patch :toggle_public_wars
       end

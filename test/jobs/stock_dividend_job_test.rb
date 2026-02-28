@@ -6,8 +6,8 @@ class StockDividendJobTest < ActiveJob::TestCase
     @prn_stock = torn_stocks(:prn)
   end
 
-  test "enqueues to the owner_api queue" do
-    assert_equal "owner_api", Daily::StockDividendJob.new.queue_name
+  test "enqueues to the admin queue" do
+    assert_equal "admin", Daily::StockDividendJob.new.queue_name
   end
 
   test "updates dividend values from API response" do
@@ -22,7 +22,7 @@ class StockDividendJobTest < ActiveJob::TestCase
       dividend_description: "1x Erotic DVD"
     )
 
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Torn::Stocks.any_instance.stubs(:fetch).returns([ fetched_sym, fetched_prn ])
 
     Daily::StockDividendJob.perform_now
@@ -39,7 +39,7 @@ class StockDividendJobTest < ActiveJob::TestCase
       dividend_description: "$1,234"
     )
 
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::Torn::Stocks.any_instance.stubs(:fetch).returns([ fetched ])
 
     Daily::StockDividendJob.perform_now

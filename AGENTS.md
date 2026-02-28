@@ -39,11 +39,12 @@ No Redis, no PostgreSQL, no Node.js build step. This is a "Solid trifecta" Rails
 
 ### Job Queues (Solid Queue)
 
-Configured in `config/queue.yml`. Three named queues:
+Configured in `config/queue.yml`. Four named queues:
 
-- **`owner_api`** (1 thread, 1.1s polling) -- Jobs using the app owner's personal API key. Rate-limited to ~28 req/min. Base class: `OwnerApiJob`.
-- **`faction_polling`** (3 threads, 0.5s polling) -- Real-time war status polling.
-- **`default`** (3 threads, 0.1s polling) -- General-purpose jobs.
+- **`admin`** (1 thread, 1.1s polling) -- Jobs using the app owner's personal API key. Rate-limited to ~28 req/min. Base class: `AdminApiJob`. Credentials via `AdminCredentials.api_key`.
+- **`faction`** (5 threads, 0.5s polling) -- Faction-level jobs using each faction's own API key. `limits_concurrency` ensures one API call per faction at a time while allowing parallel execution across factions. Base class: `FactionApiJob`.
+- **`war`** (3 threads, 0.5s polling) -- Real-time war status polling.
+- **`default`** (3 threads, 0.1s polling) -- Orchestrator jobs, scheduled cleanup, and non-API work.
 
 Each Torn API key has independent rate limits. Jobs using different API keys can run in parallel. Use `limits_concurrency` for per-key/per-faction rate limiting rather than serializing an entire queue.
 

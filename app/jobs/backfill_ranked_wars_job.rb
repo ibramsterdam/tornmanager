@@ -1,11 +1,11 @@
-class BackfillRankedWarsJob < ApplicationJob
-  queue_as :default
+class BackfillRankedWarsJob < FactionApiJob
+  limits_concurrency to: 1, key: ->(faction_id, **) { faction_id }, group: "FactionApiCalls"
 
   def perform(faction_id, limit: 20)
     faction = Faction.find_by(id: faction_id)
     return unless faction
 
-    api_key = faction.faction_setting&.torn_api_key || OwnerCredentials.api_key
+    api_key = faction.faction_setting&.torn_api_key || AdminCredentials.api_key
     return unless api_key.present?
 
     wars = TornApi::Faction::RankedWars.new(api_key, faction.torn_id).fetch(limit: limit)
@@ -38,7 +38,6 @@ class BackfillRankedWarsJob < ApplicationJob
     end
 
     wars_needing_reports.each do |torn_war_id|
-      sleep 1
       fetch_war_report(faction, api_key, torn_war_id)
     end
 

@@ -1,11 +1,11 @@
 class BackfillPersonalStatsJob < ApplicationJob
-  queue_as :default
+  queue_as :faction
 
   SECONDS_PER_API_CALL = 1.1
 
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
-    api_key = faction.faction_setting&.torn_api_key || OwnerCredentials.api_key
+    api_key = faction.faction_setting&.torn_api_key || AdminCredentials.api_key
     users = faction.users.active.to_a
     dates = (start_date.to_date..end_date.to_date).to_a
 
@@ -22,7 +22,7 @@ class BackfillPersonalStatsJob < ApplicationJob
       dates.each do |date|
         next if existing_dates.include?(date)
 
-        BackfillSingleStatJob.perform_later(user.id, date.to_s, api_key: api_key)
+        BackfillSingleStatJob.perform_later(user.id, date.to_s, faction_id: faction.id, api_key: api_key)
         jobs_scheduled += 1
       end
     end

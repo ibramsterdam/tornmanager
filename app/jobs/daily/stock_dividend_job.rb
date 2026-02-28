@@ -1,7 +1,7 @@
 module Daily
-  class StockDividendJob < OwnerApiJob
+  class StockDividendJob < AdminApiJob
     def perform(*args)
-      stocks = TornApi::Torn::Stocks.new(OwnerCredentials.api_key).fetch
+      stocks = TornApi::Torn::Stocks.new(AdminCredentials.api_key).fetch
       items = Torn::Item.money_makers.index_by(&:torn_id)
 
       stocks.each do |fetched_stock|
@@ -29,7 +29,7 @@ module Daily
     end
 
     def average_market_price
-      market_data = TornApi::Market.new(OwnerCredentials.api_key).fetch
+      market_data = TornApi::Market.new(AdminCredentials.api_key).fetch
       return 0 if market_data.blank?
 
       costs = market_data.values.map { |point_data| point_data["cost"] }

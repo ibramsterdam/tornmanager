@@ -2,18 +2,20 @@ require "test_helper"
 
 class BackfillSingleStatJobTest < ActiveJob::TestCase
   setup do
+    @faction = Faction.create!(torn_id: 77777, name: "Test Faction", xanax_target: 2.5)
     @user = users(:bram)
+    @user.update!(faction: @faction)
     @date_str = "2026-01-15"
     @batch1_stats = PersonalStatSnapshot::TRACKED_STATS_BATCH_1.values.index_with { |_| 42 }
       .merge(date: Date.parse(@date_str))
   end
 
   test "batch 1 saves snapshot and chains batch 2" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
-    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { batch: 2, api_key: "test_key" } ]) do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1)
+    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { faction_id: @faction.id, batch: 2, api_key: "test_key" } ]) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1)
     end
 
     snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
@@ -22,7 +24,7 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
   end
 
   test "batch 2 does not chain further" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     @user.personal_stat_snapshots.create!(date: @date_str, drugs_xanax: 42)
 
     batch2_stats = PersonalStatSnapshot::TRACKED_STATS_BATCH_2.values.index_with { |_| 99 }
@@ -30,48 +32,47 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(batch2_stats)
 
     assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 2)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 2)
     end
   end
 
   test "logs error and returns when api key is blank" do
-    OwnerCredentials.stubs(:api_key).returns(nil)
+    AdminCredentials.stubs(:api_key).returns(nil)
 
     assert_nothing_raised do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id)
     end
 
     assert_nil @user.personal_stat_snapshots.find_by(date: @date_str)
   end
 
   test "handles API error gracefully without saving snapshot" do
-    OwnerCredentials.stubs(:api_key).returns("test_key")
+    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
 
     assert_nothing_raised do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id)
     end
 
     assert_nil @user.personal_stat_snapshots.find_by(date: @date_str)
   end
 
-  test "uses passed api_key instead of OwnerCredentials" do
+  test "uses passed api_key instead of AdminCredentials" do
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
-    # Should NOT call OwnerCredentials.api_key when api_key is passed
-    OwnerCredentials.expects(:api_key).never
+    AdminCredentials.expects(:api_key).never
 
-    BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1, api_key: "faction_key_123")
+    BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1, api_key: "faction_key_123")
 
     snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
     assert snapshot, "Expected snapshot to be saved"
   end
 
-  test "falls back to OwnerCredentials when no api_key passed" do
-    OwnerCredentials.stubs(:api_key).returns("owner_key")
+  test "falls back to AdminCredentials when no api_key passed" do
+    AdminCredentials.stubs(:api_key).returns("owner_key")
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
-    BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1)
+    BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1)
 
     snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
     assert snapshot, "Expected snapshot to be saved"
@@ -80,8 +81,8 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
   test "chains batch 2 with the same api_key" do
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
-    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { batch: 2, api_key: "faction_key_123" } ]) do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, batch: 1, api_key: "faction_key_123")
+    assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { faction_id: @faction.id, batch: 2, api_key: "faction_key_123" } ]) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1, api_key: "faction_key_123")
     end
   end
 end
@@ -103,23 +104,23 @@ class BackfillPersonalStatsJobTest < ActiveJob::TestCase
 
     assert_enqueued_with(
       job: BackfillSingleStatJob,
-      args: [ @user.id, "2026-02-20", { api_key: "faction_api_key_abc" } ]
+      args: [ @user.id, "2026-02-20", { faction_id: @faction.id, api_key: "faction_api_key_abc" } ]
     ) do
       BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
     end
   end
 
-  test "falls back to OwnerCredentials api_key when faction has no setting" do
+  test "falls back to AdminCredentials api_key when faction has no setting" do
     @faction.faction_setting.destroy!
     @faction.reload
-    OwnerCredentials.stubs(:api_key).returns("owner_fallback_key")
+    AdminCredentials.stubs(:api_key).returns("owner_fallback_key")
 
     start_date = Date.new(2026, 2, 20)
     end_date = Date.new(2026, 2, 20)
 
     assert_enqueued_with(
       job: BackfillSingleStatJob,
-      args: [ @user.id, "2026-02-20", { api_key: "owner_fallback_key" } ]
+      args: [ @user.id, "2026-02-20", { faction_id: @faction.id, api_key: "owner_fallback_key" } ]
     ) do
       BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
     end

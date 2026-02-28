@@ -86,7 +86,7 @@ rails stats:backfill_2026_core
 
 ## Notes
 
-- The task uses OwnerCredentials.api_key for API access
+- The task uses AdminCredentials.api_key for API access
 - Snapshots are created with `created_at` set to noon of the historical date
 - The `date` column ensures only one snapshot per user per day
 - Progress is shown in real-time as users are processed

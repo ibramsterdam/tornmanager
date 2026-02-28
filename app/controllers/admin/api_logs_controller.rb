@@ -3,11 +3,11 @@ module Admin
     before_action :require_admin
 
     def index
-      owner_api_key = OwnerCredentials.api_key
+      admin_api_key = AdminCredentials.api_key
       admin_user = User.find_by(torn_id: 2728237)
 
       base_scope = ApiCall
-        .where(api_key: owner_api_key)
+        .where(api_key: admin_api_key)
         .where(user_id: admin_user&.id)
 
       @api_logs = base_scope.recent.limit(500)
