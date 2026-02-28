@@ -5,8 +5,7 @@ class Faction < ApplicationRecord
   has_one :faction_setting, dependent: :destroy
   has_many :api_calls, dependent: :nullify
   has_many :spy_reports, dependent: :destroy
-  has_many :faction_whitelists, dependent: :destroy
-  has_many :whitelisted_users, through: :faction_whitelists, source: :user
+  has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
@@ -53,8 +52,65 @@ class Faction < ApplicationRecord
     "faction:#{id}:war_data"
   end
 
-  def whitelisted?(user)
+  def leadership?(user)
     return false unless user
-    faction_whitelists.exists?(user: user)
+    user.faction_id == id && user.leadership_access?
+  end
+
+  def import_spy_report(spy)
+    report = spy_reports.find_or_initialize_by(torn_id: spy.torn_id)
+    report.assign_attributes(
+      strength: spy.strength,
+      defense: spy.defense,
+      speed: spy.speed,
+      dexterity: spy.dexterity,
+      total: spy.total,
+      spied_at: spy.spied_at
+    )
+    report.save!
+  end
+
+  def delete_all_data!
+    transaction do
+      stop_war_polling! if war_polling_active?
+      clear_backfill_status! if backfill_in_progress?
+
+      user_ids = users.pluck(:id)
+      PersonalStatSnapshot.where(user_id: user_ids).delete_all if user_ids.any?
+      spy_reports.delete_all
+      ranked_wars.delete_all
+      users.update_all(leadership_access: false)
+      faction_setting&.destroy!
+      update!(setup_completed: false)
+
+      cancel_background_jobs(user_ids)
+    end
+  end
+
+  private
+
+  def cancel_background_jobs(user_ids)
+    SolidQueue::Job
+      .where(finished_at: nil)
+      .where(class_name: %w[
+        BackfillPersonalStatsJob
+        BackfillRankedWarsJob
+        ClearBackfillStatusJob
+        WarPollingJob
+      ])
+      .where("arguments LIKE ?", "%\"arguments\":[#{id},%")
+      .destroy_all
+
+    if user_ids.any?
+      SolidQueue::Job
+        .where(finished_at: nil)
+        .where(class_name: %w[BackfillSingleStatJob BackfillUserStatsJob])
+        .where(user_ids.map { |uid| "arguments LIKE '%\"arguments\":[#{uid},%'" }.join(" OR "))
+        .destroy_all
+    end
+
+    SolidQueue::Semaphore.where(key: "war_polling_faction_#{id}").delete_all
+  rescue => e
+    Rails.logger.warn("Failed to cancel faction jobs for faction #{torn_id}: #{e.class} - #{e.message}")
   end
 end

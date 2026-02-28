@@ -2,7 +2,7 @@ class Factions::Leadership::BaseController < ApplicationController
   include FactionAccess
 
   before_action :require_setup_completed
-  before_action :require_faction_whitelisted
+  before_action :require_faction_leadership
   before_action :require_api_keys_configured
 
   private
@@ -41,8 +41,8 @@ class Factions::Leadership::BaseController < ApplicationController
     @faction_setting = @faction.faction_setting || @faction.build_faction_setting
     @torn_api_key_masked = mask_key(@faction_setting.torn_api_key)
     @tornstats_api_key_masked = mask_key(@faction_setting.tornstats_api_key)
-    @whitelisted_users = @faction.whitelisted_users.order(:name)
-    @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
+    @leadership_users = @faction.leadership.order(:name)
+    @faction_members = @faction.users.active.where(leadership_access: false).order(:name)
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
     @faction_member_count = @faction.users.active.count
     @war_polling_active = @faction.war_polling_active?

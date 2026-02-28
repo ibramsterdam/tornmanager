@@ -59,7 +59,7 @@
             <span class="war-summary-date"><%= @latest_war.started_at.strftime("%B %d, %Y") %></span>
             <span class="war-summary-duration"><%= @latest_war.duration_formatted %></span>
           </div>
-          <% if @faction.whitelisted?(Current.user) || Current.user.admin? %>
+          <% if @faction.leadership?(Current.user) || Current.user.admin? %>
             <%= link_to "View War History", faction_leadership_path(@faction, anchor: "wars"), class: "btn btn-secondary btn-sm" %>
           <% end %>
         </div>

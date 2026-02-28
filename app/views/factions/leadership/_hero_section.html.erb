@@ -45,12 +45,12 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
           </svg>
         </span>
-        <span class="dashboard-stat-value"><%= @whitelisted_users.count %></span>
-        <span class="dashboard-stat-label">Whitelist</span>
+        <span class="dashboard-stat-value"><%= @leadership_users.count %></span>
+        <span class="dashboard-stat-label">Leadership</span>
       <% end %>
 
       <% if @war_polling_active %>
-        <%= button_to stop_faction_war_polling_path(@faction), method: :delete, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle", data: { turbo_confirm: "Stop war polling?" } do %>
+        <%= button_to stop_faction_leadership_war_polling_path(@faction), method: :delete, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle", data: { turbo_confirm: "Stop war polling?" } do %>
           <span class="dashboard-stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
@@ -62,7 +62,7 @@
           <span class="dashboard-stat-label">War Polling <span class="live-polling-dot"></span></span>
         <% end %>
       <% else %>
-        <%= button_to start_faction_war_polling_path(@faction), method: :post, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle dashboard-stat-card-cta" do %>
+        <%= button_to start_faction_leadership_war_polling_path(@faction), method: :post, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle dashboard-stat-card-cta" do %>
           <span class="dashboard-stat-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="5 3 19 12 5 21 5 3"/>

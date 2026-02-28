@@ -10,10 +10,8 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @faction.faction_whitelists.create!(user: @bram)
-    @faction.faction_whitelists.create!(user: @bert)
+    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now, leadership_access: true)
+    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now, leadership_access: true)
   end
 
   # -- Data Coverage --
@@ -90,10 +88,10 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "setup is accessible without whitelist or setup_completed" do
+  test "setup is accessible without leadership access or setup_completed" do
     @faction.update!(setup_completed: false)
     @faction.faction_setting.destroy!
-    @faction.faction_whitelists.destroy_all
+    @bram.update!(leadership_access: false)
 
     sign_in_as(@bram)
     get setup_faction_leadership_path(@faction)
@@ -158,7 +156,6 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   test "complete_setup rejects key belonging to different user" do
     stub_key_info_for_different_user(@faction.torn_id)
 
-    stub_leader_role(@bert)
     sign_in_as(@bert)
     patch complete_setup_faction_leadership_path(@faction), params: {
       faction_setting: { torn_api_key: "WRONG_USER_KEY" }
@@ -218,10 +215,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "update_keys updates torn api key with valid key" do
     stub_valid_key_info(@bram, @faction.torn_id)
-    stub_leader_role(@bram)
 
     sign_in_as(@bram)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { torn_api_key: "UPDATED_KEY" }
     }
 
@@ -231,10 +227,8 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_keys updates only tornstats key when no torn key provided" do
-    stub_leader_role(@bram)
-
     sign_in_as(@bram)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { tornstats_api_key: "NEW_TORNSTATS_KEY" }
     }
 
@@ -245,10 +239,8 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_keys reports no changes when both keys blank" do
-    stub_leader_role(@bram)
-
     sign_in_as(@bram)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { torn_api_key: "", tornstats_api_key: "" }
     }
 
@@ -258,10 +250,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "update_keys rejects non-limited access torn key" do
     stub_key_info(@bram, @faction.torn_id, access_type: "Public Only")
-    stub_leader_role(@bram)
 
     sign_in_as(@bram)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { torn_api_key: "PUBLIC_KEY" }
     }
 
@@ -271,10 +262,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "update_keys rejects invalid torn key" do
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError)
-    stub_leader_role(@bram)
 
     sign_in_as(@bram)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { torn_api_key: "BAD_KEY" }
     }
 
@@ -286,7 +276,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "delete_torn_key clears the torn api key" do
     sign_in_as(@bram)
-    delete delete_torn_key_faction_leadership_path(@faction)
+    delete faction_leadership_api_keys_path(@faction, key: "torn")
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /deleted/, flash[:notice]
@@ -296,14 +286,13 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_nil setting.torn_api_access_type
   end
 
-  test "delete_torn_key shows error when no setting exists" do
+  test "delete_torn_key redirects to setup when no setting exists" do
     @faction.faction_setting.destroy!
 
     sign_in_as(@bram)
-    delete delete_torn_key_faction_leadership_path(@faction)
+    delete faction_leadership_api_keys_path(@faction, key: "torn")
 
-    assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /No API keys/, flash[:alert]
+    assert_redirected_to setup_faction_leadership_path(@faction)
   end
 
   # -- Delete TornStats Key --
@@ -312,71 +301,70 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @faction.faction_setting.update!(tornstats_api_key: "SOME_KEY")
 
     sign_in_as(@bram)
-    delete delete_tornstats_key_faction_leadership_path(@faction)
+    delete faction_leadership_api_keys_path(@faction, key: "tornstats")
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /deleted/, flash[:notice]
     assert_nil @faction.reload.faction_setting.tornstats_api_key
   end
 
-  test "delete_tornstats_key shows error when no setting exists" do
+  test "delete_tornstats_key redirects to setup when no setting exists" do
     @faction.faction_setting.destroy!
 
     sign_in_as(@bram)
-    delete delete_tornstats_key_faction_leadership_path(@faction)
+    delete faction_leadership_api_keys_path(@faction, key: "tornstats")
 
-    assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /No API keys/, flash[:alert]
+    assert_redirected_to setup_faction_leadership_path(@faction)
   end
 
-  # -- Add Whitelist --
+  # -- Grant Leadership Access --
 
-  test "add_whitelist grants access to a faction member" do
+  test "grant_leadership_access grants access to a faction member" do
     member = User.create!(torn_id: 555555, name: "NewMember", level: 30, faction: @faction)
 
     sign_in_as(@bram)
-    post add_whitelist_faction_leadership_path(@faction), params: { user_id: member.id }
+    post faction_leadership_leadership_access_path(@faction), params: { user_id: member.id }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert @faction.faction_whitelists.exists?(user: member)
+    assert member.reload.leadership_access?
     assert_match /granted access/, flash[:notice]
   end
 
-  test "add_whitelist handles already whitelisted user" do
+  test "grant_leadership_access handles user who already has access" do
     sign_in_as(@bram)
-    post add_whitelist_faction_leadership_path(@faction), params: { user_id: @bert.id }
+    post faction_leadership_leadership_access_path(@faction), params: { user_id: @bert.id }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /already has access/, flash[:notice]
   end
 
-  test "add_whitelist handles user not found" do
+  test "grant_leadership_access handles user not found" do
     sign_in_as(@bram)
-    post add_whitelist_faction_leadership_path(@faction), params: { user_id: 0 }
+    post faction_leadership_leadership_access_path(@faction), params: { user_id: 0 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /not found/, flash[:alert]
   end
 
-  # -- Remove Whitelist --
+  # -- Revoke Leadership Access --
 
-  test "remove_whitelist removes access from a whitelisted user" do
+  test "revoke_leadership_access removes access from a user" do
     sign_in_as(@bram)
-    delete remove_whitelist_faction_leadership_path(@faction), params: { user_id: @bert.id }
+    delete faction_leadership_leadership_access_path(@faction), params: { user_id: @bert.id }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_not @faction.faction_whitelists.exists?(user: @bert)
+    assert_not @bert.reload.leadership_access?
     assert_match /removed/, flash[:notice]
   end
 
-  test "remove_whitelist handles user not in whitelist" do
-    member = User.create!(torn_id: 555555, name: "NotWhitelisted", level: 30, faction: @faction)
+  test "revoke_leadership_access handles user without access" do
+    member = User.create!(torn_id: 555555, name: "NoAccess", level: 30, faction: @faction)
 
     sign_in_as(@bram)
-    delete remove_whitelist_faction_leadership_path(@faction), params: { user_id: member.id }
+    delete faction_leadership_leadership_access_path(@faction), params: { user_id: member.id }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /not found in whitelist/, flash[:alert]
+    assert_match /not found in leadership/, flash[:alert]
   end
 
   # -- Share Subscription --
@@ -389,7 +377,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     active_count = @faction.users.active.count
 
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: active_count }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /Shared #{active_count} weeks/, flash[:notice]
@@ -397,7 +385,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "share_subscription rejects zero weeks" do
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: 0 }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: 0 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /valid number/, flash[:alert]
@@ -405,7 +393,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "share_subscription rejects negative weeks" do
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: -5 }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: -5 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /valid number/, flash[:alert]
@@ -414,7 +402,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   test "share_subscription rejects uneven split" do
     # 2 active members (bram + bert), but asking for 3 weeks — doesn't divide evenly
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: 3 }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: 3 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /cannot be split evenly/, flash[:alert]
@@ -425,7 +413,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     active_count = @faction.users.active.count
 
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: active_count * 10 }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count * 10 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /weeks remaining/, flash[:alert]
@@ -438,7 +426,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_difference "FactionSubscriptionGrant.count", 1 do
-      post share_subscription_faction_leadership_path(@faction), params: { total_weeks: active_count }
+      post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
     end
 
     grant = FactionSubscriptionGrant.last
@@ -454,7 +442,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_difference "SubscriptionGrant.count", active_count do
-      post share_subscription_faction_leadership_path(@faction), params: { total_weeks: active_count }
+      post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
     end
   end
 
@@ -464,7 +452,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     active_count = @faction.users.active.count
 
     sign_in_as(@bram)
-    post share_subscription_faction_leadership_path(@faction), params: { total_weeks: active_count }
+    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
 
     remaining = @bram.reload.subscription_weeks_remaining
     assert remaining < original_weeks, "Subscription should be deducted"
@@ -474,7 +462,6 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "import_spies imports spy reports from tornstats" do
     @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
-    stub_leader_role(@bram)
 
     spy_data = [
       TornStatsApi::SpyFaction::SpyData.new(
@@ -493,7 +480,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_difference "@faction.spy_reports.count", 2 do
-      post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+      post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
     end
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
@@ -504,7 +491,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
 
     sign_in_as(@bram)
-    post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "" }
+    post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "" }
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
     assert_match /enter a faction ID/, flash[:alert]
@@ -514,7 +501,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @faction.faction_setting.update!(tornstats_api_key: nil)
 
     sign_in_as(@bram)
-    post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+    post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
     assert_match /TornStats API key must be configured/, flash[:alert]
@@ -529,7 +516,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     Rails.cache.stubs(:read).with(cache_key).returns(Time.current)
 
     sign_in_as(@bram)
-    post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+    post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
     assert_match /recently/, flash[:alert]
@@ -540,7 +527,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     TornStatsApi::SpyFaction.any_instance.stubs(:fetch).raises(TornStatsApi::NotFoundError, "No data")
 
     sign_in_as(@bram)
-    post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+    post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
     assert_match /No spy data found/, flash[:alert]
@@ -551,7 +538,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     TornStatsApi::SpyFaction.any_instance.stubs(:fetch).raises(TornStatsApi::InvalidKeyError, "Bad key")
 
     sign_in_as(@bram)
-    post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+    post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
 
     assert_redirected_to faction_leadership_spy_reports_path(@faction)
     assert_match /Invalid TornStats API key/, flash[:alert]
@@ -573,7 +560,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_no_difference "@faction.spy_reports.count" do
-      post import_spies_faction_leadership_path(@faction), params: { target_faction_id: "88888" }
+      post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
     end
 
     assert_equal 36000, @faction.spy_reports.find_by(torn_id: 111).total
@@ -585,7 +572,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_difference "FactionSetting.count", -1 do
-      delete delete_faction_data_faction_leadership_path(@faction)
+      delete faction_leadership_faction_data_path(@faction)
     end
 
     assert_nil @faction.reload.faction_setting
@@ -602,7 +589,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     other_spy = other_faction.spy_reports.create!(torn_id: 333, total: 3000, strength: 300, defense: 300, speed: 300, dexterity: 300)
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_equal 0, @faction.spy_reports.count
     assert SpyReport.exists?(other_spy.id), "Other faction's spy reports should NOT be deleted"
@@ -614,7 +601,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     PersonalStatSnapshot.create!(user: member, date: Date.yesterday, timestamp: Date.yesterday.to_time.to_i)
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_equal 0, PersonalStatSnapshot.where(user_id: [ @bram.id, member.id ]).count
   end
@@ -630,7 +617,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     PersonalStatSnapshot.create!(user: @bram, date: Date.yesterday, timestamp: Date.yesterday.to_time.to_i)
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert PersonalStatSnapshot.exists?(other_snapshot.id), "Other faction's snapshots should NOT be deleted"
   end
@@ -645,22 +632,22 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
 
     assert_difference "RankedWar.count", -1 do
-      delete delete_faction_data_faction_leadership_path(@faction)
+      delete faction_leadership_faction_data_path(@faction)
     end
   end
 
-  test "delete_faction_data clears the whitelist" do
+  test "delete_faction_data revokes leadership access" do
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
-    assert_equal 0, @faction.faction_whitelists.count
+    assert_equal 0, @faction.leadership.count
   end
 
   test "delete_faction_data stops war polling" do
     @faction.update!(war_polling_active: true)
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_not @faction.reload.war_polling_active?
   end
@@ -669,7 +656,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     @faction.update!(backfill_ends_at: 1.hour.from_now, backfill_target_date: Date.yesterday)
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_nil @faction.reload.backfill_ends_at
     assert_nil @faction.reload.backfill_target_date
@@ -679,7 +666,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     original_expiry = @bram.subscription_expires_at
 
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_equal original_expiry, @bram.reload.subscription_expires_at,
       "Subscription time should NOT be revoked"
@@ -687,27 +674,27 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "delete_faction_data marks faction setup as incomplete" do
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_not @faction.reload.setup_completed?
   end
 
   test "delete_faction_data redirects to faction dashboard with notice" do
     sign_in_as(@bram)
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
 
     assert_redirected_to faction_path(@faction)
     assert_equal "All faction data has been deleted. Subscription time has been preserved.", flash[:notice]
   end
 
   test "delete_faction_data requires authentication" do
-    delete delete_faction_data_faction_leadership_path(@faction)
+    delete faction_leadership_faction_data_path(@faction)
     assert_redirected_to new_session_path
   end
 
   # -- Access control --
 
-  test "non-whitelisted member cannot access show" do
+  test "member without leadership access cannot access show" do
     kaneki = users(:kaneki)
     kaneki.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
 
@@ -717,16 +704,16 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to faction_path(@faction)
   end
 
-  test "non-leader cannot access leader-only actions" do
-    stub_member_role(@bert)
+  test "member without leadership access cannot access mutating actions" do
+    kaneki = users(:kaneki)
+    kaneki.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
 
-    sign_in_as(@bert)
-    patch update_keys_faction_leadership_path(@faction), params: {
+    sign_in_as(kaneki)
+    patch faction_leadership_api_keys_path(@faction), params: {
       faction_setting: { torn_api_key: "KEY" }
     }
 
     assert_redirected_to faction_path(@faction)
-    assert_match /leaders/, flash[:alert]
   end
 
   private
@@ -755,27 +742,5 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(key_info)
   end
 
-  def stub_leader_role(user)
-    member = TornApi::Faction::Members::Member.new(
-      user.torn_id, user.name, user.level, 100,
-      "Online", Time.current.to_i, "0 seconds ago",
-      "Okay", "", "Okay", "green", 0, nil,
-      "Everyone", "Leader", true, false, false, false
-    )
-    members_api = mock
-    members_api.stubs(:fetch).returns([ member ])
-    TornApi::Faction::Members.stubs(:new).with(user.api_key, @faction.torn_id).returns(members_api)
-  end
 
-  def stub_member_role(user)
-    member = TornApi::Faction::Members::Member.new(
-      user.torn_id, user.name, user.level, 100,
-      "Online", Time.current.to_i, "0 seconds ago",
-      "Okay", "", "Okay", "green", 0, nil,
-      "Everyone", "Member", true, false, false, false
-    )
-    members_api = mock
-    members_api.stubs(:fetch).returns([ member ])
-    TornApi::Faction::Members.stubs(:new).with(user.api_key, @faction.torn_id).returns(members_api)
-  end
 end

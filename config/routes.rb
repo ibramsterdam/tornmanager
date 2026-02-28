@@ -25,25 +25,23 @@ Rails.application.routes.draw do
       get :setup
       patch :complete_setup
       get :war_data
-      patch :update_keys
-      delete :delete_torn_key
-      delete :delete_tornstats_key
-      post :add_whitelist
-      delete :remove_whitelist
-      post :share_subscription
-      post :import_spies
-      delete :delete_faction_data
+
+      resource :api_keys, only: [ :update, :destroy ], controller: "factions/leadership/api_keys"
+      resource :leadership_access, only: [ :create, :destroy ], controller: "factions/leadership/leadership_access"
+      resource :subscriptions, only: [ :create ], controller: "factions/leadership/subscriptions"
+      resource :spy_imports, only: [ :create ], controller: "factions/leadership/spy_imports"
+      resource :faction_data, only: [ :destroy ], controller: "factions/leadership/faction_data"
 
       resource :war_history, only: [ :show ], controller: "factions/leadership/war_history"
       resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports"
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"
       resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage"
-    end
 
-    resource :war_polling, only: [], controller: "factions/war_polling" do
-      post :start
-      delete :stop
+      resource :war_polling, only: [], controller: "factions/leadership/war_polling" do
+        post :start
+        delete :stop
+      end
     end
 
     get :public_war, controller: "factions/public_war", action: :show
