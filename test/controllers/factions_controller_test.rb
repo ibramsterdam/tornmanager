@@ -166,6 +166,45 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".dashboard-hero"
   end
 
+  # -- Data coverage warning banner --
+
+  test "shows coverage warning banner when data coverage is below 100 percent" do
+    # Create snapshots for only some of the expected days
+    start_date = PersonalStatSnapshot.tracking_start_date
+    PersonalStatSnapshot.create!(user: @bram, date: start_date, drugs_xanax: 10)
+
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+    assert_select ".coverage-warning-banner", minimum: 1
+    assert_select ".coverage-warning-banner", /may affect accuracy/
+  end
+
+  test "does not show coverage warning banner when data coverage is 100 percent" do
+    # Create snapshots for every expected day for all active members
+    start_date = PersonalStatSnapshot.tracking_start_date
+    end_date = PersonalStatSnapshot.tracking_end_date
+
+    @faction.users.active.each do |user|
+      (start_date..end_date).each do |date|
+        PersonalStatSnapshot.create!(user: user, date: date, drugs_xanax: 10)
+      end
+    end
+
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+    assert_select ".coverage-warning-banner", 0
+  end
+
+  test "does not show coverage warning banner during backfill" do
+    @faction.update!(backfill_ends_at: 1.hour.from_now, backfill_target_date: Date.new(2026, 1, 1))
+    sign_in_as(@bram)
+    get faction_path(@faction)
+    assert_response :success
+    assert_select ".coverage-warning-banner", 0
+  end
+
   # -- Setup wizard (faction exists but setup_completed: false) --
 
   test "dashboard redirects to setup when faction setup not completed" do

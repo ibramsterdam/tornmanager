@@ -67,17 +67,22 @@
   margin-bottom: var(--space-8);
 }
 
+.login-icon {
+  color: var(--gray-500);
+  margin-bottom: var(--space-3);
+}
+
 .login-title {
   font-size: 1.75rem;
   font-weight: 600;
   color: #ffffff;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-1);
   letter-spacing: -0.025em;
 }
 
 .login-subtitle {
-  font-size: 0.875rem;
-  color: var(--gray-400);
+  font-size: 0.8125rem;
+  color: var(--gray-500);
   margin: 0;
 }
 
