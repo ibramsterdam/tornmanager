@@ -445,6 +445,28 @@ a.public-war-card:hover {
   .public-war-card-matchup {
     gap: 2px;
   }
+
+  .live-war-scores-minimal .live-score-label {
+    font-size: 1rem;
+  }
+
+  .live-war-scores-minimal ~ .live-war-table-card .live-war-table-scroll {
+    max-height: calc(100vh - 260px);
+  }
+
+  .public-war-danger-zone {
+    margin-top: var(--space-6);
+    padding: var(--space-3);
+  }
+
+  .public-war-delete-form {
+    gap: var(--space-2);
+  }
+
+  .public-war-modal {
+    margin: 0 var(--space-4);
+    padding: var(--space-4) var(--space-5);
+  }
 }
 
 @media (max-width: 480px) {
@@ -454,5 +476,9 @@ a.public-war-card:hover {
 
   .public-wars-create-card {
     grid-column: span 1;
+  }
+
+  .public-wars-create-row {
+    grid-template-columns: 1fr;
   }
 }

@@ -165,9 +165,8 @@ class PublicWarsController < ApplicationController
     spy_stats = Rails.cache.read(@lobby.spy_stats_cache_key) || {}
     spy_stats[torn_id] = (spy_stats[torn_id] || {}).merge(stats.symbolize_keys)
 
-    # Auto-calculate total if individual stats are present
     individual = spy_stats[torn_id]
-    if individual[:strength] && individual[:defense] && individual[:speed] && individual[:dexterity]
+    if !stats.key?(:total) && individual[:strength] && individual[:defense] && individual[:speed] && individual[:dexterity]
       spy_stats[torn_id][:total] = individual[:strength] + individual[:defense] + individual[:speed] + individual[:dexterity]
     end
 

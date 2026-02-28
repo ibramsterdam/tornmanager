@@ -798,7 +798,12 @@ tr.row-updated {
 @media (max-width: 768px) {
   .live-war-scores-minimal {
     flex-direction: column;
-    gap: var(--space-4);
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+  }
+
+  .live-war-score-side {
+    min-width: auto;
   }
 
   .live-war-score-side.our-side,
@@ -807,20 +812,122 @@ tr.row-updated {
   }
 
   .live-score-value {
-    font-size: 2.5rem;
+    font-size: 2rem;
+  }
+
+  .live-war-score-center {
+    min-width: auto;
+    gap: var(--space-1);
+  }
+
+  .live-war-table-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding: var(--space-3);
+  }
+
+  .live-war-table-status {
+    gap: var(--space-2);
+    flex-wrap: wrap;
   }
 
   .live-war-filters {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--space-3);
+    padding: var(--space-3);
+  }
+
+  .live-war-filters .war-filter-group {
+    align-items: center;
+  }
+
+  .live-war-filters .war-filter-options {
+    justify-content: center;
   }
 
   .live-war-filters .war-filter-stats {
     margin-left: 0;
+    align-items: center;
+  }
+
+  .live-war-filters .war-filter-slider {
+    justify-content: center;
   }
 
   .live-war-filters .war-filter-slider input[type="range"] {
     width: 140px;
+  }
+
+  .live-war-table-scroll {
+    max-height: calc(100vh - 280px);
+  }
+
+  /* Hide individual stat columns (STR, DEF, SPD, DEX) — keep Total */
+  .live-war-table-scroll th:nth-child(7),
+  .live-war-table-scroll td:nth-child(7),
+  .live-war-table-scroll th:nth-child(8),
+  .live-war-table-scroll td:nth-child(8),
+  .live-war-table-scroll th:nth-child(9),
+  .live-war-table-scroll td:nth-child(9),
+  .live-war-table-scroll th:nth-child(10),
+  .live-war-table-scroll td:nth-child(10) {
+    display: none;
+  }
+
+  /* Tighter padding on table cells */
+  .live-war-table-scroll th,
+  .live-war-table-scroll td {
+    padding: var(--space-2);
+    font-size: 0.75rem;
+  }
+
+  .stat-value {
+    font-size: 0.75rem;
+  }
+
+  .member-status,
+  .action-badge {
+    font-size: 0.625rem;
+    padding: 1px 4px;
+  }
+
+  .hospital-timer,
+  .travel-timer,
+  .abroad-timer {
+    font-size: 0.6875rem;
+  }
+
+  .attack-link {
+    width: 24px;
+    height: 24px;
+  }
+
+  .column-help-tooltip {
+    width: 220px;
+    left: auto;
+    right: 0;
+    transform: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .live-score-value {
+    font-size: 1.5rem;
+  }
+
+  .live-score-label {
+    font-size: 0.75rem;
+  }
+
+  .live-war-target {
+    font-size: 0.875rem;
+  }
+
+  /* Also hide Lvl column on very small screens */
+  .live-war-table-scroll th:nth-child(2),
+  .live-war-table-scroll td:nth-child(2) {
+    display: none;
   }
 }
