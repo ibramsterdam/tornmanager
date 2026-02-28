@@ -1,0 +1,57 @@
+require "test_helper"
+
+class Factions::Leadership::SettingsControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @faction = Faction.create!(
+      torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
+      energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
+    )
+    @faction.create_faction_setting!(torn_api_key: "FACTION_KEY_123", torn_api_access_type: "Limited Access")
+
+    @bram = users(:bram)
+    @bert = users(:bert)
+    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+
+    @faction.faction_whitelists.create!(user: @bram)
+  end
+
+  test "requires authentication" do
+    get faction_leadership_settings_path(@faction)
+    assert_redirected_to new_session_path
+  end
+
+  test "requires whitelist access" do
+    sign_in_as(@bert)
+    get faction_leadership_settings_path(@faction)
+    assert_redirected_to faction_path(@faction)
+  end
+
+  test "shows page for whitelisted member" do
+    sign_in_as(@bram)
+    get faction_leadership_settings_path(@faction)
+    assert_response :success
+    assert_select "a.back-link", "← Back to Leadership"
+  end
+
+  test "shows api configuration card" do
+    sign_in_as(@bram)
+    get faction_leadership_settings_path(@faction)
+    assert_response :success
+    assert_select "h3", "API Configuration"
+  end
+
+  test "shows whitelist card" do
+    sign_in_as(@bram)
+    get faction_leadership_settings_path(@faction)
+    assert_response :success
+    assert_select "h3", "Leadership Access"
+  end
+
+  test "redirects to setup when no api keys" do
+    @faction.faction_setting.update!(torn_api_key: nil)
+    sign_in_as(@bram)
+    get faction_leadership_settings_path(@faction)
+    assert_redirected_to setup_faction_leadership_path(@faction)
+  end
+end

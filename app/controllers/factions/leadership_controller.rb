@@ -1,20 +1,17 @@
-class Factions::LeadershipController < ApplicationController
-  include FactionAccess
+class Factions::LeadershipController < Factions::Leadership::BaseController
   include FactionHelper
 
-  IMPORT_COOLDOWN = 1.minute
-
-  before_action :require_setup_completed, except: [ :setup, :complete_setup ]
-  before_action :require_faction_whitelisted, except: [ :setup, :complete_setup, :share_subscription ]
+  skip_before_action :require_setup_completed, only: [ :setup, :complete_setup ]
+  skip_before_action :require_faction_whitelisted, only: [ :setup, :complete_setup ]
+  skip_before_action :require_api_keys_configured, except: [ :show ]
   before_action :require_faction_leader, only: [ :setup, :complete_setup, :update_keys, :delete_torn_key, :delete_tornstats_key, :add_whitelist, :remove_whitelist, :import_spies, :delete_faction_data ]
-  before_action :require_faction_whitelisted, only: [ :share_subscription ]
-  before_action :require_api_keys_configured, only: [ :show ]
 
   def show
     load_wars_data
     load_spy_stats_data
     load_settings_data
     load_data_coverage
+    load_api_peak_rate
   end
 
   def setup
@@ -83,21 +80,21 @@ class Factions::LeadershipController < ApplicationController
         key_info = TornApi::Key::Info.new(new_torn_key).fetch
 
         unless key_info.access.type == "Limited Access"
-          return redirect_to faction_leadership_path(@faction, anchor: "settings"),
+          return redirect_to faction_leadership_settings_path(@faction),
             alert: "Only Limited Access keys are allowed."
         end
 
         unless Current.user.admin? || key_info.user.id == Current.user.torn_id
-          return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "This API key does not belong to you."
+          return redirect_to faction_leadership_settings_path(@faction), alert: "This API key does not belong to you."
         end
 
         @faction_setting.torn_api_key = new_torn_key
         @faction_setting.torn_api_access_type = key_info.access.type
         changes_made = true
       rescue TornApi::InvalidKeyError
-        return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Invalid Torn API key."
+        return redirect_to faction_leadership_settings_path(@faction), alert: "Invalid Torn API key."
       rescue TornApi::ApiError => e
-        return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Could not validate Torn API key: #{e.message}"
+        return redirect_to faction_leadership_settings_path(@faction), alert: "Could not validate Torn API key: #{e.message}"
       end
     end
 
@@ -107,11 +104,11 @@ class Factions::LeadershipController < ApplicationController
     end
 
     if !changes_made
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "No changes made."
+      redirect_to faction_leadership_settings_path(@faction), notice: "No changes made."
     elsif @faction_setting.save
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "API keys saved successfully."
+      redirect_to faction_leadership_settings_path(@faction), notice: "API keys saved successfully."
     else
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Failed to save settings."
+      redirect_to faction_leadership_settings_path(@faction), alert: "Failed to save settings."
     end
   end
 
@@ -119,9 +116,9 @@ class Factions::LeadershipController < ApplicationController
     setting = @faction.faction_setting
     if setting
       setting.update!(torn_api_key: nil, torn_api_access_type: nil)
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "Torn API key deleted."
+      redirect_to faction_leadership_settings_path(@faction), notice: "Torn API key deleted."
     else
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "No API keys configured."
+      redirect_to faction_leadership_settings_path(@faction), alert: "No API keys configured."
     end
   end
 
@@ -129,9 +126,9 @@ class Factions::LeadershipController < ApplicationController
     setting = @faction.faction_setting
     if setting
       setting.update!(tornstats_api_key: nil)
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "TornStats API key deleted."
+      redirect_to faction_leadership_settings_path(@faction), notice: "TornStats API key deleted."
     else
-      redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "No API keys configured."
+      redirect_to faction_leadership_settings_path(@faction), alert: "No API keys configured."
     end
   end
 
@@ -158,7 +155,7 @@ class Factions::LeadershipController < ApplicationController
           turbo_stream.append("flash-notifications", partial: "layouts/flash", locals: { type: @flash_type, message: @flash_message })
         ]
       end
-      format.html { redirect_to faction_leadership_path(@faction, anchor: "settings"), @flash_type.to_sym => @flash_message }
+      format.html { redirect_to faction_leadership_settings_path(@faction), @flash_type.to_sym => @flash_message }
     end
   end
 
@@ -183,7 +180,7 @@ class Factions::LeadershipController < ApplicationController
           turbo_stream.append("flash-notifications", partial: "layouts/flash", locals: { type: @flash_type, message: @flash_message })
         ]
       end
-      format.html { redirect_to faction_leadership_path(@faction, anchor: "settings"), @flash_type.to_sym => @flash_message }
+      format.html { redirect_to faction_leadership_settings_path(@faction), @flash_type.to_sym => @flash_message }
     end
   end
 
@@ -193,21 +190,21 @@ class Factions::LeadershipController < ApplicationController
     member_count = members.count
 
     if total_weeks <= 0
-      return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Please enter a valid number of weeks to share."
+      return redirect_to faction_leadership_settings_path(@faction), alert: "Please enter a valid number of weeks to share."
     end
 
     if member_count == 0
-      return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "No faction members found."
+      return redirect_to faction_leadership_settings_path(@faction), alert: "No faction members found."
     end
 
     if total_weeks % member_count != 0
-      return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "#{total_weeks} weeks cannot be split evenly across #{member_count} members. Try a multiple of #{member_count}."
+      return redirect_to faction_leadership_settings_path(@faction), alert: "#{total_weeks} weeks cannot be split evenly across #{member_count} members. Try a multiple of #{member_count}."
     end
 
     weeks_per_member = total_weeks / member_count
 
     if Current.user.subscription_weeks_remaining < total_weeks
-      return redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "You only have #{Current.user.subscription_weeks_remaining} weeks remaining. Cannot share #{total_weeks} weeks."
+      return redirect_to faction_leadership_settings_path(@faction), alert: "You only have #{Current.user.subscription_weeks_remaining} weeks remaining. Cannot share #{total_weeks} weeks."
     end
 
     ActiveRecord::Base.transaction do
@@ -231,26 +228,26 @@ class Factions::LeadershipController < ApplicationController
       end
     end
 
-    redirect_to faction_leadership_path(@faction, anchor: "settings"), notice: "Shared #{total_weeks} weeks across #{member_count} members (#{weeks_per_member} weeks each)."
+    redirect_to faction_leadership_settings_path(@faction), notice: "Shared #{total_weeks} weeks across #{member_count} members (#{weeks_per_member} weeks each)."
   rescue => e
     Rails.logger.error("Share subscription failed for user #{Current.user.torn_id}: #{e.class} - #{e.message}")
-    redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Failed to share subscription: #{e.message}"
+    redirect_to faction_leadership_settings_path(@faction), alert: "Failed to share subscription: #{e.message}"
   end
 
   def import_spies
     target_faction_id = params[:target_faction_id].to_s.strip
 
     if target_faction_id.blank?
-      return redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "Please enter a faction ID to import spy data for."
+      return redirect_to faction_leadership_spy_reports_path(@faction), alert: "Please enter a faction ID to import spy data for."
     end
 
     @faction_setting = @faction.faction_setting
     unless @faction_setting&.tornstats_api_key?
-      return redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "TornStats API key must be configured before importing spy data."
+      return redirect_to faction_leadership_spy_reports_path(@faction), alert: "TornStats API key must be configured before importing spy data."
     end
 
     if rate_limited?
-      return redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "Import was run recently. Try again in #{seconds_until_import} seconds."
+      return redirect_to faction_leadership_spy_reports_path(@faction), alert: "Import was run recently. Try again in #{seconds_until_import} seconds."
     end
 
     Rails.cache.write(import_cache_key, Time.current, expires_in: IMPORT_COOLDOWN)
@@ -269,14 +266,14 @@ class Factions::LeadershipController < ApplicationController
 
       Rails.cache.delete(@faction.war_cache_key)
 
-      redirect_to faction_leadership_path(@faction, anchor: "spies"), notice: "Successfully imported #{imported} spy reports."
+      redirect_to faction_leadership_spy_reports_path(@faction), notice: "Successfully imported #{imported} spy reports."
     rescue TornStatsApi::NotFoundError => e
-      redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "No spy data found: #{e.message}"
+      redirect_to faction_leadership_spy_reports_path(@faction), alert: "No spy data found: #{e.message}"
     rescue TornStatsApi::InvalidKeyError => e
-      redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "Invalid TornStats API key: #{e.message}"
+      redirect_to faction_leadership_spy_reports_path(@faction), alert: "Invalid TornStats API key: #{e.message}"
     rescue TornStatsApi::ApiError => e
       Rails.logger.error("TornStats import failed: #{e.class} - #{e.message}")
-      redirect_to faction_leadership_path(@faction, anchor: "spies"), alert: "Import failed: #{e.message}"
+      redirect_to faction_leadership_spy_reports_path(@faction), alert: "Import failed: #{e.message}"
     end
   end
 
@@ -284,38 +281,23 @@ class Factions::LeadershipController < ApplicationController
     user_ids = @faction.users.pluck(:id)
 
     ActiveRecord::Base.transaction do
-      # Stop war polling
       @faction.stop_war_polling! if @faction.war_polling_active?
-
-      # Clear backfill status
       @faction.clear_backfill_status! if @faction.backfill_in_progress?
 
-      # Delete personal stat snapshots for all faction members
       PersonalStatSnapshot.where(user_id: user_ids).delete_all if user_ids.any?
-
-      # Delete spy reports (faction-scoped)
       @faction.spy_reports.delete_all
-
-      # Delete ranked wars
       @faction.ranked_wars.delete_all
-
-      # Clear whitelist
       @faction.faction_whitelists.delete_all
-
-      # Delete API keys (destroy the faction_setting)
       @faction.faction_setting&.destroy!
-
-      # Mark setup as incomplete
       @faction.update!(setup_completed: false)
     end
 
-    # Cancel scheduled Solid Queue jobs for this faction (outside transaction — separate DB)
     cancel_faction_jobs(user_ids)
 
     redirect_to faction_path(@faction), notice: "All faction data has been deleted. Subscription time has been preserved."
   rescue => e
     Rails.logger.error("Delete faction data failed for faction #{@faction.torn_id}: #{e.class} - #{e.message}")
-    redirect_to faction_leadership_path(@faction, anchor: "settings"), alert: "Failed to delete faction data: #{e.message}"
+    redirect_to faction_leadership_settings_path(@faction), alert: "Failed to delete faction data: #{e.message}"
   end
 
   private
@@ -323,7 +305,6 @@ class Factions::LeadershipController < ApplicationController
   def cancel_faction_jobs(user_ids)
     faction_id = @faction.id
 
-    # Jobs with faction_id as first argument
     SolidQueue::Job
       .where(finished_at: nil)
       .where(class_name: %w[
@@ -335,7 +316,6 @@ class Factions::LeadershipController < ApplicationController
       .where("arguments LIKE ?", "%\"arguments\":[#{faction_id},%")
       .destroy_all
 
-    # BackfillSingleStatJob / BackfillUserStatsJob — user_id as first argument
     if user_ids.any?
       SolidQueue::Job
         .where(finished_at: nil)
@@ -344,168 +324,9 @@ class Factions::LeadershipController < ApplicationController
         .destroy_all
     end
 
-    # Clean up war polling concurrency semaphore
     SolidQueue::Semaphore.where(key: "war_polling_faction_#{faction_id}").delete_all
   rescue => e
     Rails.logger.warn("Failed to cancel faction jobs for faction #{@faction.torn_id}: #{e.class} - #{e.message}")
-  end
-
-
-
-  def require_api_keys_configured
-    return if performed?
-    find_faction unless @faction
-    return if performed?
-    return if @faction.faction_setting&.torn_api_key?
-
-    redirect_to setup_faction_leadership_path(@faction)
-  end
-
-  def load_wars_data
-    @wars = @faction.ranked_wars.recent.includes(:faction)
-
-    current_year_wars = @wars.completed.where(started_at: Date.current.beginning_of_year..)
-    @wins = current_year_wars.won.count
-    @losses = current_year_wars.lost.count
-
-    @ongoing_war = @wars.ongoing.select(&:in_progress?).first
-    @scheduled_war = @wars.ongoing.select(&:scheduled?).first
-
-    @member_performance = calculate_member_performance(current_year_wars)
-  end
-
-  def load_spy_stats_data
-    @spy_reports = @faction.spy_reports.order(total: :desc)
-    @spy_report_count = @spy_reports.count
-    @last_import_at = Rails.cache.read(import_cache_key)
-    @can_import = @last_import_at.nil?
-    @seconds_until_import = seconds_until_import
-  end
-
-  def load_settings_data
-    @faction_setting = @faction.faction_setting || @faction.build_faction_setting
-    @torn_api_key_masked = mask_key(@faction_setting.torn_api_key)
-    @tornstats_api_key_masked = mask_key(@faction_setting.tornstats_api_key)
-    @whitelisted_users = @faction.whitelisted_users.order(:name)
-    @faction_members = @faction.users.active.where.not(id: @whitelisted_users.select(:id)).order(:name)
-    @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
-    @faction_member_count = @faction.users.active.count
-    @war_polling_active = @faction.war_polling_active?
-  end
-
-  def load_data_coverage
-    faction_user_ids = @faction.users.active.pluck(:id)
-
-    if faction_user_ids.empty?
-      @data_coverage_rate = 0.0
-      @data_missing_yesterday = 0
-      @data_total_missing_days = 0
-      return
-    end
-
-    start_date = PersonalStatSnapshot.tracking_start_date
-    end_date = PersonalStatSnapshot.tracking_end_date
-    expected_days = (start_date..end_date).count
-
-    total_expected = faction_user_ids.size * expected_days
-    total_existing = PersonalStatSnapshot
-      .where(user_id: faction_user_ids)
-      .where(date: start_date..end_date)
-      .count
-
-    @data_coverage_rate = total_expected > 0 ? (total_existing.to_f / total_expected * 100).round(1) : 0.0
-
-    yesterday_user_ids = PersonalStatSnapshot
-      .where(user_id: faction_user_ids, date: Date.yesterday)
-      .distinct
-      .pluck(:user_id)
-    @data_missing_yesterday = faction_user_ids.size - yesterday_user_ids.size
-
-    @data_total_missing_days = total_expected - total_existing
-  end
-
-  def refresh_latest_wars
-    api_key = @faction.faction_setting&.torn_api_key
-    return unless api_key.present?
-
-    wars = TornApi::Faction::RankedWars.new(api_key, @faction.torn_id).fetch(limit: 5)
-    return if wars.empty?
-
-    wars.each do |war_data|
-      our_faction_data = war_data["factions"].find { |f| f["id"] == @faction.torn_id }
-      their_faction_data = war_data["factions"].find { |f| f["id"] != @faction.torn_id }
-      next unless our_faction_data && their_faction_data
-
-      ranked_war = @faction.ranked_wars.find_or_initialize_by(torn_war_id: war_data["id"])
-
-      ranked_war.assign_attributes(
-        opponent_faction_id: their_faction_data["id"],
-        opponent_faction_name: their_faction_data["name"],
-        started_at: Time.at(war_data["start"]),
-        ended_at: war_data["end"].to_i > 0 ? Time.at(war_data["end"]) : nil,
-        target_score: war_data["target"],
-        our_score: our_faction_data["score"],
-        their_score: their_faction_data["score"],
-        winner_faction_id: war_data["winner"]
-      )
-
-      ranked_war.save!
-    end
-  rescue TornApi::ApiError => e
-    Rails.logger.warn("[LeadershipController] Failed to refresh latest wars: #{e.message}")
-  end
-
-  def calculate_member_performance(wars)
-    return [] if wars.empty?
-
-    performance = {}
-
-    wars.each do |war|
-      next unless war.our_members.present?
-
-      war.our_members.each do |member|
-        torn_id = member["id"].to_s
-        name = member["name"]
-
-        performance[torn_id] ||= {
-          name: name,
-          torn_id: torn_id,
-          wars_participated: 0,
-          total_attacks: 0,
-          total_score: 0.0
-        }
-
-        attacks = member["attacks"].to_i
-        if attacks > 0
-          performance[torn_id][:wars_participated] += 1
-          performance[torn_id][:total_attacks] += attacks
-          performance[torn_id][:total_score] += member["score"].to_f
-        end
-      end
-    end
-
-    performance.values.map do |p|
-      p[:avg_attacks] = p[:wars_participated] > 0 ? (p[:total_attacks].to_f / p[:wars_participated]).round(1) : 0
-      p[:avg_score] = p[:wars_participated] > 0 ? (p[:total_score] / p[:wars_participated]).round(1) : 0
-      p[:avg_respect_per_hit] = p[:total_attacks] > 0 ? (p[:total_score] / p[:total_attacks]).round(2) : 0
-      p
-    end.sort_by { |p| -p[:total_score] }
-  end
-
-  def import_cache_key
-    "faction:#{@faction.id}:spy_import:last_run"
-  end
-
-  def rate_limited?
-    Rails.cache.exist?(import_cache_key)
-  end
-
-  def seconds_until_import
-    last_run = Rails.cache.read(import_cache_key)
-    return 0 unless last_run
-
-    remaining = IMPORT_COOLDOWN - (Time.current - last_run)
-    [ remaining.to_i, 0 ].max
   end
 
   def import_spy_report(spy)
@@ -519,10 +340,5 @@ class Factions::LeadershipController < ApplicationController
       spied_at: spy.spied_at
     )
     report.save!
-  end
-
-  def mask_key(key)
-    return nil if key.blank?
-    "#{key[0..3]}********#{key[-4..]}"
   end
 end

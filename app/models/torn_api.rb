@@ -160,6 +160,7 @@ module TornApi
 
       ApiCall.create!(
         user: target_user,
+        faction_id: target_user.faction_id,
         api_key: api_key,
         endpoint: endpoint,
         selections: params.except(:comment, :striptags).to_json,

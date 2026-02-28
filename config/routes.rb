@@ -33,6 +33,11 @@ Rails.application.routes.draw do
       post :share_subscription
       post :import_spies
       delete :delete_faction_data
+
+      resource :war_history, only: [ :show ], controller: "factions/leadership/war_history"
+      resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports"
+      resource :settings, only: [ :show ], controller: "factions/leadership/settings"
+      resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"
     end
 
     resource :war_polling, only: [], controller: "factions/war_polling" do

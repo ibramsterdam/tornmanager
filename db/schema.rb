@@ -10,12 +10,13 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_142818) do
+ActiveRecord::Schema[8.1].define(version: 2026_02_28_153953) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
     t.string "endpoint", null: false
     t.text "error_message"
+    t.integer "faction_id"
     t.integer "response_time"
     t.string "selections"
     t.string "status", null: false
@@ -23,6 +24,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_142818) do
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["created_at"], name: "index_api_calls_on_created_at"
+    t.index ["faction_id"], name: "index_api_calls_on_faction_id"
     t.index ["user_id", "created_at"], name: "index_api_calls_on_user_id_and_created_at"
     t.index ["user_id"], name: "index_api_calls_on_user_id"
   end
@@ -246,6 +248,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_142818) do
     t.index ["sender_id"], name: "index_xanax_payments_on_sender_id"
   end
 
+  add_foreign_key "api_calls", "factions"
   add_foreign_key "api_calls", "users"
   add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"

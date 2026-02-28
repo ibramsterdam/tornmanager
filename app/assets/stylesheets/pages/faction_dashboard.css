@@ -76,6 +76,16 @@
   border-color: var(--gray-700);
 }
 
+.dashboard-stat-card-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dashboard-stat-card-link:hover {
+  border-color: var(--gray-600);
+}
+
 .dashboard-stat-icon {
   color: var(--gray-500);
 }

@@ -7,7 +7,7 @@
 
     <!-- Stats Grid -->
     <div class="dashboard-stats-grid">
-      <div class="dashboard-stat-card">
+      <%= link_to faction_leadership_war_history_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2L2 7l10 5 10-5-10-5z"/>
@@ -21,9 +21,9 @@
           <span class="stat-losses"><%= @losses %></span><span class="stat-divider">L</span>
         </span>
         <span class="dashboard-stat-label">War Record <%= Date.current.year %></span>
-      </div>
+      <% end %>
 
-      <div class="dashboard-stat-card">
+      <%= link_to faction_leadership_spy_reports_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -34,9 +34,9 @@
         </span>
         <span class="dashboard-stat-value"><%= @spy_report_count %></span>
         <span class="dashboard-stat-label">Spy Reports</span>
-      </div>
+      <% end %>
 
-      <div class="dashboard-stat-card">
+      <%= link_to faction_leadership_settings_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
@@ -47,9 +47,9 @@
         </span>
         <span class="dashboard-stat-value"><%= @whitelisted_users.count %></span>
         <span class="dashboard-stat-label">Whitelist</span>
-      </div>
+      <% end %>
 
-      <div class="dashboard-stat-card">
+      <%= link_to faction_leadership_settings_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <% if @war_polling_active %>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -71,7 +71,7 @@
           <% end %>
         </span>
         <span class="dashboard-stat-label">War Polling</span>
-      </div>
+      <% end %>
 
       <div class="dashboard-stat-card">
         <span class="dashboard-stat-icon">
@@ -91,84 +91,21 @@
         </span>
         <span class="dashboard-stat-label">Data Coverage</span>
       </div>
-    </div>
 
-    <!-- Ongoing War Banner -->
-    <% if @ongoing_war %>
-      <div class="leadership-war-banner">
-        <div class="leadership-war-banner-content">
-          <span class="status-dot live"></span>
-          <span class="leadership-war-banner-text">
-            War in progress vs <strong><%= @ongoing_war.opponent_faction_name %></strong>
-          </span>
-          <span class="leadership-war-banner-score">
-            <span class="<%= @ongoing_war.our_score > @ongoing_war.their_score ? 'stat-wins' : '' %>"><%= @ongoing_war.our_score %></span>
-            -
-            <span class="<%= @ongoing_war.their_score > @ongoing_war.our_score ? 'stat-losses' : '' %>"><%= @ongoing_war.their_score %></span>
-            <span class="stat-muted">/ <%= @ongoing_war.target_score %></span>
-          </span>
-          <%= link_to "View Live", faction_path(@faction), class: "btn btn-sm btn-primary" %>
-        </div>
-      </div>
-    <% end %>
-
-    <!-- Scroll Cards -->
-    <div class="dashboard-scroll-cards">
-      <button class="dashboard-scroll-card" data-controller="scroll-to" data-action="click->scroll-to#scroll" data-scroll-to-target-value="wars">
-        <div class="dashboard-scroll-card-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path d="M14.5 10c-.83 0-1.5-.67-1.5-1.5v-5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5z"/>
-            <path d="M20.5 10H19V8.5c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-            <path d="M9.5 14c.83 0 1.5.67 1.5 1.5v5c0 .83-.67 1.5-1.5 1.5S8 21.33 8 20.5v-5c0-.83.67-1.5 1.5-1.5z"/>
-            <path d="M3.5 14H5v1.5c0 .83-.67 1.5-1.5 1.5S2 16.33 2 15.5 2.67 14 3.5 14z"/>
+      <%= link_to faction_leadership_api_logs_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <line x1="9" y1="15" x2="15" y2="15"/>
           </svg>
-        </div>
-        <div class="dashboard-scroll-card-content">
-          <h4>War History</h4>
-          <p class="scroll-card-status"><%= @wars.count %> wars recorded</p>
-        </div>
-        <div class="dashboard-scroll-indicator">
-          <div class="scroll-mouse">
-            <div class="scroll-mouse-dot"></div>
-          </div>
-        </div>
-      </button>
-
-      <button class="dashboard-scroll-card" data-controller="scroll-to" data-action="click->scroll-to#scroll" data-scroll-to-target-value="spies">
-        <div class="dashboard-scroll-card-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </div>
-        <div class="dashboard-scroll-card-content">
-          <h4>Spy Reports</h4>
-          <p class="scroll-card-status"><%= @spy_report_count %> reports stored</p>
-        </div>
-        <div class="dashboard-scroll-indicator">
-          <div class="scroll-mouse">
-            <div class="scroll-mouse-dot"></div>
-          </div>
-        </div>
-      </button>
-
-      <button class="dashboard-scroll-card" data-controller="scroll-to" data-action="click->scroll-to#scroll" data-scroll-to-target-value="settings">
-        <div class="dashboard-scroll-card-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <circle cx="12" cy="12" r="3"/>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-          </svg>
-        </div>
-        <div class="dashboard-scroll-card-content">
-          <h4>Settings</h4>
-          <p class="scroll-card-status">API keys, polling, access</p>
-        </div>
-        <div class="dashboard-scroll-indicator">
-          <div class="scroll-mouse">
-            <div class="scroll-mouse-dot"></div>
-          </div>
-        </div>
-      </button>
+        </span>
+        <span class="dashboard-stat-value">
+          <span class="<%= @api_peak_rate >= 60 ? 'stat-danger' : '' %>"><%= @api_peak_rate %>/min</span>
+        </span>
+        <span class="dashboard-stat-label">API Peak Rate</span>
+      <% end %>
     </div>
   </div>
 </section>

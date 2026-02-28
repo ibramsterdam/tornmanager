@@ -3,6 +3,7 @@ class Faction < ApplicationRecord
   has_many :faction_subscription_grants, dependent: :nullify
   has_many :ranked_wars, dependent: :destroy
   has_one :faction_setting, dependent: :destroy
+  has_many :api_calls, dependent: :nullify
   has_many :spy_reports, dependent: :destroy
   has_many :faction_whitelists, dependent: :destroy
   has_many :whitelisted_users, through: :faction_whitelists, source: :user
