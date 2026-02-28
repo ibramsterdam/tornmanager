@@ -659,10 +659,11 @@ export default class extends Controller {
 
     if (!stats) {
       return fields.map(field => {
-        if (editable && field !== "total") {
-          return `<td class="stat-value stat-editable no-data" data-member-id="${member.torn_id}" data-stat-field="${field}" title="Click to enter ${field}">-</td>`
+        const extraClass = field === "total" ? " stat-total" : ""
+        if (editable) {
+          return `<td class="stat-value stat-editable${extraClass} no-data" data-member-id="${member.torn_id}" data-stat-field="${field}" title="Click to enter ${field}">-</td>`
         }
-        return `<td class="stat-value no-data">-</td>`
+        return `<td class="stat-value${extraClass} no-data">-</td>`
       }).join("")
     }
 
@@ -670,7 +671,7 @@ export default class extends Controller {
       const value = stats[field]
       const extraClass = field === "total" ? " stat-total" : ""
 
-      if (editable && field !== "total") {
+      if (editable) {
         return `<td class="stat-value stat-editable${extraClass}" data-member-id="${member.torn_id}" data-stat-field="${field}" data-stat-raw="${value || ""}" title="Click to edit">${this.formatStat(value)}</td>`
       }
       return `<td class="stat-value${extraClass}">${this.formatStat(value)}</td>`
@@ -815,11 +816,6 @@ export default class extends Controller {
     if (member) {
       if (!member.stats) member.stats = {}
       member.stats[field] = parsed
-
-      const s = member.stats
-      if (s.strength && s.defense && s.speed && s.dexterity) {
-        member.stats.total = s.strength + s.defense + s.speed + s.dexterity
-      }
     }
 
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content
