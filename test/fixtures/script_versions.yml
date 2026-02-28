@@ -1,0 +1,11 @@
+initial:
+  version: "0.1.0"
+  changelog: "Initial release"
+  script_content: "// ==UserScript==\n// @name Torn Manager\n// @version 0.1.0\n// ==/UserScript==\nconsole.log('v0.1.0');"
+  released_at: "2026-02-28"
+
+update:
+  version: "0.2.0"
+  changelog: "Added ranked war stats overlay"
+  script_content: "// ==UserScript==\n// @name Torn Manager\n// @version 0.2.0\n// ==/UserScript==\nconsole.log('v0.2.0');"
+  released_at: "2026-03-01"

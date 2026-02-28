@@ -1,0 +1,62 @@
+<div class="page-header">
+  <h1>TornManager Script</h1>
+  <p class="page-subtitle">Enhance your Torn experience with the Torn Manager companion script</p>
+</div>
+
+<div class="settings-section">
+  <div class="settings-top-grid">
+    <!-- Left: Install instructions -->
+    <div class="info-card">
+      <h3>Install Torn Manager</h3>
+      <p>The userscript adds ranked war stat overlays, member details, and more — directly on torn.com.</p>
+
+      <h4>Requirements</h4>
+      <p>You need a userscript manager installed in your browser:</p>
+      <ul class="userscript-requirements">
+        <li><%= link_to "Tampermonkey", "https://www.tampermonkey.net/", target: "_blank" %> (recommended)</li>
+        <li><%= link_to "Violentmonkey", "https://violentmonkey.github.io/", target: "_blank" %></li>
+      </ul>
+
+      <% if @latest&.script_content.present? %>
+        <%= link_to "Install v#{@latest.version}", userscript_download_path, class: "btn-primary" %>
+        <p class="data-stats-footer">Clicking install will open Tampermonkey's install dialog.</p>
+      <% else %>
+        <p class="data-stats-footer">No release available yet.</p>
+      <% end %>
+    </div>
+
+    <!-- Right: How to update -->
+    <div class="info-card">
+      <h3>Updating</h3>
+      <p>When a new version is released, just click the install button again. Tampermonkey will detect the existing script and offer to update it.</p>
+
+      <p class="data-stats-footer">Check the version history below to see what's new.</p>
+    </div>
+  </div>
+</div>
+
+<% if @versions.any? %>
+  <div class="settings-section">
+    <h2>Version History</h2>
+    <div class="info-card">
+      <table class="version-history-table">
+        <thead>
+          <tr>
+            <th>Version</th>
+            <th>Released</th>
+            <th>Changes</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @versions.each do |version| %>
+            <tr>
+              <td class="version-number"><%= version.version %></td>
+              <td class="version-date"><%= version.released_at.strftime("%-d %B %Y") %></td>
+              <td class="version-changelog"><%= version.changelog %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+<% end %>

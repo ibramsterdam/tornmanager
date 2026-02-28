@@ -55,6 +55,9 @@ Rails.application.routes.draw do
   patch "settings/update_api_key", to: "settings#update_api_key", as: :settings_update_api_key
   get "settings/export_data", to: "settings#export_data", as: :settings_export_data
 
+  get "userscript",                        to: "userscript#index",    as: :userscript
+  get "userscript/tornmanager.user.js",    to: "userscript#download", as: :userscript_download
+
   namespace :admin do
     get "/", to: "dashboard#index", as: :dashboard
     resources :stats, only: [ :index ]
@@ -73,6 +76,7 @@ Rails.application.routes.draw do
       end
     end
     resources :api_logs, only: [ :index ]
+    resources :script_versions, except: [ :show ]
     resources :snapshot_management, only: [ :index ] do
       member do
         post :backfill_user
