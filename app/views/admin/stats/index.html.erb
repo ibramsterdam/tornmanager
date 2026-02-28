@@ -36,10 +36,6 @@
       <div class="stat-label">Total Factions</div>
     </div>
     <div class="stat-card">
-      <div class="stat-value"><%= @tracked_factions %></div>
-      <div class="stat-label">Tracked</div>
-    </div>
-    <div class="stat-card">
       <div class="stat-value <%= @factions_with_backfill > 0 ? 'warning' : '' %>"><%= @factions_with_backfill %></div>
       <div class="stat-label">Backfill In Progress</div>
     </div>
