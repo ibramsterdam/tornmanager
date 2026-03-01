@@ -622,7 +622,8 @@
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   text-align: center;
-  max-width: 560px;
+  max-width: 720px;
+  width: 100%;
 }
 
 .dashboard-war-summary-card.war-won {
@@ -740,9 +741,150 @@
   display: flex;
   justify-content: center;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
   font-size: 0.875rem;
   color: var(--gray-500);
+}
+
+.war-summary-stats-row {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+  padding: var(--space-4) 0;
+  border-top: 1px solid var(--gray-800);
+  border-bottom: 1px solid var(--gray-800);
+}
+
+.war-summary-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.war-summary-stat-label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.war-summary-stat-value {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gray-300);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.war-summary-stat-value .stat-better {
+  color: #22c55e;
+}
+
+.war-summary-stat-value .stat-worse {
+  color: var(--gray-500);
+}
+
+.war-summary-stat-value .stat-vs {
+  font-size: 0.75rem;
+  color: var(--gray-600);
+}
+
+.war-summary-stat-value .rank-arrow {
+  font-size: 0.75rem;
+}
+
+.war-summary-stat-value .rank-arrow.rank-up {
+  color: #22c55e;
+}
+
+.war-summary-stat-value .rank-arrow.rank-down {
+  color: #ef4444;
+}
+
+.war-summary-rewards {
+  flex-direction: column;
+  gap: 2px;
+}
+
+.war-summary-performers {
+  margin-bottom: var(--space-6);
+}
+
+.war-summary-performers h3 {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 var(--space-3);
+}
+
+.war-summary-performers-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.war-summary-performer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--gray-800);
+  border-radius: var(--radius-md);
+}
+
+.war-summary-performer .performer-rank {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-500);
+  width: 20px;
+  text-align: center;
+}
+
+.war-summary-performer .performer-name {
+  flex: 1;
+  text-align: left;
+}
+
+.war-summary-performer .performer-name .player-link {
+  color: var(--gray-200);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.war-summary-performer .performer-name .player-link:hover {
+  color: var(--gray-100);
+}
+
+.war-summary-performer .performer-stats {
+  display: flex;
+  gap: var(--space-3);
+  font-size: 0.8125rem;
+}
+
+.war-summary-performer .performer-score {
+  color: #22c55e;
+  font-weight: 500;
+}
+
+.war-summary-performer .performer-attacks {
+  color: var(--gray-500);
+}
+
+.war-summary-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.war-summary-actions {
+  display: flex;
+  gap: var(--space-3);
 }
 
 /* Training Section Header */
@@ -863,8 +1005,9 @@
     gap: var(--space-2);
   }
 
-  .training-section-header {
-    margin-bottom: var(--space-2);
+  .war-summary-stats-row {
+    flex-wrap: wrap;
+    gap: var(--space-4);
   }
 
   .training-section-header h2 {

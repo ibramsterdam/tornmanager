@@ -20,6 +20,7 @@ Rails.application.routes.draw do
     end
 
     resources :ranked_wars, only: [ :show ], controller: "factions/ranked_wars"
+    resource :war_history, only: [ :show ], controller: "factions/war_history"
 
     resource :leadership, only: [ :show ], controller: "factions/leadership" do
       get :war_data

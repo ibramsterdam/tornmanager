@@ -29,16 +29,19 @@
     <% elsif @latest_war %>
       <div class="dashboard-fullpage-center">
         <div class="dashboard-war-summary-card <%= @latest_war.won? ? 'war-won' : 'war-lost' %>">
-          <div class="war-summary-badge <%= @latest_war.won? ? 'won' : 'lost' %>">
-            <%= @latest_war.won? ? "Victory" : "Defeat" %>
+          <div class="war-summary-header">
+            <div class="war-summary-badge <%= @latest_war.won? ? 'won' : 'lost' %>">
+              <%= @latest_war.won? ? "Victory" : "Defeat" %>
+            </div>
+            <h2>Latest Ranked War</h2>
+            <p class="war-summary-opponent">
+              vs
+              <a href="https://www.torn.com/factions.php?step=profile&ID=<%= @latest_war.opponent_faction_id %>" target="_blank" class="faction-link">
+                <%= @latest_war.opponent_faction_name %>
+              </a>
+            </p>
           </div>
-          <h2>Latest Ranked War</h2>
-          <p class="war-summary-opponent">
-            vs 
-            <a href="https://www.torn.com/factions.php?step=profile&ID=<%= @latest_war.opponent_faction_id %>" target="_blank" class="faction-link">
-              <%= @latest_war.opponent_faction_name %>
-            </a>
-          </p>
+
           <div class="war-summary-scores">
             <div class="war-summary-score ours <%= @latest_war.won? ? 'winner' : '' %>">
               <span class="score-label"><%= @faction.name %></span>
@@ -53,13 +56,80 @@
               <span class="score-value"><%= @latest_war.their_score %></span>
             </div>
           </div>
-          <div class="war-summary-meta">
-            <span class="war-summary-date"><%= @latest_war.started_at.strftime("%B %d, %Y") %></span>
-            <span class="war-summary-duration"><%= @latest_war.duration_formatted %></span>
+
+          <div class="war-summary-stats-row">
+            <div class="war-summary-stat">
+              <span class="war-summary-stat-label">Attacks</span>
+              <span class="war-summary-stat-value">
+                <span class="<%= @latest_war.our_attacks.to_i >= @latest_war.their_attacks.to_i ? 'stat-better' : 'stat-worse' %>"><%= number_with_delimiter(@latest_war.our_attacks) %></span>
+                <span class="stat-vs">vs</span>
+                <span class="<%= @latest_war.their_attacks.to_i >= @latest_war.our_attacks.to_i ? 'stat-better' : 'stat-worse' %>"><%= number_with_delimiter(@latest_war.their_attacks) %></span>
+              </span>
+            </div>
+            <div class="war-summary-stat">
+              <span class="war-summary-stat-label">Avg Respect/Hit</span>
+              <span class="war-summary-stat-value">
+                <span class="<%= @latest_war.score_per_attack >= @latest_war.their_score_per_attack ? 'stat-better' : 'stat-worse' %>"><%= @latest_war.score_per_attack %></span>
+                <span class="stat-vs">vs</span>
+                <span class="<%= @latest_war.their_score_per_attack >= @latest_war.score_per_attack ? 'stat-better' : 'stat-worse' %>"><%= @latest_war.their_score_per_attack %></span>
+              </span>
+            </div>
+            <% if @latest_war.rank_before && @latest_war.rank_after %>
+              <div class="war-summary-stat">
+                <span class="war-summary-stat-label">Rank</span>
+                <span class="war-summary-stat-value">
+                  <span><%= @latest_war.rank_before %></span>
+                  <span class="rank-arrow <%= @latest_war.won? ? 'rank-up' : 'rank-down' %>"><%= @latest_war.rank_change %></span>
+                  <span><%= @latest_war.rank_after %></span>
+                </span>
+              </div>
+            <% end %>
+            <% if @latest_war.respect_gained.to_i > 0 || @latest_war.points_gained.to_i > 0 %>
+              <div class="war-summary-stat">
+                <span class="war-summary-stat-label">Rewards</span>
+                <span class="war-summary-stat-value war-summary-rewards">
+                  <% if @latest_war.respect_gained.to_i > 0 %>
+                    <span class="stat-better">+<%= number_with_delimiter(@latest_war.respect_gained) %> respect</span>
+                  <% end %>
+                  <% if @latest_war.points_gained.to_i > 0 %>
+                    <span class="stat-better">+<%= @latest_war.points_gained %> points</span>
+                  <% end %>
+                </span>
+              </div>
+            <% end %>
           </div>
-          <% if @faction.leadership?(Current.user) || Current.user.admin? %>
-            <%= link_to "View War History", faction_leadership_path(@faction, anchor: "wars"), class: "btn btn-secondary btn-sm" %>
+
+          <% top_performers = @latest_war.our_top_performers(3).select { |m| m["attacks"].to_i > 0 } %>
+          <% if top_performers.any? %>
+            <div class="war-summary-performers">
+              <h3>Top Performers</h3>
+              <div class="war-summary-performers-list">
+                <% top_performers.each_with_index do |member, index| %>
+                  <div class="war-summary-performer">
+                    <span class="performer-rank"><%= index + 1 %></span>
+                    <span class="performer-name">
+                      <%= link_to member["name"], "https://www.torn.com/profiles.php?XID=#{member["id"]}", target: "_blank", class: "player-link" %>
+                    </span>
+                    <span class="performer-stats">
+                      <span class="performer-score"><%= member["score"].to_f.round(1) %> score</span>
+                      <span class="performer-attacks"><%= member["attacks"] %> hits</span>
+                    </span>
+                  </div>
+                <% end %>
+              </div>
+            </div>
           <% end %>
+
+          <div class="war-summary-footer">
+            <div class="war-summary-meta">
+              <span class="war-summary-date"><%= @latest_war.started_at.strftime("%B %d, %Y") %></span>
+              <span class="war-summary-duration"><%= @latest_war.duration_formatted %></span>
+            </div>
+            <div class="war-summary-actions">
+              <%= link_to "View Details", faction_ranked_war_path(@faction, @latest_war), class: "btn btn-secondary btn-small" %>
+              <%= link_to "War History", faction_war_history_path(@faction), class: "btn btn-secondary btn-small" %>
+            </div>
+          </div>
         </div>
       </div>
     <% else %>

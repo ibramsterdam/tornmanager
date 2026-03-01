@@ -1,6 +1,8 @@
 class ComplianceSummary
   include FactionHelper
 
+  CACHE_TTL = 1.hour
+
   attr_reader :faction, :start_date, :end_date, :member_rows,
               :compliant_count, :warning_count, :non_compliant_count, :total_days
 
@@ -11,7 +13,7 @@ class ComplianceSummary
     @total_days = (@end_date - @start_date).to_i + 1
     @member_rows = []
 
-    compute
+    load_cached_results
   end
 
   def worst_performers(limit = 5)
@@ -20,30 +22,50 @@ class ComplianceSummary
 
   private
 
-  def compute
-    query_start_date = start_date - 1.day
+  def load_cached_results
+    cached = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) { compute }
 
-    @member_rows = faction.users.active.includes(:personal_stat_snapshots).filter_map do |user|
-      build_member_row(user, query_start_date)
-    end
-
-    @compliant_count = @member_rows.count { |row| row[:compliance_level] == :compliant }
-    @warning_count = @member_rows.count { |row| row[:compliance_level] == :warning }
-    @non_compliant_count = @member_rows.count { |row| row[:compliance_level] == :danger }
+    @member_rows = cached[:member_rows]
+    @compliant_count = cached[:compliant_count]
+    @warning_count = cached[:warning_count]
+    @non_compliant_count = cached[:non_compliant_count]
   end
 
-  def build_member_row(user, query_start_date)
-    all_snapshots = user.personal_stat_snapshots
-                        .where(date: query_start_date..end_date)
-                        .order(:date)
+  def cache_key
+    "compliance_summary:#{faction.id}:#{start_date}:#{end_date}:#{faction.updated_at.to_i}"
+  end
 
-    xanax_stats = calculate_stat(all_snapshots, :drugs_xanax)
-    energy_stats = calculate_stat(all_snapshots, :other_refills_energy)
-    nerve_stats = calculate_stat(all_snapshots, :other_refills_nerve)
-    missions_stats = calculate_stat(all_snapshots, :missions_contracts_total)
-    crimes_stats = calculate_stat(all_snapshots, :crimes_offenses_total)
-    activity_stats = calculate_stat(all_snapshots, :other_activity_time)
-    networth_stats = calculate_stat(all_snapshots, :networth_total)
+  def compute
+    query_start_date = start_date - 1.day
+    active_users = faction.users.active.to_a
+
+    snapshots_by_user = PersonalStatSnapshot
+      .where(user_id: active_users.map(&:id))
+      .where(date: query_start_date..end_date)
+      .order(:date)
+      .group_by(&:user_id)
+
+    rows = active_users.filter_map do |user|
+      user_snapshots = snapshots_by_user[user.id] || []
+      build_member_row(user, user_snapshots)
+    end
+
+    {
+      member_rows: rows,
+      compliant_count: rows.count { |row| row[:compliance_level] == :compliant },
+      warning_count: rows.count { |row| row[:compliance_level] == :warning },
+      non_compliant_count: rows.count { |row| row[:compliance_level] == :danger }
+    }
+  end
+
+  def build_member_row(user, snapshots)
+    xanax_stats = calculate_stat(snapshots, :drugs_xanax)
+    energy_stats = calculate_stat(snapshots, :other_refills_energy)
+    nerve_stats = calculate_stat(snapshots, :other_refills_nerve)
+    missions_stats = calculate_stat(snapshots, :missions_contracts_total)
+    crimes_stats = calculate_stat(snapshots, :crimes_offenses_total)
+    activity_stats = calculate_stat(snapshots, :other_activity_time)
+    networth_stats = calculate_stat(snapshots, :networth_total)
 
     return if xanax_stats[:days].zero? && energy_stats[:days].zero? && nerve_stats[:days].zero?
 
@@ -103,12 +125,12 @@ class ComplianceSummary
     }
   end
 
-  def calculate_stat(all_snapshots, field)
-    snapshots = all_snapshots.where.not(field => nil)
-    return { gained: 0, daily: 0.0, days: 0, current: 0 } if snapshots.size < 2
+  def calculate_stat(snapshots, field)
+    relevant = snapshots.select { |s| s[field].present? }
+    return { gained: 0, daily: 0.0, days: 0, current: 0 } if relevant.size < 2
 
-    first = snapshots.first
-    last = snapshots.last
+    first = relevant.first
+    last = relevant.last
     gained = (last[field] || 0) - (first[field] || 0)
 
     actual_days = (last.date - first.date).to_i
