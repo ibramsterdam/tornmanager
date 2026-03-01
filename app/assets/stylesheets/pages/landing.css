@@ -526,3 +526,202 @@
     font-size: 0.75rem;
   }
 }
+
+/* Demo War Dashboard */
+
+.demo-war-container {
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  background: var(--gray-1000);
+  overflow: hidden;
+}
+
+.demo-war-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gray-800);
+  flex-wrap: wrap;
+  background: var(--gray-900);
+}
+
+.demo-war-filter-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.demo-war-filter-sep {
+  width: 1px;
+  height: 16px;
+  background: var(--gray-700);
+  margin: 0 var(--space-1);
+}
+
+.demo-filter-toggle {
+  font-size: 0.5625rem;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  user-select: none;
+  border: 1px solid;
+  transition: opacity 0.15s ease;
+  font-family: "Geist Mono", monospace;
+}
+
+.demo-filter-disabled {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+
+.demo-filter-okay { background: rgba(34, 197, 94, 0.15); color: rgb(34, 197, 94); border-color: rgba(34, 197, 94, 0.3); }
+.demo-filter-hospital { background: rgba(239, 68, 68, 0.15); color: rgb(239, 68, 68); border-color: rgba(239, 68, 68, 0.3); }
+.demo-filter-traveling { background: rgba(59, 130, 246, 0.15); color: rgb(59, 130, 246); border-color: rgba(59, 130, 246, 0.3); }
+.demo-filter-online { background: rgba(34, 197, 94, 0.15); color: rgb(34, 197, 94); border-color: rgba(34, 197, 94, 0.3); }
+.demo-filter-idle { background: rgba(234, 179, 8, 0.15); color: rgb(234, 179, 8); border-color: rgba(234, 179, 8, 0.3); }
+.demo-filter-offline { background: rgba(107, 114, 128, 0.15); color: rgb(156, 163, 175); border-color: rgba(107, 114, 128, 0.3); }
+
+.demo-filter-count {
+  font-size: 0.5625rem;
+  color: var(--gray-500);
+  margin-left: auto;
+  font-family: "Geist Mono", monospace;
+  white-space: nowrap;
+}
+
+.demo-war-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.demo-war-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.625rem;
+  font-family: "Geist Mono", monospace;
+}
+
+.demo-war-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.demo-war-table th {
+  background: var(--gray-900);
+  color: var(--gray-400);
+  font-weight: 600;
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 6px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--gray-800);
+}
+
+.demo-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.demo-sortable:hover {
+  color: var(--gray-200);
+}
+
+.demo-sort-indicator {
+  font-size: 0.5rem;
+  margin-left: 2px;
+  color: #ffffff;
+}
+
+.demo-war-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--gray-900);
+  white-space: nowrap;
+  color: var(--gray-300);
+}
+
+.demo-war-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.demo-row-hospital {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.demo-player-name {
+  color: var(--gray-200);
+  font-weight: 500;
+}
+
+.demo-stat-value {
+  color: var(--gray-400);
+}
+
+.demo-stat-total {
+  color: var(--gray-200);
+  font-weight: 600;
+}
+
+.demo-member-status,
+.demo-action-badge {
+  display: inline-block;
+  font-size: 0.5625rem;
+  padding: 1px 5px;
+  border-radius: 9999px;
+  border: 1px solid;
+  font-family: "Geist Mono", monospace;
+}
+
+.demo-status-okay { background: rgba(34, 197, 94, 0.15); color: rgb(34, 197, 94); border-color: rgba(34, 197, 94, 0.3); }
+.demo-status-hospital { background: rgba(239, 68, 68, 0.15); color: rgb(239, 68, 68); border-color: rgba(239, 68, 68, 0.3); }
+.demo-status-traveling { background: rgba(59, 130, 246, 0.15); color: rgb(59, 130, 246); border-color: rgba(59, 130, 246, 0.3); }
+
+.demo-action-online { background: rgba(34, 197, 94, 0.15); color: rgb(34, 197, 94); border-color: rgba(34, 197, 94, 0.3); }
+.demo-action-idle { background: rgba(234, 179, 8, 0.15); color: rgb(234, 179, 8); border-color: rgba(234, 179, 8, 0.3); }
+.demo-action-offline { background: rgba(107, 114, 128, 0.15); color: rgb(156, 163, 175); border-color: rgba(107, 114, 128, 0.3); }
+
+.demo-hospital-timer {
+  color: rgb(239, 68, 68);
+  font-weight: 600;
+}
+
+.demo-timer-expiring {
+  color: rgb(234, 179, 8);
+  animation: demo-pulse 1s ease-in-out infinite;
+}
+
+.demo-travel-timer {
+  color: rgb(59, 130, 246);
+  font-weight: 600;
+}
+
+.demo-travel-landing {
+  color: rgb(34, 197, 94);
+  animation: demo-pulse 1s ease-in-out infinite;
+}
+
+.demo-no-data {
+  color: var(--gray-700);
+}
+
+@keyframes demo-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+@media (max-width: 768px) {
+  .demo-col-level {
+    display: none;
+  }
+
+  .demo-war-table {
+    font-size: 0.5625rem;
+  }
+
+  .demo-war-table th {
+    font-size: 0.5rem;
+  }
+}
