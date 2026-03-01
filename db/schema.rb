@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_02_28_191926) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_01_161041) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -225,6 +225,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_02_28_191926) do
     t.boolean "leadership_access", default: false, null: false
     t.integer "level", null: false
     t.string "name", null: false
+    t.string "position"
     t.string "profile_image"
     t.boolean "ssl_user", default: false, null: false
     t.datetime "subscription_expires_at"

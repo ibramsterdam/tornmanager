@@ -17,6 +17,7 @@ class SyncFactionMembersJob < AdminApiJob
         name: member.name,
         level: member.level,
         faction_id: faction.id,
+        position: member.position,
         fallen: member.status_state == "Fallen"
       )
       user.save!

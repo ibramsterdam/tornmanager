@@ -17,11 +17,20 @@
     <div class="whitelist-list whitelist-list-scroll" data-scroll-hint-target="list">
       <% @leadership_users.each do |user| %>
         <div class="whitelist-item">
-          <span class="whitelist-user-name"><%= user.name %> [<%= user.torn_id %>]</span>
-          <%= button_to "Remove",
-              faction_leadership_leadership_access_path(@faction, user_id: user.id),
-              method: :delete,
-              class: "whitelist-remove-btn" %>
+          <span class="whitelist-user-name">
+            <%= user.name %> [<%= user.torn_id %>]
+            <% if user.faction_leader? %>
+              <span class="badge badge-muted"><%= user.position %></span>
+            <% end %>
+          </span>
+          <% if user == Current.user || user.faction_leader? %>
+            <span class="whitelist-remove-btn-disabled">Remove</span>
+          <% else %>
+            <%= button_to "Remove",
+                faction_leadership_leadership_access_path(@faction, user_id: user.id),
+                method: :delete,
+                class: "whitelist-remove-btn" %>
+          <% end %>
         </div>
       <% end %>
     </div>

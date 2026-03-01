@@ -61,6 +61,10 @@ class User < ApplicationRecord
     update!(hof_stats_user: true) if stat_enhancer_count.to_i > HOF_STAT_ENHANCER_THRESHOLD
   end
 
+  def faction_leader?
+    %w[Leader Co-leader].include?(position)
+  end
+
   def has_limited_access?
     LIMITED_ACCESS_TYPES.include?(api_access_type)
   end

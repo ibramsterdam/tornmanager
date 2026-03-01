@@ -357,6 +357,37 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_match /removed/, flash[:notice]
   end
 
+  test "revoke_leadership_access prevents removing yourself" do
+    sign_in_as(@bram)
+    delete faction_leadership_leadership_access_path(@faction), params: { user_id: @bram.id }
+
+    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert @bram.reload.leadership_access?
+    assert_match /cannot remove your own access/, flash[:alert]
+  end
+
+  test "revoke_leadership_access prevents removing faction leader" do
+    @bert.update!(position: "Leader")
+
+    sign_in_as(@bram)
+    delete faction_leadership_leadership_access_path(@faction), params: { user_id: @bert.id }
+
+    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert @bert.reload.leadership_access?
+    assert_match /Leader and cannot be removed/, flash[:alert]
+  end
+
+  test "revoke_leadership_access prevents removing co-leader" do
+    @bert.update!(position: "Co-leader")
+
+    sign_in_as(@bram)
+    delete faction_leadership_leadership_access_path(@faction), params: { user_id: @bert.id }
+
+    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert @bert.reload.leadership_access?
+    assert_match /Co-leader and cannot be removed/, flash[:alert]
+  end
+
   test "revoke_leadership_access handles user without access" do
     member = User.create!(torn_id: 555555, name: "NoAccess", level: 30, faction: @faction)
 
