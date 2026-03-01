@@ -29,7 +29,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
     assert_equal @bram.id, payment.recipient_id
     assert_equal @bert.id, payment.sender_id
     assert_equal 3, payment.xanax_amount
-    assert_equal 3, payment.weeks_granted
+    assert_equal 6, payment.weeks_granted
   end
 
   test "extends sender subscription" do
@@ -48,7 +48,7 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
       sender: @bert,
       log_id: "xanax_log_999",
       xanax_amount: 3,
-      weeks_granted: 3,
+      weeks_granted: 6,
       processed_at: Time.at(1708000000)
     )
 

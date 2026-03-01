@@ -3,4 +3,303 @@
     <h1 class="hero-title">TornManager</h1>
     <%= link_to "Sign In", new_session_path, class: "hero-signin-button" %>
   </div>
+  <a href="#landing-intro" class="scroll-indicator">
+    <div class="scroll-indicator-mouse">
+      <div class="scroll-indicator-wheel"></div>
+    </div>
+    <span class="scroll-indicator-text">Scroll</span>
+  </a>
+</div>
+
+<div class="landing-content">
+  <div class="landing-intro" id="landing-intro">
+    <h2 class="landing-intro-tagline">Professional Faction Management<br>for Torn City</h2>
+    <p class="landing-intro-description">
+      TornManager gives faction leaders and members the tools to track compliance, dominate ranked wars, and run a tight operation.
+      Paired with a companion browser script for in-game overlays. Fully mobile-friendly.
+    </p>
+  </div>
+
+  <section class="landing-section">
+    <div class="landing-section-header">
+      <span class="landing-section-label">Features</span>
+      <h2 class="landing-section-title">Everything your faction needs</h2>
+      <p class="landing-section-subtitle">From live war intelligence to daily training compliance, TornManager covers the full lifecycle of faction management.</p>
+    </div>
+
+    <div class="landing-features-grid">
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Live War Dashboard</h3>
+        <p class="landing-feature-description">
+          Real-time ranked war tracking with enemy status, hospital timers, travel countdowns, and online indicators.
+          Polls every 3 seconds during active wars. See who to hit and when.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Live War Dashboard</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Training & Compliance</h3>
+        <p class="landing-feature-description">
+          Track daily xanax, energy refills, nerve refills, missions, and crimes per member.
+          Compliance scores, color-coded status, and sortable training tables with configurable targets.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Training Table</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+            <path d="M2 17l10 5 10-5"/>
+            <path d="M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">War History & Analytics</h3>
+        <p class="landing-feature-description">
+          Browse your full ranked war history with scores, attacks, avg respect per hit, rank changes, and rewards.
+          Member performance tables show who contributes across wars.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: War History</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Spy Reports</h3>
+        <p class="landing-feature-description">
+          Import spy data from TornStats to build faction intelligence.
+          View estimated battle stats for opponents and members, with strength and defense breakdowns.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Spy Reports</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+            <circle cx="9" cy="7" r="4"/>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Public War Lobbies</h3>
+        <p class="landing-feature-description">
+          Share live war dashboards publicly with anyone. Password-protected or open lobbies.
+          Inline editable spy stats so spectators can contribute intel in real time.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Public War Lobby</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+            <line x1="8" y1="21" x2="16" y2="21"/>
+            <line x1="12" y1="17" x2="12" y2="21"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Browser Userscript</h3>
+        <p class="landing-feature-description">
+          Companion Tampermonkey script that enhances torn.com directly.
+          Ranked war stat overlays, member details, and more &mdash; without leaving the game.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Userscript Overlay</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Leadership Dashboard</h3>
+        <p class="landing-feature-description">
+          API key management, member access control, data coverage monitoring, war polling controls, and subscription management.
+          Give your officers the tools they need without exposing sensitive settings to everyone.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Leadership Dashboard</div>
+      </div>
+
+      <div class="landing-feature-card">
+        <div class="landing-feature-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+            <line x1="12" y1="18" x2="12" y2="18"/>
+          </svg>
+        </div>
+        <h3 class="landing-feature-title">Fully Mobile Friendly</h3>
+        <p class="landing-feature-description">
+          Every page is designed to work on mobile devices. Manage your faction from your phone during wars, check compliance on the go, and share war lobbies from anywhere.
+        </p>
+        <div class="landing-feature-screenshot">Screenshot: Mobile View</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-section-header">
+      <span class="landing-section-label">Trust & Security</span>
+      <h2 class="landing-section-title">Your data, your control</h2>
+      <p class="landing-section-subtitle">Built with transparency and privacy as core principles.</p>
+    </div>
+
+    <div class="landing-trust-grid">
+      <div class="landing-trust-item">
+        <div class="landing-trust-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </div>
+        <h3 class="landing-trust-title">Full API Key Transparency</h3>
+        <p class="landing-trust-description">Every API call made with your key is logged and visible to you. See exactly what data is being accessed, when, and how often. No hidden requests.</p>
+      </div>
+      <div class="landing-trust-item">
+        <div class="landing-trust-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <h3 class="landing-trust-title">Built-in Rate Limiting</h3>
+        <p class="landing-trust-description">Automatic 1-second delay between API calls ensures TornManager never exceeds 60 requests per minute per key. Your key stays safe from rate limit violations.</p>
+      </div>
+      <div class="landing-trust-item">
+        <div class="landing-trust-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h3 class="landing-trust-title">GDPR Compliant</h3>
+        <p class="landing-trust-description">Full data export, one-click data deletion, transparent privacy policy. Your data is never sold or shared with third parties. You own your data.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="landing-section landing-pricing">
+    <div class="landing-section-header">
+      <span class="landing-section-label">Pricing</span>
+      <h2 class="landing-section-title">Simple, faction-wide pricing</h2>
+      <p class="landing-section-subtitle">One price covers your entire faction. No per-feature upsells, no hidden costs.</p>
+    </div>
+
+    <div class="landing-pricing-card">
+      <div class="landing-pricing-amount">1 Xanax</div>
+      <p class="landing-pricing-period">per member, per two weeks</p>
+      <div class="landing-pricing-divider"></div>
+
+      <ul class="landing-pricing-features">
+        <li>
+          <svg class="landing-pricing-check" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Purchased by faction leadership for the whole faction
+        </li>
+        <li>
+          <svg class="landing-pricing-check" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          All features included &mdash; no tiers
+        </li>
+        <li>
+          <svg class="landing-pricing-check" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Live war dashboards, compliance tracking, analytics
+        </li>
+        <li>
+          <svg class="landing-pricing-check" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Browser userscript included
+        </li>
+        <li>
+          <svg class="landing-pricing-check" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Public war lobbies for sharing with allies
+        </li>
+      </ul>
+
+      <div class="landing-pricing-trial">1-month free trial for new factions</div>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-section-header">
+      <span class="landing-section-label">In Development</span>
+      <h2 class="landing-section-title">What I'm building next</h2>
+      <p class="landing-section-subtitle">TornManager is actively developed. Here's what's coming soon.</p>
+    </div>
+
+    <div class="landing-coming-soon-grid">
+      <div class="landing-coming-soon-item">
+        <h3 class="landing-coming-soon-item-title">Chain Tracking</h3>
+        <p class="landing-coming-soon-item-description">Monitor chain progress, timeout warnings, and member contributions in real time.</p>
+      </div>
+      <div class="landing-coming-soon-item">
+        <h3 class="landing-coming-soon-item-title">Organised Crimes 2.0</h3>
+        <p class="landing-coming-soon-item-description">Crime team management with CPR tracking, cost analysis, and optimal team suggestions.</p>
+      </div>
+      <div class="landing-coming-soon-item">
+        <h3 class="landing-coming-soon-item-title">Armoury Management</h3>
+        <p class="landing-coming-soon-item-description">Track loaned equipment, manage faction armoury inventory, and monitor returns.</p>
+      </div>
+      <div class="landing-coming-soon-item">
+        <h3 class="landing-coming-soon-item-title">Discord Integration</h3>
+        <p class="landing-coming-soon-item-description">War notifications, compliance alerts, and member updates pushed directly to your faction's Discord server.</p>
+      </div>
+      <div class="landing-coming-soon-item">
+        <h3 class="landing-coming-soon-item-title">Ranked War Payouts</h3>
+        <p class="landing-coming-soon-item-description">Automated payout calculations based on war contribution. Fair distribution of war rewards to your members.</p>
+      </div>
+    </div>
+
+    <div class="landing-coming-soon-link">
+      <%= link_to "View the full roadmap &rarr;".html_safe, roadmap_path %>
+    </div>
+  </section>
+
+  <section class="landing-section">
+    <div class="landing-section-header">
+      <span class="landing-section-label">Getting Started</span>
+      <h2 class="landing-section-title">Up and running in minutes</h2>
+    </div>
+
+    <div class="landing-steps">
+      <div class="landing-step">
+        <div class="landing-step-number">1</div>
+        <h3 class="landing-step-title">Sign in with Torn</h3>
+        <p class="landing-step-description">Use your Torn API key to authenticate. No passwords, no Discord &mdash; just your Torn identity.</p>
+      </div>
+      <div class="landing-step">
+        <div class="landing-step-number">2</div>
+        <h3 class="landing-step-title">Leader sets up faction</h3>
+        <p class="landing-step-description">A faction leader provides a Limited Access API key. TornManager starts syncing your faction's data automatically.</p>
+      </div>
+      <div class="landing-step">
+        <div class="landing-step-number">3</div>
+        <h3 class="landing-step-title">Start tracking</h3>
+        <p class="landing-step-description">Your dashboard is live. Training compliance, war analytics, and member management &mdash; all in one place.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="landing-cta">
+    <h2 class="landing-cta-title">Ready to level up your faction?</h2>
+    <p class="landing-cta-subtitle">Join the factions already using TornManager.</p>
+    <%= link_to "Sign In", new_session_path, class: "landing-cta-button" %>
+    <div class="landing-cta-links">
+      <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy") %>
+      <%= link_to "Terms of Service", legal_path(anchor: "terms-of-service") %>
+      <%= link_to "Roadmap", roadmap_path %>
+    </div>
+  </div>
 </div>
