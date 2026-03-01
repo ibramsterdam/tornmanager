@@ -40,7 +40,23 @@
           Real-time ranked war tracking with enemy status, hospital timers, travel countdowns, and online indicators.
           Polls every 3 seconds during active wars. See who to hit and when.
         </p>
-        <div class="landing-feature-screenshot">Screenshot: Live War Dashboard</div>
+        <div class="demo-war-container" data-controller="demo-war-dashboard">
+          <div class="demo-war-filters">
+            <div class="demo-war-filter-group">
+              <span class="demo-filter-toggle demo-filter-okay" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="status" data-filter-value="Okay">Okay</span>
+              <span class="demo-filter-toggle demo-filter-hospital" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="status" data-filter-value="Hospital">Hospital</span>
+              <span class="demo-filter-toggle demo-filter-traveling" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="status" data-filter-value="Traveling">Traveling</span>
+            </div>
+            <div class="demo-war-filter-sep"></div>
+            <div class="demo-war-filter-group">
+              <span class="demo-filter-toggle demo-filter-online" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="activity" data-filter-value="Online">Online</span>
+              <span class="demo-filter-toggle demo-filter-idle" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="activity" data-filter-value="Idle">Idle</span>
+              <span class="demo-filter-toggle demo-filter-offline" data-action="click->demo-war-dashboard#toggleFilter" data-filter-type="activity" data-filter-value="Offline">Offline</span>
+            </div>
+            <span class="demo-filter-count" data-demo-war-dashboard-target="filterCount">(10/10)</span>
+          </div>
+          <div class="demo-war-table-wrap" data-demo-war-dashboard-target="table"></div>
+        </div>
       </div>
 
       <div class="landing-feature-card">
