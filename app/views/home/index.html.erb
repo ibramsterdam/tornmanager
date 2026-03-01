@@ -70,7 +70,23 @@
           Track daily xanax, energy refills, nerve refills, missions, and crimes per member.
           Compliance scores, color-coded status, and sortable training tables with configurable targets.
         </p>
-        <div class="landing-feature-screenshot">Screenshot: Training Table</div>
+        <div class="demo-ct-container" data-controller="demo-compliance">
+          <div class="demo-ct-summary">
+            <div class="demo-ct-summary-box demo-ct-summary-compliant">
+              <span class="demo-ct-summary-count" data-demo-compliance-target="compliantCount">0</span>
+              <span class="demo-ct-summary-label">Compliant</span>
+            </div>
+            <div class="demo-ct-summary-box demo-ct-summary-warning">
+              <span class="demo-ct-summary-count" data-demo-compliance-target="warningCount">0</span>
+              <span class="demo-ct-summary-label">Needs Attn</span>
+            </div>
+            <div class="demo-ct-summary-box demo-ct-summary-danger">
+              <span class="demo-ct-summary-count" data-demo-compliance-target="dangerCount">0</span>
+              <span class="demo-ct-summary-label">Below Target</span>
+            </div>
+          </div>
+          <div class="demo-ct-table-wrap" data-demo-compliance-target="table"></div>
+        </div>
       </div>
 
       <div class="landing-feature-card">
