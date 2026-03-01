@@ -79,11 +79,14 @@ class FactionsController < ApplicationController
       trial_granted_at: Time.current
     )
 
-    # Grant leadership access to Leaders and Co-leaders
-    leader_ids = members.select { |m| %w[Leader Co-leader].include?(m.position) }.map(&:id)
-    leader_ids.each do |torn_id|
-      user = User.find_by(torn_id: torn_id)
-      user&.update!(leadership_access: true)
+    # Persist positions and grant leadership access to Leaders and Co-leaders
+    members.each do |member|
+      user = User.find_by(torn_id: member.id)
+      next unless user
+
+      attrs = { position: member.position }
+      attrs[:leadership_access] = true if %w[Leader Co-leader].include?(member.position)
+      user.update!(attrs)
     end
 
     # Calculate backfill ETA immediately so the banner shows right away

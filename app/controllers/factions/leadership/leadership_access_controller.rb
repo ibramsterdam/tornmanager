@@ -29,13 +29,19 @@ class Factions::Leadership::LeadershipAccessController < Factions::Leadership::B
   def destroy
     user = @faction.leadership.find_by(id: params[:user_id])
 
-    if user
+    if user.nil?
+      @flash_type = "alert"
+      @flash_message = "User not found in leadership."
+    elsif user == Current.user
+      @flash_type = "alert"
+      @flash_message = "You cannot remove your own access."
+    elsif user.faction_leader?
+      @flash_type = "alert"
+      @flash_message = "#{user.name} is #{user.position} and cannot be removed."
+    else
       user.update!(leadership_access: false)
       @flash_type = "notice"
       @flash_message = "#{user.name}'s access has been removed."
-    else
-      @flash_type = "alert"
-      @flash_message = "User not found in leadership."
     end
 
     load_settings_data
