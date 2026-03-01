@@ -189,7 +189,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
       assert_select "summary", text: "How to subscribe"
     end
     assert_match /Bram \[2728237\]/, response.body
-    assert_match /1 week/, response.body
+    assert_match /2 week/, response.body
     assert_match /Xanax Payment/, response.body
     assert_match /Faction Sharing/, response.body
   end
