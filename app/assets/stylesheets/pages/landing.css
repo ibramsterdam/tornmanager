@@ -1,5 +1,5 @@
 .landing-content {
-  max-width: 1080px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 var(--space-6);
 }
@@ -81,6 +81,22 @@
   border-radius: var(--radius-lg);
   padding: var(--space-8);
   transition: border-color 0.2s ease;
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-feature-card .demo-war-container,
+.landing-feature-card .demo-ct-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.landing-feature-card .demo-war-table-wrap,
+.landing-feature-card .demo-ct-table-wrap {
+  flex: 1;
 }
 
 .landing-feature-card:hover {
@@ -114,7 +130,7 @@
   font-size: 0.875rem;
   color: var(--gray-400);
   line-height: 1.6;
-  margin: 0 0 var(--space-6);
+  margin: 0 0 var(--space-4);
 }
 
 .landing-feature-screenshot {
@@ -505,6 +521,15 @@
     font-size: 2rem;
   }
 
+  .landing-content {
+    padding: 0 var(--space-2);
+  }
+
+  .landing-feature-card {
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+  }
+
   .landing-feature-description {
     font-size: 0.75rem;
   }
@@ -717,11 +742,275 @@
     display: none;
   }
 
+  .demo-war-filters {
+    padding: var(--space-1) var(--space-2);
+    gap: var(--space-1);
+  }
+
+  .demo-filter-toggle {
+    font-size: 0.5rem;
+    padding: 1px 4px;
+  }
+
+  .demo-filter-count {
+    font-size: 0.5rem;
+  }
+
   .demo-war-table {
-    font-size: 0.5625rem;
+    font-size: 0.5rem;
   }
 
   .demo-war-table th {
+    font-size: 0.4375rem;
+    padding: 3px 4px;
+  }
+
+  .demo-war-table td {
+    padding: 2px 4px;
+  }
+
+  .demo-member-status,
+  .demo-action-badge {
+    font-size: 0.4375rem;
+    padding: 1px 3px;
+  }
+
+  .demo-hospital-timer,
+  .demo-travel-timer,
+  .demo-travel-landing {
+    font-size: 0.5rem;
+  }
+}
+
+/* Demo Compliance Table */
+
+.demo-ct-container {
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  background: var(--gray-1000);
+  overflow: hidden;
+}
+
+.demo-ct-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--gray-800);
+  background: var(--gray-900);
+}
+
+.demo-ct-summary-box {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.5625rem;
+  font-family: "Geist Mono", monospace;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+}
+
+.demo-ct-summary-compliant {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: rgb(34, 197, 94);
+}
+
+.demo-ct-summary-warning {
+  background: rgba(234, 179, 8, 0.1);
+  border-color: rgba(234, 179, 8, 0.3);
+  color: rgb(234, 179, 8);
+}
+
+.demo-ct-summary-danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: rgb(239, 68, 68);
+}
+
+.demo-ct-summary-count {
+  font-weight: 700;
+  font-size: 0.6875rem;
+}
+
+.demo-ct-summary-label {
+  color: inherit;
+  opacity: 0.8;
+}
+
+.demo-ct-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.demo-ct-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.625rem;
+  font-family: "Geist Mono", monospace;
+}
+
+.demo-ct-table th {
+  background: var(--gray-900);
+  color: var(--gray-400);
+  font-weight: 600;
+  font-size: 0.5625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 6px;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--gray-800);
+  vertical-align: bottom;
+}
+
+.demo-ct-sub {
+  display: block;
+  font-size: 0.5rem;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--gray-600);
+  margin-top: 1px;
+}
+
+.demo-ct-th-status {
+  width: 28px;
+}
+
+.demo-ct-table td {
+  padding: 3px 6px;
+  border-bottom: 1px solid var(--gray-900);
+  white-space: nowrap;
+  color: var(--gray-300);
+}
+
+.demo-ct-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.demo-ct-td-status {
+  text-align: center;
+}
+
+.demo-ct-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 0.5rem;
+  border: 1px solid;
+}
+
+.demo-ct-badge-compliant {
+  background: rgba(34, 197, 94, 0.2);
+  color: rgb(34, 197, 94);
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+.demo-ct-badge-warning {
+  background: rgba(234, 179, 8, 0.2);
+  color: rgb(234, 179, 8);
+  border-color: rgba(234, 179, 8, 0.4);
+}
+
+.demo-ct-badge-danger {
+  background: rgba(239, 68, 68, 0.2);
+  color: rgb(239, 68, 68);
+  border-color: rgba(239, 68, 68, 0.4);
+}
+
+.demo-ct-row-compliant { background: rgba(34, 197, 94, 0.03); }
+.demo-ct-row-warning { background: rgba(234, 179, 8, 0.03); }
+.demo-ct-row-danger { background: rgba(239, 68, 68, 0.03); }
+
+.demo-ct-stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.demo-ct-stat-daily {
+  font-size: 0.5625rem;
+  color: var(--gray-500);
+}
+
+.demo-ct-c-green { color: rgb(34, 197, 94); font-weight: 600; }
+.demo-ct-c-yellow { color: rgb(234, 179, 8); font-weight: 600; }
+.demo-ct-c-red { color: rgb(239, 68, 68); font-weight: 600; }
+
+.demo-ct-ssl {
+  display: inline-block;
+  font-size: 0.4375rem;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgba(139, 92, 246, 0.15);
+  color: rgb(167, 139, 250);
+  margin-left: 3px;
+  vertical-align: middle;
+  font-weight: 600;
+}
+
+.demo-ct-exempt {
+  font-size: 0.5625rem;
+  font-style: italic;
+  color: rgb(167, 139, 250);
+}
+
+@media (max-width: 768px) {
+  .demo-ct-hide-mobile {
+    display: none;
+  }
+
+  .demo-ct-summary {
+    padding: var(--space-1) var(--space-2);
+    gap: var(--space-2);
+  }
+
+  .demo-ct-summary-box {
+    font-size: 0.5rem;
+    padding: 1px 4px;
+  }
+
+  .demo-ct-summary-count {
+    font-size: 0.5625rem;
+  }
+
+  .demo-ct-table {
+    font-size: 0.5rem;
+  }
+
+  .demo-ct-table th {
+    font-size: 0.4375rem;
+    padding: 3px 4px;
+  }
+
+  .demo-ct-sub {
+    font-size: 0.4375rem;
+  }
+
+  .demo-ct-table td {
+    padding: 2px 4px;
+  }
+
+  .demo-ct-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 0.4375rem;
+  }
+
+  .demo-ct-stat-daily {
+    font-size: 0.5rem;
+  }
+
+  .demo-ct-ssl {
+    font-size: 0.375rem;
+    padding: 0 2px;
+  }
+
+  .demo-ct-exempt {
     font-size: 0.5rem;
   }
 }
