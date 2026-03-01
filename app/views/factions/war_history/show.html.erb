@@ -1,0 +1,18 @@
+<div class="war-history-page">
+  <%= link_to "← Back to Dashboard", faction_path(@faction), class: "back-link" %>
+
+  <div class="war-history-header">
+    <h1>War History</h1>
+    <div class="war-record-summary">
+      <span class="stat-wins"><%= @wins %></span><span class="stat-divider">W</span>
+      <span class="stat-separator">/</span>
+      <span class="stat-losses"><%= @losses %></span><span class="stat-divider">L</span>
+      <span class="war-record-year"><%= Date.current.year %></span>
+    </div>
+  </div>
+
+  <div class="war-history-content">
+    <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
+    <%= render "factions/ranked_wars/member_performance_table", member_performance: @member_performance %>
+  </div>
+</div>
