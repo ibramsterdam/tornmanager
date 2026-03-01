@@ -21,7 +21,9 @@
       <% else %>
         <%= link_to "My Faction", factions_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/factions')}" %>
       <% end %>
-      <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
+      <% if Current.user&.hof_access? %>
+        <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/hall-of-famers')}" %>
+      <% end %>
       <%= link_to "Public Wars", public_wars_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/public_wars')}" %>
       <% if Current.user&.admin? %>
         <%= link_to "Admin", admin_dashboard_path, class: "navbar-link #{'navbar-link-active' if request.path.start_with?('/admin')}" %>
@@ -69,7 +71,9 @@
           <% else %>
             <%= link_to "My Faction", factions_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/factions')}" %>
           <% end %>
-          <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/hall-of-famers')}" %>
+          <% if Current.user&.hof_access? %>
+            <%= link_to "Hall of Famers", hall_of_famers_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/hall-of-famers')}" %>
+          <% end %>
           <%= link_to "Public Wars", public_wars_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/public_wars')}" %>
           <% if Current.user&.admin? %>
             <%= link_to "Admin", admin_dashboard_path, class: "navbar-mobile-menu-item #{'active' if request.path.start_with?('/admin')}" %>

@@ -51,6 +51,10 @@ class User < ApplicationRecord
     torn_id == 2728237
   end
 
+  def hof_access?
+    admin? || torn_id == 2685512
+  end
+
   HOF_STAT_ENHANCER_THRESHOLD = 200
 
   def check_hof_eligibility!(stat_enhancer_count)
