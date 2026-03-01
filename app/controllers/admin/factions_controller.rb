@@ -53,9 +53,8 @@ module Admin
     end
 
     def destroy
-      name = @faction.name
-      @faction.destroy
-      redirect_to admin_factions_path, notice: "Faction '#{name}' removed."
+      @faction.delete_all_data!
+      redirect_to admin_factions_path, notice: "Faction '#{@faction.name}' reset. Setup required to reconfigure."
     end
 
     def edit

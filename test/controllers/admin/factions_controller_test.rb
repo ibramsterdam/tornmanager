@@ -34,4 +34,23 @@ class Admin::FactionsControllerTest < ActionDispatch::IntegrationTest
     @faction.reload
     assert_not @faction.public_wars?
   end
+
+  test "destroy resets faction data and requires re-setup" do
+    setting = FactionSetting.create!(faction: @faction, torn_api_key: "abc123")
+    @faction.update!(setup_completed: true)
+    @faction.ranked_wars.create!(
+      torn_war_id: 1, opponent_faction_id: 12345, opponent_faction_name: "Enemy",
+      started_at: 1.day.ago, target_score: 100, our_score: 50, their_score: 40
+    )
+
+    assert_no_difference "Faction.count" do
+      delete admin_faction_path(@faction)
+    end
+
+    assert_redirected_to admin_factions_path
+    @faction.reload
+    assert_not @faction.setup_completed?
+    assert_not FactionSetting.exists?(setting.id)
+    assert_equal 0, @faction.ranked_wars.count
+  end
 end
