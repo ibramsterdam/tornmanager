@@ -72,8 +72,8 @@ class FactionsController < ApplicationController
     # Fetch faction members to grant trial subscriptions and leadership access to leaders
     members = TornApi::Faction::Members.new(api_key, @faction.torn_id).fetch
 
-    # Grant 14-day trial subscription to members who haven't received one yet
-    trial_expiry = 14.days.from_now
+    # Grant 1-month trial subscription to members who haven't received one yet
+    trial_expiry = 1.month.from_now
     @faction.users.where(trial_granted_at: nil).update_all(
       subscription_expires_at: trial_expiry,
       trial_granted_at: Time.current

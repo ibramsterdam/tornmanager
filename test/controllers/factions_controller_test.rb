@@ -423,10 +423,10 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert leader.reload.subscribed?, "Leader should have a subscription"
     assert member.reload.subscribed?, "Member should have a subscription"
 
-    # All should expire around 14 days from now and have trial_granted_at set
+    # All should expire around 1 month from now and have trial_granted_at set
     [ @bert, leader, member ].each do |user|
-      assert_in_delta 14.days.from_now.to_i, user.subscription_expires_at.to_i, 5,
-        "#{user.name} subscription should expire in ~14 days"
+      assert_in_delta 1.month.from_now.to_i, user.subscription_expires_at.to_i, 5,
+        "#{user.name} subscription should expire in ~1 month"
       assert_not_nil user.trial_granted_at, "#{user.name} should have trial_granted_at set"
     end
   end

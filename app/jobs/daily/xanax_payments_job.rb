@@ -19,22 +19,25 @@ module Daily
       end
     end
 
+    WEEKS_PER_XANAX = 2
+
     def process_payment(entry)
       sender = find_or_create_sender(entry.sender_torn_id)
       recipient = User.find_by!(torn_id: PAYMENT_RECIPIENT_TORN_ID)
+      weeks = entry.xanax_quantity * WEEKS_PER_XANAX
 
       XanaxPayment.create!(
         recipient: recipient,
         sender: sender,
         log_id: entry.id,
         xanax_amount: entry.xanax_quantity,
-        weeks_granted: entry.xanax_quantity,
+        weeks_granted: weeks,
         processed_at: Time.at(entry.timestamp)
       )
 
-      sender.extend_subscription!(entry.xanax_quantity)
+      sender.extend_subscription!(weeks)
 
-      Rails.logger.info "Xanax payment processed: #{entry.xanax_quantity} from #{sender.name || sender.torn_id}"
+      Rails.logger.info "Xanax payment processed: #{entry.xanax_quantity} xanax (#{weeks} weeks) from #{sender.name || sender.torn_id}"
     end
 
     def find_or_create_sender(torn_id)
