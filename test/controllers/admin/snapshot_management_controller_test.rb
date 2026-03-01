@@ -42,7 +42,7 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
 
     post backfill_all_admin_snapshot_management_index_path
 
-    [@bram, @bert].each do |user|
+    [ @bram, @bert ].each do |user|
       user.reload
       assert user.backfill_ends_at.present?, "#{user.name} should have backfill_ends_at set"
       assert user.backfill_ends_at > Time.current, "#{user.name} backfill_ends_at should be in the future"
@@ -54,7 +54,7 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
     stub_solid_queue_count
 
     expected_dates = PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date
-    [@bram, @bert].each do |user|
+    [ @bram, @bert ].each do |user|
       expected_dates.each do |date|
         PersonalStatSnapshot.create!(user: user, date: date, drugs_xanax: 10)
       end
