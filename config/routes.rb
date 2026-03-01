@@ -91,6 +91,9 @@ Rails.application.routes.draw do
     resources :api_logs, only: [ :index ]
     resources :script_versions, except: [ :show ]
     resources :snapshot_management, only: [ :index ] do
+      collection do
+        post :backfill_all
+      end
       member do
         post :backfill_user
       end
