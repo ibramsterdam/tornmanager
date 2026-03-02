@@ -1,280 +1,359 @@
-<div class="page-header">
-  <%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
-  <h1>System Stats</h1>
-  <p class="page-subtitle">Overview of users, snapshots, and data health</p>
-</div>
-
-<div class="stats-section">
-  <h2>Users</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value"><%= @total_users %></div>
-      <div class="stat-label">Total Users</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @tracked_users %></div>
-      <div class="stat-label">Tracked for Stats</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @active_subscribers %></div>
-      <div class="stat-label">Active Subscribers</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @hof_stats_users %></div>
-      <div class="stat-label">HoF Stats Users</div>
-    </div>
-  </div>
-</div>
-
-<div class="stats-section">
-  <h2>Factions</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value"><%= @total_factions %></div>
-      <div class="stat-label">Total Factions</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value <%= @factions_with_backfill > 0 ? 'warning' : '' %>"><%= @factions_with_backfill %></div>
-      <div class="stat-label">Backfill In Progress</div>
-    </div>
+<div class="admin-stats">
+  <div class="admin-stats-header">
+    <%= link_to "← Admin", admin_dashboard_path, class: "back-link" %>
+    <h1>System Stats</h1>
   </div>
 
-  <% if @faction_stats.any? %>
-    <div class="mini-table">
-      <h3>Tracked Factions</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Faction</th>
-            <th>Members</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @faction_stats.each do |(faction_id, faction_name), count| %>
-            <tr>
-              <td><%= faction_name %></td>
-              <td><%= count %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
+  <div class="admin-stats-grid">
+    <div class="admin-stats-panel">
+      <h2>Users</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total</span>
+          <span class="admin-stat-value"><%= @total_users %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Tracked</span>
+          <span class="admin-stat-value"><%= @tracked_users %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Subscribers</span>
+          <span class="admin-stat-value"><%= @active_subscribers %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">HoF Users</span>
+          <span class="admin-stat-value"><%= @hof_stats_users %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">API Keys</span>
+          <span class="admin-stat-value"><%= @api_keys_configured %></span>
+        </div>
+      </div>
     </div>
-  <% end %>
-</div>
 
-<div class="stats-section">
-  <h2>Snapshot Coverage</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value"><%= number_with_delimiter(@total_snapshots) %></div>
-      <div class="stat-label">Total Snapshots</div>
+    <div class="admin-stats-panel">
+      <h2>Factions</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total</span>
+          <span class="admin-stat-value"><%= @total_factions %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Backfilling</span>
+          <span class="admin-stat-value <%= 'warning' if @factions_with_backfill > 0 %>"><%= @factions_with_backfill %></span>
+        </div>
+      </div>
+      <% if @faction_stats.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Faction</th><th>Members</th></tr>
+          </thead>
+          <tbody>
+            <% @faction_stats.each do |(faction_id, faction_name), count| %>
+              <tr><td><%= faction_name %></td><td><%= count %></td></tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @unique_snapshot_days %></div>
-      <div class="stat-label">Days with Data</div>
+
+    <div class="admin-stats-panel">
+      <h2>Snapshots</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total</span>
+          <span class="admin-stat-value"><%= number_with_delimiter(@total_snapshots) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Days with Data</span>
+          <span class="admin-stat-value"><%= @unique_snapshot_days %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Earliest</span>
+          <span class="admin-stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Latest</span>
+          <span class="admin-stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
+        </div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d-%m-%Y") : "N/A" %></div>
-      <div class="stat-label">Earliest Snapshot</div>
+
+    <div class="admin-stats-panel">
+      <h2>Activity</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Snapshots today</span>
+          <span class="admin-stat-value"><%= @snapshots_today %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Snapshots this week</span>
+          <span class="admin-stat-value"><%= @snapshots_this_week %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">API calls today</span>
+          <span class="admin-stat-value"><%= @api_calls_today %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">API calls this week</span>
+          <span class="admin-stat-value"><%= @api_calls_this_week %></span>
+        </div>
+      </div>
+      <% if @daily_snapshots.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Date</th><th>Snapshots</th></tr>
+          </thead>
+          <tbody>
+            <% @daily_snapshots.each do |date, count| %>
+              <tr><td><%= date %></td><td><%= count %></td></tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
     </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d-%m-%Y") : "N/A" %></div>
-      <div class="stat-label">Latest Snapshot</div>
+
+    <div class="admin-stats-panel">
+      <h2>Torn API <span class="admin-stats-retention">30d retention</span></h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total calls</span>
+          <span class="admin-stat-value"><%= number_with_delimiter(@total_api_calls) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Peak rate</span>
+          <span class="admin-stat-value"><%= @api_peak_rate_all_time %>/min</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Peak rate today</span>
+          <span class="admin-stat-value"><%= @api_peak_rate_today %>/min</span>
+        </div>
+      </div>
+      <div class="admin-stats-rows admin-stats-sub">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Admin key calls</span>
+          <span class="admin-stat-value"><%= number_with_delimiter(@admin_api_total) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Admin peak rate</span>
+          <span class="admin-stat-value"><%= @admin_api_peak_all_time %>/min</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Admin peak today</span>
+          <span class="admin-stat-value"><%= @admin_api_peak_today %>/min</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-stats-panel">
+      <h2>Data Health</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Missing yesterday</span>
+          <span class="admin-stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %> users</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Users with gaps</span>
+          <span class="admin-stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Missing days</span>
+          <span class="admin-stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Complete</span>
+          <span class="admin-stat-value success"><%= number_with_delimiter(@complete_snapshots) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Incomplete</span>
+          <span class="admin-stat-value <%= 'warning' if @incomplete_snapshots > 0 %>"><%= number_with_delimiter(@incomplete_snapshots) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Completeness</span>
+          <span class="admin-stat-value"><%= @total_snapshots > 0 ? "#{((@complete_snapshots.to_f / @total_snapshots) * 100).round(1)}%" : "N/A" %></span>
+        </div>
+      </div>
+      <% if @missing_dates_summary.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Date</th><th>Missing</th></tr>
+          </thead>
+          <tbody>
+            <% @missing_dates_summary.each do |date, count| %>
+              <tr><td><%= date.strftime("%d %b") %></td><td><%= count %></td></tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    </div>
+
+    <div class="admin-stats-panel">
+      <h2>Sign-ins <span class="admin-stats-retention">90d retention</span></h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Sessions this week</span>
+          <span class="admin-stat-value"><%= @sign_ins_this_week %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Unique users</span>
+          <span class="admin-stat-value"><%= @unique_sign_ins_this_week %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">First-time users</span>
+          <span class="admin-stat-value"><%= @new_sign_ins.size %></span>
+        </div>
+      </div>
+      <% if @new_sign_ins.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>New User</th><th>Joined</th></tr>
+          </thead>
+          <tbody>
+            <% @new_sign_ins.each do |user| %>
+              <tr>
+                <td>
+                  <a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link">
+                    <%= user.name %> [<%= user.torn_id %>]
+                  </a>
+                </td>
+                <td><%= user.created_at.strftime("%d %b") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
     </div>
   </div>
-</div>
-
-<div class="stats-section">
-  <h2>Recent Activity</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value"><%= @snapshots_today %></div>
-      <div class="stat-label">Snapshots Today</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @snapshots_this_week %></div>
-      <div class="stat-label">Snapshots This Week</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @api_calls_today %></div>
-      <div class="stat-label">API Calls Today</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @api_calls_this_week %></div>
-      <div class="stat-label">API Calls This Week</div>
-    </div>
-  </div>
-
-  <% if @daily_snapshots.any? %>
-    <div class="mini-table">
-      <h3>Snapshots by Day (Last 7 Days)</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Snapshots</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @daily_snapshots.each do |date, count| %>
-            <tr>
-              <td><%= date %></td>
-              <td><%= count %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  <% end %>
-</div>
-
-<div class="stats-section">
-  <h2>Data Health</h2>
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %></div>
-      <div class="stat-label">Users Missing Yesterday's Snapshot</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></div>
-      <div class="stat-label">Users With Data Gaps</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></div>
-      <div class="stat-label">Total Missing Snapshot-Days</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value success"><%= number_with_delimiter(@complete_snapshots) %></div>
-      <div class="stat-label">Complete Snapshots</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value <%= @incomplete_snapshots > 0 ? 'warning' : '' %>"><%= number_with_delimiter(@incomplete_snapshots) %></div>
-      <div class="stat-label">Incomplete Snapshots</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-value"><%= @total_snapshots > 0 ? "#{((@complete_snapshots.to_f / @total_snapshots) * 100).round(1)}%" : "N/A" %></div>
-      <div class="stat-label">Completeness Rate</div>
-    </div>
-  </div>
-
-  <% if @missing_dates_summary.any? %>
-    <div class="mini-table">
-      <h3>Recent Dates With Missing Snapshots</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Users Missing</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @missing_dates_summary.each do |date, count| %>
-            <tr>
-              <td><%= date.strftime("%d-%m-%Y") %></td>
-              <td><%= count %></td>
-            </tr>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
-  <% end %>
 </div>
 
 <style>
-  .stats-section {
-    background: var(--card-bg, #171717);
-    border: 1px solid var(--border-color, #262626);
-    border-radius: 8px;
-    padding: 24px;
-    margin-bottom: 24px;
+  .admin-stats {
+    max-width: 1400px;
+    margin: 0 auto;
   }
 
-  .stats-section h2 {
-    margin: 0 0 16px 0;
+  .admin-stats-header {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3, 12px);
+    margin-bottom: var(--space-4, 16px);
+  }
+
+  .admin-stats-header h1 {
+    margin: 0;
     font-size: 1.25rem;
-    color: var(--text-primary, #e5e5e5);
+    color: var(--gray-100, #f5f5f5);
   }
 
-  .stats-grid {
+  .admin-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-3, 12px);
   }
 
-  .stat-card {
-    background: var(--bg-secondary, #0a0a0a);
-    border: 1px solid var(--border-color, #262626);
-    border-radius: 8px;
-    padding: 20px;
-    text-align: center;
+  .admin-stats-panel {
+    background: var(--gray-900, #171717);
+    border: 1px solid var(--gray-800, #262626);
+    border-radius: var(--radius-lg, 8px);
+    padding: var(--space-3, 12px);
   }
 
-  .stat-value {
-    font-size: 2rem;
-    font-weight: 700;
-    color: var(--text-primary, #e5e5e5);
-    font-family: 'Geist Mono', monospace;
-  }
-
-  .stat-value.success {
-    color: #22c55e;
-  }
-
-  .stat-value.warning {
-    color: #f59e0b;
-  }
-
-  .stat-value.error {
-    color: #ef4444;
-  }
-
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--text-muted, #737373);
+  .admin-stats-panel h2 {
+    margin: 0 0 var(--space-2, 8px) 0;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--gray-500, #737373);
     text-transform: uppercase;
-    margin-top: 8px;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.06em;
   }
 
-  .mini-table {
-    margin-top: 20px;
-    background: var(--bg-secondary, #0a0a0a);
-    border: 1px solid var(--border-color, #262626);
-    border-radius: 8px;
-    padding: 16px;
+  .admin-stats-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
-  .mini-table h3 {
-    margin: 0 0 12px 0;
-    font-size: 0.875rem;
-    color: var(--text-muted, #a3a3a3);
+  .admin-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
   }
 
-  .mini-table table {
+  .admin-stat-label {
+    font-size: 0.8125rem;
+    color: var(--gray-400, #a3a3a3);
+  }
+
+  .admin-stat-value {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--gray-100, #f5f5f5);
+    font-family: "Geist Mono", monospace;
+  }
+
+  .admin-stats-retention {
+    font-size: 0.5625rem;
+    font-weight: 400;
+    color: var(--gray-600, #525252);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  .admin-stat-value.success { color: #22c55e; }
+  .admin-stat-value.warning { color: #f59e0b; }
+  .admin-stat-value.error { color: #ef4444; }
+
+  .admin-stats-table {
     width: 100%;
     border-collapse: collapse;
+    margin-top: var(--space-2, 8px);
+    border-top: 1px solid var(--gray-800, #262626);
+    padding-top: var(--space-2, 8px);
   }
 
-  .mini-table th,
-  .mini-table td {
-    padding: 8px 12px;
+  .admin-stats-table th,
+  .admin-stats-table td {
+    padding: 3px 0;
     text-align: left;
-    border-bottom: 1px solid var(--border-color, #262626);
-    font-size: 0.875rem;
-  }
-
-  .mini-table th {
-    color: var(--text-muted, #737373);
-    font-weight: 600;
-    text-transform: uppercase;
     font-size: 0.75rem;
   }
 
-  .mini-table td {
-    color: var(--text-primary, #e5e5e5);
+  .admin-stats-table th {
+    color: var(--gray-600, #525252);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-size: 0.625rem;
+    padding-bottom: 4px;
   }
 
-  .mini-table tr:last-child td {
-    border-bottom: none;
+  .admin-stats-table td {
+    color: var(--gray-300, #d4d4d4);
+    border-top: 1px solid var(--gray-800, #1c1c1c);
+  }
+
+  .admin-stats-table td:last-child,
+  .admin-stats-table th:last-child {
+    text-align: right;
+    font-family: "Geist Mono", monospace;
+  }
+
+  @media (max-width: 1200px) {
+    .admin-stats-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+  }
+
+  @media (max-width: 900px) {
+    .admin-stats-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 600px) {
+    .admin-stats-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
