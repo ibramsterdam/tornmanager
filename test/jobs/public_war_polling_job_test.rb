@@ -142,7 +142,7 @@ class PublicWarPollingJobTest < ActiveJob::TestCase
     end
   end
 
-  test "first time travelers have no travel_started_at" do
+  test "first time travelers get travel_started_at stamped immediately" do
     traveling_member = TornApi::Faction::Members::Member.new(
       6666666, "TravelingPlayer", 50, 30,
       "Online", 1708000000, "5 minutes ago",
@@ -155,10 +155,12 @@ class PublicWarPollingJobTest < ActiveJob::TestCase
     with_memory_cache do
       Rails.cache.write(@lobby.api_key_cache_key, "test_api_key")
 
-      PublicWarPollingJob.perform_now(@lobby.id)
+      freeze_time do
+        PublicWarPollingJob.perform_now(@lobby.id)
 
-      cached = Rails.cache.read(@lobby.war_cache_key)
-      assert_nil cached[:members][6666666][:status][:travel_started_at]
+        cached = Rails.cache.read(@lobby.war_cache_key)
+        assert_equal Time.current.iso8601, cached[:members][6666666][:status][:travel_started_at]
+      end
     end
   end
 
@@ -248,21 +250,17 @@ class PublicWarPollingJobTest < ActiveJob::TestCase
     with_memory_cache do
       Rails.cache.write(@lobby.api_key_cache_key, "test_api_key")
 
-      # First poll — no travel_started_at
-      PublicWarPollingJob.perform_now(@lobby.id)
-      cached = Rails.cache.read(@lobby.war_cache_key)
-      assert_nil cached[:members][6666666][:status][:travel_started_at]
+      freeze_time do
+        PublicWarPollingJob.perform_now(@lobby.id)
+        cached = Rails.cache.read(@lobby.war_cache_key)
+        departure_time = cached[:members][6666666][:status][:travel_started_at]
+        assert_equal Time.current.iso8601, departure_time
 
-      # Manually set travel_started_at to simulate departure detection
-      departure_time = Time.current.iso8601
-      cached[:members][6666666][:status][:travel_started_at] = departure_time
-      Rails.cache.write(@lobby.war_cache_key, cached)
+        PublicWarPollingJob.perform_now(@lobby.id)
+        cached = Rails.cache.read(@lobby.war_cache_key)
 
-      # Second poll — should carry forward departure time
-      PublicWarPollingJob.perform_now(@lobby.id)
-      cached = Rails.cache.read(@lobby.war_cache_key)
-
-      assert_equal departure_time, cached[:members][6666666][:status][:travel_started_at]
+        assert_equal departure_time, cached[:members][6666666][:status][:travel_started_at]
+      end
     end
   end
 
