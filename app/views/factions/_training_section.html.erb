@@ -5,16 +5,14 @@
     <% nerve_enabled = @nerve_target > 0 %>
     <%
       def sortable_header(sort_info, faction)
-        if sort_info[:current]
-          arrow = sort_info[:current_direction] == "asc" ? "▲" : "▼"
-          arrow_html = "<span class='sort-arrow active'>#{arrow}</span>"
-        else
-          arrow_html = "<span class='sort-arrow'>▼</span>"
-        end
+        chevron = '<svg class="sort-arrow'
+        chevron += ' active' if sort_info[:current]
+        chevron += ' asc' if sort_info[:current] && sort_info[:current_direction] == "asc"
+        chevron += '" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         url_params = { sort: sort_info[:column], direction: sort_info[:direction] }
         url_params[:start_date] = params[:start_date] if params[:start_date].present?
         url_params[:end_date] = params[:end_date] if params[:end_date].present?
-        link_to "#{sort_info[:label]} #{arrow_html}".html_safe, faction_path(faction, url_params) + "#training", class: "sort-link"
+        link_to "#{sort_info[:label]} #{chevron}".html_safe, faction_path(faction, url_params) + "#training", class: "sort-link"
       end
     %>
 

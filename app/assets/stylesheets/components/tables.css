@@ -41,6 +41,18 @@ tbody tr:hover {
   background-color: rgba(255, 255, 255, 0.03);
 }
 
+/* Sortable Headers */
+th.sortable {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+th.sortable:hover {
+  color: var(--gray-200);
+}
+
 /* Sort Links */
 .sort-link {
   color: var(--gray-400);
@@ -57,14 +69,16 @@ tbody tr:hover {
 }
 
 .sort-arrow {
-  opacity: 0.2;
-  font-size: 0.75rem;
-  transition: opacity 0.15s ease;
+  color: var(--gray-600);
+  transition: transform 0.2s ease, color 0.15s ease;
 }
 
 .sort-arrow.active {
-  opacity: 1;
-  color: #ffffff;
+  color: var(--gray-200);
+}
+
+.sort-arrow.asc {
+  transform: rotate(180deg);
 }
 
 /* Table Container */

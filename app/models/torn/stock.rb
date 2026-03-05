@@ -25,6 +25,7 @@ class Torn::Stock < ApplicationRecord
           dividend_value: stock.dividend_value,
           block_cost: stock.block_cost(increment),
           days_to_break_even: stock.days_to_break_even_with_item(stock.dividend_value, increment),
+          annual_roi: stock.annual_roi(increment),
           owned: owned_stock ? stock.owns_increment?(increment, owned_stock.total_shares) : false
         }
       end
@@ -41,6 +42,14 @@ class Torn::Stock < ApplicationRecord
     return Float::INFINITY if payout == 0
     payout_days = dividend_frequency
     (cost / payout).ceil * payout_days
+  end
+
+  def annual_roi(increment)
+    return 0.0 if dividend_value.to_i == 0 || dividend_frequency.to_i == 0
+
+    cost = block_cost(increment)
+    annual_dividends = dividend_value.to_f * (365.0 / dividend_frequency)
+    (annual_dividends / cost * 100).round(2)
   end
 
   def owns_increment?(increment, owned_shares)
