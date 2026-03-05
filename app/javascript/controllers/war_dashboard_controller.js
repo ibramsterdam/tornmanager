@@ -381,10 +381,11 @@ export default class extends Controller {
       const target = hasTarget ? this[`${targetName}Target`] : null
 
       if (target) {
-        target.classList.remove("asc", "desc")
+        target.classList.remove("active", "asc")
         const sortKeyMatch = key.charAt(0).toLowerCase() + key.slice(1)
         if (this.sortKey === sortKeyMatch) {
-          target.classList.add(this.sortDirection)
+          target.classList.add("active")
+          if (this.sortDirection === "asc") target.classList.add("asc")
         }
       }
     })

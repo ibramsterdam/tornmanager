@@ -40,7 +40,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     get stocks_path
     assert_response :success
     assert_select "h1", "Stocks"
-    assert_select "th", text: "OWNED"
+    assert_select "th", text: /OWNED/
   end
 
   # -- Non-limited access user sees table without owned column --
@@ -51,7 +51,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
 
     get stocks_path
     assert_response :success
-    assert_select "th", text: "OWNED", count: 0
+    assert_select "th", text: /OWNED/, count: 0
     assert_select ".alert-info", /Limited Access Required/
   end
 
@@ -79,7 +79,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
 
   # -- Table content --
 
-  test "table rows are sorted by days to break even" do
+  test "table rows are sorted by days to break even by default" do
     @user.update!(api_access_type: "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
@@ -87,5 +87,47 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
     get stocks_path
     assert_response :success
     assert_select "table tbody tr"
+  end
+
+  test "shows annual roi column" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
+    assert_response :success
+    assert_select "th", text: /ANNUAL ROI/
+  end
+
+  test "table has sortable headers with data attributes" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
+    assert_response :success
+    assert_select "th.sortable[data-sort-column]", minimum: 7
+  end
+
+  test "table uses table-sort stimulus controller" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
+    assert_response :success
+    assert_select "table[data-controller='table-sort']"
+  end
+
+  test "table cells have sort values for client-side sorting" do
+    @user.update!(api_access_type: "Limited Access")
+    sign_in_as(@user)
+    TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
+
+    get stocks_path
+    assert_response :success
+    assert_select "td[data-sort-key='annual_roi'][data-sort-value]"
+    assert_select "td[data-sort-key='days_to_break_even'][data-sort-value]"
+    assert_select "td[data-sort-key='block_cost'][data-sort-value]"
   end
 end

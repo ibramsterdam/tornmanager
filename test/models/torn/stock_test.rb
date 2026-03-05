@@ -45,6 +45,36 @@ class Torn::StockTest < ActiveSupport::TestCase
     assert_equal days, days.to_i
   end
 
+  # -- annual_roi --
+
+  test "annual_roi returns percentage for valid inputs" do
+    roi = @sym.annual_roi(1)
+
+    assert roi > 0
+    assert_kind_of Numeric, roi
+  end
+
+  test "annual_roi returns 0.0 when dividend value is 0" do
+    @sym.dividend_value = 0
+    assert_equal 0.0, @sym.annual_roi(1)
+  end
+
+  test "annual_roi halves with each increment" do
+    roi1 = @sym.annual_roi(1)
+    roi2 = @sym.annual_roi(2)
+
+    assert_in_delta roi1 / 2, roi2, 0.01
+  end
+
+  test "annual_roi calculation is correct" do
+    # SYM: price 691.52, req 500_000, freq 7, dividend_value 4_200_194
+    # Block cost inc1 = 691.52 * 500_000 = 345_760_000
+    # Annual dividends = 4_200_194 * (365 / 7) = 219_010_137.14...
+    # ROI = 219_010_137.14 / 345_760_000 * 100 = 63.34%
+    expected = (4_200_194.0 * (365.0 / 7) / (691.52 * 500_000) * 100).round(2)
+    assert_equal expected, @sym.annual_roi(1)
+  end
+
   # -- owns_increment? --
 
   test "owns_increment returns true when shares meet requirement" do

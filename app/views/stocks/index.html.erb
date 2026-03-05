@@ -13,45 +13,55 @@
 <% end %>
 
 <div class="table-container">
-  <table>
+  <table data-controller="table-sort" data-table-sort-column-value="days_to_break_even" data-table-sort-direction-value="asc">
     <thead>
       <tr>
-        <th>STOCK NAME</th>
-        <th>INCREMENT</th>
-        <th>DIVIDEND VALUE</th>
-        <th>BLOCK COST</th>
-        <th>DAYS TO BREAK EVEN</th>
+        <th class="sortable" data-sort-column="stock_name" data-sort-type="string" data-action="click->table-sort#sort">STOCK NAME <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
+        <th class="sortable" data-sort-column="increment" data-sort-type="number" data-action="click->table-sort#sort">INCREMENT <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
+        <th class="sortable" data-sort-column="dividend_value" data-sort-type="number" data-action="click->table-sort#sort">DIVIDEND VALUE <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
+        <th class="sortable" data-sort-column="block_cost" data-sort-type="number" data-action="click->table-sort#sort">BLOCK COST <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
+        <th class="sortable" data-sort-column="days_to_break_even" data-sort-type="number" data-action="click->table-sort#sort">DAYS TO BREAK EVEN <svg class="sort-arrow active asc" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
+        <th class="sortable" data-sort-column="annual_roi" data-sort-type="number" data-action="click->table-sort#sort">ANNUAL ROI <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
         <% if @has_limited_access %>
-          <th>OWNED</th>
+          <th class="sortable" data-sort-column="owned" data-sort-type="boolean" data-action="click->table-sort#sort">OWNED <svg class="sort-arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></th>
         <% end %>
       </tr>
     </thead>
     <tbody>
       <% @table_rows.each do |row| %>
         <tr>
-          <td><%= row[:stock_name] %></td>
-          <td><%= row[:increment] %></td>
-          <td>
+          <td data-sort-key="stock_name" data-sort-value="<%= row[:stock_name] %>"><%= row[:stock_name] %></td>
+          <td data-sort-key="increment" data-sort-value="<%= row[:increment] %>"><%= row[:increment] %></td>
+          <td data-sort-key="dividend_value" data-sort-value="<%= row[:dividend_value] || 0 %>">
             <% if row[:dividend_value].nil? %>
               <span class="stat-value">N/A</span>
             <% else %>
               <span class="stat-value"><%= number_to_currency(row[:dividend_value], precision: 2) %></span>
             <% end %>
           </td>
-          <td><span class="stat-value"><%= number_to_currency(row[:block_cost], precision: 2) %></span></td>
-          <td>
+          <td data-sort-key="block_cost" data-sort-value="<%= row[:block_cost] %>">
+            <span class="stat-value"><%= number_to_currency(row[:block_cost], precision: 2) %></span>
+          </td>
+          <td data-sort-key="days_to_break_even" data-sort-value="<%= row[:days_to_break_even].infinite? ? 'Infinity' : row[:days_to_break_even] %>">
             <% if row[:days_to_break_even].infinite? %>
-              <span class="stat-value">∞</span>
+              <span class="stat-value">&infin;</span>
             <% else %>
               <span class="stat-value"><%= number_with_delimiter(row[:days_to_break_even].to_i) %></span>
             <% end %>
           </td>
+          <td data-sort-key="annual_roi" data-sort-value="<%= row[:annual_roi] %>">
+            <% if row[:annual_roi] == 0.0 %>
+              <span class="stat-value">N/A</span>
+            <% else %>
+              <span class="stat-value"><%= row[:annual_roi] %>%</span>
+            <% end %>
+          </td>
           <% if @has_limited_access %>
-            <td>
+            <td data-sort-key="owned" data-sort-value="<%= row[:owned] %>">
               <% if row[:owned] %>
-                <span class="stat-value" style="color: #10b981;">✓ Yes</span>
+                <span class="stat-value" style="color: #10b981;">&#10003; Yes</span>
               <% else %>
-                <span class="stat-value" style="color: #ef4444;">✗ No</span>
+                <span class="stat-value" style="color: #ef4444;">&#10007; No</span>
               <% end %>
             </td>
           <% end %>
