@@ -47,7 +47,13 @@ export default class extends Controller {
     `
     
     this.listTarget.prepend(item)
-    
+
+    const maxVisible = 3
+    const items = this.listTarget.querySelectorAll(".live-api-item")
+    if (items.length > maxVisible) {
+      Array.from(items).slice(maxVisible).forEach(el => el.remove())
+    }
+
     requestAnimationFrame(() => {
       item.classList.add("live-api-item-visible")
     })

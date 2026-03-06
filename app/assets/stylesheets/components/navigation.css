@@ -405,10 +405,16 @@ nav {
     flex: 1;
   }
 
-  /* Live feed below navbar on mobile */
   .live-api-feed {
+    position: fixed;
+    top: 60px;
+    left: var(--space-3);
+    right: var(--space-3);
+    z-index: 1000;
+    pointer-events: none;
+  }
+
+  .live-api-feed-list {
     width: 100%;
-    order: 3;
-    margin-top: var(--space-3);
   }
 }
