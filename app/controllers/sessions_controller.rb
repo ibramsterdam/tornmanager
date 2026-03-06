@@ -80,6 +80,7 @@ class SessionsController < ApplicationController
       user.assign_attributes(
         name: member.name,
         level: member.level,
+        position: member.position,
         faction_id: faction.id,
         fallen: member.status_state == "Fallen"
       )

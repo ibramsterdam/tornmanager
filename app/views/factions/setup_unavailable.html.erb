@@ -1,0 +1,25 @@
+<div class="setup-page">
+  <div class="setup-container">
+    <div class="setup-header">
+      <h1>Faction Not Set Up Yet</h1>
+      <p class="setup-subtitle"><%= @faction.name %></p>
+    </div>
+
+    <div class="setup-info">
+      <p>Only your faction's <strong>Leader</strong> or <strong>Co-leader</strong> can complete the initial setup. Once done, all members automatically receive a <strong>1-month free trial</strong>.</p>
+
+      <ul class="setup-info-list">
+        <li>
+          <strong>Ask your Leader or Co-leader</strong> to sign in to TornManager and complete the one-time setup.
+        </li>
+        <li>
+          <strong>Need help?</strong> Reach out to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank">Bram [2728237]</a> on Torn.
+        </li>
+      </ul>
+    </div>
+
+    <div class="setup-actions">
+      <%= link_to "Go to Settings", settings_path, class: "btn btn-primary btn-lg setup-submit" %>
+    </div>
+  </div>
+</div>

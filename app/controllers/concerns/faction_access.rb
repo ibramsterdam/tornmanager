@@ -16,8 +16,12 @@ module FactionAccess
     find_faction
     return if performed?
 
-    unless @faction.setup_completed?
+    return if @faction.setup_completed?
+
+    if Current.user.admin? || Current.user.faction_leader?
       redirect_to setup_faction_path(@faction)
+    else
+      redirect_to setup_unavailable_faction_path(@faction)
     end
   end
 
