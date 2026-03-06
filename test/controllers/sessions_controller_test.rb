@@ -306,7 +306,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     )
     mock_members = [
       TornApi::Faction::Members::Member.new(8888888, "MemberOne", 30, 100, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil),
-      TornApi::Faction::Members::Member.new(9999999, "NewFactionUser", 40, 50, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil)
+      TornApi::Faction::Members::Member.new(9999999, "NewFactionUser", 40, 50, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Leader", nil, nil, nil, nil)
     ]
 
     TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
@@ -327,11 +327,39 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     user = User.find_by(torn_id: 9999999)
     assert_equal faction.id, user.faction_id
 
-    # Verify members were synced
+    # Verify members were synced with positions
     member = User.find_by(torn_id: 8888888)
     assert_not_nil member
     assert_equal faction.id, member.faction_id
     assert_equal "MemberOne", member.name
+    assert_equal "Member", member.position
+  end
+
+  test "create syncs member positions during faction creation" do
+    mock_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: true, company: false),
+      user: TornApi::Key::Info::UserData.new(id: 9999999, faction_id: 77777, company_id: nil)
+    )
+    mock_profile = TornApi::User::Profile::ProfileData.new(
+      id: 9999999, name: "FactionLeader", level: 80, image: nil
+    )
+    mock_members = [
+      TornApi::Faction::Members::Member.new(9999999, "FactionLeader", 80, 365, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Leader", nil, nil, nil, nil),
+      TornApi::Faction::Members::Member.new(8888888, "CoLeaderUser", 60, 200, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Co-leader", nil, nil, nil, nil),
+      TornApi::Faction::Members::Member.new(7777777, "RegularUser", 30, 100, nil, nil, nil, nil, nil, "Okay", nil, nil, nil, nil, "Member", nil, nil, nil, nil)
+    ]
+
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(mock_key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(mock_profile)
+    TornApi::Faction::Basic.any_instance.stubs(:name).returns("Position Sync Faction")
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns(mock_members)
+    AdminCredentials.stubs(:api_key).returns("owner_key")
+
+    post session_path, params: { api_key: @valid_api_key }
+
+    assert_equal "Leader", User.find_by(torn_id: 9999999).position
+    assert_equal "Co-leader", User.find_by(torn_id: 8888888).position
+    assert_equal "Member", User.find_by(torn_id: 7777777).position
   end
 
   test "create syncs members without scheduling backfills for new faction on login" do

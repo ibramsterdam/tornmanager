@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     member do
       get :setup
       post :setup, action: :create
+      get :setup_unavailable
       get :war_data
     end
 

@@ -7,7 +7,8 @@ class FactionsController < ApplicationController
   before_action :require_faction_member, only: [ :war_data ]
   before_action :find_faction_and_check_access, only: [ :show ]
   before_action :require_setup_completed, only: [ :show ]
-  before_action :find_faction_for_setup, only: [ :setup, :create ]
+  before_action :find_faction_for_setup, only: [ :setup, :create, :setup_unavailable ]
+  before_action :require_faction_leader_for_setup, only: [ :setup, :create ]
 
   def index
     if Current.user.faction.present?
@@ -31,6 +32,9 @@ class FactionsController < ApplicationController
 
   def setup
     @api_key_prefill = Current.user.has_limited_access? ? Current.user.api_key : nil
+  end
+
+  def setup_unavailable
   end
 
   def create
@@ -137,6 +141,13 @@ class FactionsController < ApplicationController
     unless Current.user.admin? || Current.user.faction == @faction
       redirect_to root_path, alert: "You don't have access to this faction."
     end
+  end
+
+  def require_faction_leader_for_setup
+    return if performed?
+    return if Current.user.admin? || Current.user.faction_leader?
+
+    redirect_to setup_unavailable_faction_path(@faction)
   end
 
   def find_faction_for_setup

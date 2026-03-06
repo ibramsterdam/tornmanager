@@ -207,22 +207,46 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
   # -- Setup wizard (faction exists but setup_completed: false) --
 
-  test "dashboard redirects to setup when faction setup not completed" do
+  test "dashboard redirects leader to setup when faction setup not completed" do
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     get faction_path(setup_faction)
     assert_redirected_to setup_faction_path(setup_faction)
   end
 
-  test "setup page shows setup wizard" do
+  test "dashboard redirects regular member to setup_unavailable when faction not set up" do
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Member")
+    sign_in_as(@bert)
+
+    get faction_path(setup_faction)
+    assert_redirected_to setup_unavailable_faction_path(setup_faction)
+  end
+
+  test "setup_unavailable page shows message for regular members" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Member")
+    sign_in_as(@bert)
+
+    get setup_unavailable_faction_path(setup_faction)
+    assert_response :success
+    assert_select "h1", "Faction Not Set Up Yet"
+    assert_select ".setup-subtitle", "New Faction"
+  end
+
+  test "setup page shows setup wizard for leader" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     get setup_faction_path(setup_faction)
@@ -231,11 +255,57 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".setup-subtitle", "New Faction"
   end
 
+  test "setup page shows setup wizard for co-leader" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Co-leader")
+    sign_in_as(@bert)
+
+    get setup_faction_path(setup_faction)
+    assert_response :success
+    assert_select "h1", "Set Up Your Faction"
+  end
+
+  test "regular member is redirected from setup wizard to setup_unavailable" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Member")
+    sign_in_as(@bert)
+
+    get setup_faction_path(setup_faction)
+    assert_redirected_to setup_unavailable_faction_path(setup_faction)
+  end
+
+  test "regular member cannot POST to setup" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Member")
+    sign_in_as(@bert)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "SOME_KEY" }
+    assert_redirected_to setup_unavailable_faction_path(setup_faction)
+  end
+
+  test "admin can access setup wizard regardless of position" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bram.update!(faction: setup_faction)
+    sign_in_as(@bram)
+
+    get setup_faction_path(setup_faction)
+    assert_response :success
+    assert_select "h1", "Set Up Your Faction"
+  end
+
   test "prefills api key on setup when user has limited access" do
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction, api_access_type: "Limited Access")
+    @bert.update!(faction: setup_faction, api_access_type: "Limited Access", position: "Leader")
     sign_in_as(@bert)
 
     get setup_faction_path(setup_faction)
@@ -262,7 +332,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError)
 
@@ -275,7 +345,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     minimal_key = TornApi::Key::Info::InfoData.new(
@@ -293,7 +363,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     other_user_key = TornApi::Key::Info::InfoData.new(
@@ -311,7 +381,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     wrong_faction_key = TornApi::Key::Info::InfoData.new(
@@ -331,7 +401,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     stub_valid_key_info(@bert, 55555)
@@ -359,7 +429,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Leader")
     sign_in_as(@bert)
 
     stub_valid_key_info(@bert, 55555)
@@ -407,7 +477,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     )
     leader = User.create!(torn_id: 111111, name: "Leader", level: 50, faction: setup_faction)
     member = User.create!(torn_id: 222222, name: "Member", level: 30, faction: setup_faction)
-    @bert.update!(faction: setup_faction, subscription_expires_at: nil)
+    @bert.update!(faction: setup_faction, subscription_expires_at: nil, position: "Co-leader")
     sign_in_as(@bert)
 
     stub_valid_key_info(@bert, 55555)
@@ -443,12 +513,12 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     )
     # New member never received trial
     new_member = User.create!(torn_id: 333333, name: "NewMember", level: 20, faction: setup_faction)
-    @bert.update!(faction: setup_faction, subscription_expires_at: nil, trial_granted_at: nil)
+    @bert.update!(faction: setup_faction, subscription_expires_at: nil, trial_granted_at: nil, position: "Leader")
     sign_in_as(@bert)
 
     stub_valid_key_info(@bert, 55555)
     stub_faction_members_api("VALID_LIMITED_KEY", setup_faction.torn_id, [
-      build_member(@bert.torn_id, @bert.name, @bert.level, "Member"),
+      build_member(@bert.torn_id, @bert.name, @bert.level, "Leader"),
       build_member(member.torn_id, member.name, member.level, "Member"),
       build_member(new_member.torn_id, new_member.name, new_member.level, "Member")
     ])
@@ -474,7 +544,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     leader = User.create!(torn_id: 111111, name: "TheLeader", level: 80, faction: setup_faction)
     co_leader = User.create!(torn_id: 333333, name: "TheCoLeader", level: 70, faction: setup_faction)
     regular = User.create!(torn_id: 222222, name: "Regular", level: 30, faction: setup_faction)
-    @bert.update!(faction: setup_faction)
+    @bert.update!(faction: setup_faction, position: "Co-leader")
     sign_in_as(@bert)
 
     stub_valid_key_info(@bert, 55555)
