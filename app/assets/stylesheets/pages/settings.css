@@ -171,6 +171,12 @@
   align-items: center;
 }
 
+@media (max-width: 480px) {
+  .data-actions {
+    flex-direction: column;
+  }
+}
+
 /* War polling active indicator */
 .war-polling-active-indicator {
   display: flex;
