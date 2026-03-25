@@ -444,7 +444,33 @@
   width: 100%;
 }
 
-/* Settings Grid */
+/* Settings Layout */
+.leadership-settings-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  max-width: 900px;
+}
+
+.leadership-settings-main {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.leadership-settings-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 700px) {
+  .leadership-settings-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Legacy grid (unused, kept for other pages) */
 .leadership-settings-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

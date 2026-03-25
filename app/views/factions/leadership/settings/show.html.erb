@@ -1,128 +1,127 @@
 <div class="leadership-page">
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
-  <div class="leadership-settings-grid">
-    <div class="leadership-settings-card leadership-settings-card-compact">
-      <h3>API Configuration</h3>
+  <div class="leadership-settings-layout">
+    <div class="leadership-settings-main">
+      <div class="leadership-settings-card">
+        <h3>API Configuration</h3>
 
-      <div class="leadership-api-current">
-        <div class="leadership-api-current-row">
-          <div class="leadership-api-current-info">
-            <span class="leadership-api-key-label">Torn API Key</span>
-            <% if @faction_setting.torn_api_access_type.present? %>
-              <span class="leadership-api-key-badge"><%= @faction_setting.torn_api_access_type %></span>
-            <% end %>
-          </div>
-          <div class="leadership-api-current-value">
-            <code><%= @torn_api_key_masked || "Not set" %></code>
-            <% if @faction_setting.torn_api_key? %>
-              <%= button_to faction_leadership_api_keys_path(@faction, key: "torn"),
-                  method: :delete,
-                  class: "leadership-key-delete-btn",
-                  data: { turbo_confirm: "Delete the Torn API key?" } do %>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
+        <div class="leadership-api-current">
+          <div class="leadership-api-current-row">
+            <div class="leadership-api-current-info">
+              <span class="leadership-api-key-label">Torn API Key</span>
+              <% if @faction_setting.torn_api_access_type.present? %>
+                <span class="leadership-api-key-badge"><%= @faction_setting.torn_api_access_type %></span>
               <% end %>
-            <% end %>
+            </div>
+            <div class="leadership-api-current-value">
+              <code><%= @torn_api_key_masked || "Not set" %></code>
+              <% if @faction_setting.torn_api_key? %>
+                <%= button_to faction_leadership_api_keys_path(@faction, key: "torn"),
+                    method: :delete,
+                    class: "leadership-key-delete-btn",
+                    data: { turbo_confirm: "Delete the Torn API key?" } do %>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="leadership-api-current-row">
+            <div class="leadership-api-current-info">
+              <span class="leadership-api-key-label">TornStats API Key</span>
+            </div>
+            <div class="leadership-api-current-value">
+              <code><%= @tornstats_api_key_masked || "Not set" %></code>
+              <% if @faction_setting.tornstats_api_key? %>
+                <%= button_to faction_leadership_api_keys_path(@faction, key: "tornstats"),
+                    method: :delete,
+                    class: "leadership-key-delete-btn",
+                    data: { turbo_confirm: "Delete the TornStats API key?" } do %>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                <% end %>
+              <% end %>
+            </div>
           </div>
         </div>
 
-        <div class="leadership-api-current-row">
-          <div class="leadership-api-current-info">
-            <span class="leadership-api-key-label">TornStats API Key</span>
+        <%= form_with model: @faction_setting, url: faction_leadership_api_keys_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
+          <div class="leadership-api-fields">
+            <%= form.text_field :torn_api_key,
+                class: "leadership-api-input",
+                placeholder: "New Torn API key (Limited Access)",
+                autocomplete: "off",
+                value: "" %>
+            <%= form.text_field :tornstats_api_key,
+                class: "leadership-api-input",
+                placeholder: "New TornStats API key",
+                autocomplete: "off",
+                value: "" %>
           </div>
-          <div class="leadership-api-current-value">
-            <code><%= @tornstats_api_key_masked || "Not set" %></code>
-            <% if @faction_setting.tornstats_api_key? %>
-              <%= button_to faction_leadership_api_keys_path(@faction, key: "tornstats"),
-                  method: :delete,
-                  class: "leadership-key-delete-btn",
-                  data: { turbo_confirm: "Delete the TornStats API key?" } do %>
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-              <% end %>
-            <% end %>
-          </div>
-        </div>
+          <%= form.submit "Save Keys", class: "btn btn-sm btn-primary" %>
+        <% end %>
       </div>
 
       <%= render "shared/api_tos_table", key_access_level: "Limited Access (required)" %>
 
-      <%= form_with model: @faction_setting, url: faction_leadership_api_keys_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
-        <div class="leadership-api-fields">
-          <%= form.text_field :torn_api_key,
-              class: "leadership-api-input",
-              placeholder: "New Torn API key (Limited Access)",
-              autocomplete: "off",
-              value: "" %>
-          <%= form.text_field :tornstats_api_key,
-              class: "leadership-api-input",
-              placeholder: "New TornStats API key",
-              autocomplete: "off",
-              value: "" %>
+      <div class="leadership-settings-row">
+        <div class="leadership-settings-card">
+          <h3>Leadership Access</h3>
+          <p class="leadership-settings-description">Control who can access this dashboard.</p>
+
+          <%= turbo_frame_tag "leadership-access" do %>
+            <%= render "factions/leadership/leadership_access" %>
+          <% end %>
         </div>
-        <%= form.submit "Save Keys", class: "btn btn-sm btn-primary" %>
-      <% end %>
-    </div>
 
-    <div class="leadership-settings-card">
-      <h3>Leadership Access</h3>
-      <p class="leadership-settings-description">Control who can access this dashboard.</p>
+        <div class="leadership-settings-card">
+          <h3>Share Subscription</h3>
+          <p class="leadership-settings-description">Share your subscription time with faction members.</p>
 
-      <%= turbo_frame_tag "leadership-access" do %>
-        <%= render "factions/leadership/leadership_access" %>
-      <% end %>
-    </div>
-
-    <div class="leadership-settings-card">
-      <h3>Share Subscription</h3>
-      <p class="leadership-settings-description">Share your subscription time with faction members.</p>
-
-      <div class="leadership-subscription-info">
-        <span>Your balance: <strong><%= pluralize(@subscription_weeks_remaining, "week") %></strong></span>
-        <span>Faction members: <strong><%= @faction_member_count %></strong></span>
-      </div>
-
-      <% if @subscription_weeks_remaining <= 0 %>
-        <p class="leadership-settings-hint">You need an active subscription to share time.</p>
-      <% elsif @faction_member_count == 0 %>
-        <p class="leadership-settings-hint">No faction members found to share with.</p>
-      <% else %>
-        <% max_steps = @subscription_weeks_remaining / @faction_member_count %>
-        <% max_total = max_steps * @faction_member_count %>
-        <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post,
-            data: { controller: "share-subscription",
-                    share_subscription_member_count_value: @faction_member_count,
-                    share_subscription_max_total_value: max_total } do |form| %>
-          <div class="leadership-share-slider">
-            <%= form.range_field :slider,
-                min: 0,
-                max: max_steps,
-                value: 0,
-                step: 1,
-                class: "share-slider",
-                data: { share_subscription_target: "slider", action: "input->share-subscription#slide" } %>
-            <%= form.hidden_field :total_weeks, value: 0, data: { share_subscription_target: "hidden" } %>
-            <div class="leadership-share-labels">
-              <span>0</span>
-              <span><%= pluralize(max_total, "week") %></span>
-            </div>
+          <div class="leadership-subscription-info">
+            <span>Your balance: <strong><%= pluralize(@subscription_weeks_remaining, "week") %></strong></span>
+            <span>Faction members: <strong><%= @faction_member_count %></strong></span>
           </div>
-          <p class="leadership-share-preview" data-share-subscription-target="preview">
-            Drag to share subscription time.
-          </p>
-          <%= form.submit "Share", class: "btn btn-primary", disabled: true,
-              data: { share_subscription_target: "submit",
-                      turbo_confirm: "This will deduct weeks from your subscription. Continue?" } %>
-        <% end %>
-      <% end %>
-    </div>
 
-    <div class="leadership-settings-card leadership-settings-card-muted">
-      <h3>Coming Soon</h3>
-      <p class="leadership-settings-description">More features are on the way. Stay tuned for updates.</p>
+          <% if @subscription_weeks_remaining <= 0 %>
+            <p class="leadership-settings-hint">You need an active subscription to share time.</p>
+          <% elsif @faction_member_count == 0 %>
+            <p class="leadership-settings-hint">No faction members found to share with.</p>
+          <% else %>
+            <% max_steps = @subscription_weeks_remaining / @faction_member_count %>
+            <% max_total = max_steps * @faction_member_count %>
+            <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post,
+                data: { controller: "share-subscription",
+                        share_subscription_member_count_value: @faction_member_count,
+                        share_subscription_max_total_value: max_total } do |form| %>
+              <div class="leadership-share-slider">
+                <%= form.range_field :slider,
+                    min: 0,
+                    max: max_steps,
+                    value: 0,
+                    step: 1,
+                    class: "share-slider",
+                    data: { share_subscription_target: "slider", action: "input->share-subscription#slide" } %>
+                <%= form.hidden_field :total_weeks, value: 0, data: { share_subscription_target: "hidden" } %>
+                <div class="leadership-share-labels">
+                  <span>0</span>
+                  <span><%= pluralize(max_total, "week") %></span>
+                </div>
+              </div>
+              <p class="leadership-share-preview" data-share-subscription-target="preview">
+                Drag to share subscription time.
+              </p>
+              <%= form.submit "Share", class: "btn btn-primary", disabled: true,
+                  data: { share_subscription_target: "submit",
+                          turbo_confirm: "This will deduct weeks from your subscription. Continue?" } %>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
     </div>
 
     <div class="leadership-settings-card leadership-settings-card-danger">

@@ -43,7 +43,7 @@ class Factions::Leadership::DataCoverageControllerTest < ActionDispatch::Integra
     assert_select "th", "Days Missing"
   end
 
-  test "shows coverage stats for members with snapshots" do
+  test "hides members with 100% coverage from table" do
     start_date = PersonalStatSnapshot.tracking_start_date
     (start_date..PersonalStatSnapshot.tracking_end_date).each do |date|
       PersonalStatSnapshot.create!(user: @bram, date: date, timestamp: date.to_time.to_i)
@@ -52,7 +52,32 @@ class Factions::Leadership::DataCoverageControllerTest < ActionDispatch::Integra
     sign_in_as(@bram)
     get faction_leadership_data_coverage_path(@faction)
     assert_response :success
-    assert_select "span.stat-compliant", "100.0%"
+    assert_select "a.player-link", { text: /Bram/, count: 0 }
+  end
+
+  test "shows members with missing days in table" do
+    sign_in_as(@bram)
+    get faction_leadership_data_coverage_path(@faction)
+    assert_response :success
+    assert_select "a.player-link", /Bram/
+    assert_select "span.stat-danger"
+  end
+
+  test "backfill_user schedules jobs and returns json" do
+    sign_in_as(@bram)
+
+    relation = mock
+    relation.stubs(:count).returns(0)
+    SolidQueue::Job.stubs(:where).returns(relation)
+
+    assert_enqueued_with(job: BackfillSingleStatJob) do
+      post backfill_user_faction_leadership_data_coverage_path(@faction, user_id: @bert.id)
+    end
+
+    assert_response :success
+    json = JSON.parse(response.body)
+    assert json["success"]
+    assert_match /API calls/, json["message"]
   end
 
   test "redirects to setup when no api keys" do
