@@ -38,9 +38,6 @@
 <div class="stats-section">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
     <h2 style="margin: 0;">Users With Missing Snapshots (<%= @users_with_gaps.size %>)</h2>
-    <% if @users_with_gaps.any? %>
-      <%= button_to "Backfill All", backfill_all_admin_snapshot_management_index_path, method: :post, class: "btn-small btn-primary", data: { turbo_confirm: "Backfill all #{@users_with_gaps.size} users? This will schedule #{@users_with_gaps.sum { |d| d[:missing_count] } * 2} API calls." } %>
-    <% end %>
   </div>
 
   <% if @users_with_gaps.any? %>

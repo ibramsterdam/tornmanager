@@ -1,0 +1,7 @@
+with_key:
+  faction: with_api_key
+  torn_api_key: "test_api_key_123"
+
+without_key:
+  faction: without_api_key
+  torn_api_key: ""

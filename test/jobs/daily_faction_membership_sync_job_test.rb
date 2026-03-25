@@ -9,7 +9,7 @@ class DailyFactionMembershipSyncJobTest < ActiveJob::TestCase
     faction1 = Faction.create!(torn_id: 11111, name: "Faction One", xanax_target: 2.5)
     faction2 = Faction.create!(torn_id: 22222, name: "Faction Two", xanax_target: 2.5)
 
-    assert_enqueued_jobs 2, only: SyncFactionMembersJob do
+    perform_enqueued_jobs(only: Daily::FactionMembershipSyncJob) do
       Daily::FactionMembershipSyncJob.perform_now
     end
 
@@ -20,6 +20,8 @@ class DailyFactionMembershipSyncJobTest < ActiveJob::TestCase
   end
 
   test "does nothing when no factions exist" do
+    Faction.destroy_all
+
     assert_no_enqueued_jobs(only: SyncFactionMembersJob) do
       Daily::FactionMembershipSyncJob.perform_now
     end

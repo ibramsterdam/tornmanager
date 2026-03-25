@@ -1,6 +1,10 @@
 require "test_helper"
 
 class DailyRankedWarRefreshJobTest < ActiveJob::TestCase
+  setup do
+    Faction.destroy_all
+  end
+
   test "enqueues to the default queue" do
     assert_equal "default", Daily::RankedWarRefreshJob.new.queue_name
   end
