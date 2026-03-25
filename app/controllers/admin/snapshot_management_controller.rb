@@ -12,11 +12,12 @@ module Admin
     def backfill_user
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
+      api_key = user.faction&.faction_setting&.torn_api_key
 
       existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction", finished_at: nil).count
 
       missing_dates.each_with_index do |date, index|
-        BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s, faction_id: user.faction_id)
+        BackfillSingleStatJob.set(wait: index.seconds).perform_later(user.id, date.to_s, faction_id: user.faction_id, api_key: api_key)
       end
 
       total_api_calls = existing_queued_jobs + (missing_dates.size * 2)
@@ -25,35 +26,6 @@ module Admin
       user.update!(backfill_ends_at: Time.current + estimated_seconds.seconds)
 
       render json: { success: true, message: "Scheduled #{missing_dates.size * 2} API calls for #{user.name} (~#{estimated_seconds}s)" }
-    end
-
-    def backfill_all
-      users_with_gaps = users_with_missing_snapshots
-      total_jobs = 0
-      existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction", finished_at: nil).count
-      offset = 0
-
-      users_with_gaps.each do |data|
-        user = data[:user]
-        missing_dates = data[:missing_dates].sort
-
-        missing_dates.each_with_index do |date, index|
-          BackfillSingleStatJob.set(wait: (offset + index).seconds).perform_later(user.id, date.to_s, faction_id: user.faction_id)
-        end
-
-        offset += missing_dates.size
-        total_jobs += missing_dates.size
-      end
-
-      total_api_calls = existing_queued_jobs + (total_jobs * 2)
-      estimated_seconds = (total_api_calls * SECONDS_PER_API_CALL).ceil
-
-      users_with_gaps.each do |data|
-        data[:user].update!(backfill_ends_at: Time.current + estimated_seconds.seconds)
-      end
-
-      redirect_to admin_snapshot_management_index_path,
-        notice: "Backfilling #{users_with_gaps.size} users (#{total_jobs * 2} API calls, ~#{estimated_seconds}s)"
     end
 
     private

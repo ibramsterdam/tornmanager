@@ -18,3 +18,27 @@ kaneki:
   level: 75
   hof_stats_user: false
   api_key: MNOPQR
+
+user_with_keyed_faction:
+  name: KeyedUser
+  torn_id: 9999001
+  level: 30
+  faction: with_api_key
+
+user_with_unkeyed_faction:
+  name: UnkeyedUser
+  torn_id: 9999002
+  level: 30
+  faction: without_api_key
+
+user_no_faction:
+  name: NoFactionUser
+  torn_id: 9999003
+  level: 30
+  hof_stats_user: true
+
+user_hof_no_faction:
+  name: HofUser
+  torn_id: 9999004
+  level: 30
+  hof_stats_user: true
