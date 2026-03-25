@@ -1,10 +1,10 @@
 <div class="leadership-page">
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Overall Coverage</div>
-      <div class="stat-value">
+  <div class="coverage-stats-grid">
+    <div class="coverage-stat-card">
+      <div class="coverage-stat-label">Overall Coverage</div>
+      <div class="coverage-stat-value">
         <% coverage_class = if @data_coverage_rate >= 90
                               "stat-compliant"
                             elsif @data_coverage_rate >= 70
@@ -16,138 +16,249 @@
       </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-label">Missing Yesterday</div>
-      <div class="stat-value"><%= @data_missing_yesterday %></div>
+    <div class="coverage-stat-card">
+      <div class="coverage-stat-label">Missing Yesterday</div>
+      <div class="coverage-stat-value">
+        <% if @data_missing_yesterday > 0 %>
+          <span class="stat-danger"><%= @data_missing_yesterday %></span>
+        <% else %>
+          <span class="stat-compliant">0</span>
+        <% end %>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-label">Total Missing Days</div>
-      <div class="stat-value"><%= number_with_delimiter(@data_total_missing_days) %></div>
+    <div class="coverage-stat-card">
+      <div class="coverage-stat-label">Total Missing Days</div>
+      <div class="coverage-stat-value">
+        <% if @data_total_missing_days > 0 %>
+          <span class="stat-warning"><%= number_with_delimiter(@data_total_missing_days) %></span>
+        <% else %>
+          <span class="stat-compliant">0</span>
+        <% end %>
+      </div>
     </div>
 
-    <div class="stat-card">
-      <div class="stat-label">Tracking Period</div>
-      <div class="stat-value" style="font-size: 1rem;"><%= @tracking_start.strftime("%d %b") %> - <%= @tracking_end.strftime("%d %b %Y") %></div>
+    <div class="coverage-stat-card">
+      <div class="coverage-stat-label">Tracking Period</div>
+      <div class="coverage-stat-value coverage-stat-value-sm"><%= @tracking_start.strftime("%d %b") %> &ndash; <%= @tracking_end.strftime("%d %b %Y") %></div>
+    </div>
+
+    <div class="coverage-stat-card">
+      <div class="coverage-stat-label">Next Backfill</div>
+      <div class="coverage-stat-value coverage-stat-value-sm" data-controller="countdown" data-countdown-target-value="<%= Date.tomorrow.beginning_of_day.change(hour: 3).iso8601 %>">
+        <span data-countdown-target="display">--:--:--</span>
+      </div>
+      <div class="coverage-stat-hint">Daily at 03:00 TCT</div>
     </div>
   </div>
 
-  <div class="table-container">
-    <h2>Member Coverage (<%= @expected_days %> days tracked)</h2>
+  <div class="table-container coverage-table-container">
+    <h2>Members With Gaps (<%= @member_coverage.size %>)</h2>
 
     <% if @member_coverage.any? %>
-      <table>
-        <thead>
-          <tr>
-            <th>Member</th>
-            <th>Coverage</th>
-            <th>Days Present</th>
-            <th>Days Missing</th>
-            <th>Yesterday</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @member_coverage.each do |member| %>
-            <% coverage_class = if member[:rate] >= 90
-                                  ""
-                                elsif member[:rate] >= 70
-                                  "warning-row"
-                                else
-                                  "error-row"
-                                end %>
-            <tr class="<%= coverage_class %>">
-              <td>
-                <a href="https://www.torn.com/profiles.php?XID=<%= member[:user].torn_id %>" target="_blank" class="player-link">
-                  <%= member[:user].name %> [<%= member[:user].torn_id %>]
-                </a>
-              </td>
-              <td>
-                <% rate_class = if member[:rate] >= 90
-                                  "stat-compliant"
-                                elsif member[:rate] >= 70
-                                  "stat-warning"
-                                else
-                                  "stat-danger"
-                                end %>
-                <span class="<%= rate_class %>"><%= member[:rate] %>%</span>
-              </td>
-              <td><%= member[:existing] %></td>
-              <td>
-                <% if member[:missing] > 0 %>
-                  <span class="stat-danger"><%= member[:missing] %></span>
-                <% else %>
-                  0
-                <% end %>
-              </td>
-              <td>
-                <% if member[:has_yesterday] %>
-                  <span class="status-badge success">Yes</span>
-                <% else %>
-                  <span class="status-badge error">No</span>
-                <% end %>
-              </td>
+      <div class="coverage-table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Member</th>
+              <th>Coverage</th>
+              <th>Days Present</th>
+              <th>Days Missing</th>
             </tr>
+          </thead>
+          <% @member_coverage.each do |member| %>
+            <tbody data-controller="coverage-row">
+              <tr class="coverage-member-row" data-action="click->coverage-row#toggle">
+                <td>
+                  <a href="https://www.torn.com/profiles.php?XID=<%= member[:user].torn_id %>" target="_blank" class="player-link" data-action="click->coverage-row#stopPropagation">
+                    <%= member[:user].name %> [<%= member[:user].torn_id %>]
+                  </a>
+                </td>
+                <td>
+                  <% rate_class = if member[:rate] >= 90
+                                    "stat-compliant"
+                                  elsif member[:rate] >= 70
+                                    "stat-warning"
+                                  else
+                                    "stat-danger"
+                                  end %>
+                  <span class="<%= rate_class %>"><%= member[:rate] %>%</span>
+                </td>
+                <td><%= member[:existing] %></td>
+                <td><span class="stat-danger"><%= member[:missing] %></span></td>
+              </tr>
+              <tr class="coverage-detail-row" data-coverage-row-target="details" style="display: none;">
+                <td colspan="4">
+                  <div class="coverage-detail-content">
+                    <div class="coverage-missing-dates">
+                      <strong>Missing dates:</strong>
+                      <div class="coverage-date-tags">
+                        <% member[:missing_dates].each do |date| %>
+                          <span class="coverage-date-tag"><%= date.strftime("%d-%m-%Y") %></span>
+                        <% end %>
+                      </div>
+                    </div>
+                    <div class="coverage-backfill-action" data-coverage-row-target="action">
+                      <p class="coverage-backfill-info">
+                        <%= member[:missing] * 2 %> API calls needed to fetch <%= member[:missing] %> missing days.
+                      </p>
+                      <%= button_to "Backfill Now",
+                          backfill_user_faction_leadership_data_coverage_path(@faction, user_id: member[:user].id),
+                          method: :post,
+                          class: "btn btn-sm btn-primary",
+                          data: { action: "click->coverage-row#backfill", coverage_row_target: "button" } %>
+                    </div>
+                    <div class="coverage-backfill-result" data-coverage-row-target="result" style="display: none;"></div>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
           <% end %>
-        </tbody>
-      </table>
+        </table>
+      </div>
     <% else %>
-      <p>No active faction members found.</p>
+      <div class="table-empty">
+        <p class="table-empty-text">All members have complete coverage!</p>
+      </div>
     <% end %>
   </div>
 </div>
 
 <style>
-  .stats-grid {
+  .coverage-stats-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1rem;
-    margin-bottom: 2rem;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
   }
 
-  .stat-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 1.5rem;
+  .coverage-stat-card {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
     text-align: center;
   }
 
-  .stat-label {
-    font-size: 0.875rem;
-    color: var(--text-muted);
-    margin-bottom: 0.5rem;
+  .coverage-stat-label {
+    font-size: 0.8125rem;
+    color: var(--gray-400);
+    margin-bottom: var(--space-2);
   }
 
-  .stat-value {
+  .coverage-stat-value {
     font-size: 2rem;
-    font-weight: bold;
-    color: var(--text-primary);
+    font-weight: 700;
+    color: var(--gray-100);
+    font-family: "Geist Mono", monospace;
   }
 
-  .warning-row {
-    background-color: rgba(234, 179, 8, 0.05);
+  .coverage-stat-value-sm {
+    font-size: 1rem;
+  }
+
+  .coverage-stat-hint {
+    font-size: 0.6875rem;
+    color: var(--gray-500);
+    margin-top: var(--space-1);
+  }
+
+  .coverage-table-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+  }
+
+  .coverage-table-container h2 {
+    flex-shrink: 0;
+  }
+
+  .coverage-table-wrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    scrollbar-color: var(--gray-700) transparent;
+  }
+
+  .coverage-table-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .coverage-table-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .coverage-table-wrapper::-webkit-scrollbar-thumb {
+    background: var(--gray-800);
+    border-radius: 3px;
+  }
+
+  .coverage-table-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-700);
+  }
+
+  .coverage-table-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--gray-900);
+  }
+
+  .coverage-member-row {
+    cursor: pointer;
+  }
+
+  .coverage-member-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .coverage-detail-row td {
+    background: var(--gray-1000);
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .coverage-detail-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .coverage-date-tags {
+    margin-top: var(--space-2);
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .coverage-date-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-family: "Geist Mono", monospace;
+    color: var(--gray-400);
+  }
+
+  .coverage-backfill-action {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .coverage-backfill-info {
+    font-size: 0.8125rem;
+    color: var(--gray-400);
+    margin: 0;
+  }
+
+  .coverage-backfill-result {
+    font-size: 0.8125rem;
+    color: #22c55e;
   }
 
   .stat-compliant { color: #22c55e; }
   .stat-warning { color: #eab308; }
   .stat-danger { color: #ef4444; }
-
-  .status-badge {
-    display: inline-block;
-    padding: 0.25rem 0.75rem;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-  }
-
-  .status-badge.success {
-    background-color: #27ae60;
-    color: white;
-  }
-
-  .status-badge.error {
-    background-color: #e74c3c;
-    color: white;
-  }
 </style>

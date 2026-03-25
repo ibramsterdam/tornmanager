@@ -38,7 +38,9 @@ Rails.application.routes.draw do
       resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports"
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"
-      resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage"
+      resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage" do
+        post :backfill_user
+      end
 
       resource :war_polling, only: [], controller: "factions/leadership/war_polling" do
         post :start
