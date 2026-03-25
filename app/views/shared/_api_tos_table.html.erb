@@ -1,0 +1,58 @@
+<% storage = local_assigns[:data_storage] || "Persistent - until account deletion" %>
+<% sharing = local_assigns[:data_sharing] || "Nobody (your data is private)" %>
+<% use = local_assigns[:purpose] || "Track personal progress, statistics, and investment analysis" %>
+<% key_store = local_assigns[:key_storage] || "Stored in database / Used only for automation" %>
+<% access = local_assigns[:key_access_level] || "Public Only (minimum); Limited Access (for stock features)" %>
+
+<div class="api-tos-disclosure">
+  <table class="api-tos-table">
+    <thead>
+      <tr>
+        <th>Data Storage</th>
+        <th>Data Sharing</th>
+        <th>Purpose of Use</th>
+        <th>Key Storage & Sharing</th>
+        <th>Key Access Level</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="api-tos-description-row">
+        <td>Will the data be stored for any purpose?</td>
+        <td>Who can access the data besides the end user?</td>
+        <td>What is the stored data being used for?</td>
+        <td>Will the API key be stored securely and who can access it?</td>
+        <td>What key access level or specific selections are required?</td>
+      </tr>
+      <tr class="api-tos-answer-row">
+        <td><%= storage %></td>
+        <td><%= sharing %></td>
+        <td><%= use %></td>
+        <td><%= key_store %></td>
+        <td><%= access %></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="api-tos-stacked">
+    <div class="api-tos-item">
+      <span class="api-tos-label">Data Storage</span>
+      <span class="api-tos-value"><%= storage %></span>
+    </div>
+    <div class="api-tos-item">
+      <span class="api-tos-label">Data Sharing</span>
+      <span class="api-tos-value"><%= sharing %></span>
+    </div>
+    <div class="api-tos-item">
+      <span class="api-tos-label">Purpose of Use</span>
+      <span class="api-tos-value"><%= use %></span>
+    </div>
+    <div class="api-tos-item">
+      <span class="api-tos-label">Key Storage & Sharing</span>
+      <span class="api-tos-value"><%= key_store %></span>
+    </div>
+    <div class="api-tos-item">
+      <span class="api-tos-label">Key Access Level</span>
+      <span class="api-tos-value"><%= access %></span>
+    </div>
+  </div>
+</div>

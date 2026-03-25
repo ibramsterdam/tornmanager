@@ -1,45 +1,51 @@
-<section class="login-container<%= ' login-container--no-animation' if flash[:alert] || flash[:notice] %>" aria-label="Sign in" data-controller="login">
-  <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
-    <div class="login-header">
-      <div class="login-icon">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
+<div class="login-page">
+  <section class="login-container<%= ' login-container--no-animation' if flash[:alert] || flash[:notice] %>" aria-label="Sign in" data-controller="login">
+    <%= form_with url: session_path, html: { class: "login-form" } do |form| %>
+      <div class="login-header">
+        <div class="login-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+          </svg>
+        </div>
+        <h1 class="login-title">Sign In</h1>
+        <p class="login-subtitle">Authenticate with your Torn API key</p>
       </div>
-      <h1 class="login-title">Sign In</h1>
-      <p class="login-subtitle">Authenticate with your Torn API key</p>
-    </div>
 
-    <div class="login-field">
-      <label for="api_key" class="login-label">API Key</label>
-      <%= form.password_field :api_key,
-          id: "api_key",
-          required: true,
-          autofocus: true,
-          autocomplete: "current-password",
-          placeholder: "Paste your API key",
-          value: params[:api_key],
-          class: "login-input" %>
-      <p class="login-hint">Requires a Public Only key or higher, <%= link_to "create one here", "https://www.torn.com/preferences.php#tab=api?&step=addNewKey&title=TornManager&type=1", target: "_blank" %></p>
-    </div>
+      <div class="login-field">
+        <label for="api_key" class="login-label">API Key</label>
+        <%= form.password_field :api_key,
+            id: "api_key",
+            required: true,
+            autofocus: true,
+            autocomplete: "current-password",
+            placeholder: "Paste your API key",
+            value: params[:api_key],
+            class: "login-input" %>
+        <p class="login-hint">Requires a Public Only key or higher, <%= link_to "create one here", "https://www.torn.com/preferences.php#tab=api?&step=addNewKey&title=TornManager&type=1", target: "_blank" %></p>
+      </div>
 
-    <div class="login-checkbox-field">
-      <input
-        type="checkbox"
-        id="terms_checkbox"
-        class="login-checkbox"
-        data-login-target="checkbox"
-        data-action="change->login#toggle" />
-      <label for="terms_checkbox" class="login-checkbox-label">
-        I agree to the <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy"), class: "login-checkbox-link", target: "_blank" %> and <%= link_to "Terms of Service", legal_path(anchor: "terms-of-service"), class: "login-checkbox-link", target: "_blank" %>, including use of essential cookies and anonymous analytics
-      </label>
-    </div>
+      <div class="login-checkbox-field">
+        <input
+          type="checkbox"
+          id="terms_checkbox"
+          class="login-checkbox"
+          data-login-target="checkbox"
+          data-action="change->login#toggle" />
+        <label for="terms_checkbox" class="login-checkbox-label">
+          I agree to the <%= link_to "Privacy Policy", legal_path(anchor: "privacy-policy"), class: "login-checkbox-link", target: "_blank" %> and <%= link_to "Terms of Service", legal_path(anchor: "terms-of-service"), class: "login-checkbox-link", target: "_blank" %>, including use of essential cookies and anonymous analytics
+        </label>
+      </div>
 
-    <button
-      type="submit"
-      class="login-submit"
-      data-login-target="submit"
-      disabled>Sign In</button>
-  <% end %>
-</section>
+      <button
+        type="submit"
+        class="login-submit"
+        data-login-target="submit"
+        disabled>Sign In</button>
+    <% end %>
+  </section>
+
+  <div class="login-tos-wrapper">
+    <%= render "shared/api_tos_table" %>
+  </div>
+</div>

@@ -17,6 +17,12 @@
           } %>
     </div>
 
+    <%= render "shared/api_tos_table",
+        data_storage: "Not stored - fetched and displayed only",
+        key_storage: "Never stored / Not shared",
+        purpose: "View API key activity log (3 API calls)",
+        key_access_level: "Any access level" %>
+
     <div class="key-log-confirmations">
       <div class="key-log-checkbox-field">
         <input 

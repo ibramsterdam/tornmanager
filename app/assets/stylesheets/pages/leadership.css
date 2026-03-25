@@ -54,9 +54,14 @@
 /* Setup Page - Modern Design */
 .setup-page {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding: var(--space-6) var(--space-6) var(--space-8);
+}
+
+.setup-tos-wrapper {
+  width: 100%;
+  max-width: 900px;
 }
 
 .setup-container {

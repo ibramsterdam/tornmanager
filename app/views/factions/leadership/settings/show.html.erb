@@ -48,6 +48,8 @@
         </div>
       </div>
 
+      <%= render "shared/api_tos_table", key_access_level: "Limited Access (required)" %>
+
       <%= form_with model: @faction_setting, url: faction_leadership_api_keys_path(@faction), method: :patch, class: "leadership-api-form" do |form| %>
         <div class="leadership-api-fields">
           <%= form.text_field :torn_api_key,
