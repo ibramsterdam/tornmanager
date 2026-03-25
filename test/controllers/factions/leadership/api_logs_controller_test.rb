@@ -6,7 +6,8 @@ class Factions::Leadership::ApiLogsControllerTest < ActionDispatch::IntegrationT
       torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
-    @faction.create_faction_setting!(torn_api_key: "FACTION_KEY_123", torn_api_access_type: "Limited Access")
+    @faction.create_faction_setting!
+    ApiKey::Torn.create!(faction: @faction, key: "FACTION_KEY_123", access_type: "Limited Access")
 
     @bram = users(:bram)
     @bert = users(:bert)

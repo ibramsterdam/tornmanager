@@ -10,13 +10,13 @@
           <div class="leadership-api-current-row">
             <div class="leadership-api-current-info">
               <span class="leadership-api-key-label">Torn API Key</span>
-              <% if @faction_setting.torn_api_access_type.present? %>
-                <span class="leadership-api-key-badge"><%= @faction_setting.torn_api_access_type %></span>
+              <% if @torn_api_key&.access_type.present? %>
+                <span class="leadership-api-key-badge"><%= @torn_api_key.access_type %></span>
               <% end %>
             </div>
             <div class="leadership-api-current-value">
               <code><%= @torn_api_key_masked || "Not set" %></code>
-              <% if @faction_setting.torn_api_key? %>
+              <% if @torn_api_key.present? %>
                 <%= button_to faction_leadership_api_keys_path(@faction, key: "torn"),
                     method: :delete,
                     class: "leadership-key-delete-btn",
@@ -35,7 +35,7 @@
             </div>
             <div class="leadership-api-current-value">
               <code><%= @tornstats_api_key_masked || "Not set" %></code>
-              <% if @faction_setting.tornstats_api_key? %>
+              <% if @tornstats_api_key.present? %>
                 <%= button_to faction_leadership_api_keys_path(@faction, key: "tornstats"),
                     method: :delete,
                     class: "leadership-key-delete-btn",

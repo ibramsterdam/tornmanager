@@ -5,7 +5,8 @@ class Factions::Leadership::WarPollingControllerTest < ActionDispatch::Integrati
     @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5, setup_completed: true)
     @bram = users(:bram)
     @bram.update!(faction: @faction, leadership_access: true, subscription_expires_at: 1.month.from_now)
-    @faction.create_faction_setting!(torn_api_key: "faction_limited_key", torn_api_access_type: "Limited Access")
+    @faction.create_faction_setting!
+    ApiKey::Torn.create!(faction: @faction, key: "faction_limited_key", access_type: "Limited Access")
   end
 
   test "start activates war polling when active war exists" do
@@ -33,7 +34,7 @@ class Factions::Leadership::WarPollingControllerTest < ActionDispatch::Integrati
   end
 
   test "start redirects to setup when no torn api key configured" do
-    @faction.faction_setting.update!(torn_api_key: nil)
+    @faction.torn_api_key&.destroy!
     create_active_war
     sign_in_as(@bram)
 

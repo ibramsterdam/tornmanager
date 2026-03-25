@@ -17,8 +17,7 @@ class WarPollingJob < ApplicationJob
       return
     end
 
-    setting = faction.faction_setting
-    unless setting&.torn_api_key?
+    unless faction.torn_api_key.present?
       Rails.logger.warn("WarPollingJob: No API key for faction #{faction_id}, stopping polling")
       faction.update!(war_polling_active: false)
       return
@@ -26,7 +25,7 @@ class WarPollingJob < ApplicationJob
 
     @previous_data = Rails.cache.read(faction.war_cache_key) || {}
 
-    war_data = build_war_data(faction, war, setting)
+    war_data = build_war_data(faction, war)
     Rails.cache.write(faction.war_cache_key, war_data, expires_in: CACHE_TTL)
 
     WarPollingJob.set(wait: POLL_INTERVAL).perform_later(faction_id)
@@ -37,8 +36,8 @@ class WarPollingJob < ApplicationJob
 
   private
 
-  def build_war_data(faction, war, setting)
-    enemy_members = fetch_enemy_members(setting.torn_api_key, war.opponent_faction_id)
+  def build_war_data(faction, war)
+    enemy_members = fetch_enemy_members(faction.torn_api_key.key, war.opponent_faction_id)
     spy_reports = faction.spy_reports.where(torn_id: enemy_members.keys).index_by(&:torn_id)
 
     members = enemy_members.transform_values do |member|

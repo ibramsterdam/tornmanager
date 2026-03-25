@@ -93,7 +93,8 @@ class BackfillPersonalStatsJobTest < ActiveJob::TestCase
       torn_id: 77777, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0
     )
-    @faction.create_faction_setting!(torn_api_key: "faction_api_key_abc", torn_api_access_type: "Limited Access")
+    @faction.create_faction_setting!
+    ApiKey::Torn.create!(faction: @faction, key: "faction_api_key_abc", access_type: "Limited Access")
     @user = users(:bram)
     @user.update!(faction: @faction)
   end
@@ -110,8 +111,8 @@ class BackfillPersonalStatsJobTest < ActiveJob::TestCase
     end
   end
 
-  test "falls back to AdminCredentials api_key when faction has no setting" do
-    @faction.faction_setting.destroy!
+  test "falls back to AdminCredentials api_key when faction has no api key" do
+    @faction.api_keys.destroy_all
     @faction.reload
     AdminCredentials.stubs(:api_key).returns("owner_fallback_key")
 

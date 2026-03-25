@@ -6,8 +6,7 @@ class Factions::Leadership::SpyImportsController < Factions::Leadership::BaseCon
       return redirect_to faction_leadership_spy_reports_path(@faction), alert: "Please enter a faction ID to import spy data for."
     end
 
-    @faction_setting = @faction.faction_setting
-    unless @faction_setting&.tornstats_api_key?
+    unless @faction.tornstats_api_key&.key.present?
       return redirect_to faction_leadership_spy_reports_path(@faction), alert: "TornStats API key must be configured before importing spy data."
     end
 
@@ -19,7 +18,7 @@ class Factions::Leadership::SpyImportsController < Factions::Leadership::BaseCon
 
     begin
       spies = TornStatsApi::SpyFaction.new(
-        @faction_setting.tornstats_api_key,
+        @faction.tornstats_api_key.key,
         faction_id: target_faction_id
       ).fetch
 
