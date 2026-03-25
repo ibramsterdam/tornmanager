@@ -36,7 +36,8 @@ class Admin::FactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "destroy resets faction data and requires re-setup" do
-    setting = FactionSetting.create!(faction: @faction, torn_api_key: "abc123")
+    setting = FactionSetting.create!(faction: @faction)
+    ApiKey::Torn.create!(faction: @faction, key: "abc123")
     @faction.update!(setup_completed: true)
     @faction.ranked_wars.create!(
       torn_war_id: 1, opponent_faction_id: 12345, opponent_faction_name: "Enemy",

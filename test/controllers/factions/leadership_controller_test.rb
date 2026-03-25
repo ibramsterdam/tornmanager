@@ -6,7 +6,8 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
       torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
-    FactionSetting.create!(faction: @faction, torn_api_key: "FACTION_KEY")
+    FactionSetting.create!(faction: @faction)
+    ApiKey::Torn.create!(faction: @faction, key: "FACTION_KEY")
 
     @bram = users(:bram)
     @bert = users(:bert)
@@ -112,8 +113,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to faction_leadership_path(@faction)
     assert_match /configured successfully/, flash[:notice]
-    assert_equal "NEW_LIMITED_KEY", @faction.reload.faction_setting.torn_api_key
-    assert_equal "Limited Access", @faction.faction_setting.torn_api_access_type
+    assert_equal "NEW_LIMITED_KEY", @faction.reload.torn_api_key.key
+    assert_equal "Limited Access", @faction.torn_api_key.access_type
+    assert @faction.torn_api_key.faction_access?, "faction_access should be stored from key info"
   end
 
   test "complete_setup saves both torn and tornstats keys" do
@@ -126,9 +128,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to faction_leadership_path(@faction)
-    setting = @faction.reload.faction_setting
-    assert_equal "NEW_LIMITED_KEY", setting.torn_api_key
-    assert_equal "TORNSTATS_KEY", setting.tornstats_api_key
+    @faction.reload
+    assert_equal "NEW_LIMITED_KEY", @faction.torn_api_key.key
+    assert_equal "TORNSTATS_KEY", @faction.tornstats_api_key.key
   end
 
   test "complete_setup rejects missing torn api key" do
@@ -223,7 +225,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /saved successfully/, flash[:notice]
-    assert_equal "UPDATED_KEY", @faction.reload.faction_setting.torn_api_key
+    assert_equal "UPDATED_KEY", @faction.reload.torn_api_key.key
   end
 
   test "update_keys updates only tornstats key when no torn key provided" do
@@ -234,8 +236,8 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /saved successfully/, flash[:notice]
-    assert_equal "NEW_TORNSTATS_KEY", @faction.reload.faction_setting.tornstats_api_key
-    assert_equal "FACTION_KEY", @faction.faction_setting.torn_api_key, "Torn key should be unchanged"
+    assert_equal "NEW_TORNSTATS_KEY", @faction.reload.tornstats_api_key.key
+    assert_equal "FACTION_KEY", @faction.torn_api_key.key, "Torn key should be unchanged"
   end
 
   test "update_keys reports no changes when both keys blank" do
@@ -281,40 +283,37 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /deleted/, flash[:notice]
 
-    setting = @faction.reload.faction_setting
-    assert_nil setting.torn_api_key
-    assert_nil setting.torn_api_access_type
+    assert_nil @faction.reload.torn_api_key
   end
 
-  test "delete_torn_key redirects to setup when no setting exists" do
-    @faction.faction_setting.destroy!
+  test "delete_torn_key handles no torn key gracefully" do
+    @faction.torn_api_key&.destroy!
 
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "torn")
 
+    # Redirects to setup since no torn key exists (before_action check)
     assert_redirected_to faction_leadership_setup_path(@faction)
   end
 
   # -- Delete TornStats Key --
 
   test "delete_tornstats_key clears the tornstats api key" do
-    @faction.faction_setting.update!(tornstats_api_key: "SOME_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "SOME_KEY")
 
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "tornstats")
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /deleted/, flash[:notice]
-    assert_nil @faction.reload.faction_setting.tornstats_api_key
+    assert_nil @faction.reload.tornstats_api_key
   end
 
-  test "delete_tornstats_key redirects to setup when no setting exists" do
-    @faction.faction_setting.destroy!
-
+  test "delete_tornstats_key handles no tornstats key gracefully" do
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "tornstats")
 
-    assert_redirected_to faction_leadership_setup_path(@faction)
+    assert_redirected_to faction_leadership_settings_path(@faction)
   end
 
   # -- Grant Leadership Access --
@@ -492,7 +491,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   # -- Import Spies --
 
   test "import_spies imports spy reports from tornstats" do
-    @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TORNSTATS_KEY")
 
     spy_data = [
       TornStatsApi::SpyFaction::SpyData.new(
@@ -519,7 +518,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies rejects blank faction id" do
-    @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TORNSTATS_KEY")
 
     sign_in_as(@bram)
     post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "" }
@@ -529,7 +528,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies rejects when tornstats key not configured" do
-    @faction.faction_setting.update!(tornstats_api_key: nil)
+    @faction.tornstats_api_key&.destroy!
 
     sign_in_as(@bram)
     post faction_leadership_spy_imports_path(@faction), params: { target_faction_id: "88888" }
@@ -539,7 +538,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies enforces rate limiting" do
-    @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TORNSTATS_KEY")
 
     # Stub cache to simulate a recent import (test uses :null_store)
     cache_key = "faction:#{@faction.id}:spy_import:last_run"
@@ -554,7 +553,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies handles not found error" do
-    @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TORNSTATS_KEY")
     TornStatsApi::SpyFaction.any_instance.stubs(:fetch).raises(TornStatsApi::NotFoundError, "No data")
 
     sign_in_as(@bram)
@@ -565,7 +564,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies handles invalid key error" do
-    @faction.faction_setting.update!(tornstats_api_key: "BAD_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "BAD_KEY")
     TornStatsApi::SpyFaction.any_instance.stubs(:fetch).raises(TornStatsApi::InvalidKeyError, "Bad key")
 
     sign_in_as(@bram)
@@ -576,7 +575,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "import_spies upserts existing spy reports" do
-    @faction.faction_setting.update!(tornstats_api_key: "TORNSTATS_KEY")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TORNSTATS_KEY")
     @faction.spy_reports.create!(torn_id: 111, total: 5000, strength: 100, defense: 100, speed: 100, dexterity: 100)
 
     spy_data = [

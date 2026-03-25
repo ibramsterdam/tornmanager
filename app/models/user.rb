@@ -20,9 +20,9 @@ class User < ApplicationRecord
   scope :active, -> { where(fallen: false) }
   scope :fallen, -> { where(fallen: true) }
   scope :tracked_for_stats, -> {
-    base = left_joins(faction: :faction_setting).where(fallen: false)
+    base = left_joins(faction: :api_keys).where(fallen: false)
     base.where(hof_stats_user: true)
-      .or(base.where.not(faction_settings: { torn_api_key: [ nil, "" ] }))
+      .or(base.where(api_keys: { type: "ApiKey::Torn" }))
       .distinct
   }
 

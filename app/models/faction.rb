@@ -3,6 +3,9 @@ class Faction < ApplicationRecord
   has_many :faction_subscription_grants, dependent: :nullify
   has_many :ranked_wars, dependent: :destroy
   has_one :faction_setting, dependent: :destroy
+  has_many :api_keys, dependent: :destroy
+  has_one :torn_api_key, class_name: "ApiKey::Torn"
+  has_one :tornstats_api_key, class_name: "ApiKey::Tornstats"
   has_many :api_calls, dependent: :nullify
   has_many :spy_reports, dependent: :destroy
   has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
@@ -80,6 +83,7 @@ class Faction < ApplicationRecord
       spy_reports.delete_all
       ranked_wars.delete_all
       users.update_all(leadership_access: false)
+      api_keys.destroy_all
       faction_setting&.destroy!
       update!(setup_completed: false)
 

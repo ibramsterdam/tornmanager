@@ -15,7 +15,7 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
 
     assert_enqueued_with(
       job: BackfillSingleStatJob,
-      args: ->(args) { args.last[:api_key] == faction_settings(:with_key).torn_api_key }
+      args: ->(args) { args.last[:api_key] == api_keys(:faction_with_key_torn).key }
     ) do
       post backfill_user_admin_snapshot_management_path(@bert)
     end
@@ -24,15 +24,29 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
   test "backfill_user falls back to admin key for hof user without faction" do
     sign_in_as(@bram)
     stub_solid_queue_count
+    AdminCredentials.stubs(:api_key).returns("admin_fallback_key")
 
     hof_user = users(:user_hof_no_faction)
 
     assert_enqueued_with(
       job: BackfillSingleStatJob,
-      args: ->(args) { args.last[:api_key].nil? }
+      args: ->(args) { args.last[:api_key] == "admin_fallback_key" }
     ) do
       post backfill_user_admin_snapshot_management_path(hof_user)
     end
+  end
+
+  test "backfill_user returns error when no api key available" do
+    sign_in_as(@bram)
+    stub_solid_queue_count
+    AdminCredentials.stubs(:api_key).returns(nil)
+
+    hof_user = users(:user_hof_no_faction)
+    post backfill_user_admin_snapshot_management_path(hof_user)
+
+    assert_response :unprocessable_entity
+    json = JSON.parse(response.body)
+    assert_not json["success"]
   end
 
   test "non-admin cannot access backfill_user" do

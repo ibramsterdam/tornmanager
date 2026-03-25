@@ -11,7 +11,7 @@ class Factions::Leadership::BaseController < ApplicationController
     return if performed?
     find_faction unless @faction
     return if performed?
-    return if @faction.faction_setting&.torn_api_key?
+    return if @faction.torn_api_key.present?
 
     redirect_to faction_leadership_setup_path(@faction)
   end
@@ -39,8 +39,10 @@ class Factions::Leadership::BaseController < ApplicationController
 
   def load_settings_data
     @faction_setting = @faction.faction_setting || @faction.build_faction_setting
-    @torn_api_key_masked = mask_key(@faction_setting.torn_api_key)
-    @tornstats_api_key_masked = mask_key(@faction_setting.tornstats_api_key)
+    @torn_api_key_masked = mask_key(@faction.torn_api_key&.key)
+    @tornstats_api_key_masked = mask_key(@faction.tornstats_api_key&.key)
+    @torn_api_key = @faction.torn_api_key
+    @tornstats_api_key = @faction.tornstats_api_key
     @leadership_users = @faction.leadership.order(:name)
     @faction_members = @faction.users.active.where(leadership_access: false).order(:name)
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining

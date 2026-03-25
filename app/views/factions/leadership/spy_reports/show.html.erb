@@ -2,7 +2,7 @@
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
   <div class="leadership-import-bar">
-    <% unless @faction_setting.tornstats_api_key? %>
+    <% unless @faction.tornstats_api_key&.key.present? %>
       <p class="leadership-import-hint">Configure your TornStats API key in <%= link_to "Settings", faction_leadership_settings_path(@faction) %> to import spy data.</p>
     <% else %>
       <%= form_with url: faction_leadership_spy_imports_path(@faction), method: :post, class: "leadership-import-form" do |form| %>

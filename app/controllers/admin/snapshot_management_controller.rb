@@ -12,7 +12,9 @@ module Admin
     def backfill_user
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
-      api_key = user.faction&.faction_setting&.torn_api_key
+      api_key = user.faction&.torn_api_key&.key || AdminCredentials.api_key
+
+      return render json: { success: false, message: "No API key available for #{user.name}" }, status: :unprocessable_entity if api_key.blank?
 
       existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction", finished_at: nil).count
 

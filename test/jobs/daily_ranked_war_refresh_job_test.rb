@@ -11,7 +11,8 @@ class DailyRankedWarRefreshJobTest < ActiveJob::TestCase
 
   test "enqueues BackfillRankedWarsJob for factions with setup completed and API key configured" do
     faction = Faction.create!(torn_id: 99901, name: "War Ready", xanax_target: 2.5, setup_completed: true)
-    FactionSetting.create!(faction: faction, torn_api_key: "abc123")
+    FactionSetting.create!(faction: faction)
+    ApiKey::Torn.create!(faction: faction, key: "abc123")
 
     assert_enqueued_jobs 1, only: BackfillRankedWarsJob do
       Daily::RankedWarRefreshJob.perform_now
@@ -23,7 +24,8 @@ class DailyRankedWarRefreshJobTest < ActiveJob::TestCase
 
   test "skips factions without setup completed" do
     faction = Faction.create!(torn_id: 99902, name: "Not Setup", xanax_target: 2.5, setup_completed: false)
-    FactionSetting.create!(faction: faction, torn_api_key: "abc123")
+    FactionSetting.create!(faction: faction)
+    ApiKey::Torn.create!(faction: faction, key: "abc123")
 
     assert_no_enqueued_jobs(only: BackfillRankedWarsJob) do
       Daily::RankedWarRefreshJob.perform_now
@@ -32,7 +34,7 @@ class DailyRankedWarRefreshJobTest < ActiveJob::TestCase
 
   test "skips factions without API key configured" do
     faction = Faction.create!(torn_id: 99903, name: "No Key", xanax_target: 2.5, setup_completed: true)
-    FactionSetting.create!(faction: faction, torn_api_key: nil)
+    FactionSetting.create!(faction: faction)
 
     assert_no_enqueued_jobs(only: BackfillRankedWarsJob) do
       Daily::RankedWarRefreshJob.perform_now
@@ -41,7 +43,7 @@ class DailyRankedWarRefreshJobTest < ActiveJob::TestCase
 
   test "skips factions with empty API key" do
     faction = Faction.create!(torn_id: 99904, name: "Empty Key", xanax_target: 2.5, setup_completed: true)
-    FactionSetting.create!(faction: faction, torn_api_key: "")
+    FactionSetting.create!(faction: faction)
 
     assert_no_enqueued_jobs(only: BackfillRankedWarsJob) do
       Daily::RankedWarRefreshJob.perform_now

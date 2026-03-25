@@ -6,7 +6,8 @@ class Factions::Leadership::SettingsControllerTest < ActionDispatch::Integration
       torn_id: 99999, name: "Test Faction", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
-    @faction.create_faction_setting!(torn_api_key: "FACTION_KEY_123", torn_api_access_type: "Limited Access")
+    @faction.create_faction_setting!
+    ApiKey::Torn.create!(faction: @faction, key: "FACTION_KEY_123", access_type: "Limited Access")
 
     @bram = users(:bram)
     @bert = users(:bert)
@@ -49,7 +50,7 @@ class Factions::Leadership::SettingsControllerTest < ActionDispatch::Integration
   end
 
   test "redirects to setup when no api keys" do
-    @faction.faction_setting.update!(torn_api_key: nil)
+    @faction.torn_api_key&.destroy!
     sign_in_as(@bram)
     get faction_leadership_settings_path(@faction)
     assert_redirected_to faction_leadership_setup_path(@faction)
