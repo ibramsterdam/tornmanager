@@ -1,0 +1,257 @@
+<%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
+
+<div class="page-header">
+  <h1>Recon</h1>
+  <p class="page-subtitle">Battle stat predictor training data</p>
+</div>
+
+<div class="recon-stats-grid">
+  <div class="recon-stat-card">
+    <div class="recon-stat-label">Training Samples</div>
+    <div class="recon-stat-value"><%= number_with_delimiter(@training_sample_count) %></div>
+  </div>
+  <div class="recon-stat-card">
+    <div class="recon-stat-label">Latest Sample</div>
+    <div class="recon-stat-value recon-stat-value-sm"><%= @latest_sample&.created_at&.strftime("%d %b %Y %H:%M") || "None" %></div>
+  </div>
+</div>
+
+<div class="recon-import-card">
+  <h2>Import Spy Data</h2>
+  <p class="recon-import-hint">Paste tab-separated spy data from TornStats, YATA, or any spy tool. Each row will be paired with historical personalstats from the Torn API to create training samples.</p>
+
+  <%= form_with url: import_admin_recon_path, method: :post, class: "recon-import-form" do |form| %>
+    <%= form.text_area :spy_data,
+        class: "recon-import-textarea",
+        placeholder: "Paste spy data here...\n\nExpected format (tab-separated):\nName [ID]  Level  Faction  STR  DEF  SPD  DEX  Total  FF  Date",
+        rows: 12 %>
+
+    <div class="recon-import-actions">
+      <%= form.submit "Import & Queue Jobs", class: "btn btn-primary" %>
+      <p class="recon-import-note">Each row requires ~2 Torn API calls to fetch personalstats. Rows already in the database will be skipped.</p>
+    </div>
+  <% end %>
+</div>
+
+<div class="table-container recon-samples-container">
+  <h2>Training Samples (<%= number_with_delimiter(@training_sample_count) %>)</h2>
+
+  <% if @samples.any? %>
+    <div class="recon-samples-wrapper">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>STR</th>
+            <th>DEF</th>
+            <th>SPD</th>
+            <th>DEX</th>
+            <th>Total</th>
+            <th>Spied At</th>
+            <th>Collected</th>
+          </tr>
+        </thead>
+        <% @samples.each do |sample| %>
+          <tbody data-controller="recon-sample">
+            <tr class="recon-sample-row" data-action="click->recon-sample#toggle">
+              <td>
+                <a href="https://www.torn.com/profiles.php?XID=<%= sample.player_id %>" target="_blank" class="player-link" data-action="click->recon-sample#stopPropagation">
+                  <%= sample.player_id %>
+                </a>
+              </td>
+              <td class="nowrap"><%= number_with_delimiter(sample.strength) %></td>
+              <td class="nowrap"><%= number_with_delimiter(sample.defense) %></td>
+              <td class="nowrap"><%= number_with_delimiter(sample.speed) %></td>
+              <td class="nowrap"><%= number_with_delimiter(sample.dexterity) %></td>
+              <td class="nowrap"><strong><%= number_with_delimiter(sample.total_stats) %></strong></td>
+              <td class="nowrap"><%= sample.spied_at.strftime("%d %b %Y") %></td>
+              <td class="nowrap muted"><%= sample.created_at.strftime("%d %b %H:%M") %></td>
+            </tr>
+            <tr class="recon-sample-detail" data-recon-sample-target="details" style="display: none;">
+              <td colspan="8">
+                <div class="recon-sample-features">
+                  <% sample.features.each do |key, value| %>
+                    <div class="recon-feature">
+                      <span class="recon-feature-label"><%= key %></span>
+                      <span class="recon-feature-value"><%= value.present? ? number_with_delimiter(value) : "—" %></span>
+                    </div>
+                  <% end %>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        <% end %>
+      </table>
+    </div>
+  <% else %>
+    <div class="table-empty">
+      <p class="table-empty-text">No training samples yet. Import spy data above to get started.</p>
+    </div>
+  <% end %>
+</div>
+
+<style>
+  .recon-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .recon-stat-card {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    text-align: center;
+  }
+
+  .recon-stat-label {
+    font-size: 0.8125rem;
+    color: var(--gray-400);
+    margin-bottom: var(--space-2);
+  }
+
+  .recon-stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gray-100);
+    font-family: "Geist Mono", monospace;
+  }
+
+  .recon-stat-value-sm {
+    font-size: 1rem;
+  }
+
+  .recon-import-card {
+    background: var(--gray-900);
+    border: 1px solid var(--gray-800);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+  }
+
+  .recon-import-card h2 {
+    margin: 0 0 var(--space-2);
+    font-size: 1.125rem;
+  }
+
+  .recon-import-hint {
+    color: var(--gray-400);
+    font-size: 0.8125rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .recon-import-textarea {
+    width: 100%;
+    background: var(--gray-1000);
+    border: 1px solid var(--gray-800);
+    border-radius: var(--radius-md);
+    color: var(--gray-200);
+    font-family: "Geist Mono", monospace;
+    font-size: 0.75rem;
+    padding: var(--space-4);
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .recon-import-textarea:focus {
+    outline: none;
+    border-color: var(--gray-600);
+  }
+
+  .recon-import-textarea::placeholder {
+    color: var(--gray-600);
+  }
+
+  .recon-import-actions {
+    margin-top: var(--space-4);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .recon-import-note {
+    color: var(--gray-500);
+    font-size: 0.75rem;
+    margin: 0;
+  }
+
+  .recon-samples-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+  }
+
+  .recon-samples-container h2 {
+    flex-shrink: 0;
+  }
+
+  .recon-samples-wrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    scrollbar-color: var(--gray-700) transparent;
+  }
+
+  .recon-samples-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .recon-samples-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .recon-samples-wrapper::-webkit-scrollbar-thumb {
+    background: var(--gray-800);
+    border-radius: 3px;
+  }
+
+  .recon-samples-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-700);
+  }
+
+  .recon-samples-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--gray-900);
+  }
+
+  .recon-sample-row {
+    cursor: pointer;
+  }
+
+  .recon-sample-row:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  .recon-sample-detail td {
+    background: var(--gray-1000);
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .recon-sample-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .recon-feature {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .recon-feature-label {
+    font-size: 0.6875rem;
+    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .recon-feature-value {
+    font-size: 0.8125rem;
+    color: var(--gray-200);
+    font-family: "Geist Mono", monospace;
+  }
+</style>
