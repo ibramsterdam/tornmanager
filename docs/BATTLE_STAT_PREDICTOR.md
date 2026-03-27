@@ -19,25 +19,20 @@ app/
       trainer.rb                # Recon::Trainer (model training logic)
       feature_extractor.rb      # Recon::FeatureExtractor (API -> features hash)
       outlier_detector.rb       # Recon::OutlierDetector
-      spy_report.rb             # Recon::SpyReport (Recon's own spy data, separate from faction spy_reports)
     recon/
       torn_api/
         personal_stats.rb       # Recon::TornApi::PersonalStats (cat=popular or stat+timestamp)
         profile.rb              # Recon::TornApi::Profile (age, level, property, last_action)
-      torn_stats_api/
-        spy_report.rb           # Recon::TornStatsApi::SpyReport (import into recon_spy_reports)
   jobs/
     recon/
       collect_training_sample_job.rb
       backfill_training_samples_job.rb
-      train_model_job.rb
-      validate_from_attacks_job.rb
   controllers/
     api/
       recon_controller.rb
 ```
 
-Database tables are prefixed with `recon_`.
+Database tables are prefixed with `recon_`. Currently only `recon_training_samples` exists. Other tables (`recon_models`, `recon_predictions`, `recon_ff_observations`) are documented below for future use.
 
 ---
 
@@ -216,30 +211,50 @@ class Recon::FeatureExtractor
 end
 ```
 
-#### Database Tables
+#### Database Table
 
-Recon owns its own spy data -- completely separate from the faction `spy_reports` table. No `faction_id`, no trace of who contributed.
+One table holds everything -- spy data (labels) and personalstats (features) together. Completely separate from the faction `spy_reports` table. No `faction_id`, no trace of who contributed.
 
 ```ruby
-# Recon's own spy data store -- voluntarily contributed, never auto-pulled from factions
-create_table :recon_spy_reports do |t|
+create_table :recon_training_samples do |t|
   t.integer :player_id, null: false
+
+  # Labels (from spy reports)
   t.bigint :strength, null: false
   t.bigint :defense, null: false
   t.bigint :speed, null: false
   t.bigint :dexterity, null: false
-  t.bigint :total_stats, null: false
-  t.datetime :spied_at, null: false
-  t.timestamps
-end
-add_index :recon_spy_reports, :player_id
-add_index :recon_spy_reports, :spied_at
+  # total_stats is calculated: strength + defense + speed + dexterity
 
-# Training samples = recon_spy_reports + fetched personalstats features
-create_table :recon_training_samples do |t|
-  t.integer :player_id, null: false
-  t.bigint :total_stats, null: false
-  t.json :features, null: false
+  # Features: Direct energy sources
+  t.integer :xantaken
+  t.integer :energydrinkused
+  t.integer :refills
+  t.integer :daysbeendonator
+
+  # Features: Training multipliers & optimization
+  t.integer :statenhancersused
+  t.integer :boostersused
+  t.integer :lsdtaken
+  t.integer :revives
+  t.integer :exttaken
+  t.integer :victaken
+  t.integer :rehabs
+  t.integer :highestbeaten
+  t.integer :hospital
+  t.integer :jobpointsused
+  t.integer :trainsreceived
+
+  # Features: Progression & activity proxies
+  t.integer :attackswon
+  t.integer :awards
+  t.integer :useractivity
+  t.bigint :networth
+  t.integer :level
+  t.integer :property_happy
+  t.integer :real_age
+
+  # Metadata
   t.datetime :spied_at, null: false
   t.timestamps
 end
@@ -247,49 +262,44 @@ add_index :recon_training_samples, :player_id
 add_index :recon_training_samples, :spied_at
 ```
 
+Feature columns allow nulls -- historical backfills may have partial data, and some stats may not exist at a given timestamp.
+
 #### Data Flow
 
 ```
-recon_spy_reports (voluntarily contributed spy data)
+Spy data (voluntarily contributed)
+  + personalstats fetched at spied_at timestamp
+  + profile data
         |
         v
 Recon::CollectTrainingSampleJob:
-  - Fetch personalstats + profile for the player
-  - Store (features, total_stats) in recon_training_samples
+  - Combine labels + features into one row in recon_training_samples
 ```
 
 #### How Spy Data Gets Into Recon
 
-For now: manually import from your own faction's spy data or directly from TornStats.
+For now: manually import from your own faction's spy data or directly from TornStats. The job fetches matching personalstats and stores everything in one row.
 
-Future: factions can opt-in to sync their `spy_reports` → `recon_spy_reports`. This is a one-way copy -- deleting faction data doesn't affect Recon's training data.
-
-#### Trigger Points
-
-1. **Direct import** -- admin action to bulk import spy data into `recon_spy_reports`
-2. **Future: faction opt-in sync** -- opted-in factions auto-copy new spy reports to Recon
-3. **On new recon_spy_report** -- enqueue `Recon::CollectTrainingSampleJob` to fetch features
+Future: factions can opt-in to auto-sync new spy reports into Recon training data.
 
 #### Historical Backfill
 
 The Torn API supports fetching personalstats at any point in time via the `timestamp` parameter. This means we can pair **old spy reports** with historical personalstats to create valid training samples immediately.
 
 ```
-For each historical spy report (spied_at = e.g. 3 months ago):
+For each historical spy (spied_at = e.g. 3 months ago):
   1. Fetch personalstats at spied_at timestamp (2 API calls, 10 stats each)
-  2. Fetch profile (age/level are less time-sensitive, current values are acceptable)
-  3. Store as training sample
+  2. Fetch profile (age/level are less time-sensitive, current values acceptable)
+  3. Store spy labels + features as one row in recon_training_samples
 ```
 
 **Constraints:**
 - `timestamp` only works with the `stat` parameter (not `cat=popular`), max 10 stats per request
-- So 2 API calls per player: batch 1 (10 stats) + batch 2 (remaining stats)
+- 2 API calls per player: batch 1 (10 stats) + batch 2 (remaining stats)
 - Rate limited: ~25 players/min = ~1500 players/hour
 - 3,000 old spies ≈ 2 hours of backfill
 
-**New job:** `Recon::BackfillTrainingSamplesJob` -- iterates over `recon_spy_reports` that don't have a corresponding `recon_training_samples` entry, fetches historical personalstats, creates samples.
-
-**Worst case:** If historical data turns out to be noisy or inaccurate, truncate `recon_training_samples`, re-import with fresh spies only, retrain. The infrastructure stays the same.
+**Worst case:** If historical data turns out to be noisy, truncate `recon_training_samples`, re-import with fresh spies only, retrain. Infrastructure stays the same.
 
 ### Phase 2: ML Model
 
@@ -339,84 +349,43 @@ importance = model.feature_importances
 # Prune features with importance < 0.01 in next training cycle
 ```
 
-#### Model Storage
+#### Training: `Recon::Predictor`
+
+For now, trains a fresh model on every prediction request (~1-2 seconds with 3000 samples). No model storage needed.
 
 ```ruby
-create_table :recon_models do |t|
-  t.binary :serialized_model, null: false  # Marshal.dump of Rumale model
-  t.json :feature_names, null: false       # Ordered list of feature names
-  t.json :feature_importances              # { "xantaken": 0.28, ... }
-  t.integer :sample_count, null: false
-  t.float :r_squared
-  t.float :mean_absolute_error
-  t.float :median_absolute_percentage_error
-  t.boolean :active, default: false
-  t.timestamps
-end
-```
+class Recon::Predictor
+  FEATURE_COLUMNS = %w[
+    xantaken energydrinkused refills daysbeendonator
+    statenhancersused boostersused lsdtaken revives exttaken victaken
+    rehabs highestbeaten hospital jobpointsused trainsreceived
+    attackswon awards useractivity networth level property_happy real_age
+  ].freeze
 
-#### Training: `Recon::Trainer`
+  def predict(features)
+    samples = Recon::TrainingSample.all.to_a
+    return nil if samples.size < 100
 
-```ruby
-class Recon::Trainer
-  def train!
-    samples = Recon::TrainingSample.all.to_a.shuffle(random: Random.new(42))
-    return if samples.size < 100
-
-    feature_names = Recon::FeatureExtractor::PERSONALSTAT_KEYS + %w[level property_happy real_age]
-    x = Numo::DFloat.cast(samples.map { |s| feature_names.map { |f| s.features[f] || 0 } })
-    y = Numo::DFloat.cast(samples.map(&:total_stats))
-
-    split = (samples.size * 0.8).to_i
-    x_train, x_test = x[0...split, true], x[split.., true]
-    y_train, y_test = y[0...split], y[split..]
+    x_train = Numo::DFloat.cast(samples.map { |s| FEATURE_COLUMNS.map { |f| s.send(f) || 0 } })
+    y_train = Numo::DFloat.cast(samples.map { |s| s.strength + s.defense + s.speed + s.dexterity })
 
     model = Rumale::Ensemble::RandomForestRegressor.new(
       n_estimators: 200, max_depth: 15, min_samples_leaf: 5, random_seed: 42
     )
     model.fit(x_train, y_train)
 
-    predictions = model.predict(x_test)
-    r_squared = calculate_r_squared(y_test, predictions)
-    mae = (y_test - predictions).abs.mean
-    mape = ((y_test - predictions).abs / y_test * 100).median
-
-    Recon::Model.create!(
-      serialized_model: Marshal.dump(model),
-      feature_names:,
-      feature_importances: feature_names.zip(model.feature_importances).to_h,
-      sample_count: samples.size,
-      r_squared:,
-      mean_absolute_error: mae,
-      median_absolute_percentage_error: mape,
-      active: r_squared > 0.6
-    )
+    x_new = Numo::DFloat.cast([FEATURE_COLUMNS.map { |f| features[f] || 0 }])
+    model.predict(x_new).first.round
   end
 end
 ```
 
-#### Cached Predictions
+#### Future: Model Storage & Prediction Caching (TODO)
 
-```ruby
-create_table :recon_predictions do |t|
-  t.integer :player_id, null: false
-  t.bigint :predicted_total, null: false
-  t.float :confidence
-  t.json :flags, default: []
-  t.json :features                       # For debugging
-  t.integer :recon_model_id
-  t.timestamps
-end
-add_index :recon_predictions, :player_id, unique: true
-```
-
-#### Retraining
-
-- Weekly scheduled job (adding ~250 samples/week)
-- Manual trigger via admin
-- Trains on ALL samples from scratch (random forest doesn't do incremental learning)
-- New model activated only if metrics >= current active model
-- Old models kept for comparison
+When training per request becomes too slow, add:
+- `recon_models` table -- persist serialized models, track metrics (R², MAE, MAPE), activate best model
+- `recon_predictions` table -- cache results per player_id (5 day TTL)
+- Weekly scheduled retraining job instead of train-per-request
 
 ### Phase 3: Public Prediction API
 
@@ -630,15 +599,19 @@ Use `cat=popular` (not `cat=all`) to reduce Torn server load. Both responses cac
 
 ## Implementation Priority
 
-1. **Migrations**: `recon_spy_reports`, `recon_training_samples`, `recon_models`, `recon_predictions`, `recon_ff_observations`
-2. **`Recon::FeatureExtractor`** + API wrapper for personalstats/profile (public key)
-3. **`Recon::CollectTrainingSampleJob`** + **`Recon::BackfillTrainingSamplesJob`** -- start collecting new + backfill historical
-4. **`Recon::Trainer`** -- random forest training with 80/20 evaluation
-5. **`Recon::Predictor`** -- prediction service with caching + FF floor
-6. **`Api::ReconController`** -- public API endpoint (`/api/recon/:player_id`)
-7. **`Recon::ValidateFromAttacksJob`** -- FF observations + floor logic
-8. **`Recon::OutlierDetector`** -- flag unbalanced builds
-9. **Feature pruning** -- analyze importance, drop useless features, retrain
+1. **Migration**: `recon_training_samples` ✅
+2. **`Recon::TornApi::PersonalStats`** + **`Recon::TornApi::Profile`** -- fetch features for any player
+3. **`Recon::FeatureExtractor`** -- turn API responses into feature hashes
+4. **`Recon::TrainingSample`** model + admin import -- get spy data in
+5. **`Recon::CollectTrainingSampleJob`** + **`Recon::BackfillTrainingSamplesJob`** -- pair spies with personalstats
+6. **`Recon::Predictor`** -- train-per-request random forest
+7. **`Api::ReconController`** -- public API endpoint (`/api/recon/:player_id`)
+8. **Feature pruning** -- analyze importance after first training, drop useless features
+
+**Later (TODO):**
+- `recon_models` + `recon_predictions` tables -- model storage + prediction caching
+- `recon_ff_observations` table -- FF validation + floor logic
+- `Recon::OutlierDetector` -- flag unbalanced builds
 
 ## Open Questions
 
