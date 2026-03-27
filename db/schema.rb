@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_25_213759) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_27_200337) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -141,6 +141,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_213759) do
     t.index ["faction_id"], name: "index_ranked_wars_on_faction_id"
   end
 
+  create_table "recon_training_samples", force: :cascade do |t|
+    t.integer "attackswon"
+    t.integer "awards"
+    t.integer "boostersused"
+    t.datetime "created_at", null: false
+    t.integer "daysbeendonator"
+    t.bigint "defense", null: false
+    t.bigint "dexterity", null: false
+    t.integer "energydrinkused"
+    t.integer "exttaken"
+    t.integer "highestbeaten"
+    t.integer "hospital"
+    t.integer "jobpointsused"
+    t.integer "level"
+    t.integer "lsdtaken"
+    t.bigint "networth"
+    t.integer "player_id", null: false
+    t.integer "property_happy"
+    t.integer "real_age"
+    t.integer "refills"
+    t.integer "rehabs"
+    t.integer "revives"
+    t.bigint "speed", null: false
+    t.datetime "spied_at", null: false
+    t.integer "statenhancersused"
+    t.bigint "strength", null: false
+    t.integer "trainsreceived"
+    t.datetime "updated_at", null: false
+    t.integer "useractivity"
+    t.integer "victaken"
+    t.integer "xantaken"
+    t.index ["player_id"], name: "index_recon_training_samples_on_player_id"
+    t.index ["spied_at"], name: "index_recon_training_samples_on_spied_at"
+  end
+
   create_table "roadmap_items", force: :cascade do |t|
     t.string "category", default: "factions", null: false
     t.datetime "created_at", null: false
@@ -260,10 +295,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_25_213759) do
     t.index ["sender_id"], name: "index_xanax_payments_on_sender_id"
   end
 
-  add_foreign_key "api_calls", "factions"
-  add_foreign_key "api_calls", "users"
-  add_foreign_key "api_keys", "factions"
-  add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
