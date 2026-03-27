@@ -11,10 +11,9 @@ class UserTrackedForStatsTest < ActiveSupport::TestCase
     assert_not_includes User.tracked_for_stats, user
   end
 
-  test "excludes user whose faction has no faction_setting at all" do
-    # Remove the faction_setting for the unkeyed faction to simulate no setting record
+  test "excludes user whose faction has no api keys at all" do
     faction = factions(:without_api_key)
-    faction.faction_setting.destroy!
+    faction.api_keys.destroy_all
     user = users(:user_with_unkeyed_faction)
     assert_not_includes User.tracked_for_stats, user
   end

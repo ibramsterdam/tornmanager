@@ -12,7 +12,8 @@ class DailyPersonalStatsJobTest < ActiveJob::TestCase
 
   test "enqueues a FetchPersonalStatsJob for each tracked user" do
     faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
-    FactionSetting.create!(faction: faction, torn_api_key: "test_key")
+    FactionSetting.create!(faction: faction)
+    ApiKey::Torn.create!(faction: faction, key: "test_key")
     bram = users(:bram)
     bert = users(:bert)
     bram.update!(faction: faction, fallen: false)
@@ -29,7 +30,8 @@ class DailyPersonalStatsJobTest < ActiveJob::TestCase
 
   test "skips fallen users" do
     faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
-    FactionSetting.create!(faction: faction, torn_api_key: "test_key")
+    FactionSetting.create!(faction: faction)
+    ApiKey::Torn.create!(faction: faction, key: "test_key")
     bram = users(:bram)
     bram.update!(faction: faction, fallen: true)
 

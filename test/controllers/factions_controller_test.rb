@@ -417,8 +417,8 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     setup_faction.reload
     assert setup_faction.setup_completed, "Faction should be marked as setup completed"
-    assert_equal "VALID_LIMITED_KEY", setup_faction.faction_setting.torn_api_key
-    assert_equal "Limited Access", setup_faction.faction_setting.torn_api_access_type
+    assert_equal "VALID_LIMITED_KEY", setup_faction.torn_api_key.key
+    assert_equal "Limited Access", setup_faction.torn_api_key.access_type
     assert @bert.reload.leadership_access?
 
     assert_redirected_to faction_path(setup_faction)

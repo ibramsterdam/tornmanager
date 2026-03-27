@@ -9,7 +9,8 @@ class Factions::Leadership::DataCoverageController < Factions::Leadership::BaseC
   def backfill_user
     user = @faction.users.find(params[:user_id])
     missing_dates = missing_dates_for(user)
-    api_key = @faction.faction_setting&.torn_api_key
+    api_key = @faction.torn_api_key&.key
+    return render json: { success: false, message: "No API key configured for this faction" }, status: :unprocessable_entity if api_key.blank?
 
     existing_queued_jobs = SolidQueue::Job.where(queue_name: "faction", finished_at: nil).count
 

@@ -66,9 +66,10 @@ class FactionsController < ApplicationController
       return render :setup, status: :unprocessable_entity
     end
 
-    # Create faction setting with the API key
-    setting = @faction.faction_setting || @faction.build_faction_setting
-    setting.update!(torn_api_key: api_key, torn_api_access_type: "Limited Access")
+    # Create faction setting and store the API key
+    @faction.create_faction_setting! unless @faction.faction_setting
+    torn_record = @faction.torn_api_key || @faction.build_torn_api_key
+    torn_record.update!(key: api_key, access_type: "Limited Access", faction_access: key_info.access.faction == true)
 
     # Grant leadership access to the setup user
     Current.user.update!(leadership_access: true)
@@ -222,7 +223,7 @@ class FactionsController < ApplicationController
   def load_war_data
     @current_war = @faction.current_war
     @latest_war = @faction.ranked_wars.completed.recent.first unless @current_war
-    @api_keys_configured = @faction.faction_setting&.torn_api_key.present?
+    @api_keys_configured = @faction.torn_api_key.present?
 
     return unless @current_war && @api_keys_configured
 
@@ -232,7 +233,7 @@ class FactionsController < ApplicationController
   end
 
   def ensure_war_polling_active
-    return unless @faction.faction_setting&.torn_api_key?
+    return unless @faction.torn_api_key.present?
     return if @faction.war_polling_active?
 
     @faction.start_war_polling!

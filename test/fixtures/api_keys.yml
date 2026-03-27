@@ -1,0 +1,6 @@
+faction_with_key_torn:
+  faction: with_api_key
+  type: ApiKey::Torn
+  key: "test_api_key_123"
+  access_type: "Limited Access"
+  faction_access: true

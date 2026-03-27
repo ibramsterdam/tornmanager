@@ -3,7 +3,8 @@ require "test_helper"
 class WarPollingJobTest < ActiveJob::TestCase
   setup do
     @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5, war_polling_active: true)
-    @faction.create_faction_setting!(torn_api_key: "faction_limited_key", torn_api_access_type: "Limited Access")
+    @faction.create_faction_setting!
+    ApiKey::Torn.create!(faction: @faction, key: "faction_limited_key", access_type: "Limited Access")
 
     @war = @faction.ranked_wars.create!(
       torn_war_id: 1001,
@@ -106,7 +107,7 @@ class WarPollingJobTest < ActiveJob::TestCase
   end
 
   test "stops when no faction API key configured" do
-    @faction.faction_setting.update!(torn_api_key: nil)
+    @faction.torn_api_key&.destroy!
 
     assert_no_enqueued_jobs(only: WarPollingJob) do
       WarPollingJob.perform_now(@faction.id)
