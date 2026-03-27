@@ -20,7 +20,9 @@
       </div>
     <% end %>
     
-    <%= render "shared/api_tos_table" %>
+    <div class="api-tos-stacked-only">
+      <%= render "shared/api_tos_table" %>
+    </div>
 
     <%= form_with url: settings_update_api_key_path, method: :patch, data: { turbo: false, controller: "api-key", action: "submit->api-key#submit" } do |form| %>
       <div class="api-key-form-inline">

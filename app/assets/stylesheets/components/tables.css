@@ -413,6 +413,16 @@ th.sortable:hover {
   line-height: 1.4;
 }
 
+/* Force stacked layout when inside constrained containers */
+.api-tos-stacked-only .api-tos-table {
+  display: none;
+}
+
+.api-tos-stacked-only .api-tos-stacked {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
 @media (max-width: 768px) {
   .api-tos-table {
     display: none;
