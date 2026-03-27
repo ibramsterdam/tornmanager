@@ -23,8 +23,7 @@ module Api
         return render json: { error: "You are not a member of any faction." }, status: :unprocessable_entity
       end
 
-      setting = faction.faction_setting
-      unless setting&.keys_configured?
+      unless faction.torn_api_key.present?
         return render json: { error: "Faction API keys not configured. Ask your faction leader to set them up on tornmanager.com." }, status: :unprocessable_entity
       end
 
@@ -32,7 +31,7 @@ module Api
 
       members_status = {}
       if enemy_faction_id.present?
-        members_status = fetch_enemy_status(setting.torn_api_key, enemy_faction_id)
+        members_status = fetch_enemy_status(faction.torn_api_key.key, enemy_faction_id)
       end
 
       members = {}

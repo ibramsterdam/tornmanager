@@ -1,7 +1,5 @@
 class Factions::Leadership::ApiKeysController < Factions::Leadership::BaseController
   def update
-    @faction_setting = @faction.faction_setting || @faction.build_faction_setting
-
     new_torn_key = params.dig(:faction_setting, :torn_api_key).presence
     new_tornstats_key = params.dig(:faction_setting, :tornstats_api_key).presence
 
@@ -20,8 +18,12 @@ class Factions::Leadership::ApiKeysController < Factions::Leadership::BaseContro
           return redirect_to faction_leadership_settings_path(@faction), alert: "This API key does not belong to you."
         end
 
-        @faction_setting.torn_api_key = new_torn_key
-        @faction_setting.torn_api_access_type = key_info.access.type
+        torn_record = @faction.torn_api_key || @faction.build_torn_api_key
+        torn_record.update!(
+          key: new_torn_key,
+          access_type: key_info.access.type,
+          faction_access: key_info.access.faction == true
+        )
         changes_made = true
       rescue TornApi::InvalidKeyError
         return redirect_to faction_leadership_settings_path(@faction), alert: "Invalid Torn API key."
@@ -31,32 +33,25 @@ class Factions::Leadership::ApiKeysController < Factions::Leadership::BaseContro
     end
 
     if new_tornstats_key
-      @faction_setting.tornstats_api_key = new_tornstats_key
+      ts_record = @faction.tornstats_api_key || @faction.build_tornstats_api_key
+      ts_record.update!(key: new_tornstats_key)
       changes_made = true
     end
 
-    if !changes_made
-      redirect_to faction_leadership_settings_path(@faction), notice: "No changes made."
-    elsif @faction_setting.save
+    if changes_made
       redirect_to faction_leadership_settings_path(@faction), notice: "API keys saved successfully."
     else
-      redirect_to faction_leadership_settings_path(@faction), alert: "Failed to save settings."
+      redirect_to faction_leadership_settings_path(@faction), notice: "No changes made."
     end
   end
 
   def destroy
-    setting = @faction.faction_setting
-
-    unless setting
-      return redirect_to faction_leadership_settings_path(@faction), alert: "No API keys configured."
-    end
-
     case params[:key]
     when "torn"
-      setting.update!(torn_api_key: nil, torn_api_access_type: nil)
+      @faction.torn_api_key&.destroy!
       redirect_to faction_leadership_settings_path(@faction), notice: "Torn API key deleted."
     when "tornstats"
-      setting.update!(tornstats_api_key: nil)
+      @faction.tornstats_api_key&.destroy!
       redirect_to faction_leadership_settings_path(@faction), notice: "TornStats API key deleted."
     else
       redirect_to faction_leadership_settings_path(@faction), alert: "Unknown key type."

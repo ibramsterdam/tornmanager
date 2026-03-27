@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_01_161041) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_25_213759) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -29,12 +29,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_161041) do
     t.index ["user_id"], name: "index_api_calls_on_user_id"
   end
 
+  create_table "api_keys", force: :cascade do |t|
+    t.string "access_type"
+    t.datetime "created_at", null: false
+    t.boolean "faction_access", default: false, null: false
+    t.integer "faction_id", null: false
+    t.string "key", null: false
+    t.string "type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["faction_id", "type"], name: "index_api_keys_on_faction_id_and_type", unique: true
+    t.index ["faction_id"], name: "index_api_keys_on_faction_id"
+  end
+
   create_table "faction_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "faction_id", null: false
-    t.string "torn_api_access_type"
-    t.string "torn_api_key"
-    t.string "tornstats_api_key"
     t.datetime "updated_at", null: false
     t.index ["faction_id"], name: "index_faction_settings_on_faction_id", unique: true
   end
@@ -167,10 +176,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_161041) do
     t.bigint "defense"
     t.bigint "dexterity"
     t.integer "faction_id", null: false
-    t.decimal "fair_fight"
     t.bigint "speed"
     t.datetime "spied_at"
-    t.string "spy_type"
     t.bigint "strength"
     t.integer "torn_id", null: false
     t.bigint "total"
@@ -255,6 +262,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_01_161041) do
 
   add_foreign_key "api_calls", "factions"
   add_foreign_key "api_calls", "users"
+  add_foreign_key "api_keys", "factions"
   add_foreign_key "faction_settings", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
