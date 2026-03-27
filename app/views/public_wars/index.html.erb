@@ -12,10 +12,12 @@
       </p>
     </div>
 
-    <%= render "shared/api_tos_table",
-        data_storage: "Not stored - held in memory only during polling",
-        key_storage: "Never stored / Not shared",
-        key_access_level: "Public Only" %>
+    <div class="api-tos-stacked-only">
+      <%= render "shared/api_tos_table",
+          data_storage: "Not stored - held in memory only during polling",
+          key_storage: "Never stored / Not shared",
+          key_access_level: "Public Only" %>
+    </div>
 
     <%= form_with url: public_wars_path, method: :post, class: "public-wars-create-form" do %>
       <div class="public-wars-create-row">
