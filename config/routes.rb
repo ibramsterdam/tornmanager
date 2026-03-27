@@ -98,6 +98,9 @@ Rails.application.routes.draw do
         post :backfill_user
       end
     end
+    resource :recon, only: [ :show ], controller: "recon" do
+      post :import
+    end
   end
 
   get "roadmap", to: "roadmap#index", as: :roadmap
