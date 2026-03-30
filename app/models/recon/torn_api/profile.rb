@@ -11,13 +11,14 @@ module Recon
       end
 
       def fetch
-        response = get("v2/user/#{player_id}", { striptags: true })
+        response = get("v2/user/#{player_id}/profile", {})
+        profile = response["profile"] || response
 
         ProfileData.new(
-          age: response["age"],
-          level: response["level"],
-          property: response["property"],
-          last_action_timestamp: response.dig("last_action", "timestamp")
+          age: profile["age"],
+          level: profile["level"],
+          property: profile.dig("property", "name"),
+          last_action_timestamp: profile.dig("last_action", "timestamp")
         )
       end
     end

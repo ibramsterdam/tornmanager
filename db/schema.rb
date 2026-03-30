@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_27_200337) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_30_194240) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -164,7 +164,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_200337) do
     t.integer "rehabs"
     t.integer "revives"
     t.bigint "speed", null: false
-    t.datetime "spied_at", null: false
+    t.date "spied_at", null: false
     t.integer "statenhancersused"
     t.bigint "strength", null: false
     t.integer "trainsreceived"
@@ -172,6 +172,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_27_200337) do
     t.integer "useractivity"
     t.integer "victaken"
     t.integer "xantaken"
+    t.index ["player_id", "spied_at"], name: "index_recon_training_samples_on_player_id_and_spied_at", unique: true
     t.index ["player_id"], name: "index_recon_training_samples_on_player_id"
     t.index ["spied_at"], name: "index_recon_training_samples_on_spied_at"
   end

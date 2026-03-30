@@ -7,8 +7,6 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
   def perform(player_id:, strength:, defense:, speed:, dexterity:, spied_at:)
     spied_at_date = Date.parse(spied_at.to_s)
 
-    return if Recon::TrainingSample.exists?(player_id: player_id, spied_at: spied_at_date.all_day)
-
     api_key = AdminCredentials.api_key
     return if api_key.blank?
 
@@ -19,13 +17,12 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
 
     feature_set = Recon::FeatureSet.new(personalstats: personalstats, profile: profile)
 
-    Recon::TrainingSample.create!(
-      player_id: player_id,
+    sample = Recon::TrainingSample.find_or_initialize_by(player_id: player_id, spied_at: spied_at_date)
+    sample.update!(
       strength: strength,
       defense: defense,
       speed: speed,
       dexterity: dexterity,
-      spied_at: spied_at_date,
       **feature_set.to_h
     )
   rescue TornApi::ApiError => e
@@ -35,7 +32,7 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
   private
 
   def fetch_personalstats(api_key, player_id, timestamp)
-    batches = Recon::FeatureSet::PERSONALSTAT_KEYS.each_slice(BATCH_SIZE).to_a
+    batches = Recon::FeatureSet::API_STAT_NAMES.each_slice(BATCH_SIZE).to_a
 
     batches.reduce({}) do |result, batch|
       stats = Recon::TornApi::PersonalStats.new(

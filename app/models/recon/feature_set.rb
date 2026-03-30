@@ -1,10 +1,29 @@
 class Recon::FeatureSet
-  PERSONALSTAT_KEYS = %w[
-    xantaken energydrinkused refills daysbeendonator
-    statenhancersused boostersused lsdtaken revives exttaken victaken
-    rehabs highestbeaten hospital jobpointsused trainsreceived
-    attackswon awards useractivity networth
-  ].freeze
+  # Keys are our DB column names, values are Torn API stat names (when different)
+  PERSONALSTAT_MAP = {
+    "xantaken" => "xantaken",
+    "energydrinkused" => "energydrinkused",
+    "refills" => "refills",
+    "daysbeendonator" => "daysbeendonator",
+    "statenhancersused" => "statenhancersused",
+    "boostersused" => "boostersused",
+    "lsdtaken" => "lsdtaken",
+    "revives" => "revives",
+    "exttaken" => "exttaken",
+    "victaken" => "victaken",
+    "rehabs" => "rehabs",
+    "highestbeaten" => "highestbeaten",
+    "hospital" => "hospital",
+    "jobpointsused" => "jobpointsused",
+    "trainsreceived" => "trainsreceived",
+    "attackswon" => "attackswon",
+    "awards" => "awards",
+    "useractivity" => "timeplayed",
+    "networth" => "networth"
+  }.freeze
+
+  PERSONALSTAT_KEYS = PERSONALSTAT_MAP.keys.freeze
+  API_STAT_NAMES = PERSONALSTAT_MAP.values.freeze
 
   PROPERTY_HAPPY = {
     "Private Island" => 4225,
@@ -36,8 +55,8 @@ class Recon::FeatureSet
   def build
     features = {}
 
-    PERSONALSTAT_KEYS.each do |key|
-      features[key] = @personalstats[key] || 0
+    PERSONALSTAT_MAP.each do |column, api_name|
+      features[column] = @personalstats[api_name] || 0
     end
 
     features["level"] = @profile.level || 0

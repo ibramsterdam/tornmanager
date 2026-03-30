@@ -22,15 +22,9 @@ module Admin
       end
 
       seconds_per_job = 9 # 3 API calls/job, ~20 calls/min max
-      skipped = 0
       queued = 0
 
       rows.each do |row|
-        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at&.beginning_of_day)
-          skipped += 1
-          next
-        end
-
         Recon::CollectTrainingSampleJob.set(wait: (queued * seconds_per_job).seconds).perform_later(
           player_id: row.player_id,
           strength: row.strength,
@@ -44,7 +38,7 @@ module Admin
 
       estimated_minutes = (queued * seconds_per_job / 60.0).ceil
 
-      redirect_to admin_recon_path, notice: "Queued #{queued} training samples (#{skipped} duplicates skipped). ~#{queued * 3} API calls, ~#{estimated_minutes} min."
+      redirect_to admin_recon_path, notice: "Queued #{queued} training samples. ~#{queued * 3} API calls, ~#{estimated_minutes} min."
     end
   end
 end

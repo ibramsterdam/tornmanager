@@ -52,8 +52,10 @@ class Recon::CollectTrainingSampleJobTest < ActiveJob::TestCase
     assert_equal 500, sample.xantaken
   end
 
-  test "skips if training sample already exists for player and date" do
-    Recon::TrainingSample.create!(
+  test "updates existing sample for same player and date" do
+    stub_api_calls
+
+    existing = Recon::TrainingSample.create!(
       player_id: 1485341,
       strength: 1, defense: 1, speed: 1, dexterity: 1,
       spied_at: Date.new(2026, 3, 24)
@@ -62,6 +64,10 @@ class Recon::CollectTrainingSampleJobTest < ActiveJob::TestCase
     assert_no_difference "Recon::TrainingSample.count" do
       Recon::CollectTrainingSampleJob.perform_now(**@params)
     end
+
+    existing.reload
+    assert_equal 5_751_694_281, existing.strength
+    assert_equal 500, existing.xantaken
   end
 
   test "handles API errors gracefully" do
