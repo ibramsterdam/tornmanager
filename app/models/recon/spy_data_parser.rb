@@ -19,8 +19,11 @@ class Recon::SpyDataParser
   end
 
   def self.parse_row(line)
-    cols = line.split("\t")
+    cols = line.split("\t").map(&:strip)
     return nil if cols.size < 8
+
+    # If first column is a pure number, it's a rank — shift it off
+    cols.shift if cols[0].match?(/\A\d+\z/)
 
     name, player_id = extract_name_and_id(cols[0])
     return nil unless player_id
@@ -51,7 +54,7 @@ class Recon::SpyDataParser
   # Format 2: Name, Level, STR, DEF, SPD, DEX, Total, Date, LastAction, Score
   def self.parse_format_2(cols, name, player_id)
     return nil if cols.size < 8
-    return nil if cols[2]&.strip == "N/A"
+    return nil if cols[2] == "N/A"
 
     SpyRow.new(
       player_id: player_id,
@@ -65,14 +68,10 @@ class Recon::SpyDataParser
     )
   end
 
-  # Format 1 has a faction column (cols[2]) that's text like "None", "|HT|", etc.
-  # Format 2 has stats in cols[2] which are numbers or "N/A"
   def self.format_with_faction?(cols)
-    col2 = cols[2]&.strip
-    return false if col2.nil?
-    return false if col2 == "N/A"
+    col2 = cols[2]
+    return false if col2.nil? || col2 == "N/A"
 
-    # If it looks like a number (with commas), it's format 2
     !col2.match?(/\A[\d,]+\z/)
   end
 
@@ -88,13 +87,13 @@ class Recon::SpyDataParser
   end
 
   def self.parse_level(str)
-    return nil if str&.strip == "Unknown"
+    return nil if str == "Unknown"
     str&.to_i
   end
 
   def self.parse_date(str)
-    return nil if str.blank? || str.strip == "N/A"
-    day, month, year = str.strip.split("/").map(&:to_i)
+    return nil if str.blank? || str == "N/A"
+    day, month, year = str.split("/").map(&:to_i)
     year += 2000 if year < 100
     Date.new(year, month, day)
   end

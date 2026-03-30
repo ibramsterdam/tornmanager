@@ -6,6 +6,8 @@ module Admin
       @training_sample_count = Recon::TrainingSample.count
       @latest_sample = Recon::TrainingSample.order(created_at: :desc).first
       @samples = Recon::TrainingSample.order(created_at: :desc).limit(100)
+      @import_ends_at = Rails.cache.read("recon:import_ends_at")
+      @import_in_progress = @import_ends_at.present? && @import_ends_at > Time.current
     end
 
     def import
@@ -36,7 +38,10 @@ module Admin
         queued += 1
       end
 
-      estimated_minutes = (queued * seconds_per_job / 60.0).ceil
+      estimated_seconds = queued * seconds_per_job
+      estimated_minutes = (estimated_seconds / 60.0).ceil
+
+      Rails.cache.write("recon:import_ends_at", Time.current + estimated_seconds.seconds, expires_in: estimated_seconds.seconds)
 
       redirect_to admin_recon_path, notice: "Queued #{queued} training samples. ~#{queued * 3} API calls, ~#{estimated_minutes} min."
     end

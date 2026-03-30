@@ -101,6 +101,26 @@ class Recon::SpyDataParserTest < ActiveSupport::TestCase
     assert_equal 1, results.size
   end
 
+  test "format 2: parses row with rank as separate tab column" do
+    input = "1\tPenicillin [1517799]\t100\t655,000,300,610,300\t2,761,464,594,401,500\t8,940,446,370,100\t12,344,518,438\t3,425,417,685,900,338\t30/03/26\t16 minutes ago\t81,243,777"
+
+    results = Recon::SpyDataParser.parse(input)
+    assert_equal 1, results.size
+
+    row = results.first
+    assert_equal 1517799, row.player_id
+    assert_equal "Penicillin", row.name
+    assert_equal 655_000_300_610_300, row.strength
+    assert_equal Date.new(2026, 3, 30), row.spied_at
+  end
+
+  test "format 2: skips N/A rows with rank as separate tab column" do
+    input = "18\tYaamean [2779971]\t100\tN/A\tN/A\tN/A\tN/A\tN/A\tN/A\t54 minutes ago\tN/A"
+
+    results = Recon::SpyDataParser.parse(input)
+    assert_equal 0, results.size
+  end
+
   test "format 2: skips average row" do
     input = "Average:	20,155,271,658,445	59,122,116,213,084	5,655,748,625,209	5,554,996,840	84,938,691,493,578"
 

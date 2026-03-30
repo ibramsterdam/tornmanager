@@ -15,7 +15,7 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
     personalstats = fetch_personalstats(api_key, player_id, timestamp)
     profile = Recon::TornApi::Profile.new(api_key, player_id).fetch
 
-    feature_set = Recon::FeatureSet.new(personalstats: personalstats, profile: profile)
+    features = Recon::FeatureSet.build(personalstats: personalstats, profile: profile)
 
     sample = Recon::TrainingSample.find_or_initialize_by(player_id: player_id, spied_at: spied_at_date)
     sample.update!(
@@ -23,7 +23,7 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
       defense: defense,
       speed: speed,
       dexterity: dexterity,
-      **feature_set.to_h
+      **features
     )
   rescue TornApi::ApiError => e
     Rails.logger.error("Recon::CollectTrainingSampleJob failed for player #{player_id}: #{e.message}")
