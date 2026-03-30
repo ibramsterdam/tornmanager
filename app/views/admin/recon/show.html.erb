@@ -16,24 +16,43 @@
   </div>
 </div>
 
-<div class="recon-import-card">
-  <h2>Import Spy Data</h2>
-  <p class="recon-import-hint">Paste tab-separated spy data from TornStats, YATA, or any spy tool. Each row will be paired with historical personalstats from the Torn API to create training samples.</p>
-
-  <%= form_with url: import_admin_recon_path, method: :post, class: "recon-import-form" do |form| %>
-    <%= form.text_area :spy_data,
-        class: "recon-import-textarea",
-        placeholder: "Paste spy data here...\n\nExpected format (tab-separated):\nName [ID]  Level  Faction  STR  DEF  SPD  DEX  Total  FF  Date",
-        rows: 12 %>
-
-    <div class="recon-import-actions">
-      <%= form.submit "Import & Queue Jobs", class: "btn btn-primary" %>
-      <p class="recon-import-note">Each row requires ~2 Torn API calls to fetch personalstats. Rows already in the database will be skipped.</p>
+<% if @import_in_progress %>
+  <% seconds_remaining = (@import_ends_at - Time.current).to_i %>
+  <div class="backfill-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= seconds_remaining %>">
+    <div class="backfill-banner-content">
+      <div class="backfill-banner-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12 6 12 12 16 14"/>
+        </svg>
+      </div>
+      <div class="backfill-banner-text">
+        <strong>Collecting training samples</strong>
+        <span>Fetching personalstats and profile data from the Torn API for each imported spy.</span>
+        <span>Estimated time remaining: <strong data-backfill-countdown-target="countdown"></strong></span>
+      </div>
     </div>
-  <% end %>
-</div>
+  </div>
+<% else %>
+  <div class="recon-import-card">
+    <h2>Import Spy Data</h2>
+    <p class="recon-import-hint">Paste tab-separated spy data from TornStats, YATA, or any spy tool. Each row will be paired with historical personalstats from the Torn API to create training samples.</p>
 
-<div class="table-container recon-samples-container">
+    <%= form_with url: import_admin_recon_path, method: :post, class: "recon-import-form" do |form| %>
+      <%= form.text_area :spy_data,
+          class: "recon-import-textarea",
+          placeholder: "Paste TornStats data here!\n\nFaction spy format:\nName [ID]  Level  Faction  STR  DEF  SPD  DEX  Total  FF  Date\n\nFaction member format:\nRank Name [ID]  Level  STR  DEF  SPD  DEX  Total  Date  LastAction  Score",
+          rows: 12 %>
+
+      <div class="recon-import-actions">
+        <%= form.submit "Import & Queue Jobs", class: "btn btn-primary" %>
+        <p class="recon-import-note">Each row requires 3 Torn API calls (2 personalstats batches + 1 profile). Existing samples will be updated.</p>
+      </div>
+    <% end %>
+  </div>
+<% end %>
+
+<div class="table-container recon-samples-container <%= 'table-disabled' if @import_in_progress %>">
   <h2>Training Samples (<%= number_with_delimiter(@training_sample_count) %>)</h2>
 
   <% if @samples.any? %>
@@ -128,6 +147,7 @@
     border: 1px solid var(--gray-800);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
+    margin-bottom: var(--space-6);
   }
 
   .recon-import-card h2 {

@@ -112,6 +112,27 @@ th.sortable:hover {
   }
 }
 
+/* Disabled Table State */
+.table-container.table-disabled {
+  position: relative;
+  pointer-events: none;
+}
+
+.table-container.table-disabled::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: var(--radius-lg);
+  z-index: 10;
+}
+
+.table-container.table-disabled table,
+.table-container.table-disabled h2 {
+  opacity: 0.4;
+  filter: blur(1px);
+}
+
 .table-empty {
   padding: var(--space-12);
   text-align: center;
