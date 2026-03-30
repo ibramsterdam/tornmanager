@@ -8,14 +8,16 @@ class Recon::TornApi::ProfileTest < ActiveSupport::TestCase
 
   test "fetches profile data for a player" do
     api_response = {
-      "age" => 4500,
-      "level" => 80,
-      "property" => "Private Island",
-      "last_action" => { "timestamp" => 1711500000 }
+      "profile" => {
+        "age" => 4500,
+        "level" => 80,
+        "property" => { "id" => 123, "name" => "Private Island" },
+        "last_action" => { "status" => "Online", "timestamp" => 1711500000 }
+      }
     }
 
     service = Recon::TornApi::Profile.new(@api_key, @player_id)
-    service.expects(:get).with("v2/user/#{@player_id}", { striptags: true }).returns(api_response)
+    service.expects(:get).with("v2/user/#{@player_id}/profile", {}).returns(api_response)
 
     result = service.fetch
     assert_equal 4500, result.age
@@ -26,10 +28,12 @@ class Recon::TornApi::ProfileTest < ActiveSupport::TestCase
 
   test "handles missing last_action gracefully" do
     api_response = {
-      "age" => 1000,
-      "level" => 15,
-      "property" => "Apartment",
-      "last_action" => nil
+      "profile" => {
+        "age" => 1000,
+        "level" => 15,
+        "property" => { "id" => 1, "name" => "Apartment" },
+        "last_action" => nil
+      }
     }
 
     service = Recon::TornApi::Profile.new(@api_key, @player_id)
@@ -41,10 +45,12 @@ class Recon::TornApi::ProfileTest < ActiveSupport::TestCase
 
   test "handles missing property" do
     api_response = {
-      "age" => 1000,
-      "level" => 15,
-      "property" => nil,
-      "last_action" => { "timestamp" => 1711500000 }
+      "profile" => {
+        "age" => 1000,
+        "level" => 15,
+        "property" => nil,
+        "last_action" => { "timestamp" => 1711500000 }
+      }
     }
 
     service = Recon::TornApi::Profile.new(@api_key, @player_id)

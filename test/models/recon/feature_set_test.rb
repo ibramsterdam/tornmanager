@@ -57,6 +57,11 @@ class Recon::FeatureSetTest < ActiveSupport::TestCase
     assert_equal 1000, features["real_age"]
   end
 
+  test "maps timeplayed API name to useractivity column" do
+    features = build_feature_set(personalstats: { "timeplayed" => 999_999 })
+    assert_equal 999_999, features["useractivity"]
+  end
+
   test "to_h returns all expected feature keys" do
     features = build_feature_set
     Recon::TrainingSample::FEATURE_COLUMNS.each do |col|
