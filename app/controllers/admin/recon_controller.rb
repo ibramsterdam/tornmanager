@@ -25,7 +25,6 @@ module Admin
 
       seconds_per_job = 9 # 3 API calls/job, ~20 calls/min max
 
-      # Start new jobs after any existing queue finishes
       existing_ends_at = Rails.cache.read("recon:import_ends_at")
       queue_starts_at = if existing_ends_at.present? && existing_ends_at > Time.current
         existing_ends_at
@@ -36,17 +35,22 @@ module Admin
       queued = 0
       skipped = 0
       rows.each do |row|
-        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at)
+        sample = Recon::TrainingSample.find_or_initialize_by(player_id: row.player_id, spied_at: row.spied_at)
+
+        if sample.persisted? && sample.level.present?
           skipped += 1
           next
         end
 
-        Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
-          player_id: row.player_id,
+        sample.update!(
           strength: row.strength,
           defense: row.defense,
           speed: row.speed,
-          dexterity: row.dexterity,
+          dexterity: row.dexterity
+        )
+
+        Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
+          player_id: row.player_id,
           spied_at: row.spied_at.to_s
         )
         queued += 1

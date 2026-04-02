@@ -59,75 +59,43 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
 
   # -- Import --
 
-  test "import queues jobs for valid spy data" do
-    AdminCredentials.stubs(:api_key).returns("admin_key")
-
+  test "import creates sample and queues job" do
     spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
 
-    assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
-      post import_admin_recon_path, params: { spy_data: spy_data }
+    assert_difference "Recon::TrainingSample.count", 1 do
+      assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
+        post import_admin_recon_path, params: { spy_data: spy_data }
+      end
     end
+
+    sample = Recon::TrainingSample.last
+    assert_equal 1485341, sample.player_id
+    assert_equal 5_751_694_281, sample.strength
+    assert_nil sample.xantaken # features not yet collected
 
     assert_redirected_to admin_recon_path
     assert_match /Queued 1/, flash[:notice]
   end
 
   test "import queues multiple rows" do
-    AdminCredentials.stubs(:api_key).returns("admin_key")
-
     spy_data = <<~TSV
       Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26
       Dark [222379]\t50\tNone\t4,112,090,853\t3,868,907,313\t2,013,554,995\t2,001,634,998\t11,996,188,159\t3.00\t24/03/26
     TSV
 
-    assert_enqueued_jobs 2, only: Recon::CollectTrainingSampleJob do
-      post import_admin_recon_path, params: { spy_data: spy_data }
+    assert_difference "Recon::TrainingSample.count", 2 do
+      assert_enqueued_jobs 2, only: Recon::CollectTrainingSampleJob do
+        post import_admin_recon_path, params: { spy_data: spy_data }
+      end
     end
 
     assert_match /Queued 2/, flash[:notice]
   end
 
-  test "import rejects blank data" do
-    post import_admin_recon_path, params: { spy_data: "" }
-    assert_redirected_to admin_recon_path
-    assert_match /No data/, flash[:alert]
-  end
-
-  test "import rejects unparseable data" do
-    post import_admin_recon_path, params: { spy_data: "garbage data here" }
-    assert_redirected_to admin_recon_path
-    assert_match /Could not parse/, flash[:alert]
-  end
-
-  test "import writes cache timer" do
-    spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
-
-    Rails.cache.expects(:write).with("recon:import_ends_at", anything, anything)
-
-    post import_admin_recon_path, params: { spy_data: spy_data }
-  end
-
-  test "import extends existing queue by scheduling after current end" do
-    existing_end = 2.minutes.from_now
-    Rails.cache.stubs(:read).with("recon:import_ends_at").returns(existing_end)
-    Rails.cache.stubs(:write)
-
-    spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
-
-    assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
-      post import_admin_recon_path, params: { spy_data: spy_data }
-    end
-
-    # Job should be scheduled after the existing queue ends, not from now
-    job = enqueued_jobs.last
-    scheduled_at = Time.parse(job["scheduled_at"])
-    assert scheduled_at >= existing_end, "Job should be scheduled after existing queue ends"
-  end
-
-  test "import skips rows already in database" do
+  test "import skips rows already collected with features" do
     Recon::TrainingSample.create!(
       player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24)
+      spied_at: Date.new(2026, 3, 24), level: 78 # has features
     )
 
     spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
@@ -139,10 +107,29 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
     assert_match /already collected/, flash[:notice]
   end
 
+  test "import re-queues rows that exist but have no features yet" do
+    Recon::TrainingSample.create!(
+      player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
+      spied_at: Date.new(2026, 3, 24) # no level = no features
+    )
+
+    spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
+
+    assert_no_difference "Recon::TrainingSample.count" do
+      assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
+        post import_admin_recon_path, params: { spy_data: spy_data }
+      end
+    end
+
+    # Labels should be updated
+    sample = Recon::TrainingSample.find_by(player_id: 1485341)
+    assert_equal 5_751_694_281, sample.strength
+  end
+
   test "import skips existing and queues new rows" do
     Recon::TrainingSample.create!(
       player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24)
+      spied_at: Date.new(2026, 3, 24), level: 78
     )
 
     spy_data = <<~TSV
@@ -161,7 +148,7 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
   test "import does not extend timer when all rows skipped" do
     Recon::TrainingSample.create!(
       player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24)
+      spied_at: Date.new(2026, 3, 24), level: 78
     )
 
     Rails.cache.expects(:write).with("recon:import_ends_at", anything, anything).never
@@ -170,11 +157,41 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
     post import_admin_recon_path, params: { spy_data: spy_data }
   end
 
-  test "import handles format 2 with separate rank column" do
-    spy_data = "1\tPenicillin [1517799]\t100\t655,000,300,610,300\t2,761,464,594,401,500\t8,940,446,370,100\t12,344,518,438\t3,425,417,685,900,338\t30/03/26\t16 minutes ago\t81,243,777"
+  test "import rejects blank data" do
+    post import_admin_recon_path, params: { spy_data: "" }
+    assert_redirected_to admin_recon_path
+    assert_match /No data/, flash[:alert]
+  end
+
+  test "import rejects unparseable data" do
+    post import_admin_recon_path, params: { spy_data: "garbage data here" }
+    assert_redirected_to admin_recon_path
+    assert_match /Could not parse/, flash[:alert]
+  end
+
+  test "import extends existing queue timer" do
+    existing_end = 2.minutes.from_now
+    Rails.cache.stubs(:read).with("recon:import_ends_at").returns(existing_end)
+    Rails.cache.stubs(:write)
+
+    spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
 
     assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
       post import_admin_recon_path, params: { spy_data: spy_data }
+    end
+
+    job = enqueued_jobs.last
+    scheduled_at = Time.parse(job["scheduled_at"])
+    assert scheduled_at >= existing_end, "Job should be scheduled after existing queue ends"
+  end
+
+  test "import handles format 2 with separate rank column" do
+    spy_data = "1\tPenicillin [1517799]\t100\t655,000,300,610,300\t2,761,464,594,401,500\t8,940,446,370,100\t12,344,518,438\t3,425,417,685,900,338\t30/03/26\t16 minutes ago\t81,243,777"
+
+    assert_difference "Recon::TrainingSample.count", 1 do
+      assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
+        post import_admin_recon_path, params: { spy_data: spy_data }
+      end
     end
 
     assert_match /Queued 1/, flash[:notice]
