@@ -1,8 +1,49 @@
 <div class="leadership-page">
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
-  <div class="leadership-wars-content">
-    <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
-    <%= render "factions/ranked_wars/member_performance_table", member_performance: @member_performance %>
-  </div>
+  <%= turbo_frame_tag "war-history" do %>
+    <div class="war-history-header">
+      <% if @can_refresh %>
+        <%= button_to refresh_faction_leadership_war_history_path(@faction),
+            method: :post, class: "btn btn-sm btn-primary",
+            data: { turbo_submits_with: '<span class="spinner"></span> Fetching...' } do %>
+          Fetch Latest
+        <% end %>
+      <% else %>
+        <span data-controller="countdown" data-countdown-target-value="<%= @refresh_seconds_remaining.seconds.from_now.iso8601 %>">
+          <button type="button" class="btn btn-sm btn-secondary" disabled>
+            <span data-countdown-target="display"><%= @refresh_seconds_remaining %>s</span>
+          </button>
+        </span>
+      <% end %>
+    </div>
+
+    <div class="leadership-wars-content">
+      <%= render "factions/ranked_wars/war_history_table", wars: @wars, faction: @faction %>
+      <%= render "factions/ranked_wars/member_performance_table", member_performance: @member_performance %>
+    </div>
+  <% end %>
 </div>
+
+<style>
+  .war-history-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: var(--space-4);
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>

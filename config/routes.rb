@@ -34,7 +34,9 @@ Rails.application.routes.draw do
       resource :spy_imports, only: [ :create ], controller: "factions/leadership/spy_imports"
       resource :faction_data, only: [ :destroy ], controller: "factions/leadership/faction_data"
 
-      resource :war_history, only: [ :show ], controller: "factions/leadership/war_history"
+      resource :war_history, only: [ :show ], controller: "factions/leadership/war_history" do
+        post :refresh
+      end
       resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports" do
         patch "/:id", to: "factions/leadership/spy_reports#update", as: :update_report
         delete "/:id", to: "factions/leadership/spy_reports#destroy", as: :destroy_report
