@@ -40,6 +40,7 @@ Rails.application.routes.draw do
       resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports" do
         patch "/:id", to: "factions/leadership/spy_reports#update", as: :update_report
         delete "/:id", to: "factions/leadership/spy_reports#destroy", as: :destroy_report
+        post :fetch_enemy
       end
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"

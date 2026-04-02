@@ -2,28 +2,45 @@
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
   <div class="leadership-import-bar">
-    <% unless @faction.tornstats_api_key&.key.present? %>
-      <p class="leadership-import-hint">Configure your TornStats API key in <%= link_to "Settings", faction_leadership_settings_path(@faction) %> to import spy data.</p>
-    <% else %>
-      <%= form_with url: faction_leadership_spy_imports_path(@faction), method: :post, class: "leadership-import-form" do |form| %>
-        <span class="leadership-import-label">Import from TornStats:</span>
-        <%= form.text_field :target_faction_id,
-            class: "leadership-import-input",
-            placeholder: "Enemy faction ID",
-            autocomplete: "off",
-            inputmode: "numeric",
-            pattern: "[0-9]*" %>
-        <% if @can_import %>
-          <%= form.submit "Import", class: "btn btn-sm btn-primary" %>
-        <% else %>
-          <span data-controller="backfill-countdown"
-                data-backfill-countdown-seconds-remaining-value="<%= @seconds_until_import %>">
-            <button type="button" class="btn btn-sm btn-secondary" disabled>
-              <span data-backfill-countdown-target="countdown"><%= @seconds_until_import %>s</span>
-            </button>
-          </span>
+    <% if @faction.tornstats_api_key&.key.present? %>
+      <div class="spy-actions-row">
+        <%= form_with url: faction_leadership_spy_imports_path(@faction), method: :post, class: "leadership-import-form" do |form| %>
+          <span class="leadership-import-label">Import:</span>
+          <%= form.text_field :target_faction_id,
+              class: "leadership-import-input",
+              placeholder: "Faction ID",
+              autocomplete: "off",
+              inputmode: "numeric",
+              pattern: "[0-9]*" %>
+          <% if @can_import %>
+            <%= form.submit "Import", class: "btn btn-sm btn-secondary" %>
+          <% else %>
+            <span data-controller="backfill-countdown"
+                  data-backfill-countdown-seconds-remaining-value="<%= @seconds_until_import %>">
+              <button type="button" class="btn btn-sm btn-secondary" disabled>
+                <span data-backfill-countdown-target="countdown"><%= @seconds_until_import %>s</span>
+              </button>
+            </span>
+          <% end %>
         <% end %>
-      <% end %>
+
+        <% if @current_war %>
+          <%= button_to fetch_enemy_faction_leadership_spy_reports_path(@faction),
+              method: :post, class: "btn btn-sm btn-primary",
+              data: { turbo_submits_with: '<span class="spinner"></span> Fetching...' } do %>
+            Fetch <%= @current_war.opponent_faction_name %>
+          <% end %>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="spy-actions-row">
+        <p class="leadership-import-hint">Configure your TornStats API key in <%= link_to "Settings", faction_leadership_settings_path(@faction) %> to import spy data.</p>
+        <% if @current_war %>
+          <button type="button" class="btn btn-sm btn-secondary" disabled title="TornStats API key required">
+            Fetch <%= @current_war.opponent_faction_name %>
+          </button>
+        <% end %>
+      </div>
     <% end %>
   </div>
 
@@ -164,6 +181,42 @@
     border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
+  }
+
+  .spy-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+  }
+
+  .spy-actions-row .leadership-import-form {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .spy-actions-row .leadership-import-hint {
+    margin: 0;
+  }
+
+  .spy-actions-row .btn {
+    white-space: nowrap;
+  }
+
+  .spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid currentColor;
+    border-right-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    vertical-align: middle;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
   }
 
   .spy-delete-btn:hover {
