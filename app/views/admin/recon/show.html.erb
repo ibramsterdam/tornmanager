@@ -33,24 +33,24 @@
       </div>
     </div>
   </div>
-<% else %>
-  <div class="recon-import-card">
-    <h2>Import Spy Data</h2>
-    <p class="recon-import-hint">Paste tab-separated spy data from TornStats, YATA, or any spy tool. Each row will be paired with historical personalstats from the Torn API to create training samples.</p>
-
-    <%= form_with url: import_admin_recon_path, method: :post, class: "recon-import-form" do |form| %>
-      <%= form.text_area :spy_data,
-          class: "recon-import-textarea",
-          placeholder: "Paste TornStats data here!\n\nFaction spy format:\nName [ID]  Level  Faction  STR  DEF  SPD  DEX  Total  FF  Date\n\nFaction member format:\nRank Name [ID]  Level  STR  DEF  SPD  DEX  Total  Date  LastAction  Score",
-          rows: 12 %>
-
-      <div class="recon-import-actions">
-        <%= form.submit "Import & Queue Jobs", class: "btn btn-primary" %>
-        <p class="recon-import-note">Each row requires 3 Torn API calls (2 personalstats batches + 1 profile). Existing samples will be updated.</p>
-      </div>
-    <% end %>
-  </div>
 <% end %>
+
+<div class="recon-import-card">
+  <h2>Import Spy Data</h2>
+  <p class="recon-import-hint">Paste tab-separated spy data from TornStats, YATA, or any spy tool. Each row will be paired with historical personalstats from the Torn API to create training samples.</p>
+
+  <%= form_with url: import_admin_recon_path, method: :post, class: "recon-import-form" do |form| %>
+    <%= form.text_area :spy_data,
+        class: "recon-import-textarea",
+        placeholder: "Paste TornStats data here!\n\nFaction spy format:\nName [ID]  Level  Faction  STR  DEF  SPD  DEX  Total  FF  Date\n\nFaction member format:\nRank Name [ID]  Level  STR  DEF  SPD  DEX  Total  Date  LastAction  Score",
+        rows: 12 %>
+
+    <div class="recon-import-actions">
+      <%= form.submit "Import & Queue Jobs", class: "btn btn-primary" %>
+      <p class="recon-import-note">Each row requires 3 Torn API calls (2 personalstats batches + 1 profile). Existing samples will be updated.</p>
+    </div>
+  <% end %>
+</div>
 
 <div class="table-container recon-samples-container <%= 'table-disabled' if @import_in_progress %>">
   <h2>Training Samples (<%= number_with_delimiter(@training_sample_count) %>)</h2>
