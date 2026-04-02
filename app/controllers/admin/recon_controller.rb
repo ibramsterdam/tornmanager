@@ -34,7 +34,13 @@ module Admin
       end
 
       queued = 0
+      skipped = 0
       rows.each do |row|
+        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at)
+          skipped += 1
+          next
+        end
+
         Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
           player_id: row.player_id,
           strength: row.strength,
@@ -46,12 +52,19 @@ module Admin
         queued += 1
       end
 
-      new_ends_at = queue_starts_at + (queued * seconds_per_job).seconds
-      remaining_seconds = (new_ends_at - Time.current).to_i
+      if queued > 0
+        new_ends_at = queue_starts_at + (queued * seconds_per_job).seconds
+        remaining_seconds = (new_ends_at - Time.current).to_i
 
-      Rails.cache.write("recon:import_ends_at", new_ends_at, expires_in: remaining_seconds.seconds)
+        Rails.cache.write("recon:import_ends_at", new_ends_at, expires_in: remaining_seconds.seconds)
+      end
 
-      redirect_to admin_recon_path, notice: "Queued #{queued} training samples. ~#{queued * 3} API calls, ~#{(remaining_seconds / 60.0).ceil} min total."
+      skip_msg = skipped > 0 ? " #{skipped} already collected." : ""
+      if queued > 0
+        redirect_to admin_recon_path, notice: "Queued #{queued} training samples.#{skip_msg} ~#{queued * 3} API calls, ~#{((queued * seconds_per_job) / 60.0).ceil} min."
+      else
+        redirect_to admin_recon_path, notice: "All #{skipped} samples already collected. Nothing to queue."
+      end
     end
   end
 end
