@@ -81,6 +81,7 @@ class Recon::CollectTrainingSampleJobTest < ActiveJob::TestCase
   private
 
   def stub_api_calls
+    AdminCredentials.stubs(:api_key).returns("test_admin_key")
     Recon::TornApi::PersonalStats.any_instance.stubs(:fetch).returns(@personalstats)
     Recon::TornApi::Profile.any_instance.stubs(:fetch).returns(@profile)
   end
