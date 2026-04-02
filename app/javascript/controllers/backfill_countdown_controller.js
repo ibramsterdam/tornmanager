@@ -7,6 +7,8 @@ export default class extends Controller {
   connect() {
     if (this.hasSecondsRemainingValue && this.secondsRemainingValue > 0) {
       this.startCountdown()
+    } else {
+      this.reloadPage()
     }
   }
 
