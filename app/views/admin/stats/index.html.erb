@@ -216,7 +216,7 @@
                     <%= user.name %> [<%= user.torn_id %>]
                   </a>
                 </td>
-                <td><%= user.created_at.strftime("%d %b") %></td>
+                <td><%= @first_session_dates[user.id]&.strftime("%d %b") || "—" %></td>
               </tr>
             <% end %>
           </tbody>

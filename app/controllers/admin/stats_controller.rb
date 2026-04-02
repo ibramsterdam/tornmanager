@@ -97,12 +97,13 @@ module Admin
       @sign_ins_this_week = Session.where("created_at >= ?", week_ago).count
       @unique_sign_ins_this_week = Session.where("created_at >= ?", week_ago).distinct.count(:user_id)
 
-      first_session_user_ids = Session
+      first_session_dates = Session
         .group(:user_id)
-        .having("MIN(created_at) >= ?", week_ago)
-        .pluck(:user_id)
+        .minimum(:created_at)
+        .select { |_, first_at| first_at >= week_ago }
 
-      @new_sign_ins = User.where(id: first_session_user_ids).order(created_at: :desc)
+      @first_session_dates = first_session_dates
+      @new_sign_ins = User.where(id: first_session_dates.keys).order(created_at: :desc)
     end
 
     def calculate_snapshot_gaps
