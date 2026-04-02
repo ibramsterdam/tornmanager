@@ -8,6 +8,7 @@ class Factions::Leadership::SpyReportsControllerTest < ActionDispatch::Integrati
     )
     @faction.create_faction_setting!
     ApiKey::Torn.create!(faction: @faction, key: "FACTION_KEY_123", access_type: "Limited Access")
+    ApiKey::Tornstats.create!(faction: @faction, key: "TS_KEY_123")
 
     @bram = users(:bram)
     @bert = users(:bert)
@@ -33,6 +34,14 @@ class Factions::Leadership::SpyReportsControllerTest < ActionDispatch::Integrati
     get faction_leadership_spy_reports_path(@faction)
     assert_response :success
     assert_select "a.back-link", "← Back to Leadership"
+  end
+
+  test "redirects to leadership with flash when no tornstats key" do
+    @faction.tornstats_api_key&.destroy!
+    sign_in_as(@bram)
+    get faction_leadership_spy_reports_path(@faction)
+    assert_redirected_to faction_leadership_path(@faction)
+    assert_match /TornStats API key/, flash[:alert]
   end
 
   test "shows empty state when no reports" do
@@ -157,10 +166,102 @@ class Factions::Leadership::SpyReportsControllerTest < ActionDispatch::Integrati
     assert SpyReport.exists?(other_report.id)
   end
 
+  # -- Show: current enemy button --
+
+  test "show displays fetch enemy button when ongoing war exists" do
+    create_ongoing_war
+
+    sign_in_as(@bram)
+    get faction_leadership_spy_reports_path(@faction)
+    assert_response :success
+    assert_select "button", text: /Sport Club/
+  end
+
+  test "show displays fetch enemy button when scheduled war exists" do
+    @faction.ranked_wars.create!(
+      torn_war_id: 2001, opponent_faction_id: 77777, opponent_faction_name: "Future Enemy",
+      started_at: 1.day.from_now, ended_at: nil, target_score: 100,
+      our_score: 0, their_score: 0
+    )
+
+    sign_in_as(@bram)
+    get faction_leadership_spy_reports_path(@faction)
+    assert_response :success
+    assert_select "button", text: /Future Enemy/
+  end
+
+  test "show does not display fetch enemy button when no ongoing war" do
+    sign_in_as(@bram)
+    get faction_leadership_spy_reports_path(@faction)
+    assert_response :success
+    assert_select "button[data-turbo-submits-with]", count: 0
+  end
+
+  # -- Fetch enemy --
+
+  test "fetch_enemy imports spy data for current war opponent" do
+    create_ongoing_war
+
+    spy_data = [
+      TornStatsApi::SpyFaction::SpyData.new(
+        torn_id: 111, name: "Enemy1", level: 50,
+        strength: 1000, defense: 2000, speed: 3000, dexterity: 4000,
+        total: 10000, spied_at: 1.day.ago
+      )
+    ]
+    TornStatsApi::SpyFaction.any_instance.stubs(:fetch).returns(spy_data)
+
+    sign_in_as(@bram)
+
+    assert_difference "@faction.spy_reports.count", 1 do
+      post fetch_enemy_faction_leadership_spy_reports_path(@faction)
+    end
+
+    assert_redirected_to faction_leadership_spy_reports_path(@faction)
+    assert_match /imported 1/, flash[:notice]
+  end
+
+  test "fetch_enemy requires tornstats api key" do
+    create_ongoing_war
+    @faction.tornstats_api_key&.destroy!
+
+    sign_in_as(@bram)
+    post fetch_enemy_faction_leadership_spy_reports_path(@faction)
+
+    assert_redirected_to faction_leadership_spy_reports_path(@faction)
+    assert_match /TornStats API key/, flash[:alert]
+  end
+
+  test "fetch_enemy requires ongoing war" do
+    sign_in_as(@bram)
+    post fetch_enemy_faction_leadership_spy_reports_path(@faction)
+
+    assert_redirected_to faction_leadership_spy_reports_path(@faction)
+    assert_match /No active war/, flash[:alert]
+  end
+
+  test "fetch_enemy requires leadership access" do
+    create_ongoing_war
+
+    sign_in_as(@bert)
+    post fetch_enemy_faction_leadership_spy_reports_path(@faction)
+    assert_redirected_to faction_path(@faction)
+  end
+
   test "redirects to setup when no api keys" do
     @faction.torn_api_key&.destroy!
     sign_in_as(@bram)
     get faction_leadership_spy_reports_path(@faction)
     assert_redirected_to faction_leadership_setup_path(@faction)
+  end
+
+  private
+
+  def create_ongoing_war
+    @faction.ranked_wars.create!(
+      torn_war_id: 2001, opponent_faction_id: 99937, opponent_faction_name: "Sport Club",
+      started_at: 1.hour.ago, ended_at: nil, target_score: 18000,
+      our_score: 0, their_score: 0
+    )
   end
 end
