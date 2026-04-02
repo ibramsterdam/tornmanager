@@ -35,7 +35,10 @@ Rails.application.routes.draw do
       resource :faction_data, only: [ :destroy ], controller: "factions/leadership/faction_data"
 
       resource :war_history, only: [ :show ], controller: "factions/leadership/war_history"
-      resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports"
+      resource :spy_reports, only: [ :show ], controller: "factions/leadership/spy_reports" do
+        patch "/:id", to: "factions/leadership/spy_reports#update", as: :update_report
+        delete "/:id", to: "factions/leadership/spy_reports#destroy", as: :destroy_report
+      end
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"
       resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage" do

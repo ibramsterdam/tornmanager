@@ -27,7 +27,9 @@
     <% end %>
   </div>
 
-  <div class="leadership-table-wrapper">
+  <div class="table-container spy-reports-container">
+    <h2>Spy Reports (<%= @spy_report_count %>)</h2>
+    <div class="spy-reports-wrapper">
     <table>
       <thead>
         <tr>
@@ -39,12 +41,13 @@
           <th>Dexterity</th>
           <th>Total</th>
           <th>Age</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         <% if @spy_reports.empty? %>
           <tr>
-            <td colspan="8" class="table-empty-cell">
+            <td colspan="9" class="table-empty-cell">
               <div class="table-empty">
                 <p>No spy reports imported yet.</p>
               </div>
@@ -52,23 +55,119 @@
           </tr>
         <% else %>
           <% @spy_reports.each_with_index do |report, index| %>
-            <tr>
+            <tr data-controller="inline-edit"
+                data-inline-edit-url-value="<%= update_report_faction_leadership_spy_reports_path(@faction, report.id) %>">
               <td class="spy-stats-rank"><%= index + 1 %></td>
               <td>
                 <a href="https://www.torn.com/profiles.php?XID=<%= report.torn_id %>" target="_blank" class="player-link">
                   <%= report.torn_id %>
                 </a>
               </td>
-              <td class="spy-stats-number"><%= number_with_delimiter(report.strength) %></td>
-              <td class="spy-stats-number"><%= number_with_delimiter(report.defense) %></td>
-              <td class="spy-stats-number"><%= number_with_delimiter(report.speed) %></td>
-              <td class="spy-stats-number"><%= number_with_delimiter(report.dexterity) %></td>
+              <td class="spy-stats-number" data-inline-edit-target="cell" data-field="strength"><%= number_with_delimiter(report.strength) %></td>
+              <td class="spy-stats-number" data-inline-edit-target="cell" data-field="defense"><%= number_with_delimiter(report.defense) %></td>
+              <td class="spy-stats-number" data-inline-edit-target="cell" data-field="speed"><%= number_with_delimiter(report.speed) %></td>
+              <td class="spy-stats-number" data-inline-edit-target="cell" data-field="dexterity"><%= number_with_delimiter(report.dexterity) %></td>
               <td class="spy-stats-number spy-stats-total"><%= number_with_delimiter(report.total) %></td>
               <td class="spy-stats-age"><%= report.spied_at ? time_ago_in_words(report.spied_at) + " ago" : "Unknown" %></td>
+              <td>
+                <%= button_to destroy_report_faction_leadership_spy_reports_path(@faction, report.id),
+                    method: :delete,
+                    class: "spy-delete-btn",
+                    data: { turbo_confirm: "Delete spy report for #{report.torn_id}?" } do %>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                <% end %>
+              </td>
             </tr>
           <% end %>
         <% end %>
       </tbody>
     </table>
+    </div>
   </div>
 </div>
+
+<style>
+  .spy-reports-container {
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+  }
+
+  .spy-reports-container h2 {
+    flex-shrink: 0;
+  }
+
+  .spy-reports-wrapper {
+    flex: 1;
+    overflow: auto;
+    min-height: 0;
+    scrollbar-color: var(--gray-700) transparent;
+  }
+
+  .spy-reports-wrapper::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .spy-reports-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .spy-reports-wrapper::-webkit-scrollbar-thumb {
+    background: var(--gray-800);
+    border-radius: 3px;
+  }
+
+  .spy-reports-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-700);
+  }
+
+  .spy-reports-wrapper thead {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--gray-900);
+  }
+
+  .inline-edit-input {
+    width: 100%;
+    background: var(--gray-1000);
+    border: 1px solid var(--gray-600);
+    border-radius: var(--radius-sm);
+    color: var(--gray-100);
+    font-family: "Geist Mono", monospace;
+    font-size: 0.8125rem;
+    padding: 2px 6px;
+    text-align: right;
+  }
+
+  .inline-edit-input:focus {
+    outline: none;
+    border-color: var(--gray-400);
+  }
+
+  .spy-stats-number {
+    cursor: text;
+  }
+
+  .spy-stats-number:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .spy-delete-btn {
+    background: transparent;
+    border: none;
+    color: var(--gray-600);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+  }
+
+  .spy-delete-btn:hover {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+</style>
