@@ -4,8 +4,11 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
 
   BATCH_SIZE = 10
 
-  def perform(player_id:, strength:, defense:, speed:, dexterity:, spied_at:)
+  def perform(player_id:, spied_at:)
     spied_at_date = Date.parse(spied_at.to_s)
+
+    sample = Recon::TrainingSample.find_by(player_id: player_id, spied_at: spied_at_date)
+    return unless sample
 
     api_key = AdminCredentials.api_key
     return if api_key.blank?
@@ -17,14 +20,7 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
 
     features = Recon::FeatureSet.build(personalstats: personalstats, profile: profile)
 
-    sample = Recon::TrainingSample.find_or_initialize_by(player_id: player_id, spied_at: spied_at_date)
-    sample.update!(
-      strength: strength,
-      defense: defense,
-      speed: speed,
-      dexterity: dexterity,
-      **features
-    )
+    sample.update!(features)
   rescue TornApi::ApiError => e
     Rails.logger.error("Recon::CollectTrainingSampleJob failed for player #{player_id}: #{e.message}")
   end
