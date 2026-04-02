@@ -107,6 +107,28 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-stats-table td a", text: /NewPlayer/
   end
 
+  test "joined date shows first session date not user creation date" do
+    new_user = User.create!(torn_id: 999888, name: "NewPlayer", level: 10, created_at: 1.year.ago)
+    Session.create!(user: new_user, ip_address: "1.2.3.4", user_agent: "test", created_at: 2.days.ago)
+
+    get admin_stats_path
+    assert_response :success
+
+    first_session_date = 2.days.ago.strftime("%d %b")
+    user_created_date = 1.year.ago.strftime("%d %b")
+
+    # Should show first session date
+    assert_select "tr" do
+      assert_select "a", text: /NewPlayer/
+      assert_select "td", text: first_session_date
+    end
+    # Should NOT show user creation date
+    assert_select "tr" do |rows|
+      new_player_row = rows.find { |r| r.text.include?("NewPlayer") }
+      assert_not_includes new_player_row.text, user_created_date if first_session_date != user_created_date
+    end
+  end
+
   test "does not show users with older sessions as first-time" do
     old_user = User.create!(torn_id: 999777, name: "OldPlayer", level: 10)
     Session.create!(user: old_user, ip_address: "1.2.3.4", user_agent: "test", created_at: 2.weeks.ago)
