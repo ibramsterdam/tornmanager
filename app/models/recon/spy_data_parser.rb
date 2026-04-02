@@ -39,6 +39,9 @@ class Recon::SpyDataParser
   def self.parse_format_1(cols, name, player_id)
     return nil if cols.size < 10
 
+    date = parse_date(cols[9])
+    return nil unless date
+
     SpyRow.new(
       player_id: player_id,
       name: name,
@@ -47,7 +50,7 @@ class Recon::SpyDataParser
       defense: parse_number(cols[4]),
       speed: parse_number(cols[5]),
       dexterity: parse_number(cols[6]),
-      spied_at: parse_date(cols[9])
+      spied_at: date
     )
   end
 
@@ -55,6 +58,9 @@ class Recon::SpyDataParser
   def self.parse_format_2(cols, name, player_id)
     return nil if cols.size < 8
     return nil if cols[2] == "N/A"
+
+    date = parse_date(cols[7])
+    return nil unless date
 
     SpyRow.new(
       player_id: player_id,
@@ -64,15 +70,14 @@ class Recon::SpyDataParser
       defense: parse_number(cols[3]),
       speed: parse_number(cols[4]),
       dexterity: parse_number(cols[5]),
-      spied_at: parse_date(cols[7])
+      spied_at: date
     )
   end
 
   def self.format_with_faction?(cols)
-    col2 = cols[2]
-    return false if col2.nil? || col2 == "N/A"
-
-    !col2.match?(/\A[\d,]+\z/)
+    # Format 1 has date at index 9 (DD/MM/YY), format 2 has date at index 7
+    # Check which position contains a valid date
+    cols[9]&.match?(%r{\A\d{2}/\d{2}/\d{2}\z})
   end
 
   def self.extract_name_and_id(col)
@@ -93,9 +98,14 @@ class Recon::SpyDataParser
 
   def self.parse_date(str)
     return nil if str.blank? || str == "N/A"
-    day, month, year = str.split("/").map(&:to_i)
+    parts = str.split("/")
+    return nil unless parts.size == 3
+
+    day, month, year = parts.map(&:to_i)
     year += 2000 if year < 100
     Date.new(year, month, day)
+  rescue Date::Error
+    nil
   end
 
   private_class_method :parse_row, :parse_format_1, :parse_format_2,

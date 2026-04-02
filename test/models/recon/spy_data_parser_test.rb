@@ -128,6 +128,18 @@ class Recon::SpyDataParserTest < ActiveSupport::TestCase
     assert_equal 0, results.size
   end
 
+  test "format 1: handles numeric faction name" do
+    input = "Missbhavin [2382460]\t61\t300\t1,416,721\t1,646,694\t2,100,183\t1,409,042\t6,572,640\t1.29\t03/12/24"
+
+    results = Recon::SpyDataParser.parse(input)
+    assert_equal 1, results.size
+
+    row = results.first
+    assert_equal 2382460, row.player_id
+    assert_equal 1_416_721, row.strength
+    assert_equal Date.new(2024, 12, 3), row.spied_at
+  end
+
   # -- Shared behavior --
 
   test "parses date in DD/MM/YY format" do
