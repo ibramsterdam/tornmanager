@@ -47,6 +47,53 @@ class Factions::Leadership::WarHistoryControllerTest < ActionDispatch::Integrati
     assert_response :success
   end
 
+  # -- Refresh --
+
+  test "refresh fetches wars inline and re-renders page" do
+    sign_in_as(@bram)
+    BackfillRankedWarsJob.any_instance.stubs(:perform)
+
+    post refresh_faction_leadership_war_history_path(@faction)
+
+    assert_response :success
+    assert_select "turbo-frame#war-history"
+  end
+
+  test "refresh enforces 60s cooldown" do
+    sign_in_as(@bram)
+
+    cache_key = "faction:#{@faction.id}:war_history_refresh"
+    Rails.cache.stubs(:read).with(cache_key).returns(Time.current)
+
+    post refresh_faction_leadership_war_history_path(@faction)
+
+    assert_redirected_to faction_leadership_war_history_path(@faction)
+    assert_match /wait/, flash[:alert]
+  end
+
+  test "show displays refresh button when not on cooldown" do
+    sign_in_as(@bram)
+    get faction_leadership_war_history_path(@faction)
+
+    assert_select "button", text: "Fetch Latest"
+  end
+
+  test "show displays cooldown timer when on cooldown" do
+    cache_key = "faction:#{@faction.id}:war_history_refresh"
+    Rails.cache.stubs(:read).with(cache_key).returns(Time.current)
+
+    sign_in_as(@bram)
+    get faction_leadership_war_history_path(@faction)
+
+    assert_select "button[disabled]"
+  end
+
+  test "refresh requires leadership access" do
+    sign_in_as(@bert)
+    post refresh_faction_leadership_war_history_path(@faction)
+    assert_redirected_to faction_path(@faction)
+  end
+
   test "redirects to setup when no api keys" do
     @faction.torn_api_key&.destroy!
     sign_in_as(@bram)
