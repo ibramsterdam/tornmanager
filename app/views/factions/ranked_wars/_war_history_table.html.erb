@@ -107,7 +107,7 @@
                 </div>
               </td>
               <td>
-                <%= link_to faction_ranked_war_path(faction, war), class: "view-link", title: "View details" do %>
+                <%= link_to faction_ranked_war_path(faction, war), class: "view-link", title: "View details", data: { turbo_frame: "_top" } do %>
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="9 18 15 12 9 6"/>
                   </svg>
