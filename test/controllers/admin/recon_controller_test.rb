@@ -92,10 +92,10 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
     assert_match /Queued 2/, flash[:notice]
   end
 
-  test "import skips rows already collected with features" do
+  test "import skips rows already in database" do
     Recon::TrainingSample.create!(
       player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24), level: 78 # has features
+      spied_at: Date.new(2026, 3, 24)
     )
 
     spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
@@ -107,29 +107,10 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
     assert_match /already collected/, flash[:notice]
   end
 
-  test "import re-queues rows that exist but have no features yet" do
-    Recon::TrainingSample.create!(
-      player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24) # no level = no features
-    )
-
-    spy_data = "Trole [1485341]\t78\tNone\t5,751,694,281\t7,905,360,376\t4,692,172,959\t297,478,845\t18,646,706,461\t3.00\t24/03/26"
-
-    assert_no_difference "Recon::TrainingSample.count" do
-      assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
-        post import_admin_recon_path, params: { spy_data: spy_data }
-      end
-    end
-
-    # Labels should be updated
-    sample = Recon::TrainingSample.find_by(player_id: 1485341)
-    assert_equal 5_751_694_281, sample.strength
-  end
-
   test "import skips existing and queues new rows" do
     Recon::TrainingSample.create!(
       player_id: 1485341, strength: 1, defense: 1, speed: 1, dexterity: 1,
-      spied_at: Date.new(2026, 3, 24), level: 78
+      spied_at: Date.new(2026, 3, 24)
     )
 
     spy_data = <<~TSV

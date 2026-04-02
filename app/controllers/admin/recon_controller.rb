@@ -35,18 +35,18 @@ module Admin
       queued = 0
       skipped = 0
       rows.each do |row|
-        sample = Recon::TrainingSample.find_or_initialize_by(player_id: row.player_id, spied_at: row.spied_at)
-
-        if sample.persisted? && sample.level.present?
+        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at)
           skipped += 1
           next
         end
 
-        sample.update!(
+        Recon::TrainingSample.create!(
+          player_id: row.player_id,
           strength: row.strength,
           defense: row.defense,
           speed: row.speed,
-          dexterity: row.dexterity
+          dexterity: row.dexterity,
+          spied_at: row.spied_at
         )
 
         Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
