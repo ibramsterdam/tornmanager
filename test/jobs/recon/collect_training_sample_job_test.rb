@@ -49,8 +49,9 @@ class Recon::CollectTrainingSampleJobTest < ActiveJob::TestCase
   test "skips if sample does not exist" do
     stub_api_calls
 
-    # Should not raise
     Recon::CollectTrainingSampleJob.perform_now(player_id: 9999999, spied_at: "2026-03-24")
+
+    assert_nil Recon::TrainingSample.find_by(player_id: 9999999)
   end
 
   test "handles API errors gracefully" do

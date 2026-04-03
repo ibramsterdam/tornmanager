@@ -1010,4 +1010,414 @@
 
 .stat-compliant { color: #22c55e; }
 .stat-warning { color: #eab308; }
+
+/* War Reports */
+.war-reports-top {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .war-reports-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+.war-reports-header h2 {
+  margin: 0 0 var(--space-3);
+}
+
+.war-reports-sidebar {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+}
+
+.war-reports-sidebar h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 0.875rem;
+  color: var(--gray-300);
+}
+
+.war-reports-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-color: var(--gray-700) transparent;
+}
+
+.war-reports-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.war-reports-list::-webkit-scrollbar-thumb {
+  background: var(--gray-800);
+  border-radius: 2px;
+}
+
+.war-reports-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  color: var(--gray-300);
+  font-size: 0.8125rem;
+  transition: background 0.15s;
+}
+
+.war-reports-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.war-reports-item-selected {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--gray-700);
+}
+
+.war-reports-item-status {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.war-reports-item-status.won {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.war-reports-item-status.lost {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.war-reports-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.war-reports-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.war-reports-item-date {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+}
+
+.war-reports-item-score {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
+
+.war-reports-detail {
+  min-width: 0;
+}
+
+.war-reports-summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  font-size: 0.875rem;
+}
+
+.war-reports-badge {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.war-reports-badge.won {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+.war-reports-badge.lost {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.war-reports-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.war-reports-title-row h2 {
+  margin: 0;
+}
+
+.war-reports-fetch-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  white-space: nowrap;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.pulse-dot-green {
+  background: #22c55e;
+  box-shadow: 0 0 4px #22c55e;
+}
+
+.pulse-dot-yellow {
+  background: #eab308;
+  box-shadow: 0 0 4px #eab308;
+  animation: pulse-yellow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-yellow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.war-reports-warning {
+  background: rgba(234, 179, 8, 0.1);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  margin-bottom: var(--space-4);
+  font-size: 0.8125rem;
+  color: #eab308;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.war-reports-fetch {
+  padding: var(--space-8);
+  text-align: center;
+  color: var(--gray-400);
+}
+
+.war-reports-stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.war-reports-stat {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  text-align: center;
+}
+
+.war-reports-stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--gray-100);
+  font-family: "Geist Mono", monospace;
+  display: block;
+}
+
+.war-reports-stat-label {
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  text-transform: uppercase;
+}
+
+.war-reports-table-container {
+  display: flex;
+  flex-direction: column;
+  max-height: 500px;
+}
+
+.war-reports-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.war-reports-table-header h2 {
+  margin: 0;
+}
+
+.war-reports-table-wrapper {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+  scrollbar-color: var(--gray-700) transparent;
+}
+
+.war-reports-table-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.war-reports-table-wrapper::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.war-reports-table-wrapper::-webkit-scrollbar-thumb {
+  background: var(--gray-800);
+  border-radius: 3px;
+}
+
+.war-reports-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-700);
+}
+
+.war-reports-table-wrapper thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--gray-900);
+}
+
+.war-reports-table-wrapper td {
+  font-family: "Geist Mono", monospace;
+  font-size: 0.8125rem;
+}
+
+.war-reports-member-row {
+  cursor: pointer;
+}
+
+.war-reports-member-row:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.war-reports-detail-row td {
+  background: var(--gray-1000);
+  padding: var(--space-3) var(--space-4);
+}
+
+.war-reports-attack-log {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-color: var(--gray-700) transparent;
+}
+
+.war-reports-attack-log::-webkit-scrollbar {
+  width: 4px;
+}
+
+.war-reports-attack-log::-webkit-scrollbar-thumb {
+  background: var(--gray-800);
+  border-radius: 2px;
+}
+
+.war-reports-subtable {
+  font-size: 0.75rem;
+}
+
+.war-reports-subtable th {
+  font-size: 0.625rem;
+  background: var(--gray-900);
+  position: sticky;
+  top: 0;
+}
+
+.war-reports-subtable td {
+  font-size: 0.75rem;
+  padding: var(--space-1) var(--space-2);
+}
+
+/* Payout Calculator */
+.war-reports-payout-form {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.payout-inputs {
+  display: flex;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.payout-field {
+  flex: 1;
+}
+
+.payout-field label {
+  display: block;
+  font-size: 0.6875rem;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.payout-field input {
+  width: 100%;
+  background: var(--gray-1000);
+  border: 1px solid var(--gray-700);
+  border-radius: var(--radius-sm);
+  color: var(--gray-100);
+  font-family: "Geist Mono", monospace;
+  font-size: 0.875rem;
+  padding: var(--space-2) var(--space-3);
+}
+
+.payout-field input:focus {
+  outline: none;
+  border-color: var(--gray-500);
+}
+
+.payout-summary {
+  display: flex;
+  gap: var(--space-6);
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+}
+
+.payout-summary strong {
+  color: #22c55e;
+  font-family: "Geist Mono", monospace;
+}
+
+.payout-cell {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+/* Sort indicators */
+th.sortable.sorted-asc::after {
+  content: " ▲";
+  font-size: 0.625rem;
+}
+
+th.sortable.sorted-desc::after {
+  content: " ▼";
+  font-size: 0.625rem;
+}
+
+@media (max-width: 600px) {
+  .payout-inputs {
+    flex-direction: column;
+  }
+}
 .stat-danger { color: #ef4444; }

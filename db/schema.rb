@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_30_194240) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_03_152750) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -110,6 +110,45 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_194240) do
     t.string "slug", null: false
     t.datetime "updated_at", null: false
     t.index ["slug"], name: "index_public_war_lobbies_on_slug", unique: true
+  end
+
+  create_table "ranked_war_attacks", force: :cascade do |t|
+    t.integer "attacker_faction_id"
+    t.string "attacker_faction_name"
+    t.integer "attacker_id", null: false
+    t.integer "attacker_level"
+    t.string "attacker_name"
+    t.integer "chain", default: 0
+    t.float "chain_modifier"
+    t.string "code"
+    t.datetime "created_at", null: false
+    t.integer "defender_faction_id"
+    t.string "defender_faction_name"
+    t.integer "defender_id", null: false
+    t.integer "defender_level"
+    t.string "defender_name"
+    t.integer "ended", null: false
+    t.float "fair_fight"
+    t.json "finishing_hit_effects", default: []
+    t.float "group_modifier"
+    t.boolean "is_interrupted", default: false
+    t.boolean "is_raid", default: false
+    t.boolean "is_stealthed", default: false
+    t.float "overseas"
+    t.integer "ranked_war_id", null: false
+    t.float "respect_gain", default: 0.0
+    t.float "respect_loss", default: 0.0
+    t.string "result", null: false
+    t.float "retaliation"
+    t.integer "started", null: false
+    t.integer "torn_attack_id", null: false
+    t.datetime "updated_at", null: false
+    t.float "war"
+    t.float "warlord"
+    t.index ["attacker_id"], name: "index_ranked_war_attacks_on_attacker_id"
+    t.index ["defender_id"], name: "index_ranked_war_attacks_on_defender_id"
+    t.index ["ranked_war_id", "torn_attack_id"], name: "index_ranked_war_attacks_on_ranked_war_id_and_torn_attack_id", unique: true
+    t.index ["ranked_war_id"], name: "index_ranked_war_attacks_on_ranked_war_id"
   end
 
   create_table "ranked_wars", force: :cascade do |t|
@@ -300,6 +339,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_30_194240) do
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
+  add_foreign_key "ranked_war_attacks", "ranked_wars"
   add_foreign_key "ranked_wars", "factions"
   add_foreign_key "sessions", "users"
   add_foreign_key "spy_reports", "factions"

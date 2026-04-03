@@ -42,6 +42,9 @@ Rails.application.routes.draw do
         delete "/:id", to: "factions/leadership/spy_reports#destroy", as: :destroy_report
         post :fetch_enemy
       end
+      resource :war_reports, only: [ :show ], controller: "factions/leadership/war_reports" do
+        post :fetch_attacks
+      end
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"
       resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage" do
