@@ -1,0 +1,260 @@
+<div class="leadership-page">
+  <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
+
+  <div class="war-reports-top">
+    <aside class="war-reports-sidebar">
+      <h3>Completed Wars</h3>
+      <% if @wars.any? %>
+        <div class="war-reports-list">
+          <% @wars.each do |war| %>
+            <%= link_to faction_leadership_war_reports_path(@faction, war: war.torn_war_id),
+                class: "war-reports-item #{'war-reports-item-selected' if @selected_war&.id == war.id}" do %>
+              <span class="war-reports-item-status <%= war.won? ? 'won' : 'lost' %>">
+                <%= war.won? ? 'W' : 'L' %>
+              </span>
+              <div class="war-reports-item-info">
+                <span class="war-reports-item-name"><%= war.opponent_faction_name %></span>
+                <span class="war-reports-item-date"><%= war.started_at.strftime("%d %b %Y") %></span>
+              </div>
+              <span class="war-reports-item-score"><%= war.our_score %>-<%= war.their_score %></span>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="muted">No completed wars.</p>
+      <% end %>
+    </aside>
+
+    <% if @selected_war %>
+      <div class="war-reports-header">
+        <div class="war-reports-title-row">
+          <h2>vs <%= @selected_war.opponent_faction_name %></h2>
+          <%= button_to fetch_attacks_faction_leadership_war_reports_path(@faction, war: @selected_war.torn_war_id),
+              method: :post, class: "btn btn-sm btn-secondary war-reports-fetch-btn",
+              data: { turbo_submits_with: '<span class="spinner"></span> Fetching...' } do %>
+            <span class="pulse-dot <%= @integrity_ok ? 'pulse-dot-green' : 'pulse-dot-yellow' %>"></span> Fetch
+          <% end %>
+        </div>
+        <div class="war-reports-summary">
+          <span class="war-reports-badge <%= @selected_war.won? ? 'won' : 'lost' %>">
+            <%= @selected_war.won? ? 'VICTORY' : 'DEFEAT' %>
+          </span>
+          <span><%= @selected_war.our_score %> &ndash; <%= @selected_war.their_score %> / <%= @selected_war.target_score %></span>
+          <span class="muted"><%= @selected_war.duration_formatted %></span>
+          <span class="muted"><%= @selected_war.started_at.strftime("%d %b %Y %H:%M") %></span>
+        </div>
+
+        <% attacks_count = @has_attacks ? @outgoing.count : 0 %>
+        <% total_respect = @has_attacks ? @outgoing.sum(:respect_gain) : 0 %>
+        <% avg_respect = attacks_count > 0 ? (total_respect / attacks_count).round(2) : 0 %>
+        <% avg_ff = attacks_count > 0 ? (@outgoing.average(:fair_fight)&.round(2) || 0) : 0 %>
+        <% total_assists = @has_attacks ? @member_stats.sum { |m| m[:assists] } : 0 %>
+        <% total_overseas = @has_attacks ? @member_stats.sum { |m| m[:overseas_hits] } : 0 %>
+        <% total_warlord = @has_attacks ? @member_stats.sum { |m| m[:warlord_hits] } : 0 %>
+
+        <div class="war-reports-stats-row">
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= attacks_count %></span>
+            <span class="war-reports-stat-label">Attacks</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= number_with_delimiter(total_respect.round(0)) %></span>
+            <span class="war-reports-stat-label">Respect</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= avg_respect %></span>
+            <span class="war-reports-stat-label">Avg Respect</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= avg_ff %></span>
+            <span class="war-reports-stat-label">Avg FF</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= @has_attacks ? @member_stats.size : 0 %></span>
+            <span class="war-reports-stat-label">Participants</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= total_warlord %></span>
+            <span class="war-reports-stat-label">Warlord</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= total_overseas %></span>
+            <span class="war-reports-stat-label">Overseas</span>
+          </div>
+          <div class="war-reports-stat">
+            <span class="war-reports-stat-value"><%= total_assists %></span>
+            <span class="war-reports-stat-label">Assists</span>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div class="war-reports-header">
+        <div class="table-empty">
+          <p class="table-empty-text">No completed wars found.</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @selected_war %>
+    <% if !@integrity_ok %>
+      <div class="war-reports-warning">
+        <strong>Incomplete:</strong> <%= @integrity_message || "No attack data fetched yet" %>
+      </div>
+    <% end %>
+
+    <div data-controller="payout-calculator export-csv" data-action="input->payout-calculator#calculate">
+      <div class="war-reports-payout-form">
+        <div class="payout-inputs">
+          <div class="payout-field">
+            <label>Total Pot</label>
+            <input type="text" data-payout-calculator-target="totalPot" data-export-csv-target="totalPot" value="0" placeholder="e.g. 3,120,000,000">
+          </div>
+          <div class="payout-field">
+            <label>Faction Cut %</label>
+            <input type="number" data-payout-calculator-target="factionCut" data-export-csv-target="factionCut" value="10" min="0" max="100" step="1">
+          </div>
+          <div class="payout-field">
+            <label>Assist Value</label>
+            <input type="number" data-payout-calculator-target="assistValue" data-export-csv-target="assistValue" value="0.75" min="0" max="1" step="0.05">
+          </div>
+        </div>
+        <div class="payout-summary">
+          <span>Faction Cut: <strong data-payout-calculator-target="factionCutAmount">0</strong></span>
+          <span>Payout Pot: <strong data-payout-calculator-target="payoutPot">0</strong></span>
+        </div>
+      </div>
+
+      <div class="table-container war-reports-table-container" data-controller="sortable-table">
+        <div class="war-reports-table-header">
+          <h2>Member Breakdown (<%= @has_attacks ? @member_stats.size : 0 %> participants)</h2>
+          <button type="button" class="btn btn-sm btn-secondary" data-action="click->export-csv#export">Export CSV</button>
+        </div>
+        <div class="war-reports-table-wrapper">
+          <table data-export-csv-target="table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sortable-table-target="header" data-column="0" data-sort-type="string" data-action="click->sortable-table#sort">Member</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="1" data-action="click->sortable-table#sort">RW Hits</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="2" data-action="click->sortable-table#sort">FF&lt;1.25</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="3" data-action="click->sortable-table#sort">FF&lt;1.75</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="4" data-action="click->sortable-table#sort">FF&ge;1.75</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="5" data-action="click->sortable-table#sort">Overseas</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="6" data-action="click->sortable-table#sort">Assists</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="7" data-action="click->sortable-table#sort">Warlord</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="8" data-action="click->sortable-table#sort">Respect</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="9" data-action="click->sortable-table#sort">Avg</th>
+                <th class="sortable" data-sortable-table-target="header" data-column="10" data-action="click->sortable-table#sort">Payout</th>
+              </tr>
+            </thead>
+            <% if @has_attacks %>
+              <% @member_stats.each do |member| %>
+                <tbody data-sortable-table-target="body" data-controller="recon-sample">
+                  <tr class="war-reports-member-row" data-action="click->recon-sample#toggle">
+                    <td>
+                      <a href="https://www.torn.com/profiles.php?XID=<%= member[:torn_id] %>" target="_blank" class="player-link" data-action="click->recon-sample#stopPropagation">
+                        <%= member[:name] %>
+                      </a>
+                    </td>
+                    <td><%= member[:hits] %></td>
+                    <td>
+                      <% if member[:ff_low] > 0 %>
+                        <span class="stat-danger"><%= member[:ff_low] %></span>
+                      <% else %>
+                        <span class="muted">0</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if member[:ff_mid] > 0 %>
+                        <span class="stat-warning"><%= member[:ff_mid] %></span>
+                      <% else %>
+                        <span class="muted">0</span>
+                      <% end %>
+                    </td>
+                    <td><span class="stat-compliant"><%= member[:ff_high] %></span></td>
+                    <td>
+                      <% if member[:overseas_hits] > 0 %>
+                        <span class="stat-warning"><%= member[:overseas_hits] %></span>
+                      <% else %>
+                        <span class="muted">0</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if member[:assists] > 0 %>
+                        <%= member[:assists] %>
+                      <% else %>
+                        <span class="muted">0</span>
+                      <% end %>
+                    </td>
+                    <td>
+                      <% if member[:warlord_hits] > 0 %>
+                        <span class="stat-compliant"><%= member[:warlord_hits] %></span>
+                      <% else %>
+                        <span class="muted">0</span>
+                      <% end %>
+                    </td>
+                    <td><%= number_with_delimiter(member[:respect].round(0)) %></td>
+                    <td><%= member[:avg_respect] %></td>
+                    <td class="payout-cell"
+                        data-payout-calculator-target="payoutCell"
+                        data-hits="<%= member[:hits] %>"
+                        data-assists="<%= member[:assists] %>"
+                        data-respect="<%= member[:respect].round(2) %>">—</td>
+                  </tr>
+                  <tr class="war-reports-detail-row" data-recon-sample-target="details" style="display: none;">
+                    <td colspan="11">
+                      <div class="war-reports-attack-log">
+                        <table class="war-reports-subtable">
+                          <thead>
+                            <tr>
+                              <th>Target</th>
+                              <th>Result</th>
+                              <th>Respect</th>
+                              <th>FF</th>
+                              <th>War</th>
+                              <th>Warlord</th>
+                              <th>Chain</th>
+                              <th>Time</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <% (@attacks_by_member[member[:torn_id]] || []).sort_by(&:started).each do |attack| %>
+                              <tr>
+                                <td>
+                                  <a href="https://www.torn.com/profiles.php?XID=<%= attack.defender_id %>" target="_blank" class="player-link">
+                                    <%= attack.defender_name %>
+                                  </a>
+                                </td>
+                                <td><%= attack.result %></td>
+                                <td><%= attack.respect_gain&.round(2) %></td>
+                                <td class="<%= attack.fair_fight && attack.fair_fight < 1.25 ? 'stat-danger' : (attack.fair_fight && attack.fair_fight < 1.75 ? 'stat-warning' : 'stat-compliant') %>">
+                                  <%= attack.fair_fight&.round(2) %>
+                                </td>
+                                <td><%= attack.war&.round(1) %></td>
+                                <td>
+                                  <% if attack.used_warlord? %>
+                                    <span class="stat-compliant"><%= attack.warlord&.round(2) %></span>
+                                  <% else %>
+                                    <span class="muted">1</span>
+                                  <% end %>
+                                </td>
+                                <td><%= attack.chain %></td>
+                                <td class="muted"><%= Time.at(attack.started).strftime("%d %b %H:%M") %></td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              <% end %>
+            <% else %>
+              <tbody data-sortable-table-target="body"></tbody>
+            <% end %>
+          </table>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

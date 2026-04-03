@@ -19,7 +19,6 @@ class FactionsController < ApplicationController
   end
 
   def show
-    # Subscription check: must be subscribed or admin
     unless Current.user.subscribed? || Current.user.admin?
       return render :subscription_expired
     end
@@ -40,7 +39,6 @@ class FactionsController < ApplicationController
   def create
     api_key = params[:api_key].to_s.strip
 
-    # Validate the API key
     begin
       key_info = TornApi::Key::Info.new(api_key).fetch
     rescue TornApi::InvalidKeyError
@@ -48,43 +46,35 @@ class FactionsController < ApplicationController
       return render :setup, status: :unprocessable_entity
     end
 
-    # Must be Limited Access
     unless key_info.access.type == "Limited Access"
       flash.now[:alert] = "This key is #{key_info.access.type}. A Limited Access key is required."
       return render :setup, status: :unprocessable_entity
     end
 
-    # Must belong to the current user
     unless key_info.user.id == Current.user.torn_id
       flash.now[:alert] = "This API key does not belong to you."
       return render :setup, status: :unprocessable_entity
     end
 
-    # Must be for the correct faction
     unless key_info.user.faction_id == @faction.torn_id
       flash.now[:alert] = "This API key is for a different faction."
       return render :setup, status: :unprocessable_entity
     end
 
-    # Create faction setting and store the API key
     @faction.create_faction_setting! unless @faction.faction_setting
     torn_record = @faction.torn_api_key || @faction.build_torn_api_key
     torn_record.update!(key: api_key, access_type: "Limited Access", faction_access: key_info.access.faction == true)
 
-    # Grant leadership access to the setup user
     Current.user.update!(leadership_access: true)
 
-    # Fetch faction members to grant trial subscriptions and leadership access to leaders
     members = TornApi::Faction::Members.new(api_key, @faction.torn_id).fetch
 
-    # Grant 1-month trial subscription to members who haven't received one yet
     trial_expiry = 1.month.from_now
     @faction.users.where(trial_granted_at: nil).update_all(
       subscription_expires_at: trial_expiry,
       trial_granted_at: Time.current
     )
 
-    # Persist positions and grant leadership access to Leaders and Co-leaders
     members.each do |member|
       user = User.find_by(torn_id: member.id)
       next unless user
@@ -94,12 +84,11 @@ class FactionsController < ApplicationController
       user.update!(attrs)
     end
 
-    # Calculate backfill ETA immediately so the banner shows right away
     start_date = PersonalStatSnapshot.tracking_start_date
     end_date = Date.yesterday
     dates_count = (start_date..end_date).count
     members_count = @faction.users.active.count
-    total_api_calls = members_count * dates_count * 2  # 2 batches per user per date
+    total_api_calls = members_count * dates_count * 2 # 2 batches per user per date
     estimated_seconds = [ total_api_calls * BackfillPersonalStatsJob::SECONDS_PER_API_CALL, 1 ].max.to_i
 
     @faction.update!(
@@ -107,7 +96,6 @@ class FactionsController < ApplicationController
       backfill_target_date: start_date
     )
 
-    # Queue background jobs
     BackfillRankedWarsJob.perform_later(@faction.id)
     BackfillPersonalStatsJob.perform_later(
       @faction.id,
@@ -115,7 +103,6 @@ class FactionsController < ApplicationController
       end_date.to_s
     )
 
-    # Mark setup as completed
     @faction.update!(setup_completed: true)
 
     redirect_to faction_path(@faction), notice: "Your faction has been set up. Welcome to TornManager!"
@@ -160,28 +147,23 @@ class FactionsController < ApplicationController
       return
     end
 
-    # Must be a member of this faction
     unless Current.user.faction == @faction
       redirect_to root_path, alert: "You cannot set up this faction."
       return
     end
 
-    # Must not already be set up
     if @faction.setup_completed?
       redirect_to root_path, alert: "This faction is already set up."
     end
   end
 
   def load_hero_data
-    # Member count
     @member_count = @faction.users.active.count
 
-    # War record (current year only)
     current_year_wars = @faction.ranked_wars.completed.where(started_at: Date.current.beginning_of_year..)
     @war_wins = current_year_wars.won.count
     @war_losses = current_year_wars.lost.count
 
-    # Weekly top performers (last calendar week: Monday to Sunday)
     last_week_end = Date.current.beginning_of_week(:monday) - 1.day
     last_week_start = last_week_end.beginning_of_week(:monday)
     weekly_summary = ComplianceSummary.new(@faction, start_date: last_week_start, end_date: last_week_end)

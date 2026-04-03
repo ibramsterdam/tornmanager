@@ -1,5 +1,6 @@
 class RankedWar < ApplicationRecord
   belongs_to :faction
+  has_many :ranked_war_attacks, dependent: :destroy
 
   scope :completed, -> { where.not(ended_at: nil) }
   scope :ongoing, -> { where(ended_at: nil) }

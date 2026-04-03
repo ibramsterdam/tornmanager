@@ -45,6 +45,16 @@
         <span class="dashboard-stat-label">Settings</span>
       <% end %>
 
+      <%= link_to faction_leadership_war_reports_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19v-6a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2zm0 0V9a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v10m-6 0a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2m0 0V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z"/>
+          </svg>
+        </span>
+        <span class="dashboard-stat-value"><%= @wars.size %></span>
+        <span class="dashboard-stat-label">War Reports</span>
+      <% end %>
+
       <% if @war_polling_active %>
         <%= button_to stop_faction_leadership_war_polling_path(@faction), method: :delete, class: "dashboard-stat-card dashboard-stat-card-link dashboard-stat-card-toggle", data: { turbo_confirm: "Stop war polling?" } do %>
           <span class="dashboard-stat-icon">
