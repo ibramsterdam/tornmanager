@@ -117,7 +117,7 @@ class TornApi::Faction::AttacksTest < ActiveSupport::TestCase
 
     attacks = service.fetch_all
     assert_equal 3, attacks.size
-    assert_equal [3, 2, 1], attacks.map(&:id)
+    assert_equal [ 3, 2, 1 ], attacks.map(&:id)
   end
 
   test "fetch_all stops at max pages to prevent infinite loops" do

@@ -27,8 +27,6 @@ class BackfillPersonalStatsJob < ApplicationJob
       end
     end
 
-    # Schedule cleanup job based on the faction's existing backfill ETA
-    # (backfill_ends_at is already set by the controller at setup time)
     if faction.backfill_ends_at.present?
       wait_seconds = [ (faction.backfill_ends_at - Time.current).to_i, 1 ].max
       ClearBackfillStatusJob.set(wait: wait_seconds.seconds).perform_later(faction.id)

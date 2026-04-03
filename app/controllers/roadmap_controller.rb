@@ -4,7 +4,7 @@ class RoadmapController < ApplicationController
   before_action :set_roadmap_item, only: [ :update, :destroy ]
 
   def index
-    resume_session # Attempt to load user session without requiring it
+    resume_session
     @items_by_status = RoadmapItem::STATUSES.index_with do |status|
       RoadmapItem.by_status(status)
     end

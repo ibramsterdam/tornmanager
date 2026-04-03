@@ -28,7 +28,6 @@ class Factions::Leadership::SetupController < Factions::Leadership::BaseControll
         return redirect_to faction_leadership_setup_path(@faction), alert: "This API key does not belong to you."
       end
 
-      # Ensure faction_setting exists
       @faction.create_faction_setting! unless @faction.faction_setting
 
       torn_record = @faction.torn_api_key || @faction.build_torn_api_key

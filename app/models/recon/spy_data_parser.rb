@@ -22,7 +22,6 @@ class Recon::SpyDataParser
     cols = line.split("\t").map(&:strip)
     return nil if cols.size < 8
 
-    # If first column is a pure number, it's a rank — shift it off
     cols.shift if cols[0].match?(/\A\d+\z/)
 
     name, player_id = extract_name_and_id(cols[0])

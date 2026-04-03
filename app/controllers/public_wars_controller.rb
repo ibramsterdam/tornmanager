@@ -32,7 +32,6 @@ class PublicWarsController < ApplicationController
       return render_index_with_error
     end
 
-    # Validate the API key and look up the creator
     begin
       key_info = TornApi::Key::Info.new(api_key).fetch
       creator = TornApi::User::Profile.new(api_key).fetch
@@ -44,13 +43,11 @@ class PublicWarsController < ApplicationController
       return render_index_with_error
     end
 
-    # Enforce Public Only key access level
     unless key_info.access.type == "Public Only"
       flash.now[:alert] = "Only Public Only API keys are accepted. Your key has #{key_info.access.type} access. Please create a Public Only key in your Torn API settings."
       return render_index_with_error
     end
 
-    # Fetch faction info
     begin
       faction_info = TornApi::Faction::Basic.new(api_key, faction_torn_id).fetch
       faction_name = faction_info["name"]
@@ -62,7 +59,6 @@ class PublicWarsController < ApplicationController
       return render_index_with_error
     end
 
-    # Find active ranked war
     begin
       wars = TornApi::Faction::RankedWars.new(api_key, faction_torn_id).fetch(limit: 5)
       active_war = wars.find { |w| w["end"].to_i == 0 }
@@ -76,17 +72,14 @@ class PublicWarsController < ApplicationController
       return render_index_with_error
     end
 
-    # Find opponent faction name from the war data
     opponent = active_war["factions"]&.find { |f| f["id"] != faction_torn_id }
     opponent_name = opponent&.dig("name") || "Unknown"
 
-    # Check for duplicate lobby
     if PublicWarLobby.exists?(faction_torn_id: faction_torn_id)
       flash.now[:alert] = "A lobby already exists for this faction's war."
       return render_index_with_error
     end
 
-    # Create the lobby
     lobby = PublicWarLobby.new(
       faction_torn_id: faction_torn_id,
       faction_name: faction_name,
@@ -101,10 +94,8 @@ class PublicWarsController < ApplicationController
       return render_index_with_error
     end
 
-    # Cache the API key (no expiry — lives until server restart or manual delete)
     Rails.cache.write(lobby.api_key_cache_key, api_key)
 
-    # Start polling
     PublicWarPollingJob.perform_later(lobby.id)
 
     redirect_to public_war_path(lobby), notice: "Lobby created! Live polling has started."
