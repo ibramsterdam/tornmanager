@@ -28,7 +28,6 @@ class SessionsController < ApplicationController
         profile_image: profile.image
       )
 
-      # Assign user to their faction, creating it if needed
       torn_faction_id = key_info.user.faction_id
       if torn_faction_id.present? && torn_faction_id > 0
         faction = Faction.find_by(torn_id: torn_faction_id)

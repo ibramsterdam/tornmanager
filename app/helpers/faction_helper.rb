@@ -6,7 +6,7 @@ module FactionHelper
 
     if ratio >= 1.0
       :green
-    elsif ratio >= 0.6  # 60% of target
+    elsif ratio >= 0.6
       :yellow
     else
       :red
