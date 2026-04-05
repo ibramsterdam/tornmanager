@@ -1,0 +1,85 @@
+<div class="page-header">
+  <%= link_to "&larr; Back to Recon".html_safe, admin_recon_path, class: "back-link" %>
+  <h1>Training Data Stats</h1>
+  <p class="page-subtitle">Feature and label distributions for Random Forest analysis</p>
+</div>
+
+<% if @total == 0 %>
+  <div class="table-empty">
+    <p class="table-empty-text">No complete training samples yet.</p>
+  </div>
+<% else %>
+  <div class="activity-info-bar">
+    <span><strong>Total samples:</strong> <%= number_with_delimiter(@complete_samples) %></span>
+    <span><strong>Incomplete:</strong> <%= @incomplete_samples %></span>
+    <span><strong>After clipping:</strong> <%= number_with_delimiter(@sample_count) %> (<%= @clipped_count %> removed)</span>
+    <span><strong>Features:</strong> <%= Recon::TrainingSample::FEATURE_COLUMNS.size %></span>
+  </div>
+
+  <div class="recon-outlier-filter">
+    <%= form_tag stats_admin_recon_path, method: :get, class: "recon-filter-form" do %>
+      <label>Clip outliers (top/bottom %)</label>
+      <%= number_field_tag :clip, @clip_pct, min: 0, max: 10, step: 0.5, class: "recon-filter-input" %>
+      <%= submit_tag "Apply", class: "btn btn-sm btn-primary" %>
+    <% end %>
+  </div>
+
+  <% if @total_stats_dist %>
+    <h2 class="recon-section-title">Total Battle Stats Distribution</h2>
+    <div class="recon-total-stats-chart">
+      <% max_bin = @total_stats_dist[:histogram].max || 1 %>
+      <div class="recon-total-histogram">
+        <% @total_stats_dist[:histogram].each_with_index do |count, i| %>
+          <% height_pct = max_bin > 0 ? (count * 100.0 / max_bin).round(1) : 0 %>
+          <div class="recon-total-bin" title="<%= number_with_delimiter((@total_stats_dist[:bin_min] + i * @total_stats_dist[:bin_width]).round) %> - <%= number_with_delimiter((@total_stats_dist[:bin_min] + (i + 1) * @total_stats_dist[:bin_width]).round) %>: <%= count %> samples">
+            <div class="recon-total-bar" style="height: <%= height_pct %>%"></div>
+          </div>
+        <% end %>
+        <svg class="recon-normal-overlay" viewBox="0 0 200 100" preserveAspectRatio="none">
+          <polyline fill="none" stroke="rgb(239, 68, 68)" stroke-width="2" vector-effect="non-scaling-stroke"
+            points="<%= @normal_curve.each_with_index.map { |y, i|
+              x = (i + 0.5) * (200.0 / 20)
+              cy = max_bin > 0 ? 100 - (y * 100.0 / max_bin) : 100
+              "#{x.round(1)},#{cy.round(1)}"
+            }.join(' ') %>" />
+        </svg>
+      </div>
+      <div class="recon-total-stats-info">
+        <span>Mean: <strong><%= number_with_delimiter(@total_stats_dist[:mean].round) %></strong></span>
+        <span>Median: <strong><%= number_with_delimiter(@total_stats_dist[:median].round) %></strong></span>
+        <span>Std: <strong><%= number_with_delimiter(@total_stats_dist[:std].round) %></strong></span>
+        <span>Range: <strong><%= number_with_delimiter(@total_stats_dist[:min]) %> - <%= number_with_delimiter(@total_stats_dist[:max]) %></strong></span>
+        <span>N: <strong><%= number_with_delimiter(@total_stats_dist[:count]) %></strong></span>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @warnings.any? %>
+    <div class="recon-warnings">
+      <h2 class="recon-section-title">Data Quality Warnings (<%= @warnings.size %>)</h2>
+      <div class="recon-warning-list">
+        <% @warnings.each do |w| %>
+          <div class="recon-warning-item recon-warning-<%= w[:type] %>">
+            <strong><%= w[:feature] %></strong> - <%= w[:message] %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <h2 class="recon-section-title">Labels (Battle Stats)</h2>
+  <div class="recon-feature-grid">
+    <% Recon::TrainingSample::LABEL_COLUMNS.each do |col| %>
+      <% next unless @distributions[col] %>
+      <%= render partial: "admin/recon/feature_card", locals: { col: col, d: @distributions[col] } %>
+    <% end %>
+  </div>
+
+  <h2 class="recon-section-title">Features</h2>
+  <div class="recon-feature-grid">
+    <% Recon::TrainingSample::FEATURE_COLUMNS.each do |col| %>
+      <% next unless @distributions[col] %>
+      <%= render partial: "admin/recon/feature_card", locals: { col: col, d: @distributions[col] } %>
+    <% end %>
+  </div>
+<% end %>

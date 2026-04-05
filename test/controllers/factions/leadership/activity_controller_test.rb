@@ -26,40 +26,27 @@ class Factions::Leadership::ActivityControllerTest < ActionDispatch::Integration
     assert_redirected_to faction_path(@faction)
   end
 
-  test "shows preview with dummy data when no snapshots" do
+  test "redirects with notice when not enough data" do
     sign_in_as(@bram)
     get faction_leadership_activity_path(@faction)
-    assert_response :success
-    assert_select ".activity-preview-banner"
-    assert_select "table.activity-heatmap"
-    assert_select ".activity-member-timeline"
+    assert_redirected_to faction_leadership_path(@faction)
+    assert_match /still being collected/, flash[:notice]
   end
 
-  test "shows preview when under 96 polls" do
+  test "redirects when under 96 polls" do
     create_snapshots(10)
     sign_in_as(@bram)
     get faction_leadership_activity_path(@faction)
-    assert_response :success
-    assert_select ".activity-preview-banner"
+    assert_redirected_to faction_leadership_path(@faction)
   end
 
-  test "shows real data when enough snapshots" do
-    create_snapshots(100)
-    sign_in_as(@bram)
-    get faction_leadership_activity_path(@faction)
-    assert_response :success
-    assert_select ".activity-preview-banner", false
-    assert_select "table.activity-heatmap"
-  end
-
-  test "shows heatmap and member breakdown with real data" do
+  test "shows real data when enough polls" do
     create_snapshots(100)
     sign_in_as(@bram)
     get faction_leadership_activity_path(@faction)
     assert_response :success
     assert_select "table.activity-heatmap"
     assert_select ".activity-member-timeline"
-    assert_select "a.player-link", /Bram/
   end
 
   test "redirects to setup when no api keys" do

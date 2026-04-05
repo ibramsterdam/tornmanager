@@ -110,6 +110,7 @@ Rails.application.routes.draw do
     end
     resource :recon, only: [ :show ], controller: "recon" do
       post :import
+      get :stats
     end
   end
 

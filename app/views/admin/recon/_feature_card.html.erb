@@ -1,0 +1,39 @@
+<div class="recon-feature-card">
+  <div class="recon-feature-header">
+    <h3><%= col %></h3>
+    <% if d[:zero_pct] > 50 %>
+      <span class="activity-risk-badge activity-risk-high"><%= d[:zero_pct] %>% zeros</span>
+    <% elsif d[:zero_pct] > 20 %>
+      <span class="activity-risk-badge activity-risk-medium"><%= d[:zero_pct] %>% zeros</span>
+    <% end %>
+  </div>
+
+  <div class="recon-histogram">
+    <% max_bin = d[:histogram].max || 1 %>
+    <% d[:histogram].each_with_index do |count, i| %>
+      <% height_pct = max_bin > 0 ? (count * 100.0 / max_bin).round(1) : 0 %>
+      <div class="recon-histogram-bar" style="height: <%= height_pct %>%" title="<%= (d[:bin_min] + i * d[:bin_width]).round %> - <%= (d[:bin_min] + (i + 1) * d[:bin_width]).round %>: <%= count %>"></div>
+    <% end %>
+  </div>
+
+  <div class="recon-feature-stats">
+    <div class="recon-stat-row">
+      <span>Mean</span><span><%= number_with_delimiter(d[:mean].round) %></span>
+    </div>
+    <div class="recon-stat-row">
+      <span>Median</span><span><%= number_with_delimiter(d[:median].round) %></span>
+    </div>
+    <div class="recon-stat-row">
+      <span>Std</span><span><%= number_with_delimiter(d[:std].round) %></span>
+    </div>
+    <div class="recon-stat-row">
+      <span>Range</span><span><%= number_with_delimiter(d[:min]) %> - <%= number_with_delimiter(d[:max]) %></span>
+    </div>
+    <div class="recon-stat-row">
+      <span>P25 / P75</span><span><%= number_with_delimiter(d[:p25]) %> / <%= number_with_delimiter(d[:p75]) %></span>
+    </div>
+    <div class="recon-stat-row">
+      <span>N</span><span><%= d[:count] %></span>
+    </div>
+  </div>
+</div>
