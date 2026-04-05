@@ -103,20 +103,25 @@
       </div>
     <% end %>
 
-    <div data-controller="payout-calculator export-csv" data-action="input->payout-calculator#calculate">
+    <div data-controller="payout-calculator payout-settings export-csv"
+         data-action="input->payout-calculator#calculate input->payout-settings#checkDirty"
+         data-payout-settings-url-value="<%= save_payout_settings_faction_leadership_war_reports_path(@faction) %>">
       <div class="war-reports-payout-form">
         <div class="payout-inputs">
           <div class="payout-field">
             <label>Total Pot</label>
             <input type="text" data-payout-calculator-target="totalPot" data-export-csv-target="totalPot" value="0" placeholder="e.g. 3,120,000,000">
           </div>
-          <div class="payout-field">
+          <div class="payout-field payout-field-narrow">
             <label>Faction Cut %</label>
-            <input type="number" data-payout-calculator-target="factionCut" data-export-csv-target="factionCut" value="10" min="0" max="100" step="1">
+            <input type="number" data-payout-calculator-target="factionCut" data-payout-settings-target="factionCut" data-export-csv-target="factionCut" value="<%= @payout_settings.payout_faction_cut %>" min="0" max="100" step="1">
           </div>
-          <div class="payout-field">
+          <div class="payout-field payout-field-narrow">
             <label>Assist Value</label>
-            <input type="number" data-payout-calculator-target="assistValue" data-export-csv-target="assistValue" value="0.75" min="0" max="1" step="0.05">
+            <input type="number" data-payout-calculator-target="assistValue" data-payout-settings-target="assistValue" data-export-csv-target="assistValue" value="<%= @payout_settings.payout_assist_value %>" min="0" max="1" step="0.05">
+          </div>
+          <div class="payout-field payout-field-action">
+            <button type="button" class="btn btn-sm btn-secondary" data-action="click->payout-settings#save" data-payout-settings-target="saveBtn">Save settings</button>
           </div>
         </div>
         <div class="payout-summary">

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_05_164034) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_05_211218) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -44,6 +44,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_164034) do
   create_table "faction_settings", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "faction_id", null: false
+    t.decimal "payout_assist_value", default: "0.75", null: false
+    t.decimal "payout_faction_cut", default: "10.0", null: false
     t.datetime "updated_at", null: false
     t.index ["faction_id"], name: "index_faction_settings_on_faction_id", unique: true
   end
