@@ -3,7 +3,7 @@ require "test_helper"
 class Discord::ErrorNotifierTest < ActiveSupport::TestCase
   test "includes environment field" do
     error = StandardError.new("test error")
-    error.set_backtrace([ "app/models/user.rb:10:in `save'" ])
+    error.set_backtrace([ "#{Rails.root}/app/models/user.rb:10:in `save'" ])
 
     Discord::Notifier.expects(:notify).with do |args|
       fields = args[:embed][:fields]
@@ -17,8 +17,8 @@ class Discord::ErrorNotifierTest < ActiveSupport::TestCase
   test "includes app stacktrace" do
     error = StandardError.new("boom")
     error.set_backtrace([
-      "/home/deploy/app/models/user.rb:10:in `save'",
-      "/home/deploy/app/controllers/factions_controller.rb:5:in `show'",
+      "#{Rails.root}/app/models/user.rb:10:in `save'",
+      "#{Rails.root}/app/controllers/factions_controller.rb:5:in `show'",
       "/gems/actionpack/lib/action_dispatch.rb:100:in `call'"
     ])
 
