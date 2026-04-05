@@ -28,6 +28,22 @@ class MemberActivitySnapshot < ApplicationRecord
       .order(Arel.sql("SUM(CASE WHEN status = 'Online' THEN 1 ELSE 0 END) DESC"))
   end
 
+  def self.member_hourly_summary(faction_id, days: 7)
+    where(faction_id: faction_id)
+      .recent(days)
+      .group(:torn_member_id, :hour_utc)
+      .select(
+        "torn_member_id",
+        "hour_utc",
+        "SUM(CASE WHEN status IN ('Online', 'Idle') THEN 1 ELSE 0 END) as active_count",
+        "COUNT(*) as total_count"
+      )
+      .each_with_object({}) do |row, hash|
+        hash[row.torn_member_id] ||= {}
+        hash[row.torn_member_id][row.hour_utc] = row.total_count > 0 ? (row.active_count.to_f / row.total_count).round(2) : 0
+      end
+  end
+
   def self.peak_hour(faction_id, days: 7)
     where(faction_id: faction_id)
       .recent(days)

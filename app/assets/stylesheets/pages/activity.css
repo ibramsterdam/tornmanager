@@ -311,6 +311,35 @@
   flex-shrink: 0;
 }
 
+/* Member Timeline */
+.activity-timeline-header {
+  width: 100%;
+}
+
+.activity-timeline-hours {
+  display: flex;
+  gap: 1px;
+}
+
+.activity-timeline-hours span {
+  flex: 1;
+  text-align: center;
+  font-size: 0.5rem;
+  color: var(--color-text-secondary);
+}
+
+.activity-member-timeline {
+  display: flex;
+  gap: 1px;
+}
+
+.activity-member-cell {
+  flex: 1;
+  height: 1.25rem;
+  border-radius: 2px;
+  background: rgb(var(--cell-r, 239), var(--cell-g, 68), var(--cell-b, 68));
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .activity-section-header {

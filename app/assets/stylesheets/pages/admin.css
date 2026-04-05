@@ -33,7 +33,31 @@
   gap: var(--space-3);
 }
 
-/* Admin Dashboard Cards — uses shared .feature-card styles from components/cards.css */
+/* Admin Dashboard Cards — compact variant */
+.admin-dashboard .feature-cards {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.admin-dashboard .feature-card {
+  padding: var(--space-4) var(--space-5);
+}
+
+.admin-dashboard .feature-card-icon {
+  width: 36px;
+  height: 36px;
+  margin-bottom: var(--space-3);
+}
+
+.admin-dashboard .feature-card h2 {
+  font-size: 0.9375rem;
+  margin-bottom: var(--space-2);
+}
+
+.admin-dashboard .feature-card p {
+  font-size: 0.75rem;
+}
 
 /* Section Header */
 .section-header {

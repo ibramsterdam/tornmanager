@@ -100,7 +100,7 @@
         <span class="dashboard-stat-label">Data Coverage</span>
       <% end %>
 
-      <div class="dashboard-stat-card dashboard-stat-card-disabled">
+      <%= link_to faction_leadership_activity_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="7"/>
@@ -109,9 +109,15 @@
             <rect x="3" y="14" width="7" height="7"/>
           </svg>
         </span>
-        <span class="dashboard-stat-value">Activity</span>
-        <span class="dashboard-stat-label">Coming soon</span>
-      </div>
+        <% if @activity_ready %>
+          <span class="dashboard-stat-value"><%= @activity_days %> days</span>
+        <% else %>
+          <span class="dashboard-stat-value" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @activity_seconds_remaining %>">
+            <span data-backfill-countdown-target="countdown"></span>
+          </span>
+        <% end %>
+        <span class="dashboard-stat-label">Member Activity</span>
+      <% end %>
 
       <%= link_to faction_leadership_api_logs_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
