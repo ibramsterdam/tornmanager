@@ -51,6 +51,9 @@
                       data-action="click->subscription-days#edit"
                       class="edit-days-btn">Edit</button>
             </td>
+            <td>
+              <%= button_to "Login as", admin_impersonate_path(user), method: :post, class: "btn btn-sm btn-secondary" %>
+            </td>
           </tr>
         <% end %>
       </tbody>
