@@ -32,9 +32,10 @@ class Factions::Leadership::WarReportsController < Factions::Leadership::BaseCon
     end
 
     FetchWarAttacksJob.perform_now(war.id)
+    war.calculate_reward_value!(@faction.torn_api_key.key)
 
     redirect_to faction_leadership_war_reports_path(@faction, war: war.torn_war_id),
-      notice: "Fetching attack logs for war vs #{war.opponent_faction_name}..."
+      notice: "Fetched attack logs and reward prices for war vs #{war.opponent_faction_name}."
   end
 
   private

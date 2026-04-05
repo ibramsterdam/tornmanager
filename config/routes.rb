@@ -123,6 +123,7 @@ Rails.application.routes.draw do
   post "key-log/show", to: "key_log#show", as: :key_log_show
   get "key-log/show", to: redirect("/key-log")
 
+  get "service-worker" => proc { [ 204, {}, [ "" ] ] }
   get "up" => "rails/health#show", as: :rails_health_check
 
   root "home#index"

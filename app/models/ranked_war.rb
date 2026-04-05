@@ -85,6 +85,19 @@ class RankedWar < ApplicationRecord
     our_members.select { |m| m["attacks"].to_i == 0 }
   end
 
+  def calculate_reward_value!(api_key)
+    items = our_rewards&.dig("items") || []
+    return unless items.any?
+
+    item_ids = items.map { |i| i["id"] }.uniq
+    prices = fetch_market_prices(api_key, item_ids)
+
+    items.each { |item| item["market_price"] = prices[item["id"]] || 0 }
+    total = items.sum { |item| item["market_price"] * item["quantity"] }
+
+    update!(our_rewards: our_rewards.merge("items" => items), reward_estimated_value: total)
+  end
+
   def score_per_attack
     return 0 if our_attacks.to_i.zero?
     (our_score.to_f / our_attacks).round(2)
@@ -93,5 +106,17 @@ class RankedWar < ApplicationRecord
   def their_score_per_attack
     return 0 if their_attacks.to_i.zero?
     (their_score.to_f / their_attacks).round(2)
+  end
+
+  private
+
+  def fetch_market_prices(api_key, item_ids)
+    item_ids.each_with_object({}) do |id, prices|
+      response = TornApi::Base.new(api_key).send(:get, "v2/market/#{id}/itemmarket", { limit: 1 })
+      avg_price = response.dig("itemmarket", "item", "average_price")
+      prices[id] = avg_price || 0
+    rescue TornApi::ApiError
+      prices[id] = 0
+    end
   end
 end

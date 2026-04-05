@@ -1,8 +1,8 @@
 <div class="leadership-page">
   <%= link_to "← Back to Leadership", faction_leadership_path(@faction), class: "back-link" %>
 
-  <div class="war-reports-top">
-    <aside class="war-reports-sidebar">
+  <div class="war-reports-layout">
+    <aside class="war-reports-left">
       <h3>Completed Wars</h3>
       <% if @wars.any? %>
         <div class="war-reports-list">
@@ -26,11 +26,22 @@
     </aside>
 
     <% if @selected_war %>
-      <div class="war-reports-header">
+      <% attacks_count = @has_attacks ? @outgoing.count : 0 %>
+      <% total_respect = @has_attacks ? @outgoing.sum(:respect_gain) : 0 %>
+      <% avg_respect = attacks_count > 0 ? (total_respect / attacks_count).round(2) : 0 %>
+      <% avg_ff = attacks_count > 0 ? (@outgoing.average(:fair_fight)&.round(2) || 0) : 0 %>
+      <% total_assists = @has_attacks ? @member_stats.sum { |m| m[:assists] } : 0 %>
+      <% total_overseas = @has_attacks ? @member_stats.sum { |m| m[:overseas_hits] } : 0 %>
+      <% total_warlord = @has_attacks ? @member_stats.sum { |m| m[:warlord_hits] } : 0 %>
+      <% reward_items = @selected_war.our_rewards&.dig("items") || [] %>
+      <% has_prices = reward_items.any? { |i| i["market_price"] } %>
+      <% estimated_total = @selected_war.reward_estimated_value || (has_prices ? reward_items.sum { |i| (i["market_price"] || 0) * i["quantity"] } : nil) %>
+
+      <div class="war-reports-middle">
         <div class="war-reports-title-row">
           <h2>vs <%= @selected_war.opponent_faction_name %></h2>
           <%= button_to fetch_attacks_faction_leadership_war_reports_path(@faction, war: @selected_war.torn_war_id),
-              method: :post, class: "btn btn-sm btn-secondary war-reports-fetch-btn",
+              method: :post, class: "btn btn-sm btn-secondary",
               data: { turbo_submits_with: '<span class="spinner"></span> Fetching...' } do %>
             <span class="pulse-dot <%= @integrity_ok ? 'pulse-dot-green' : 'pulse-dot-yellow' %>"></span> Fetch
           <% end %>
@@ -43,14 +54,6 @@
           <span class="muted"><%= @selected_war.duration_formatted %></span>
           <span class="muted"><%= @selected_war.started_at.strftime("%d %b %Y %H:%M") %></span>
         </div>
-
-        <% attacks_count = @has_attacks ? @outgoing.count : 0 %>
-        <% total_respect = @has_attacks ? @outgoing.sum(:respect_gain) : 0 %>
-        <% avg_respect = attacks_count > 0 ? (total_respect / attacks_count).round(2) : 0 %>
-        <% avg_ff = attacks_count > 0 ? (@outgoing.average(:fair_fight)&.round(2) || 0) : 0 %>
-        <% total_assists = @has_attacks ? @member_stats.sum { |m| m[:assists] } : 0 %>
-        <% total_overseas = @has_attacks ? @member_stats.sum { |m| m[:overseas_hits] } : 0 %>
-        <% total_warlord = @has_attacks ? @member_stats.sum { |m| m[:warlord_hits] } : 0 %>
 
         <div class="war-reports-stats-row">
           <div class="war-reports-stat">
@@ -86,9 +89,25 @@
             <span class="war-reports-stat-label">Assists</span>
           </div>
         </div>
+        <% if reward_items.any? %>
+          <div class="war-reports-rewards-inline">
+            <% reward_items.each do |item| %>
+              <% price = item["market_price"] %>
+              <span class="war-reports-reward-chip">
+                <%= item["quantity"] %>x <%= item["name"].sub(" Cache", "") %>
+                <% if price %>
+                  <span class="war-reports-reward-price">$<%= number_with_delimiter(price * item["quantity"]) %></span>
+                <% end %>
+              </span>
+            <% end %>
+            <% if estimated_total %>
+              <span class="war-reports-reward-total">= $<%= number_with_delimiter(estimated_total) %></span>
+            <% end %>
+          </div>
+        <% end %>
       </div>
     <% else %>
-      <div class="war-reports-header">
+      <div class="war-reports-middle">
         <div class="table-empty">
           <p class="table-empty-text">No completed wars found.</p>
         </div>
@@ -110,7 +129,7 @@
         <div class="payout-inputs">
           <div class="payout-field">
             <label>Total Pot</label>
-            <input type="text" data-payout-calculator-target="totalPot" data-export-csv-target="totalPot" value="0" placeholder="e.g. 3,120,000,000">
+            <input type="text" data-payout-calculator-target="totalPot" data-export-csv-target="totalPot" value="<%= estimated_total ? number_with_delimiter(estimated_total) : 0 %>" placeholder="e.g. 3,120,000,000">
           </div>
           <div class="payout-field payout-field-narrow">
             <label>Faction Cut %</label>

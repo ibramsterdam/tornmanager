@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_05_211218) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_05_213233) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -184,6 +184,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_211218) do
     t.string "rank_after"
     t.string "rank_before"
     t.integer "respect_gained", default: 0, null: false
+    t.integer "reward_estimated_value", limit: 8
     t.datetime "started_at", null: false
     t.integer "target_score", null: false
     t.integer "their_attacks", default: 0, null: false
