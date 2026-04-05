@@ -96,6 +96,7 @@ Rails.application.routes.draw do
         patch :update_days
       end
     end
+    post "impersonate/:id", to: "impersonation#create", as: :impersonate
     resources :factions, only: [ :index, :new, :create, :edit, :update, :destroy ] do
       member do
         patch :toggle_ssl
