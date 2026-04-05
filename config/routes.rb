@@ -112,11 +112,6 @@ Rails.application.routes.draw do
     end
   end
 
-  get "roadmap", to: "roadmap#index", as: :roadmap
-  post "roadmap", to: "roadmap#create"
-  patch "roadmap/:id", to: "roadmap#update", as: :roadmap_item
-  delete "roadmap/:id", to: "roadmap#destroy"
-
   get "legal", to: "pages#legal", as: :legal
   get "privacy-policy", to: redirect("/legal#privacy-policy")
   get "terms-of-service", to: redirect("/legal#terms-of-service")
