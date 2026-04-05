@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+require_relative "../config/environment"
+
+puts "Starting TornManager Discord Bot..."
+
+begin
+  bot = Discord::Bot.new
+  bot.start
+rescue => e
+  puts "Discord Bot failed to start: #{e.message}"
+  Rails.logger.error("[Discord::Bot] Failed to start: #{e.class}: #{e.message}")
+  exit 1
+end
