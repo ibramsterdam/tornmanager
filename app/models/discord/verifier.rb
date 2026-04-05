@@ -72,17 +72,31 @@ module Discord
       begin
         member.nick = display_name
       rescue => e
-        Rails.logger.warn("[Discord::Verifier] Cannot set nickname for #{@event.user.name}: #{e.message}")
+        notify_warning("Cannot set nickname for #{@event.user.name}: #{e.message}")
       end
 
       begin
         member.add_role(@verified_role_id.to_i)
       rescue => e
-        Rails.logger.warn("[Discord::Verifier] Cannot add role for #{@event.user.name}: #{e.message}")
+        notify_warning("Cannot add role for #{@event.user.name}: #{e.message}")
       end
 
       Rails.logger.info("[Discord::Verifier] Verified #{@event.user.name} as #{display_name}")
       name
+    end
+
+    def notify_warning(message)
+      Rails.logger.warn("[Discord::Verifier] #{message}")
+      Discord::Notifier.notify(
+        webhook_key: :error_webhook_url,
+        embed: {
+          title: "Verification Warning",
+          description: message,
+          color: 16_776_960,
+          footer: { text: "Discord::Verifier" },
+          timestamp: Time.current.iso8601
+        }
+      )
     end
 
     def send_link_instructions
