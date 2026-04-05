@@ -50,6 +50,7 @@ Rails.application.routes.draw do
       resource :data_coverage, only: [ :show ], controller: "factions/leadership/data_coverage" do
         post :backfill_user
       end
+      resource :activity, only: [ :show ], controller: "factions/leadership/activity"
 
       resource :war_polling, only: [], controller: "factions/leadership/war_polling" do
         post :start
