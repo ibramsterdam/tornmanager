@@ -48,7 +48,7 @@ class Factions::Leadership::WarReportsControllerTest < ActionDispatch::Integrati
     sign_in_as(@bram)
     get faction_leadership_war_reports_path(@faction)
     assert_response :success
-    assert_select ".war-reports-sidebar"
+    assert_select ".war-reports-left"
     assert_select "a.back-link"
   end
 
@@ -56,7 +56,7 @@ class Factions::Leadership::WarReportsControllerTest < ActionDispatch::Integrati
     sign_in_as(@bram)
     get faction_leadership_war_reports_path(@faction)
     assert_response :success
-    assert_select ".war-reports-header h2", /Enemy/
+    assert_select ".war-reports-middle h2", /Enemy/
   end
 
   test "selects war via query param" do
@@ -69,7 +69,7 @@ class Factions::Leadership::WarReportsControllerTest < ActionDispatch::Integrati
     sign_in_as(@bram)
     get faction_leadership_war_reports_path(@faction, war: 1002)
     assert_response :success
-    assert_select ".war-reports-header h2", /Other Enemy/
+    assert_select ".war-reports-middle h2", /Other Enemy/
   end
 
   test "always shows table and payout form" do
@@ -102,19 +102,20 @@ class Factions::Leadership::WarReportsControllerTest < ActionDispatch::Integrati
     sign_in_as(@bram)
     get faction_leadership_war_reports_path(@faction)
     assert_response :success
-    assert_select ".war-reports-header", /No completed wars/
+    assert_select ".war-reports-middle", /No completed wars/
   end
 
   # -- Fetch attacks --
 
   test "fetch_attacks runs job inline and redirects" do
     FetchWarAttacksJob.any_instance.stubs(:perform)
+    RankedWar.any_instance.stubs(:calculate_reward_value!)
 
     sign_in_as(@bram)
     post fetch_attacks_faction_leadership_war_reports_path(@faction, war: @war.torn_war_id)
 
     assert_redirected_to faction_leadership_war_reports_path(@faction, war: @war.torn_war_id)
-    assert_match /Fetching/, flash[:notice]
+    assert_match /Fetched/, flash[:notice]
   end
 
   test "fetch_attacks requires leadership access" do
