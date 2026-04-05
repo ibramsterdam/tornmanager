@@ -49,6 +49,7 @@ class SessionsController < ApplicationController
       user.save!
 
       start_new_session_for user
+      notify_sign_in(user)
 
       redirect_to after_authentication_url
     rescue TornApi::InvalidKeyError
@@ -69,8 +70,18 @@ class SessionsController < ApplicationController
 
   private
 
-  # Light member sync for new factions during login.
-  # Only upserts members — no backfill scheduling.
+  def notify_sign_in(user)
+    Discord::Notifier.notify(
+      webhook_key: :notifications_webhook_url,
+      embed: {
+        title: "Sign In",
+        description: "[#{user.name} [#{user.torn_id}]](https://www.torn.com/profiles.php?XID=#{user.torn_id})",
+        color: 5_025_616,
+        footer: { text: "TornManager" },
+        timestamp: Time.current.iso8601
+      }
+    )
+  end
   def sync_faction_members(faction)
     members = TornApi::Faction::Members.new(AdminCredentials.api_key, faction.torn_id).fetch
 
