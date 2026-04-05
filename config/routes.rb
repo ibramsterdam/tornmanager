@@ -44,6 +44,7 @@ Rails.application.routes.draw do
       end
       resource :war_reports, only: [ :show ], controller: "factions/leadership/war_reports" do
         post :fetch_attacks
+        patch :save_payout_settings
       end
       resource :settings, only: [ :show ], controller: "factions/leadership/settings"
       resource :api_logs, only: [ :show ], controller: "factions/leadership/api_logs"

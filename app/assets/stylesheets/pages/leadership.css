@@ -1354,12 +1354,22 @@
 
 .payout-inputs {
   display: flex;
+  align-items: flex-end;
   gap: var(--space-4);
   margin-bottom: var(--space-3);
 }
 
 .payout-field {
   flex: 1;
+}
+
+.payout-field-action {
+  flex: 0;
+  white-space: nowrap;
+}
+
+.payout-field-narrow {
+  flex: 0 0 120px;
 }
 
 .payout-field label {

@@ -7,7 +7,20 @@ class Factions::Leadership::WarReportsController < Factions::Leadership::BaseCon
       @wars.first
     end
 
+    @payout_settings = @faction.faction_setting || @faction.build_faction_setting
     load_war_report if @selected_war
+  end
+
+  def save_payout_settings
+    setting = @faction.faction_setting || @faction.create_faction_setting!
+    setting.update!(
+      payout_faction_cut: params[:faction_cut],
+      payout_assist_value: params[:assist_value]
+    )
+
+    render json: { success: true }
+  rescue ActiveRecord::RecordInvalid => e
+    render json: { success: false, message: e.message }, status: :unprocessable_entity
   end
 
   def fetch_attacks
