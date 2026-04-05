@@ -34,9 +34,10 @@ module Discord
     def app_backtrace(error)
       return nil unless error.backtrace
 
+      root = Rails.root.to_s
       app_lines = error.backtrace
-        .select { |line| line.include?("/app/") || line.include?("/lib/") }
-        .map { |line| line.sub(%r{.*/app/}, "app/").sub(%r{.*/lib/}, "lib/") }
+        .select { |line| line.start_with?(root) }
+        .map { |line| line.delete_prefix("#{root}/") }
         .first(APP_TRACE_LIMIT)
 
       return nil if app_lines.empty?
