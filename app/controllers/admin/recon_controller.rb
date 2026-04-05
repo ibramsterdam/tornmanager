@@ -10,6 +10,110 @@ module Admin
       @import_in_progress = @import_ends_at.present? && @import_ends_at > Time.current
     end
 
+    def stats
+      @clip_pct = (params[:clip] || 1).to_f.clamp(0, 10)
+      all_samples = Recon::TrainingSample.where.not(xantaken: nil)
+      @total = all_samples.count
+      return if @total == 0
+
+      @complete_samples = @total
+      @incomplete_samples = Recon::TrainingSample.where(xantaken: nil).count
+
+      # Remove outliers based on total_stats percentile
+      if @clip_pct > 0
+        totals = all_samples.pluck(Arel.sql("strength + defense + speed + dexterity")).sort
+        lower = totals[(totals.size * @clip_pct / 100).to_i]
+        upper = totals[(totals.size * (100 - @clip_pct) / 100).to_i]
+        samples = all_samples.where("(strength + defense + speed + dexterity) BETWEEN ? AND ?", lower, upper)
+        @clipped_count = @total - samples.count
+      else
+        samples = all_samples
+        @clipped_count = 0
+      end
+
+      @sample_count = samples.count
+      all_columns = Recon::TrainingSample::FEATURE_COLUMNS + Recon::TrainingSample::LABEL_COLUMNS
+
+      @distributions = {}
+      @warnings = []
+
+      all_columns.each do |col|
+        values = samples.pluck(col).compact
+        next if values.empty?
+
+        d = compute_distribution(col, values)
+        @distributions[col] = d
+
+        if d[:zero_pct] > 70
+          @warnings << { feature: col, type: :high_zeros, message: "#{d[:zero_pct]}% zeros - consider binary encoding (0 vs >0)" }
+        elsif d[:zero_pct] > 30
+          @warnings << { feature: col, type: :moderate_zeros, message: "#{d[:zero_pct]}% zeros - may reduce predictive power" }
+        end
+
+        if d[:std] < 1 || (d[:p25] == d[:p75] && d[:p25] == d[:median])
+          @warnings << { feature: col, type: :low_variance, message: "Near-zero variance - consider dropping" }
+        end
+
+        skewness = d[:mean] > 0 ? (d[:mean] - d[:median]).abs / [ d[:std], 1 ].max : 0
+        if skewness > 1 && d[:max] > d[:p75] * 10
+          @warnings << { feature: col, type: :skewed, message: "Heavily right-skewed - consider log transform" }
+        end
+      end
+
+      @warnings.sort_by! { |w| { high_zeros: 0, low_variance: 1, skewed: 2, moderate_zeros: 3 }[w[:type]] }
+
+      total_stats = samples.pluck(Arel.sql("strength + defense + speed + dexterity")).compact.sort
+      @total_stats_dist = compute_distribution("total_stats", total_stats)
+
+      # Compute normal curve overlay
+      mean = @total_stats_dist[:mean]
+      std = [ @total_stats_dist[:std], 1 ].max
+      bin_min = @total_stats_dist[:bin_min]
+      bin_width = @total_stats_dist[:bin_width]
+      @normal_curve = (0...20).map do |i|
+        x = bin_min + (i + 0.5) * bin_width
+        y = Math.exp(-0.5 * ((x - mean) / std)**2)
+        y
+      end
+      normal_max = @normal_curve.max || 1
+      hist_max = @total_stats_dist[:histogram].max || 1
+      @normal_curve = @normal_curve.map { |y| (y / normal_max * hist_max).round(1) }
+    end
+
+    private
+
+    def compute_distribution(col, values)
+      sorted = values.sort
+      count = sorted.size
+      mean = sorted.sum.to_f / count
+      median = count.odd? ? sorted[count / 2] : (sorted[count / 2 - 1] + sorted[count / 2]) / 2.0
+      min = sorted.first
+      max = sorted.last
+      std = Math.sqrt(sorted.sum { |v| (v - mean)**2 } / count)
+      p25 = sorted[(count * 0.25).to_i]
+      p75 = sorted[(count * 0.75).to_i]
+      zeros = sorted.count(0)
+
+      bins = 20
+      bin_width = max > min ? (max - min).to_f / bins : 1
+      histogram = Array.new(bins, 0)
+      sorted.each do |v|
+        bin = [ ((v - min) / bin_width).to_i, bins - 1 ].min
+        histogram[bin] += 1
+      end
+
+      {
+        count: count, mean: mean.round(1), median: median.round(1),
+        min: min, max: max, std: std.round(1),
+        p25: p25, p75: p75, zeros: zeros,
+        zero_pct: (zeros * 100.0 / count).round(1),
+        histogram: histogram,
+        bin_width: bin_width.round(1), bin_min: min
+      }
+    end
+
+    public
+
     def import
       raw_data = params[:spy_data]
 

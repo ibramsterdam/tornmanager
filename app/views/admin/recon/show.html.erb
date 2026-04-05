@@ -3,6 +3,9 @@
 <div class="page-header">
   <h1>Recon</h1>
   <p class="page-subtitle">Battle stat predictor training data</p>
+  <% if @training_sample_count > 0 %>
+    <%= link_to "View Stats &rarr;".html_safe, stats_admin_recon_path, class: "btn btn-sm btn-primary" %>
+  <% end %>
 </div>
 
 <div class="recon-stats-grid">

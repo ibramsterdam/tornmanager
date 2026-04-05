@@ -12,6 +12,14 @@ class FetchMemberActivityJob < FactionApiJob
     now = Time.current
 
     snapshots = members.map do |member|
+      status = if member.last_action_status.in?(%w[Online Idle])
+                 member.last_action_status
+      elsif member.last_action_timestamp && (now.to_i - member.last_action_timestamp) < 900
+                 "Online"
+      else
+                 "Offline"
+      end
+
       {
         faction_id: faction.id,
         torn_member_id: member.id,
@@ -19,7 +27,7 @@ class FetchMemberActivityJob < FactionApiJob
         recorded_at: now,
         hour_utc: now.hour,
         day_of_week: now.wday,
-        status: member.last_action_status || "Offline",
+        status: status,
         created_at: now,
         updated_at: now
       }

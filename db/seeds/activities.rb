@@ -42,11 +42,11 @@ snapshots = []
 
         status = if roll < shifted_pct * 0.7
                    "Online"
-                 elsif roll < shifted_pct
+        elsif roll < shifted_pct
                    "Idle"
-                 else
+        else
                    "Offline"
-                 end
+        end
 
         snapshots << {
           faction_id: faction.id,
