@@ -1,0 +1,88 @@
+#!/usr/bin/env ruby
+require_relative "../config/environment"
+require "net/http"
+require "json"
+
+ANNOUNCEMENTS_CHANNEL_ID = 1490353824169328690
+
+embed = {
+  title: "What is TornManager?",
+  color: 0x5865F2,
+  description: [
+    "TornManager is a companion tool for Torn - available as a website and a userscript that runs directly on torn.com.",
+    "",
+    "**Personal Features**",
+    "- Daily stat tracking (xanax, e-refills, nerve refills, contracts, crimes, activity, networth)",
+    "- Stock portfolio with break-even analysis",
+    "- API key activity viewer (no login required)",
+    "- Userscript overlay with live data on torn.com",
+    "",
+    "**Faction Features**",
+    "- Member compliance tracking with customizable daily targets",
+    "- Compliance scoring per member (xanax, refills, activity)",
+    "- Worst performers overview",
+    "- Export member stats to clipboard for faction announcements",
+    "- Automatic faction roster sync",
+    "",
+    "**Ranked War Tools**",
+    "- Live war status with real-time polling",
+    "- Member breakdown (hospital, traveling, jail, online/idle)",
+    "- Score tracking with target display",
+    "- Full war history with win/loss records",
+    "- Per-member war performance (attacks, assists, respect, fair fight brackets)",
+    "- Warlord bonus and overseas combat tracking",
+    "- War payout calculator with configurable splits",
+    "",
+    "**Spy Reports**",
+    "- TornStats integration for enemy faction spying",
+    "- Manual spy report import and editing",
+    "- Per-target stat breakdown (str/def/spd/dex)",
+    "- Auto-fetch enemy stats during active wars",
+    "",
+    "**Public War Lobbies**",
+    "- Anonymous war rooms for community use",
+    "- Only requires a Public API key",
+    "- Optional password protection",
+    "- Collaborative spy stat tracking",
+    "- Up to 10 active lobbies",
+    "",
+    "**Leadership Dashboard**",
+    "- Granular access control for faction leaders and co-leaders",
+    "- Grant leadership access to trusted members",
+    "- Faction API key management",
+    "- API usage monitoring with rate limit tracking",
+    "- Historical data coverage and backfill tools",
+    "- Complete faction data deletion",
+    "",
+    "**Subscription**",
+    "- Free: userscript, public wars, key log viewer",
+    "- Paid: all faction features, compliance tracking, war tools, spy reports",
+    "- Pay with in-game Xanax (1 Xanax = 1 week)",
+    "- Faction leaders can grant subscriptions to all members",
+    "- Trial subscription on faction setup",
+    "",
+    "**Privacy & GDPR**",
+    "- Only Limited Access API keys accepted (Full Access keys rejected)",
+    "- Full data export in JSON format",
+    "- Complete account and data deletion at any time",
+    "- [Privacy Policy & Terms of Service](https://tornmanager.com/legal)",
+    "",
+    "This is just the beginning. Share your ideas in <#1490344856134881383> and report issues in <#1490354149030891664>."
+  ].join("\n")
+}
+
+token = Rails.application.credentials.dig(:discord, :bot_token)
+abort("Discord bot_token not configured") unless token
+
+uri = URI("https://discord.com/api/v10/channels/#{ANNOUNCEMENTS_CHANNEL_ID}/messages")
+http = Net::HTTP.new(uri.host, uri.port)
+http.use_ssl = true
+
+request = Net::HTTP::Post.new(uri)
+request["Authorization"] = "Bot #{token}"
+request["Content-Type"] = "application/json"
+request.body = { embeds: [embed] }.to_json
+
+puts "Sending announcement to #announcements..."
+response = http.request(request)
+puts "Response: #{response.code} #{response.body}"

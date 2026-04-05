@@ -26,5 +26,34 @@ module Discord
     def self.notify(webhook_key: :default_webhook_url, content: nil, embed: nil)
       new(webhook_key: webhook_key).send(content: content, embed: embed)
     end
+
+    def self.send_to_channel(channel_id, content: nil, embed: nil)
+      return if Rails.env.test?
+
+      token = Rails.application.credentials.dig(:discord, :bot_token)
+      return unless token
+
+      payload = {}
+      payload[:content] = content if content
+      payload[:embeds] = [ embed ] if embed
+
+      Thread.new do
+        uri = URI("https://discord.com/api/v10/channels/#{channel_id}/messages")
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+
+        request = Net::HTTP::Post.new(uri)
+        request["Authorization"] = "Bot #{token}"
+        request["Content-Type"] = "application/json"
+        request.body = payload.to_json
+
+        response = http.request(request)
+        unless response.code.to_i == 200
+          Rails.logger.error("[Discord::Notifier] Channel message failed (#{response.code}): #{response.body}")
+        end
+      rescue => e
+        Rails.logger.error("[Discord::Notifier] Failed: #{e.message}")
+      end
+    end
   end
 end
