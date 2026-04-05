@@ -9,6 +9,7 @@ class Factions::LeadershipController < Factions::Leadership::BaseController
     load_settings_data
     load_data_coverage
     load_api_peak_rate
+    load_activity_data
   end
 
   def war_data

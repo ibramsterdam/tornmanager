@@ -90,6 +90,11 @@ class Factions::Leadership::BaseController < ApplicationController
     @data_total_missing_days = total_expected - total_existing
   end
 
+  def load_activity_data
+    @activity_snapshot_count = @faction.member_activity_snapshots.recent.count
+    @activity_members_tracked = @faction.member_activity_snapshots.recent.distinct.count(:torn_member_id)
+  end
+
   def calculate_member_performance(wars)
     return [] if wars.empty?
 
