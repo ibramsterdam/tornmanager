@@ -102,6 +102,12 @@
   border-color: var(--gray-600);
 }
 
+.dashboard-stat-card-disabled {
+  opacity: 0.4;
+  cursor: default;
+  border-style: dashed;
+}
+
 .dashboard-stat-icon {
   color: var(--gray-500);
 }

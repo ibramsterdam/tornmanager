@@ -158,4 +158,20 @@ module FactionHelper
     sign = amount >= 0 ? "+" : "-"
     "#{sign}#{format_networth(amount)}"
   end
+
+  def activity_cell_rgb(count, max_val)
+    intensity = max_val > 0 ? (count.to_f / max_val) : 0
+    if intensity <= 0.5
+      t = intensity * 2
+      r = (239 + (234 - 239) * t).round
+      g = (68 + (179 - 68) * t).round
+      b = (68 + (8 - 68) * t).round
+    else
+      t = (intensity - 0.5) * 2
+      r = (234 + (34 - 234) * t).round
+      g = (179 + (197 - 179) * t).round
+      b = (8 + (94 - 8) * t).round
+    end
+    "#{r}, #{g}, #{b}"
+  end
 end
