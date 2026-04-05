@@ -1,0 +1,185 @@
+<div class="leadership-page">
+  <%= link_to "&larr; Back to Leadership".html_safe, faction_leadership_path(@faction), class: "back-link" %>
+
+  <% unless @has_enough_data %>
+    <div class="activity-preview-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @seconds_remaining %>">
+      <strong>Collecting activity data</strong> - This is a preview with sample data. Real data will be available in
+      <span data-backfill-countdown-target="countdown"><%= @seconds_remaining > 0 ? "#{@seconds_remaining / 3600}h #{(@seconds_remaining % 3600) / 60}m" : "soon" %></span>.
+      <div class="activity-preview-progress">
+        <div class="activity-preview-progress-bar" style="width: <%= (@poll_count * 100.0 / 96).clamp(0, 100).round(1) %>%"></div>
+      </div>
+      <span class="activity-preview-progress-label"><%= @poll_count %> / 96 polls collected</span>
+    </div>
+  <% end %>
+
+  <div>
+    <div class="activity-info-bar">
+      <span><strong>Members:</strong> <%= @members.size %></span>
+      <span><strong>Peak:</strong> <%= @peak_hour ? "#{@peak_hour.to_s.rjust(2, '0')}:00 TCT" : "N/A" %></span>
+      <span><strong>Polls:</strong> <%= @has_enough_data ? number_with_delimiter(@poll_count) : "#{@poll_count}/96" %></span>
+      <span><strong>Polling:</strong> Every 15 min</span>
+      <% if @has_enough_data && @earliest_snapshot %>
+        <span><strong>Since:</strong> <%= @earliest_snapshot.strftime("%d %b %Y") %></span>
+      <% end %>
+    </div>
+
+    <div data-controller="tabs" data-tabs-default-value="heatmap">
+      <div class="leadership-tab-buttons">
+        <button class="leadership-tab-btn" data-tabs-target="button" data-tab="heatmap" data-action="click->tabs#switch">Heatmap</button>
+        <button class="leadership-tab-btn" data-tabs-target="button" data-tab="dead-zones" data-action="click->tabs#switch">Chain Coverage</button>
+        <button class="leadership-tab-btn" data-tabs-target="button" data-tab="members" data-action="click->tabs#switch">Members</button>
+      </div>
+
+      <%# ── Tab 1: Calendar Heatmap ── %>
+      <div class="leadership-tab-content" data-tabs-target="panel" data-tab="heatmap" hidden>
+        <div class="activity-section">
+          <h2>Faction Activity Heatmap</h2>
+          <p class="activity-subtitle">Active members (Online + Idle) by hour and day. Last 14 days. Times are in TCT (UTC).</p>
+
+          <% current_hour = Time.current.hour %>
+          <div class="activity-heatmap-wrapper">
+            <table class="activity-heatmap">
+              <thead>
+                <tr>
+                  <th></th>
+                  <% (0..23).each do |hour| %>
+                    <th><%= hour.to_s.rjust(2, "0") %></th>
+                  <% end %>
+                </tr>
+              </thead>
+              <tbody>
+                <% @dates.reverse.each do |date| %>
+                  <% is_today = date == Date.current %>
+                  <% has_data = date >= @first_data_date %>
+                  <tr class="<%= 'activity-heatmap-nodata-row' unless has_data %>">
+                    <td class="activity-heatmap-day<%= ' activity-heatmap-today-label' if is_today %>">
+                      <div><%= is_today ? "Today" : date.strftime("%a") %></div>
+                      <div class="activity-heatmap-date-num"><%= date.strftime("%d %b") %></div>
+                    </td>
+                    <% (0..23).each do |hour| %>
+                      <% is_future = is_today && hour > current_hour %>
+                      <% no_data = !has_data || is_future %>
+                      <% count = @calendar[[date.to_s, hour]] || 0 %>
+                      <% rgb = no_data ? "40, 40, 40" : activity_cell_rgb(count, @max_heatmap_value) %>
+                      <td class="activity-heatmap-cell<%= ' activity-heatmap-nodata' if no_data %>"
+                          style="--cell-r: <%= rgb.split(', ')[0] %>; --cell-g: <%= rgb.split(', ')[1] %>; --cell-b: <%= rgb.split(', ')[2] %>"
+                          title="<%= no_data ? 'No data' : "#{date.strftime('%a %d %b')} #{hour.to_s.rjust(2, '0')}:00 TCT - #{count} active" %>">
+                        <span class="activity-heatmap-count"><%= no_data ? '' : count %></span>
+                      </td>
+                    <% end %>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="activity-heatmap-legend">
+            <span class="activity-legend-label">0</span>
+            <span class="activity-legend-cell" style="background: rgb(239, 68, 68)"></span>
+            <span class="activity-legend-cell" style="background: rgb(249, 115, 22)"></span>
+            <span class="activity-legend-cell" style="background: rgb(234, 179, 8)"></span>
+            <span class="activity-legend-cell" style="background: rgb(134, 188, 51)"></span>
+            <span class="activity-legend-cell" style="background: rgb(34, 197, 94)"></span>
+            <span class="activity-legend-label">All</span>
+          </div>
+        </div>
+      </div>
+
+      <%# ── Tab 2: Chain Coverage ── %>
+      <div class="leadership-tab-content" data-tabs-target="panel" data-tab="dead-zones" hidden>
+        <div class="activity-section">
+          <h2>Chain Coverage</h2>
+          <p class="activity-subtitle">Average active members per hour across the selected week. Bars show when your faction has coverage for chaining.</p>
+
+          <% if @danger_windows.any? %>
+            <div class="chain-danger-windows">
+              <h3>Danger Windows</h3>
+              <div class="chain-danger-list">
+                <% @danger_windows.each do |window| %>
+                  <div class="chain-danger-card">
+                    <div class="chain-danger-time">
+                      <%= window[:start_hour].to_s.rjust(2, "0") %>:00 - <%= window[:end_hour].to_s.rjust(2, "0") %>:00 TCT
+                    </div>
+                    <div class="chain-danger-detail">
+                      <span class="chain-danger-duration"><%= window[:duration] %>h window</span>
+                      <span class="chain-danger-avg">avg <%= window[:avg] %> active, min <%= window[:min] %></span>
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
+          <div class="chain-hourly-chart">
+            <% @hourly_avg.each do |h| %>
+              <% pct = @member_count > 0 ? (h[:avg] / @member_count * 100).round(1) : 0 %>
+              <% bar_color = if pct < 10
+                               "rgb(239, 68, 68)"
+                             elsif pct < 25
+                               "rgb(249, 115, 22)"
+                             elsif pct < 50
+                               "rgb(234, 179, 8)"
+                             else
+                               "rgb(34, 197, 94)"
+                             end %>
+              <div class="chain-hour-row">
+                <span class="chain-hour-label"><%= h[:hour].to_s.rjust(2, "0") %>:00</span>
+                <div class="chain-hour-bar-bg">
+                  <div class="chain-hour-bar" style="width: <%= pct.clamp(0, 100) %>%; background: <%= bar_color %>"></div>
+                </div>
+                <span class="chain-hour-value"><%= h[:avg] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# ── Tab 3: Members ── %>
+      <div class="leadership-tab-content" data-tabs-target="panel" data-tab="members" hidden>
+        <div class="activity-section">
+          <h2>Member Breakdown</h2>
+          <p class="activity-subtitle">Individual member activity over the last 7 days.</p>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Online</th>
+                  <th>Active (Online + Idle)</th>
+                  <th>Activity</th>
+                </tr>
+              </thead>
+              <tbody>
+                <% max_active = @members.map { |m| m.active_count.to_i }.max || 1 %>
+                <% @members.each do |member| %>
+                  <% online_pct = member.total_snapshots.to_i > 0 ? (member.online_count.to_i * 100.0 / member.total_snapshots.to_i).round(1) : 0 %>
+                  <% active_pct = member.total_snapshots.to_i > 0 ? (member.active_count.to_i * 100.0 / member.total_snapshots.to_i).round(1) : 0 %>
+                  <% bar_width = max_active > 0 ? (member.active_count.to_i * 100.0 / max_active).round(1) : 0 %>
+                  <tr>
+                    <td>
+                      <% if @has_enough_data %>
+                        <a href="https://www.torn.com/profiles.php?XID=<%= member.torn_member_id %>" target="_blank" class="player-link">
+                          <%= member.member_name %> [<%= member.torn_member_id %>]
+                        </a>
+                      <% else %>
+                        <span class="player-link"><%= member.member_name %></span>
+                      <% end %>
+                    </td>
+                    <td><%= online_pct %>%</td>
+                    <td><%= active_pct %>%</td>
+                    <td>
+                      <div class="activity-bar-container">
+                        <div class="activity-bar" style="width: <%= bar_width %>%"></div>
+                      </div>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -8,6 +8,7 @@ class Faction < ApplicationRecord
   has_one :tornstats_api_key, class_name: "ApiKey::Tornstats"
   has_many :api_calls, dependent: :nullify
   has_many :spy_reports, dependent: :destroy
+  has_many :member_activity_snapshots, dependent: :destroy
   has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
 
   validates :torn_id, presence: true, uniqueness: true
@@ -82,6 +83,7 @@ class Faction < ApplicationRecord
       PersonalStatSnapshot.where(user_id: user_ids).delete_all if user_ids.any?
       spy_reports.delete_all
       ranked_wars.delete_all
+      member_activity_snapshots.delete_all
       users.update_all(leadership_access: false)
       api_keys.destroy_all
       faction_setting&.destroy!

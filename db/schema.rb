@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_05_153436) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_05_164034) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -76,6 +76,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_153436) do
     t.boolean "war_polling_active", default: false, null: false
     t.decimal "xanax_target", default: "2.5", null: false
     t.index ["torn_id"], name: "index_factions_on_torn_id", unique: true
+  end
+
+  create_table "member_activity_snapshots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "day_of_week", null: false
+    t.integer "faction_id", null: false
+    t.integer "hour_utc", null: false
+    t.string "member_name", null: false
+    t.datetime "recorded_at", null: false
+    t.string "status", null: false
+    t.integer "torn_member_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["faction_id", "hour_utc", "day_of_week"], name: "idx_activity_heatmap"
+    t.index ["faction_id", "recorded_at"], name: "index_member_activity_snapshots_on_faction_id_and_recorded_at"
+    t.index ["faction_id", "torn_member_id", "recorded_at"], name: "idx_activity_faction_member_time"
+    t.index ["faction_id"], name: "index_member_activity_snapshots_on_faction_id"
   end
 
   create_table "personal_stat_snapshots", force: :cascade do |t|
@@ -326,6 +342,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_153436) do
 
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
+  add_foreign_key "member_activity_snapshots", "factions"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "personal_stat_snapshots", "users"
   add_foreign_key "ranked_war_attacks", "ranked_wars"
