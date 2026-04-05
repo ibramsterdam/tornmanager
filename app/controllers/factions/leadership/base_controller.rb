@@ -91,8 +91,16 @@ class Factions::Leadership::BaseController < ApplicationController
   end
 
   def load_activity_data
-    @activity_snapshot_count = @faction.member_activity_snapshots.recent.count
-    @activity_members_tracked = @faction.member_activity_snapshots.recent.distinct.count(:torn_member_id)
+    @activity_poll_count = @faction.member_activity_snapshots.distinct.count(:recorded_at)
+    @activity_ready = @activity_poll_count >= 96
+    if @activity_ready
+      first = @faction.member_activity_snapshots.minimum(:recorded_at)
+      @activity_days = first ? (Date.current - first.to_date).to_i : 0
+    else
+      first_snapshot = @faction.member_activity_snapshots.minimum(:recorded_at)
+      data_ready_at = first_snapshot ? first_snapshot + 24.hours : Time.current + 24.hours
+      @activity_seconds_remaining = [ (data_ready_at - Time.current).to_i, 0 ].max
+    end
   end
 
   def calculate_member_performance(wars)

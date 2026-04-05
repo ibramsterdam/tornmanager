@@ -32,7 +32,7 @@ class Factions::Leadership::ActivityControllerTest < ActionDispatch::Integration
     assert_response :success
     assert_select ".activity-preview-banner"
     assert_select "table.activity-heatmap"
-    assert_select "h2", "Member Breakdown"
+    assert_select ".activity-member-timeline"
   end
 
   test "shows preview when under 96 polls" do
@@ -57,8 +57,8 @@ class Factions::Leadership::ActivityControllerTest < ActionDispatch::Integration
     sign_in_as(@bram)
     get faction_leadership_activity_path(@faction)
     assert_response :success
-    assert_select "h2", "Faction Activity Heatmap"
-    assert_select "h2", "Member Breakdown"
+    assert_select "table.activity-heatmap"
+    assert_select ".activity-member-timeline"
     assert_select "a.player-link", /Bram/
   end
 

@@ -1,28 +1,7 @@
 <div class="leadership-page">
   <%= link_to "&larr; Back to Leadership".html_safe, faction_leadership_path(@faction), class: "back-link" %>
 
-  <% unless @has_enough_data %>
-    <div class="activity-preview-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= @seconds_remaining %>">
-      <strong>Collecting activity data</strong> - This is a preview with sample data. Real data will be available in
-      <span data-backfill-countdown-target="countdown"><%= @seconds_remaining > 0 ? "#{@seconds_remaining / 3600}h #{(@seconds_remaining % 3600) / 60}m" : "soon" %></span>.
-      <div class="activity-preview-progress">
-        <div class="activity-preview-progress-bar" style="width: <%= (@poll_count * 100.0 / 96).clamp(0, 100).round(1) %>%"></div>
-      </div>
-      <span class="activity-preview-progress-label"><%= @poll_count %> / 96 polls collected</span>
-    </div>
-  <% end %>
-
   <div>
-    <div class="activity-info-bar">
-      <span><strong>Members:</strong> <%= @members.size %></span>
-      <span><strong>Peak:</strong> <%= @peak_hour ? "#{@peak_hour.to_s.rjust(2, '0')}:00 TCT" : "N/A" %></span>
-      <span><strong>Polls:</strong> <%= @has_enough_data ? number_with_delimiter(@poll_count) : "#{@poll_count}/96" %></span>
-      <span><strong>Polling:</strong> Every 15 min</span>
-      <% if @has_enough_data && @earliest_snapshot %>
-        <span><strong>Since:</strong> <%= @earliest_snapshot.strftime("%d %b %Y") %></span>
-      <% end %>
-    </div>
-
     <div data-controller="tabs" data-tabs-default-value="heatmap">
       <div class="leadership-tab-buttons">
         <button class="leadership-tab-btn" data-tabs-target="button" data-tab="heatmap" data-action="click->tabs#switch">Heatmap</button>
@@ -33,9 +12,7 @@
       <%# ── Tab 1: Calendar Heatmap ── %>
       <div class="leadership-tab-content" data-tabs-target="panel" data-tab="heatmap" hidden>
         <div class="activity-section">
-          <h2>Faction Activity Heatmap</h2>
-          <p class="activity-subtitle">Active members (Online + Idle) by hour and day. Last 14 days. Times are in TCT (UTC).</p>
-
+          <p class="activity-subtitle">Active members (Online + Idle) by hour and day. Last 14 days. Times in TCT.</p>
           <% current_hour = Time.current.hour %>
           <div class="activity-heatmap-wrapper">
             <table class="activity-heatmap">
@@ -88,8 +65,7 @@
       <%# ── Tab 2: Chain Coverage ── %>
       <div class="leadership-tab-content" data-tabs-target="panel" data-tab="dead-zones" hidden>
         <div class="activity-section">
-          <h2>Chain Coverage</h2>
-          <p class="activity-subtitle">Average active members per hour across the selected week. Bars show when your faction has coverage for chaining.</p>
+          <p class="activity-subtitle">Average active members per hour across the last 14 days. Red bars indicate chain risk.</p>
 
           <% if @danger_windows.any? %>
             <div class="chain-danger-windows">
@@ -112,7 +88,7 @@
 
           <div class="chain-hourly-chart">
             <% @hourly_avg.each do |h| %>
-              <% pct = @member_count > 0 ? (h[:avg] / @member_count * 100).round(1) : 0 %>
+              <% pct = @member_count > 0 ? (h[:avg].to_f / @member_count * 100).round(1) : 0 %>
               <% bar_color = if pct < 10
                                "rgb(239, 68, 68)"
                              elsif pct < 25
@@ -127,7 +103,7 @@
                 <div class="chain-hour-bar-bg">
                   <div class="chain-hour-bar" style="width: <%= pct.clamp(0, 100) %>%; background: <%= bar_color %>"></div>
                 </div>
-                <span class="chain-hour-value"><%= h[:avg] %></span>
+                <span class="chain-hour-value"><%= h[:avg].round %></span>
               </div>
             <% end %>
           </div>
@@ -137,40 +113,42 @@
       <%# ── Tab 3: Members ── %>
       <div class="leadership-tab-content" data-tabs-target="panel" data-tab="members" hidden>
         <div class="activity-section">
-          <h2>Member Breakdown</h2>
-          <p class="activity-subtitle">Individual member activity over the last 7 days.</p>
+          <p class="activity-subtitle">When each member is typically active. Last 7 days. Times in TCT.</p>
 
           <div class="table-container">
             <table>
               <thead>
                 <tr>
                   <th>Member</th>
-                  <th>Online</th>
-                  <th>Active (Online + Idle)</th>
-                  <th>Activity</th>
+                  <th class="activity-timeline-header">
+                    <div class="activity-timeline-hours">
+                      <% (0..23).each do |h| %>
+                        <span><%= h.to_s.rjust(2, "0") %></span>
+                      <% end %>
+                    </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                <% max_active = @members.map { |m| m.active_count.to_i }.max || 1 %>
                 <% @members.each do |member| %>
-                  <% online_pct = member.total_snapshots.to_i > 0 ? (member.online_count.to_i * 100.0 / member.total_snapshots.to_i).round(1) : 0 %>
-                  <% active_pct = member.total_snapshots.to_i > 0 ? (member.active_count.to_i * 100.0 / member.total_snapshots.to_i).round(1) : 0 %>
-                  <% bar_width = max_active > 0 ? (member.active_count.to_i * 100.0 / max_active).round(1) : 0 %>
+                  <% hourly = @member_hourly[member.torn_member_id] || {} %>
                   <tr>
                     <td>
                       <% if @has_enough_data %>
                         <a href="https://www.torn.com/profiles.php?XID=<%= member.torn_member_id %>" target="_blank" class="player-link">
-                          <%= member.member_name %> [<%= member.torn_member_id %>]
+                          <%= member.member_name %>
                         </a>
                       <% else %>
                         <span class="player-link"><%= member.member_name %></span>
                       <% end %>
                     </td>
-                    <td><%= online_pct %>%</td>
-                    <td><%= active_pct %>%</td>
                     <td>
-                      <div class="activity-bar-container">
-                        <div class="activity-bar" style="width: <%= bar_width %>%"></div>
+                      <div class="activity-member-timeline">
+                        <% (0..23).each do |hour| %>
+                          <% intensity = hourly[hour] || 0 %>
+                          <% rgb = activity_cell_rgb((intensity * 100).to_i, 100) %>
+                          <div class="activity-member-cell" style="--cell-r: <%= rgb.split(', ')[0] %>; --cell-g: <%= rgb.split(', ')[1] %>; --cell-b: <%= rgb.split(', ')[2] %>" title="<%= hour.to_s.rjust(2, '0') %>:00 - <%= (intensity * 100).round %>% active"></div>
+                        <% end %>
                       </div>
                     </td>
                   </tr>
