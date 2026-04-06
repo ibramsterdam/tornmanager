@@ -58,6 +58,11 @@ class FactionsController < ApplicationController
       return render :setup, status: :unprocessable_entity
     end
 
+    unless key_info.access.faction == true
+      flash.now[:alert] = "This API key does not have faction access. Please enable faction access in your Torn API key settings."
+      return render :setup, status: :unprocessable_entity
+    end
+
     unless key_info.user.id == Current.user.torn_id
       flash.now[:alert] = "This API key does not belong to you."
       return render :setup, status: :unprocessable_entity
