@@ -11,10 +11,9 @@ class Factions::Leadership::WarHistoryControllerTest < ActionDispatch::Integrati
 
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-
-    @bram.update!(leadership_access: true)
+    @bram.update!(faction: @faction, leadership_access: true)
+    @bert.update!(faction: @faction)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
   end
 
   test "requires authentication" do

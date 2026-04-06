@@ -89,7 +89,7 @@ class SettingsController < ApplicationController
         level: user.level,
         profile_image: user.profile_image,
         api_access_type: user.api_access_type,
-        subscription_expires_at: user.subscription_expires_at&.iso8601,
+        subscription_expires_at: user.effective_subscription_expires_at&.iso8601,
         created_at: user.created_at.iso8601,
         updated_at: user.updated_at.iso8601
       },
@@ -136,7 +136,9 @@ class SettingsController < ApplicationController
   private
 
   def calculate_days_remaining
-    (Current.user.subscription_expires_at.to_date - Date.current).to_i
+    expires_at = Current.user.effective_subscription_expires_at
+    return 0 unless expires_at
+    (expires_at.to_date - Date.current).to_i
   end
 
   def can_refresh?

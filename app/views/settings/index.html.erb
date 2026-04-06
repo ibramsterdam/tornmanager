@@ -17,7 +17,7 @@
           <div class="subscription-active">
             <div class="subscription-badge">✓ Active Subscriber</div>
             <div class="subscription-days"><%= @days_remaining %> days remaining</div>
-            <div class="subscription-expires">Expires: <%= Current.user.subscription_expires_at.strftime("%d %B %Y") %></div>
+            <div class="subscription-expires">Expires: <%= Current.user.effective_subscription_expires_at.strftime("%d %B %Y") %></div>
           </div>
         <% else %>
           <div class="subscription-inactive">
@@ -53,9 +53,9 @@
             </div>
 
             <div class="subscribe-method">
-              <h4>Faction Sharing</h4>
-              <p>Any faction member with dashboard access can share their own subscription time with the entire faction from the faction settings page.</p>
-              <p>The shared time is deducted from the sharer's balance and distributed evenly across all members.</p>
+              <h4>Faction Subscription</h4>
+              <p>Factions can have their own subscription. If your faction has an active subscription, all members are automatically subscribed.</p>
+              <p>Faction leaders can extend the faction subscription from the faction settings page.</p>
             </div>
           </div>
         </details>
