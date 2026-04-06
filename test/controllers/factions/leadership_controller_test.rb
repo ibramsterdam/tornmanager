@@ -434,7 +434,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     post faction_leadership_subscriptions_path(@faction), params: { weeks: 10 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /weeks remaining/, flash[:alert]
+    assert_match /personal weeks/, flash[:alert]
   end
 
   test "extend_faction_subscription creates faction subscription grant record" do

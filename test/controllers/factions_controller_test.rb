@@ -529,8 +529,8 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
 
     setup_faction.reload
     assert setup_faction.subscription.present?, "Faction should have a subscription"
-    assert_in_delta 1.month.from_now.to_i, setup_faction.subscription.expires_at.to_i, 5,
-      "Faction subscription should expire in ~1 month"
+    assert_in_delta 14.days.from_now.to_i, setup_faction.subscription.expires_at.to_i, 5,
+      "Faction subscription should expire in ~14 days"
 
     # All members should be subscribed via the faction subscription
     assert @bert.reload.subscribed?, "Setup user should be subscribed via faction"
