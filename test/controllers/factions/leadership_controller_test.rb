@@ -463,6 +463,47 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert remaining < original_weeks, "Personal subscription should be deducted"
   end
 
+  test "extend_faction_subscription cost scales with member count" do
+    # Add more members to increase the cost
+    20.times do |i|
+      User.create!(torn_id: 800000 + i, name: "Member#{i}", level: 10, faction: @faction)
+    end
+    # 22 members total (bram + bert + 20) -> ceil(22/10) = 3 personal weeks per faction week
+
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
+    original_weeks = @bram.subscription_weeks_remaining
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 2 }
+
+    # 2 faction weeks * 3 cost = 6 personal weeks deducted
+    deducted = original_weeks - @bram.reload.subscription_weeks_remaining
+    assert_equal 6, deducted, "Should deduct 6 personal weeks (2 faction weeks * 3 cost)"
+  end
+
+  test "extend_faction_subscription creates new subscription when none exists" do
+    @faction.subscription&.destroy!
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 2 }
+
+    assert @faction.reload.subscription.present?, "Faction should have a subscription"
+    assert @faction.subscription.active?, "Faction subscription should be active"
+  end
+
+  test "extend_faction_subscription rejects cost exceeding personal balance" do
+    # 2 members -> cost = 1 per faction week
+    # Give bram only 3 weeks, request 5 faction weeks = 5 personal weeks
+    grant_subscription(@bram, expires_at: 3.weeks.from_now)
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 5 }
+
+    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert_match /personal weeks/, flash[:alert]
+  end
+
   # -- Import Spies --
 
   test "import_spies imports spy reports from tornstats" do
