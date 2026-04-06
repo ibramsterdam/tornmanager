@@ -408,6 +408,16 @@
             <td>Backfill historical personal statistics for faction members</td>
             <td>Once per member per day during initial backfill</td>
           </tr>
+          <tr>
+            <td><code>v2/faction</code> (selections: weapons, armor)</td>
+            <td>Fetch current armory inventory with loan status and borrower IDs per item type</td>
+            <td>On armory page load</td>
+          </tr>
+          <tr>
+            <td><code>v1/faction</code> (selections: armorynews)</td>
+            <td>Fetch armory activity log (loans, returns, deposits, item usage)</td>
+            <td>On armory page load; during initial backfill</td>
+          </tr>
         </tbody>
       </table>
     </div>
