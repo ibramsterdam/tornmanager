@@ -276,14 +276,15 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   # -- Delete Torn Key --
 
-  test "delete_torn_key clears the torn api key" do
+  test "delete_torn_key clears the torn api key and resets setup" do
     sign_in_as(@bram)
     delete faction_leadership_api_keys_path(@faction, key: "torn")
 
-    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert_redirected_to faction_path(@faction)
     assert_match /deleted/, flash[:notice]
 
     assert_nil @faction.reload.torn_api_key
+    assert_not @faction.setup_completed?
   end
 
   test "delete_torn_key handles no torn key gracefully" do

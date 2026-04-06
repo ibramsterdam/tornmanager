@@ -54,7 +54,8 @@ class Factions::Leadership::ApiKeysController < Factions::Leadership::BaseContro
     case params[:key]
     when "torn"
       @faction.torn_api_key&.destroy!
-      redirect_to faction_leadership_settings_path(@faction), notice: "Torn API key deleted."
+      @faction.update!(setup_completed: false)
+      redirect_to faction_path(@faction), notice: "Torn API key deleted. Faction setup has been reset."
     when "tornstats"
       @faction.tornstats_api_key&.destroy!
       redirect_to faction_leadership_settings_path(@faction), notice: "TornStats API key deleted."
