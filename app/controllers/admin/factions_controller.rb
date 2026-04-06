@@ -83,6 +83,7 @@ module Admin
     end
 
     def backfill_armory_news
+      @faction.update!(armory_backfill_pending: true)
       BackfillArmoryNewsJob.perform_later(@faction.id)
       redirect_to admin_factions_path, notice: "Armory news backfill started for #{@faction.name}."
     end

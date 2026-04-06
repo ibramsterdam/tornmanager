@@ -1,6 +1,6 @@
 class BackfillArmoryNewsJob < FactionApiJob
   BACKFILL_FLOOR = Time.utc(2026, 1, 1).to_i
-  PAGE_DELAY = 40.minutes
+  PAGE_DELAY = 1.minute
 
   limits_concurrency to: 1, key: ->(faction_id, _cursor = nil) { faction_id }, group: "FactionApiCalls"
 
@@ -16,11 +16,18 @@ class BackfillArmoryNewsJob < FactionApiJob
       cursor = oldest ? oldest.to_i - 1 : Time.current.to_i
     end
 
-    return if cursor <= BACKFILL_FLOOR
+    if cursor <= BACKFILL_FLOOR
+      faction.update!(armory_backfill_pending: false)
+      return
+    end
 
     client = TornApi::Faction::ArmoryNews.new(api_key)
     batch = client.fetch(to: cursor, limit: 100)
-    return if batch.empty?
+
+    if batch.empty?
+      faction.update!(armory_backfill_pending: false)
+      return
+    end
 
     records = batch.map { |entry| build_record(faction.id, entry) }
     ArmoryNewsEntry.insert_all(records, unique_by: [ :faction_id, :torn_news_id ])
@@ -30,6 +37,8 @@ class BackfillArmoryNewsJob < FactionApiJob
 
     if batch.size == 100 && next_cursor > BACKFILL_FLOOR
       BackfillArmoryNewsJob.set(wait: PAGE_DELAY).perform_later(faction_id, next_cursor)
+    else
+      faction.update!(armory_backfill_pending: false)
     end
   rescue TornApi::ApiError => e
     Rails.logger.error("BackfillArmoryNewsJob: Failed for faction #{faction_id}: #{e.message}")

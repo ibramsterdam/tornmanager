@@ -10,8 +10,7 @@ class Factions::Leadership::ArmoryController < Factions::Leadership::BaseControl
       .newest_first
       .map { |e| entry_to_hash(e) }
 
-    latest_entry = @faction.armory_news_entries.maximum(:occurred_at)
-    @backfill_in_progress = latest_entry.nil? || latest_entry < 1.day.ago
+    @backfill_in_progress = @faction.armory_backfill_pending?
 
     member_names = @faction.users.where(torn_id: loans_by_member.keys).pluck(:torn_id, :name).to_h
 
