@@ -119,6 +119,18 @@
         <span class="dashboard-stat-label">Member Activity</span>
       <% end %>
 
+      <%= link_to faction_leadership_armory_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
+        <span class="dashboard-stat-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </span>
+        <% if @armory_loaned_count %>
+          <span class="dashboard-stat-value"><%= @armory_loaned_count %></span>
+        <% end %>
+        <span class="dashboard-stat-label">Items Loaned</span>
+      <% end %>
+
       <%= link_to faction_leadership_api_logs_path(@faction), class: "dashboard-stat-card dashboard-stat-card-link" do %>
         <span class="dashboard-stat-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">

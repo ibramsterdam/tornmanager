@@ -38,6 +38,10 @@ production:
     class: Daily::ValidateFactionKeysJob
     queue: default
     schedule: at 1am every day
+  armory_news_sync:
+    class: Daily::ArmoryNewsJob
+    queue: default
+    schedule: at 5am every day
   member_activity_poll:
     class: MemberActivityPollJob
     queue: default

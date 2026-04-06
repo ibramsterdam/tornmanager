@@ -8,6 +8,8 @@ class Faction < ApplicationRecord
   has_one :tornstats_api_key, class_name: "ApiKey::Tornstats"
   has_many :api_calls, dependent: :nullify
   has_many :spy_reports, dependent: :destroy
+
+  has_many :armory_news_entries, dependent: :destroy
   has_many :member_activity_snapshots, dependent: :destroy
   has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
   has_one :subscription, as: :subscribable, dependent: :destroy
@@ -84,6 +86,8 @@ class Faction < ApplicationRecord
       PersonalStatSnapshot.where(user_id: user_ids).delete_all if user_ids.any?
       spy_reports.delete_all
       ranked_wars.delete_all
+
+      armory_news_entries.delete_all
       member_activity_snapshots.delete_all
       users.update_all(leadership_access: false)
       api_keys.destroy_all
@@ -100,9 +104,11 @@ class Faction < ApplicationRecord
     SolidQueue::Job
       .where(finished_at: nil)
       .where(class_name: %w[
+        BackfillArmoryNewsJob
         BackfillPersonalStatsJob
         BackfillRankedWarsJob
         ClearBackfillStatusJob
+        FetchArmoryNewsJob
         WarPollingJob
       ])
       .where("arguments LIKE ?", "%\"arguments\":[#{id},%")

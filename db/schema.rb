@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_103205) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_184323) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -41,6 +41,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_103205) do
     t.index ["faction_id", "type"], name: "index_api_keys_on_faction_id_and_type", unique: true
     t.index ["faction_id"], name: "index_api_keys_on_faction_id"
     t.index ["user_id", "type"], name: "index_api_keys_on_user_id_and_type", unique: true, where: "user_id IS NOT NULL"
+  end
+
+  create_table "armory_news_entries", force: :cascade do |t|
+    t.string "action", null: false
+    t.datetime "created_at", null: false
+    t.integer "faction_id", null: false
+    t.string "item"
+    t.datetime "occurred_at", null: false
+    t.integer "player_id"
+    t.string "player_name"
+    t.text "text"
+    t.string "torn_news_id", null: false
+    t.index ["faction_id", "occurred_at"], name: "index_armory_news_entries_on_faction_id_and_occurred_at"
+    t.index ["faction_id", "player_id", "action"], name: "idx_on_faction_id_player_id_action_86316add96"
+    t.index ["faction_id", "torn_news_id"], name: "index_armory_news_entries_on_faction_id_and_torn_news_id", unique: true
+    t.index ["faction_id"], name: "index_armory_news_entries_on_faction_id"
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -351,6 +367,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_103205) do
     t.index ["sender_id"], name: "index_xanax_payments_on_sender_id"
   end
 
+  add_foreign_key "armory_news_entries", "factions"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "member_activity_snapshots", "factions"
