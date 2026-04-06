@@ -24,12 +24,11 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h2", text: "Users"
-    assert_select "h2", text: "Factions"
-    assert_select "h2", text: "Snapshots"
-    assert_select "h2", text: "Activity"
+    assert_select "h2", text: /Factions/
+    assert_select "h2", text: "Personal Stat Snapshots"
+    assert_select "h2", text: "Member Activity"
     assert_select "h2", text: /Torn API/
     assert_select "h2", text: "Data Health"
-    assert_select "h2", text: /Sign-ins/
   end
 
   test "shows user stats" do
@@ -57,7 +56,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     get admin_stats_path
     assert_response :success
 
-    assert_select ".admin-stat-label", text: "Days with Data"
+    assert_select ".admin-stat-label", text: "Days with data"
   end
 
   test "shows api call stats with admin key breakdown" do
@@ -68,7 +67,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select ".admin-stat-label", text: "Total calls"
     assert_select ".admin-stat-label", text: "Peak rate"
-    assert_select ".admin-stat-label", text: "Peak rate today"
+    assert_select ".admin-stat-label", text: "Peak today"
     assert_select ".admin-stat-label", text: "Admin key calls"
     assert_select ".admin-stat-label", text: "Admin peak rate"
     assert_select ".admin-stat-label", text: "Admin peak today"
@@ -93,8 +92,8 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select ".admin-stat-label", text: "Sessions this week"
-    assert_select ".admin-stat-label", text: "Unique users"
-    assert_select ".admin-stat-label", text: "First-time users"
+    assert_select ".admin-stat-label", text: "Unique this week"
+    assert_select ".admin-stat-label", text: "First-time"
   end
 
   test "shows first-time sign-ins table" do
@@ -146,7 +145,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     get admin_stats_path
     assert_response :success
 
-    assert_select ".admin-stats-table th", text: "Snapshots"
+    assert_select ".admin-stats-table th", text: "Count"
   end
 
   test "shows data health warning colors for missing data" do
