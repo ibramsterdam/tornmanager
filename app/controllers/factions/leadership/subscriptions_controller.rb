@@ -43,7 +43,7 @@ class Factions::Leadership::SubscriptionsController < Factions::Leadership::Base
   private
 
   def faction_week_cost
-    (@faction.users.active.count / 10.0).ceil.clamp(1, 100)
+    (@faction.users.active.count / 4.0).ceil.clamp(1, 100)
   end
   helper_method :faction_week_cost
 end

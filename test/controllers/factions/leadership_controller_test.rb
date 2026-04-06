@@ -468,7 +468,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     20.times do |i|
       User.create!(torn_id: 800000 + i, name: "Member#{i}", level: 10, faction: @faction)
     end
-    # 22 members total (bram + bert + 20) -> ceil(22/10) = 3 personal weeks per faction week
+    # 22 members total (bram + bert + 20) -> ceil(22/4) = 6 personal weeks per faction week
 
     grant_subscription(@bram, expires_at: 52.weeks.from_now)
     original_weeks = @bram.subscription_weeks_remaining
@@ -476,9 +476,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@bram)
     post faction_leadership_subscriptions_path(@faction), params: { weeks: 2 }
 
-    # 2 faction weeks * 3 cost = 6 personal weeks deducted
+    # 2 faction weeks * 6 cost = 12 personal weeks deducted
     deducted = original_weeks - @bram.reload.subscription_weeks_remaining
-    assert_equal 6, deducted, "Should deduct 6 personal weeks (2 faction weeks * 3 cost)"
+    assert_equal 12, deducted, "Should deduct 12 personal weeks (2 faction weeks * 6 cost)"
   end
 
   test "extend_faction_subscription creates new subscription when none exists" do
