@@ -13,5 +13,12 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+
+    # Helper to grant a subscription to a user or faction via the Subscription model
+    def grant_subscription(subscribable, expires_at:)
+      sub = subscribable.subscription || subscribable.build_subscription
+      sub.update!(expires_at: expires_at)
+      sub
+    end
   end
 end

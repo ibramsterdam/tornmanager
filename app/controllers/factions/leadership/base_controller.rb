@@ -47,6 +47,12 @@ class Factions::Leadership::BaseController < ApplicationController
     @faction_members = @faction.users.active.where(leadership_access: false).order(:name)
     @subscription_weeks_remaining = Current.user.subscription_weeks_remaining
     @faction_member_count = @faction.users.active.count
+    faction_sub = @faction.subscription
+    @faction_subscription_active = faction_sub&.active? || false
+    @faction_subscription_expires_at = faction_sub&.expires_at
+    @faction_subscription_days_remaining = faction_sub&.days_remaining || 0
+    @faction_week_cost = (@faction.users.active.count / 4.0).ceil.clamp(1, 100)
+    @max_faction_weeks = @subscription_weeks_remaining > 0 ? (@subscription_weeks_remaining / @faction_week_cost) : 0
     @war_polling_active = @faction.war_polling_active?
   end
 

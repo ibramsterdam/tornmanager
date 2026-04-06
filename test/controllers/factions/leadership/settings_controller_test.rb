@@ -11,8 +11,9 @@ class Factions::Leadership::SettingsControllerTest < ActionDispatch::Integration
 
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bram.update!(faction: @faction)
+    @bert.update!(faction: @faction)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
 
     @bram.update!(leadership_access: true)
   end

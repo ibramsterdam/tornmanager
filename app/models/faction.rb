@@ -10,6 +10,7 @@ class Faction < ApplicationRecord
   has_many :spy_reports, dependent: :destroy
   has_many :member_activity_snapshots, dependent: :destroy
   has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
+  has_one :subscription, as: :subscribable, dependent: :destroy
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
