@@ -432,36 +432,66 @@
   background: var(--gray-900);
   border: 1px solid var(--gray-800);
   border-radius: var(--radius-md);
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  min-height: 360px;
-}
-
-.subscription-active,
-.subscription-inactive {
+  padding: 1.25rem;
   margin-bottom: 1.5rem;
 }
 
-.subscription-days {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--gray-100);
-  margin-bottom: 0.5rem;
-  font-variant-numeric: tabular-nums;
+.subscription-status-header {
+  margin-bottom: 0.75rem;
 }
 
-.subscription-expires {
+.subscription-sources {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.subscription-source {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--gray-800);
+  border-radius: 6px;
+}
+
+.subscription-source-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.8125rem;
+}
+
+.subscription-source-detail {
+  font-size: 0.75rem;
   color: var(--gray-400);
-  font-size: 0.875rem;
-  margin-bottom: 1rem;
+  margin-top: 0.25rem;
 }
 
-.renewal-method {
-  margin-bottom: 1rem;
+.subscription-refresh-form {
+  margin-top: 0.25rem;
 }
 
-.renewal-method:last-child {
-  margin-bottom: 0;
+.subscription-how {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--gray-800);
+  font-size: 0.6875rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+}
+
+.subscription-how strong {
+  color: var(--gray-400);
+}
+
+.subscription-how a {
+  color: var(--gray-400);
+}
+
+.subscription-source-infinity {
+  font-size: 1.25rem;
+  color: #22c55e;
+  line-height: 1;
 }
 
 /* API Key Card */

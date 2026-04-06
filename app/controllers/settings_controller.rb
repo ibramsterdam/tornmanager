@@ -10,6 +10,16 @@ class SettingsController < ApplicationController
     @subscribed = Current.user.subscribed?
     @days_remaining = calculate_days_remaining if @subscribed
 
+    @personal_sub = Current.user.subscription
+    @personal_active = @personal_sub&.active? || false
+    @personal_days = @personal_sub&.days_remaining || 0
+
+    @faction = Current.user.faction
+    @faction_sub = @faction&.subscription
+    @faction_sub_active = @faction_sub&.active? || false
+    @faction_sub_days = @faction_sub&.days_remaining || 0
+    @faction_setup = @faction&.setup_completed? || false
+
     @last_refresh_at = session[:last_subscription_refresh_at]
     @can_refresh = can_refresh?
     @seconds_until_refresh = seconds_until_refresh
