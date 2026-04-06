@@ -82,7 +82,7 @@ class FactionsController < ApplicationController
     members = TornApi::Faction::Members.new(api_key, @faction.torn_id).fetch
 
     # Create a faction-level subscription (1 month trial)
-    @faction.create_subscription!(expires_at: 1.month.from_now) unless @faction.subscription
+    @faction.create_subscription!(expires_at: 14.days.from_now) unless @faction.subscription
 
     members.each do |member|
       user = User.find_by(torn_id: member.id)

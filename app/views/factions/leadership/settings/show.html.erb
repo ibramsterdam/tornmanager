@@ -92,20 +92,53 @@
             <% end %>
           </div>
 
-          <% if @subscription_weeks_remaining > 0 %>
-            <p class="leadership-settings-description">
-              Extend faction subscription from your personal balance (<%= pluralize(@subscription_weeks_remaining, "week") %> available).
-            </p>
+          <div class="leadership-sub-how">
+            <p class="leadership-settings-description"><strong>How it works</strong></p>
+            <div class="leadership-sub-steps">
+              <div class="leadership-sub-step">
+                <span class="leadership-sub-step-num">1</span>
+                <span>Send Xanax to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" class="player-link">Bram [2728237]</a></span>
+              </div>
+              <div class="leadership-sub-step">
+                <span class="leadership-sub-step-num">2</span>
+                <span>Each Xanax = <strong>2 weeks</strong> personal balance</span>
+              </div>
+              <div class="leadership-sub-step">
+                <span class="leadership-sub-step-num">3</span>
+                <span>Transfer personal weeks to faction below</span>
+              </div>
+            </div>
+          </div>
 
+          <div class="leadership-sub-rate">
+            <div class="leadership-sub-rate-row">
+              <span>Faction members</span>
+              <strong><%= @faction_member_count %></strong>
+            </div>
+            <div class="leadership-sub-rate-row">
+              <span>1 faction week costs</span>
+              <strong><%= pluralize(@faction_week_cost, "personal week") %></strong>
+            </div>
+            <div class="leadership-sub-rate-row">
+              <span>Your personal balance</span>
+              <strong><%= pluralize(@subscription_weeks_remaining, "week") %></strong>
+            </div>
+            <div class="leadership-sub-rate-row">
+              <span>You can add</span>
+              <strong><%= pluralize(@max_faction_weeks, "faction week") %></strong>
+            </div>
+          </div>
+
+          <% if @max_faction_weeks > 0 %>
             <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post do |form| %>
               <div class="api-key-form-inline">
-                <%= form.number_field :weeks, required: true, min: 1, max: @subscription_weeks_remaining, value: 1, class: "api-key-form-input", placeholder: "Weeks", inputmode: "numeric", style: "max-width: 100px;" %>
-                <%= form.submit "Extend Faction Subscription", class: "btn btn-primary",
-                    data: { turbo_confirm: "This will deduct weeks from your personal subscription. Continue?" } %>
+                <%= form.number_field :weeks, required: true, min: 1, max: @max_faction_weeks, value: 1, class: "api-key-form-input", placeholder: "Faction weeks", inputmode: "numeric", style: "max-width: 100px;" %>
+                <%= form.submit "Transfer to Faction", class: "btn btn-sm btn-primary",
+                    data: { turbo_confirm: "This will cost #{@faction_week_cost} personal week(s) per faction week. Continue?" } %>
               </div>
             <% end %>
           <% else %>
-            <p class="leadership-settings-hint">You need a personal subscription to extend the faction subscription.</p>
+            <p class="leadership-settings-hint">No personal weeks available. Send Xanax to Bram [2728237] to get started.</p>
           <% end %>
         </div>
       </div>
