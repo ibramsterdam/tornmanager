@@ -18,39 +18,36 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "index shows subscription status for subscribed users" do
-    @user.update!(subscription_expires_at: 30.days.from_now)
+  test "index shows active subscription status" do
+    grant_subscription(@user, expires_at: 30.days.from_now)
     get settings_path
     assert_response :success
-    assert_match /days remaining/, response.body
-    assert_match /Active Subscriber/, response.body
+    assert_select ".subscription-badge", /Active/
+    assert_select ".pulse-dot-green"
   end
 
-  test "index shows not subscribed state for non-subscribed users" do
-    @user.update!(subscription_expires_at: nil)
+  test "index shows inactive for non-subscribed users" do
     get settings_path
     assert_response :success
-    assert_select ".subscription-badge-inactive", text: "Not Subscribed"
-    assert_select ".subscription-inactive", /don't have an active subscription/
-    assert_select ".subscription-active", count: 0
-    assert_select ".subscription-days", count: 0
+    assert_select ".subscription-badge-inactive", /Inactive/
   end
 
-  test "index shows not subscribed state for expired subscriptions" do
-    @user.update!(subscription_expires_at: 1.day.ago)
+  test "index shows personal subscription days" do
+    grant_subscription(@user, expires_at: 42.days.from_now)
     get settings_path
     assert_response :success
-    assert_select ".subscription-badge-inactive", text: "Not Subscribed"
-    assert_select ".subscription-inactive", /don't have an active subscription/
-    assert_select ".subscription-active", count: 0
-    assert_select ".subscription-days", count: 0
+    assert_match /42 days/, response.body
   end
 
-  test "index calculates days remaining correctly" do
-    @user.update!(subscription_expires_at: 42.days.from_now)
+  test "index shows faction subscription with infinity sign" do
+    faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5, setup_completed: true)
+    @user.update!(faction: faction)
+    grant_subscription(faction, expires_at: 30.days.from_now)
+
     get settings_path
     assert_response :success
-    assert_match /42 days remaining/, response.body
+    assert_select ".subscription-source-infinity"
+    assert_match /Test Faction/, response.body
   end
 
   test "index shows data counts" do
@@ -105,12 +102,13 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
   test "purge_data preserves subscription" do
     expiration = 30.days.from_now
-    @user.update!(subscription_expires_at: expiration)
+    grant_subscription(@user, expires_at: expiration)
 
     delete settings_purge_data_path
 
     @user.reload
-    assert_equal expiration.to_i, @user.subscription_expires_at.to_i
+    assert @user.subscription.present?, "Subscription record should be preserved"
+    assert_equal expiration.to_i, @user.subscription.expires_at.to_i
   end
 
   test "purge_data preserves user record" do
@@ -181,17 +179,14 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "index displays subscription instructions in collapsible details" do
+  test "index displays subscription instructions" do
     get settings_path
 
     assert_response :success
-    assert_select "details.subscribe-details" do
-      assert_select "summary", text: "How to subscribe"
-    end
+    assert_select ".subscription-how"
     assert_match /Bram \[2728237\]/, response.body
     assert_match /2 week/, response.body
-    assert_match /Xanax Payment/, response.body
-    assert_match /Faction Sharing/, response.body
+    assert_match /Xanax/, response.body
   end
 
   test "index renders API Key and Subscription in side-by-side grid" do
@@ -225,13 +220,13 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     # Check index shows disabled button
     get settings_path
     assert_response :success
-    assert_match /Available in \d+ seconds/, response.body
+    assert_match /Available in \d+s/, response.body
   end
 
   test "index shows enabled button when no previous refresh" do
     get settings_path
     assert_response :success
-    assert_match /Check for New Payments/, response.body
+    assert_match /Check for Xanax payments/, response.body
   end
 
   # ── update_api_key ──

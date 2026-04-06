@@ -81,11 +81,7 @@ class FactionsController < ApplicationController
 
     members = TornApi::Faction::Members.new(api_key, @faction.torn_id).fetch
 
-    trial_expiry = 1.month.from_now
-    @faction.users.where(trial_granted_at: nil).update_all(
-      subscription_expires_at: trial_expiry,
-      trial_granted_at: Time.current
-    )
+    @faction.create_subscription!(expires_at: 14.days.from_now) unless @faction.subscription
 
     members.each do |member|
       user = User.find_by(torn_id: member.id)

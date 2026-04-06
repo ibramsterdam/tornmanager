@@ -11,8 +11,9 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now, leadership_access: true)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now, leadership_access: true)
+    @bram.update!(faction: @faction, leadership_access: true)
+    @bert.update!(faction: @faction, leadership_access: true)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
   end
 
   # -- Data Coverage --
@@ -398,95 +399,109 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_match /not found in leadership/, flash[:alert]
   end
 
-  # -- Share Subscription --
+  # -- Extend Faction Subscription --
 
-  test "share_subscription distributes weeks evenly across members" do
-    @bram.update!(subscription_expires_at: 52.weeks.from_now)
-    member = User.create!(torn_id: 555555, name: "Member", level: 30, faction: @faction, subscription_expires_at: 1.week.from_now)
-
-    # 3 active members: bram, bert, member (all non-fallen)
-    active_count = @faction.users.active.count
+  test "extend_faction_subscription extends faction subscription" do
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
 
     sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 4 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /Shared #{active_count} weeks/, flash[:notice]
+    assert_match /Extended faction subscription by 4 week/, flash[:notice]
   end
 
-  test "share_subscription rejects zero weeks" do
+  test "extend_faction_subscription rejects zero weeks" do
     sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: 0 }
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 0 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /valid number/, flash[:alert]
   end
 
-  test "share_subscription rejects negative weeks" do
+  test "extend_faction_subscription rejects negative weeks" do
     sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: -5 }
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: -5 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
     assert_match /valid number/, flash[:alert]
   end
 
-  test "share_subscription rejects uneven split" do
-    # 2 active members (bram + bert), but asking for 3 weeks — doesn't divide evenly
-    sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: 3 }
-
-    assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /cannot be split evenly/, flash[:alert]
-  end
-
-  test "share_subscription rejects when user has insufficient weeks" do
-    @bram.update!(subscription_expires_at: 1.week.from_now)
-    active_count = @faction.users.active.count
+  test "extend_faction_subscription rejects when user has insufficient weeks" do
+    grant_subscription(@bram, expires_at: 1.week.from_now)
 
     sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count * 10 }
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 10 }
 
     assert_redirected_to faction_leadership_settings_path(@faction)
-    assert_match /weeks remaining/, flash[:alert]
+    assert_match /personal weeks/, flash[:alert]
   end
 
-  test "share_subscription creates faction subscription grant record" do
-    @bram.update!(subscription_expires_at: 52.weeks.from_now)
-    active_count = @faction.users.active.count
+  test "extend_faction_subscription creates faction subscription grant record" do
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
 
     sign_in_as(@bram)
 
     assert_difference "FactionSubscriptionGrant.count", 1 do
-      post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
+      post faction_leadership_subscriptions_path(@faction), params: { weeks: 4 }
     end
 
     grant = FactionSubscriptionGrant.last
     assert_equal @faction.torn_id, grant.torn_faction_id
     assert_equal @bram, grant.granted_by
-    assert_equal active_count, grant.weeks_granted
+    assert_equal 4, grant.weeks_granted
   end
 
-  test "share_subscription creates individual subscription grants for each member" do
-    @bram.update!(subscription_expires_at: 52.weeks.from_now)
-    active_count = @faction.users.active.count
-
-    sign_in_as(@bram)
-
-    assert_difference "SubscriptionGrant.count", active_count do
-      post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
-    end
-  end
-
-  test "share_subscription deducts weeks from granting user" do
-    @bram.update!(subscription_expires_at: 52.weeks.from_now)
+  test "extend_faction_subscription deducts weeks from granting user" do
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
     original_weeks = @bram.subscription_weeks_remaining
-    active_count = @faction.users.active.count
 
     sign_in_as(@bram)
-    post faction_leadership_subscriptions_path(@faction), params: { total_weeks: active_count }
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 4 }
 
     remaining = @bram.reload.subscription_weeks_remaining
-    assert remaining < original_weeks, "Subscription should be deducted"
+    assert remaining < original_weeks, "Personal subscription should be deducted"
+  end
+
+  test "extend_faction_subscription cost scales with member count" do
+    # Add more members to increase the cost
+    20.times do |i|
+      User.create!(torn_id: 800000 + i, name: "Member#{i}", level: 10, faction: @faction)
+    end
+    # 22 members total (bram + bert + 20) -> ceil(22/4) = 6 personal weeks per faction week
+
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
+    original_weeks = @bram.subscription_weeks_remaining
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 2 }
+
+    # 2 faction weeks * 6 cost = 12 personal weeks deducted
+    deducted = original_weeks - @bram.reload.subscription_weeks_remaining
+    assert_equal 12, deducted, "Should deduct 12 personal weeks (2 faction weeks * 6 cost)"
+  end
+
+  test "extend_faction_subscription creates new subscription when none exists" do
+    @faction.subscription&.destroy!
+    grant_subscription(@bram, expires_at: 52.weeks.from_now)
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 2 }
+
+    assert @faction.reload.subscription.present?, "Faction should have a subscription"
+    assert @faction.subscription.active?, "Faction subscription should be active"
+  end
+
+  test "extend_faction_subscription rejects cost exceeding personal balance" do
+    # 2 members -> cost = 1 per faction week
+    # Give bram only 3 weeks, request 5 faction weeks = 5 personal weeks
+    grant_subscription(@bram, expires_at: 3.weeks.from_now)
+
+    sign_in_as(@bram)
+    post faction_leadership_subscriptions_path(@faction), params: { weeks: 5 }
+
+    assert_redirected_to faction_leadership_settings_path(@faction)
+    assert_match /personal weeks/, flash[:alert]
   end
 
   # -- Import Spies --
@@ -693,14 +708,12 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
     assert_nil @faction.reload.backfill_target_date
   end
 
-  test "delete_faction_data preserves user subscription time" do
-    original_expiry = @bram.subscription_expires_at
-
+  test "delete_faction_data preserves faction subscription" do
     sign_in_as(@bram)
     delete faction_leadership_faction_data_path(@faction)
 
-    assert_equal original_expiry, @bram.reload.subscription_expires_at,
-      "Subscription time should NOT be revoked"
+    assert @faction.reload.subscription.present?,
+      "Faction subscription should NOT be revoked"
   end
 
   test "delete_faction_data marks faction setup as incomplete" do
@@ -727,7 +740,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "member without leadership access cannot access show" do
     kaneki = users(:kaneki)
-    kaneki.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    kaneki.update!(faction: @faction)
 
     sign_in_as(kaneki)
     get faction_leadership_path(@faction)
@@ -737,7 +750,7 @@ class Factions::LeadershipControllerTest < ActionDispatch::IntegrationTest
 
   test "member without leadership access cannot access mutating actions" do
     kaneki = users(:kaneki)
-    kaneki.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    kaneki.update!(faction: @faction)
 
     sign_in_as(kaneki)
     patch faction_leadership_api_keys_path(@faction), params: {

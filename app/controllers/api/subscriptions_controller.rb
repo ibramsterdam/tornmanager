@@ -13,7 +13,7 @@ module Api
       render json: {
         subscription: {
           active: @user.subscribed?,
-          expires_at: @user.subscription_expires_at&.iso8601
+          expires_at: @user.effective_subscription_expires_at&.iso8601
         }
       }
     end

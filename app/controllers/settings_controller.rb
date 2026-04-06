@@ -10,6 +10,16 @@ class SettingsController < ApplicationController
     @subscribed = Current.user.subscribed?
     @days_remaining = calculate_days_remaining if @subscribed
 
+    @personal_sub = Current.user.subscription
+    @personal_active = @personal_sub&.active? || false
+    @personal_days = @personal_sub&.days_remaining || 0
+
+    @faction = Current.user.faction
+    @faction_sub = @faction&.subscription
+    @faction_sub_active = @faction_sub&.active? || false
+    @faction_sub_days = @faction_sub&.days_remaining || 0
+    @faction_setup = @faction&.setup_completed? || false
+
     @last_refresh_at = session[:last_subscription_refresh_at]
     @can_refresh = can_refresh?
     @seconds_until_refresh = seconds_until_refresh
@@ -89,7 +99,7 @@ class SettingsController < ApplicationController
         level: user.level,
         profile_image: user.profile_image,
         api_access_type: user.api_access_type,
-        subscription_expires_at: user.subscription_expires_at&.iso8601,
+        subscription_expires_at: user.effective_subscription_expires_at&.iso8601,
         created_at: user.created_at.iso8601,
         updated_at: user.updated_at.iso8601
       },
@@ -136,7 +146,9 @@ class SettingsController < ApplicationController
   private
 
   def calculate_days_remaining
-    (Current.user.subscription_expires_at.to_date - Date.current).to_i
+    expires_at = Current.user.effective_subscription_expires_at
+    return 0 unless expires_at
+    (expires_at.to_date - Date.current).to_i
   end
 
   def can_refresh?

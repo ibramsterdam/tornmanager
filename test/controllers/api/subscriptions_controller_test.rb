@@ -7,7 +7,7 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns subscription status for valid api key" do
-    @bram.update!(subscription_expires_at: 1.week.from_now)
+    grant_subscription(@bram, expires_at: 1.week.from_now)
 
     post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
 
@@ -18,7 +18,7 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns inactive subscription when expired" do
-    @bram.update!(subscription_expires_at: 1.day.ago)
+    grant_subscription(@bram, expires_at: 1.day.ago)
 
     post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
 
@@ -28,8 +28,6 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns inactive subscription when never subscribed" do
-    @bram.update!(subscription_expires_at: nil)
-
     post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
 
     assert_response :ok
@@ -63,7 +61,6 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "refresh triggers payment check and reloads user" do
-    @bram.update!(subscription_expires_at: nil)
     Daily::XanaxPaymentsJob.expects(:perform_now).once
 
     post api_subscription_path, params: { api_key: @bram.api_key, refresh: "1" }, as: :json

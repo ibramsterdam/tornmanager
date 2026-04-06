@@ -8,8 +8,9 @@ class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
     )
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bram.update!(faction: @faction)
+    @bert.update!(faction: @faction)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
 
     @war = @faction.ranked_wars.create!(
       torn_war_id: 1001,
@@ -90,7 +91,8 @@ class Factions::RankedWarsControllerTest < ActionDispatch::IntegrationTest
       torn_id: 11111, name: "Other", xanax_target: 2.5,
       energy_refill_target: 1.0, nerve_refill_target: 1.0, setup_completed: true
     )
-    @bert.update!(faction: other_faction, subscription_expires_at: 1.month.from_now)
+    @bert.update!(faction: other_faction)
+    grant_subscription(other_faction, expires_at: 1.month.from_now)
     sign_in_as(@bert)
 
     get faction_ranked_war_path(other_faction, @war)

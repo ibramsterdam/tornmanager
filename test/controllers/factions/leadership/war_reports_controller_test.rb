@@ -11,8 +11,9 @@ class Factions::Leadership::WarReportsControllerTest < ActionDispatch::Integrati
 
     @bram = users(:bram)
     @bert = users(:bert)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now, leadership_access: true)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bram.update!(faction: @faction, leadership_access: true)
+    @bert.update!(faction: @faction)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
 
     @war = @faction.ranked_wars.create!(
       torn_war_id: 1001, opponent_faction_id: 88888, opponent_faction_name: "Enemy",

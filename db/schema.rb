@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_101054) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_103205) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -280,6 +280,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_101054) do
     t.index ["faction_subscription_grant_id", "user_id"], name: "index_faction_grant_users_on_grant_and_user", unique: true
     t.index ["faction_subscription_grant_id"], name: "index_subscription_grants_on_faction_subscription_grant_id"
     t.index ["user_id"], name: "index_subscription_grants_on_user_id"
+  end
+
+  create_table "subscriptions", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "expires_at", null: false
+    t.integer "subscribable_id", null: false
+    t.string "subscribable_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["subscribable_type", "subscribable_id"], name: "index_subscriptions_on_subscribable_type_and_subscribable_id", unique: true
   end
 
   create_table "torn_items", force: :cascade do |t|
