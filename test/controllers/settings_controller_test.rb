@@ -19,7 +19,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index shows subscription status for subscribed users" do
-    @user.update!(subscription_expires_at: 30.days.from_now)
+    grant_subscription(@user, expires_at: 30.days.from_now)
     get settings_path
     assert_response :success
     assert_match /days remaining/, response.body
@@ -47,7 +47,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index calculates days remaining correctly" do
-    @user.update!(subscription_expires_at: 42.days.from_now)
+    grant_subscription(@user, expires_at: 42.days.from_now)
     get settings_path
     assert_response :success
     assert_match /42 days remaining/, response.body
@@ -105,12 +105,13 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
 
   test "purge_data preserves subscription" do
     expiration = 30.days.from_now
-    @user.update!(subscription_expires_at: expiration)
+    grant_subscription(@user, expires_at: expiration)
 
     delete settings_purge_data_path
 
     @user.reload
-    assert_equal expiration.to_i, @user.subscription_expires_at.to_i
+    assert @user.subscription.present?, "Subscription record should be preserved"
+    assert_equal expiration.to_i, @user.subscription.expires_at.to_i
   end
 
   test "purge_data preserves user record" do
@@ -191,7 +192,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_match /Bram \[2728237\]/, response.body
     assert_match /2 week/, response.body
     assert_match /Xanax Payment/, response.body
-    assert_match /Faction Sharing/, response.body
+    assert_match /Faction Subscription/, response.body
   end
 
   test "index renders API Key and Subscription in side-by-side grid" do

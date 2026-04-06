@@ -4,8 +4,9 @@ class Factions::Leadership::WarPollingControllerTest < ActionDispatch::Integrati
   setup do
     @faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5, setup_completed: true)
     @bram = users(:bram)
-    @bram.update!(faction: @faction, leadership_access: true, subscription_expires_at: 1.month.from_now)
+    @bram.update!(faction: @faction, leadership_access: true)
     @faction.create_faction_setting!
+    grant_subscription(@faction, expires_at: 1.month.from_now)
     ApiKey::Torn.create!(faction: @faction, key: "faction_limited_key", access_type: "Limited Access")
   end
 
@@ -61,7 +62,7 @@ class Factions::Leadership::WarPollingControllerTest < ActionDispatch::Integrati
 
   test "requires leadership access" do
     bert = users(:bert)
-    bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    bert.update!(faction: @faction)
 
     sign_in_as(bert)
     post start_faction_leadership_war_polling_path(@faction)

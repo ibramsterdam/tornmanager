@@ -9,13 +9,16 @@ class User < ApplicationRecord
   has_many :granted_faction_subscriptions, class_name: "FactionSubscriptionGrant", foreign_key: :granted_by_id
   has_many :api_calls, dependent: :destroy
   has_one :torn_api_key, class_name: "ApiKey::Torn", foreign_key: :user_id, dependent: :destroy
+  has_one :subscription, as: :subscribable, dependent: :destroy
 
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :level, presence: true
 
   scope :hof_stats_users, -> { where(hof_stats_user: true) }
-  scope :active_subscribers, -> { where("subscription_expires_at > ?", Time.current) }
+  scope :active_subscribers, -> {
+    left_joins(:subscription).where("subscriptions.expires_at > ?", Time.current)
+  }
   scope :active, -> { where(fallen: false) }
   scope :fallen, -> { where(fallen: true) }
   scope :tracked_for_stats, -> {
@@ -32,22 +35,37 @@ class User < ApplicationRecord
   end
 
   def subscribed?
-    subscription_expires_at.present? && subscription_expires_at > Time.current
+    (subscription&.expires_at.present? && subscription.expires_at > Time.current) ||
+      (faction&.subscription&.expires_at.present? && faction.subscription.expires_at > Time.current)
+  end
+
+  def personal_subscription_active?
+    subscription&.expires_at.present? && subscription.expires_at > Time.current
   end
 
   def subscription_weeks_remaining
-    return 0 unless subscribed?
-    ((subscription_expires_at - Time.current) / 1.week).round
+    return 0 unless personal_subscription_active?
+    ((subscription.expires_at - Time.current) / 1.week).round
+  end
+
+  def effective_subscription_expires_at
+    candidates = []
+    candidates << subscription.expires_at if subscription&.expires_at.present?
+    candidates << faction.subscription.expires_at if faction&.subscription&.expires_at.present?
+    candidates.compact.max
   end
 
   def extend_subscription!(weeks)
-    new_expiry = subscribed? ? subscription_expires_at + weeks.weeks : Time.current + weeks.weeks
-    update!(subscription_expires_at: new_expiry)
+    if subscription
+      subscription.extend!(weeks)
+    else
+      create_subscription!(expires_at: Time.current + weeks.weeks)
+    end
   end
 
   def deduct_subscription!(weeks)
     raise "Not enough subscription time remaining" unless subscription_weeks_remaining >= weeks
-    update!(subscription_expires_at: subscription_expires_at - weeks.weeks)
+    subscription.update!(expires_at: subscription.expires_at - weeks.weeks)
   end
 
   def admin?

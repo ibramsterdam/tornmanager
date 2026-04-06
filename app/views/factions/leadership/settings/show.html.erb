@@ -79,46 +79,33 @@
         </div>
 
         <div class="leadership-settings-card">
-          <h3>Share Subscription</h3>
-          <p class="leadership-settings-description">Share your subscription time with faction members.</p>
+          <h3>Faction Subscription</h3>
+          <p class="leadership-settings-description">Manage your faction's subscription.</p>
 
           <div class="leadership-subscription-info">
-            <span>Your balance: <strong><%= pluralize(@subscription_weeks_remaining, "week") %></strong></span>
-            <span>Faction members: <strong><%= @faction_member_count %></strong></span>
+            <% if @faction_subscription_active %>
+              <span>Status: <strong>Active</strong></span>
+              <span>Expires: <strong><%= @faction_subscription_expires_at.strftime("%d %B %Y") %></strong></span>
+              <span>Days remaining: <strong><%= @faction_subscription_days_remaining %></strong></span>
+            <% else %>
+              <span>Status: <strong>Inactive</strong></span>
+            <% end %>
           </div>
 
-          <% if @subscription_weeks_remaining <= 0 %>
-            <p class="leadership-settings-hint">You need an active subscription to share time.</p>
-          <% elsif @faction_member_count == 0 %>
-            <p class="leadership-settings-hint">No faction members found to share with.</p>
-          <% else %>
-            <% max_steps = @subscription_weeks_remaining / @faction_member_count %>
-            <% max_total = max_steps * @faction_member_count %>
-            <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post,
-                data: { controller: "share-subscription",
-                        share_subscription_member_count_value: @faction_member_count,
-                        share_subscription_max_total_value: max_total } do |form| %>
-              <div class="leadership-share-slider">
-                <%= form.range_field :slider,
-                    min: 0,
-                    max: max_steps,
-                    value: 0,
-                    step: 1,
-                    class: "share-slider",
-                    data: { share_subscription_target: "slider", action: "input->share-subscription#slide" } %>
-                <%= form.hidden_field :total_weeks, value: 0, data: { share_subscription_target: "hidden" } %>
-                <div class="leadership-share-labels">
-                  <span>0</span>
-                  <span><%= pluralize(max_total, "week") %></span>
-                </div>
+          <% if @subscription_weeks_remaining > 0 %>
+            <p class="leadership-settings-description">
+              Extend faction subscription from your personal balance (<%= pluralize(@subscription_weeks_remaining, "week") %> available).
+            </p>
+
+            <%= form_with url: faction_leadership_subscriptions_path(@faction), method: :post do |form| %>
+              <div class="api-key-form-inline">
+                <%= form.number_field :weeks, required: true, min: 1, max: @subscription_weeks_remaining, value: 1, class: "api-key-form-input", placeholder: "Weeks", inputmode: "numeric", style: "max-width: 100px;" %>
+                <%= form.submit "Extend Faction Subscription", class: "btn btn-primary",
+                    data: { turbo_confirm: "This will deduct weeks from your personal subscription. Continue?" } %>
               </div>
-              <p class="leadership-share-preview" data-share-subscription-target="preview">
-                Drag to share subscription time.
-              </p>
-              <%= form.submit "Share", class: "btn btn-primary", disabled: true,
-                  data: { share_subscription_target: "submit",
-                          turbo_confirm: "This will deduct weeks from your subscription. Continue?" } %>
             <% end %>
+          <% else %>
+            <p class="leadership-settings-hint">You need a personal subscription to extend the faction subscription.</p>
           <% end %>
         </div>
       </div>

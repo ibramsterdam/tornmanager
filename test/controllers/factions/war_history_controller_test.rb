@@ -13,8 +13,9 @@ class Factions::WarHistoryControllerTest < ActionDispatch::IntegrationTest
     @bram = users(:bram)
     @bert = users(:bert)
     @kaneki = users(:kaneki)
-    @bram.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
-    @bert.update!(faction: @faction, subscription_expires_at: 1.month.from_now)
+    @bram.update!(faction: @faction)
+    @bert.update!(faction: @faction)
+    grant_subscription(@faction, expires_at: 1.month.from_now)
 
     @won_war = @faction.ranked_wars.create!(
       torn_war_id: 1001, opponent_faction_id: 88888, opponent_faction_name: "Enemy A",
