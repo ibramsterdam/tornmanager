@@ -24,6 +24,11 @@ class Factions::Leadership::SetupController < Factions::Leadership::BaseControll
           alert: "Only Limited Access keys are allowed. Please create a Limited Access key in your Torn settings."
       end
 
+      unless key_info.access.faction == true
+        return redirect_to faction_leadership_setup_path(@faction),
+          alert: "This API key does not have faction access. Please enable faction access in your Torn API key settings."
+      end
+
       unless Current.user.admin? || key_info.user.id == Current.user.torn_id
         return redirect_to faction_leadership_setup_path(@faction), alert: "This API key does not belong to you."
       end

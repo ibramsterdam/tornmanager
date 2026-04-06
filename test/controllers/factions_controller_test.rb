@@ -395,6 +395,42 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     assert_match /different faction/, flash[:alert]
   end
 
+  test "setup shows error when key has no faction access" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Leader")
+    sign_in_as(@bert)
+
+    no_faction_key = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 3, type: "Limited Access", faction: false, company: false),
+      user: TornApi::Key::Info::UserData.new(id: @bert.torn_id, faction_id: 55555, company_id: 0)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(no_faction_key)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "NO_FACTION_KEY" }
+    assert_response :unprocessable_entity
+    assert_match /faction access/, flash[:alert]
+  end
+
+  test "setup rejects when max factions reached" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Leader")
+    sign_in_as(@bert)
+
+    FactionsController::MAX_FACTIONS.times do |i|
+      Faction.create!(torn_id: 80000 + i, name: "Faction #{i}", xanax_target: 2.5, setup_completed: true)
+    end
+
+    stub_valid_key_info(@bert, 55555)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "VALID_KEY" }
+    assert_response :unprocessable_entity
+    assert_match /Maximum number of factions/, flash[:alert]
+  end
+
   # -- Setup create: success --
 
   test "setup completes faction setup, creates setting, grants leadership access and queues jobs" do
