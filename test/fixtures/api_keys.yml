@@ -4,3 +4,24 @@ faction_with_key_torn:
   key: "test_api_key_123"
   access_type: "Limited Access"
   faction_access: true
+
+bram_personal_key:
+  user: bram
+  type: ApiKey::Torn
+  key: "ABCDEF"
+  access_type: "Limited Access"
+  faction_access: false
+
+bert_personal_key:
+  user: bert
+  type: ApiKey::Torn
+  key: "GHIJKL"
+  access_type: "Limited Access"
+  faction_access: false
+
+kaneki_personal_key:
+  user: kaneki
+  type: ApiKey::Torn
+  key: "MNOPQR"
+  access_type: "Limited Access"
+  faction_access: false

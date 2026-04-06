@@ -10,7 +10,7 @@ module Daily
     private
 
     def validate_faction_keys
-      ApiKey::Torn.includes(:faction).find_each do |api_key|
+      ApiKey::Torn.where.not(faction_id: nil).includes(:faction).find_each do |api_key|
         info = TornApi::Key::Info.new(api_key.key).fetch
 
         unless info.access.faction == true
@@ -31,13 +31,13 @@ module Daily
     end
 
     def validate_user_keys
-      User.where.not(api_key: nil).find_each do |user|
-        TornApi::Key::Info.new(user.api_key).fetch
+      ApiKey::Torn.where.not(user_id: nil).includes(:user).find_each do |api_key|
+        TornApi::Key::Info.new(api_key.key).fetch
       rescue TornApi::InvalidKeyError
-        Rails.logger.info("[ValidateKeys] User #{user.name} [#{user.torn_id}]: invalid key, clearing")
-        user.update!(api_key: nil, api_access_type: nil)
+        Rails.logger.info("[ValidateKeys] User #{api_key.user.name} [#{api_key.user.torn_id}]: invalid key, clearing")
+        api_key.destroy!
       rescue TornApi::ApiError => e
-        Rails.logger.warn("[ValidateKeys] User #{user.name} [#{user.torn_id}]: #{e.message}")
+        Rails.logger.warn("[ValidateKeys] User #{api_key.user.name} [#{api_key.user.torn_id}]: #{e.message}")
       ensure
         sleep 1
       end

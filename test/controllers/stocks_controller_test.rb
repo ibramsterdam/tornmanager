@@ -23,7 +23,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "redirects to login when user has no API key" do
-    @user.update!(api_key: nil)
+    @user.set_api_key!(nil, nil)
     sign_in_as(@user)
     get stocks_path
     assert_redirected_to new_session_path
@@ -33,7 +33,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   # -- Limited Access user sees owned column --
 
   test "limited access user sees stock table with owned column" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 
@@ -46,7 +46,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   # -- Non-limited access user sees table without owned column --
 
   test "non-limited access user sees stock table without owned column" do
-    @user.update!(api_access_type: "Minimal Access")
+    @user.set_api_key!(@user.api_key, "Minimal Access")
     sign_in_as(@user)
 
     get stocks_path
@@ -58,7 +58,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   # -- API error handling --
 
   test "invalid API key redirects to login" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError, "Invalid key")
 
@@ -68,7 +68,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "API error redirects to root with message" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
 
@@ -80,7 +80,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   # -- Table content --
 
   test "table rows are sorted by days to break even by default" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 
@@ -90,7 +90,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "shows annual roi column" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 
@@ -100,7 +100,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "table has sortable headers with data attributes" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 
@@ -110,7 +110,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "table uses table-sort stimulus controller" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 
@@ -120,7 +120,7 @@ class StocksControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "table cells have sort values for client-side sorting" do
-    @user.update!(api_access_type: "Limited Access")
+    @user.set_api_key!(@user.api_key, "Limited Access")
     sign_in_as(@user)
     TornApi::User::Stocks.any_instance.stubs(:fetch).returns(@mock_user_stocks)
 

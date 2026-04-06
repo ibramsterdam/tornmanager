@@ -50,10 +50,7 @@ class SettingsController < ApplicationController
         return
       end
 
-      Current.user.update!(
-        api_key: new_api_key,
-        api_access_type: key_info.access.type
-      )
+      Current.user.set_api_key!(new_api_key, key_info.access.type)
 
       render json: { success: true, message: "API key updated! Access level: #{key_info.access.type}", access_type: key_info.access.type }
     rescue TornApi::InvalidKeyError => e
@@ -73,7 +70,7 @@ class SettingsController < ApplicationController
 
     Current.user.sessions.destroy_all
     Current.user.api_calls.destroy_all
-    Current.user.update!(api_key: nil)
+    Current.user.set_api_key!(nil, nil)
 
     Rails.logger.info "Data purge completed for user #{Current.user.torn_id}"
 

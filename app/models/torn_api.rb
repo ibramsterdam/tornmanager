@@ -176,7 +176,7 @@ module TornApi
 
     def resolve_api_key_owner
       @resolved_user ||= begin
-        found = ::User.find_by(api_key: api_key)
+        found = ::User.find_by_api_key(api_key)
         return found if found
 
         ::User.find_by(torn_id: 2728237) if api_key == AdminCredentials.api_key

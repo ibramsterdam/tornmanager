@@ -305,7 +305,8 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     setup_faction = Faction.create!(
       torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
     )
-    @bert.update!(faction: setup_faction, api_access_type: "Limited Access", position: "Leader")
+    @bert.update!(faction: setup_faction, position: "Leader")
+    @bert.set_api_key!(@bert.api_key || "GHIJKL", "Limited Access")
     sign_in_as(@bert)
 
     get setup_faction_path(setup_faction)

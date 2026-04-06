@@ -25,7 +25,7 @@ module Api
     end
 
     def set_user
-      @user = User.find_by(api_key: params[:api_key].to_s.strip)
+      @user = User.find_by_api_key(params[:api_key].to_s.strip)
       render json: { error: "Unknown API key. Please sign in first." }, status: :not_found unless @user
     end
   end

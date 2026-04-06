@@ -13,7 +13,7 @@ module Api
         return render json: { error: "torn_ids is required" }, status: :bad_request
       end
 
-      user = User.find_by(api_key: api_key)
+      user = User.find_by_api_key(api_key)
       unless user
         return render json: { error: "Unknown API key. Please sign in first." }, status: :not_found
       end
