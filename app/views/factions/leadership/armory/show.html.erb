@@ -1,0 +1,226 @@
+<div class="leadership-page">
+  <%= link_to "&larr; Back to Leadership".html_safe, faction_leadership_path(@faction), class: "back-link" %>
+
+  <div class="armory-header">
+    <div>
+      <h1>Armory</h1>
+      <p class="activity-subtitle"><%= @members.size %> members with loans</p>
+    </div>
+    <%= button_to "Sync Today", sync_faction_leadership_armory_path(@faction), method: :post, class: "btn btn-sm btn-primary" %>
+  </div>
+
+  <% if @backfill_in_progress %>
+    <div class="backfill-banner">
+      <div class="backfill-banner-content">
+        <div class="backfill-banner-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <div class="backfill-banner-text">
+          <span><strong>Fetching armoury history</strong> <span class="pulse-dot pulse-dot-blue"></span></span>
+          <% earliest = @faction.armory_news_entries.minimum(:occurred_at) %>
+          <span>Doing a data backfill up until 1 January 2026, because of Torn API v1 call constraints this backfill is spread across 10 days. The earliest Armoury Activity date is <strong><%= earliest ? earliest.strftime("%d %b %Y") : "pending" %></strong>.</span>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <% if @members.any? %>
+    <div class="live-war-table-card" data-controller="sortable-table">
+      <div class="live-war-table-header">
+        <div class="live-war-table-title">Member Loans</div>
+        <input type="text" placeholder="Search..." class="armory-search" id="armory-search" oninput="window.armoryFilter()">
+      </div>
+
+      <div class="live-war-filters">
+        <div class="war-filter-group">
+          <span class="war-filter-label">Armor Set</span>
+          <div class="war-filter-options">
+            <span class="member-status war-filter-toggle armory-set-assault" data-filter-active="true" data-filter-group="set" data-filter-value="assault" onclick="window.armoryToggleFilter(this)">Assault</span>
+            <span class="member-status war-filter-toggle armory-set-delta" data-filter-active="true" data-filter-group="set" data-filter-value="delta" onclick="window.armoryToggleFilter(this)">Delta</span>
+            <span class="member-status war-filter-toggle armory-set-riot" data-filter-active="true" data-filter-group="set" data-filter-value="riot" onclick="window.armoryToggleFilter(this)">Riot</span>
+            <span class="member-status war-filter-toggle armory-set-dune" data-filter-active="true" data-filter-group="set" data-filter-value="dune" onclick="window.armoryToggleFilter(this)">Dune</span>
+            <span class="member-status war-filter-toggle armory-set-combat" data-filter-active="true" data-filter-group="set" data-filter-value="combat" onclick="window.armoryToggleFilter(this)">Combat</span>
+            <span class="member-status war-filter-toggle armory-set-other" data-filter-active="true" data-filter-group="set" data-filter-value="other" onclick="window.armoryToggleFilter(this)">Other</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="live-war-table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th class="sortable" data-sortable-table-target="header" data-column="0" data-sort-type="string" data-action="click->sortable-table#sort">
+                Member <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="1" data-sort-type="string" data-action="click->sortable-table#sort">
+                Head <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="2" data-sort-type="string" data-action="click->sortable-table#sort">
+                Chest <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="3" data-sort-type="string" data-action="click->sortable-table#sort">
+                Gloves <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="4" data-sort-type="string" data-action="click->sortable-table#sort">
+                Pants <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="5" data-sort-type="string" data-action="click->sortable-table#sort">
+                Boots <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="6" data-sort-type="string" data-action="click->sortable-table#sort">
+                Primary <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="7" data-sort-type="string" data-action="click->sortable-table#sort">
+                Secondary <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="8" data-sort-type="string" data-action="click->sortable-table#sort">
+                Melee <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+              <th class="sortable" data-sortable-table-target="header" data-column="9" data-sort-type="number" data-action="click->sortable-table#sort">
+                Total <svg class="sort-arrow" data-sortable-table-target="arrow" width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M3 5L6 8L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </th>
+            </tr>
+          </thead>
+          <% @members.each do |member| %>
+            <%
+              all_items = member[:slots].values.flatten.map(&:downcase)
+              armor_sets = %w[assault delta riot dune combat].select { |s| all_items.any? { |i| i.start_with?(s) } }
+              armor_sets << "other" if all_items.any? { |i| %w[assault delta riot dune combat].none? { |s| i.start_with?(s) } }
+            %>
+            <% search_text = ([member[:name]] + member[:slots].values.flatten).join(" ").downcase %>
+            <tbody data-sortable-table-target="body" data-controller="coverage-row" class="armory-row-group" data-search="<%= search_text %>" data-sets="<%= armor_sets.join(',') %>">
+              <tr class="coverage-member-row" data-action="click->coverage-row#toggle">
+                <td>
+                  <a href="https://www.torn.com/profiles.php?XID=<%= member[:torn_id] %>" target="_blank" class="member-profile-link"><%= member[:name] %></a>
+                </td>
+                <% [:head, :chest, :gloves, :pants, :boots, :primary, :secondary, :melee].each do |slot| %>
+                  <td class="armory-slot-cell">
+                    <% if member[:slots][slot].any? %>
+                      <% member[:slots][slot].each do |item| %>
+                        <% set = %w[assault delta riot dune combat].find { |s| item.downcase.start_with?(s) } || "default" %>
+                        <span class="armory-chip armory-chip-<%= set %>"><%= item %></span>
+                      <% end %>
+                    <% else %>
+                      <span class="text-muted">&mdash;</span>
+                    <% end %>
+                  </td>
+                <% end %>
+                <td class="armory-total-cell"><span class="armory-total-badge"><%= member[:total] %></span></td>
+              </tr>
+              <tr class="coverage-detail-row" data-coverage-row-target="details" style="display: none;">
+                <td colspan="10">
+                  <div class="armory-history">
+                    <div class="armory-history-title">Loan History</div>
+                    <% history = @news_by_member[member[:torn_id]] || [] %>
+                    <% if history.any? %>
+                      <table class="armory-history-table">
+                        <thead>
+                          <tr>
+                            <th>Action</th>
+                            <th>Item</th>
+                            <th>Date</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <% history.each do |entry| %>
+                            <tr>
+                              <td>
+                                <span class="armory-action-badge armory-action-<%= entry[:action] %>">
+                                  <%= entry[:action].to_s.capitalize %>
+                                </span>
+                              </td>
+                              <td><%= entry[:item] %></td>
+                              <td class="text-muted"><%= Time.at(entry[:timestamp]).strftime("%d %b %Y %H:%M") %></td>
+                            </tr>
+                          <% end %>
+                        </tbody>
+                      </table>
+                    <% else %>
+                      <p class="text-muted" style="margin: 0.5rem 0;">No loan activity in the last year.</p>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          <% end %>
+        </table>
+      </div>
+    </div>
+
+    <% if @armory_news.any? %>
+      <div class="live-war-table-card armory-news-card">
+        <div class="live-war-table-header">
+          <div class="live-war-table-title">
+            Armoury Activity
+            <% if @armory_news.any? %>
+              <span class="armory-date-range">
+                <%= Time.at(@armory_news.last[:timestamp]).strftime("%d %b %Y") %> &ndash; <%= Time.at(@armory_news.first[:timestamp]).strftime("%d %b %Y") %>
+              </span>
+            <% end %>
+          </div>
+          <input type="text" placeholder="Search activity..." class="armory-search" id="armory-activity-search" oninput="window.armoryActivityFilter()">
+        </div>
+        <div class="armory-news-list">
+          <% @armory_news.each do |entry| %>
+            <div class="armory-news-entry" data-activity-search="<%= "#{entry[:player_name]} #{entry[:item]} #{entry[:action]}".downcase %>">
+              <span class="armory-news-text"><%= entry[:text].html_safe %></span>
+              <span class="armory-news-time"><%= Time.at(entry[:timestamp]).strftime("%H:%M %d/%m") %></span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <script>
+      window.armoryToggleFilter = function(el) {
+        const isActive = el.dataset.filterActive === "true";
+        el.dataset.filterActive = isActive ? "false" : "true";
+        el.classList.toggle("filter-disabled", isActive);
+        window.armoryFilter();
+      };
+
+      window.armoryHighlight = function(text, search) {
+        if (!search) return text;
+        const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+        return text.replace(regex, '<mark class="armory-highlight">$1</mark>');
+      };
+
+      window.armoryFilter = function() {
+        const search = document.getElementById('armory-search').value.toLowerCase();
+        const activeSets = [...document.querySelectorAll('[data-filter-group="set"][data-filter-active="true"]')].map(e => e.dataset.filterValue);
+
+        document.querySelectorAll('.armory-row-group').forEach(el => {
+          const matchSearch = !search || el.dataset.search.includes(search);
+          const memberSets = (el.dataset.sets || '').split(',');
+          const matchSet = memberSets.some(s => activeSets.includes(s));
+          el.style.display = (matchSearch && matchSet) ? '' : 'none';
+
+          // Highlight matching text
+          const row = el.querySelector('tr');
+          const link = row.querySelector('.member-profile-link');
+          if (link) {
+            const name = link.dataset.original || (link.dataset.original = link.textContent);
+            link.innerHTML = search ? window.armoryHighlight(name, search) : name;
+          }
+
+          row.querySelectorAll('.armory-chip').forEach(chip => {
+            const text = chip.dataset.original || (chip.dataset.original = chip.textContent);
+            chip.innerHTML = search ? window.armoryHighlight(text, search) : text;
+          });
+        });
+      };
+
+      window.armoryActivityFilter = function() {
+        const search = document.getElementById('armory-activity-search').value.toLowerCase();
+        document.querySelectorAll('.armory-news-entry').forEach(el => {
+          el.style.display = (!search || el.dataset.activitySearch.includes(search)) ? '' : 'none';
+        });
+      };
+    </script>
+  <% else %>
+    <p class="text-muted">No members currently have loaned items.</p>
+  <% end %>
+</div>
