@@ -4,10 +4,12 @@ module Daily
 
     SESSION_RETENTION_DAYS = 90
     API_CALL_RETENTION_DAYS = 30
+    ARMORY_NEWS_RETENTION_DAYS = 365
 
     def perform
       cleanup_old_sessions
       cleanup_old_api_calls
+      cleanup_old_armory_news
     end
 
     private
@@ -24,6 +26,13 @@ module Daily
       deleted_count = ApiCall.where("created_at < ?", cutoff).delete_all
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} API calls older than #{API_CALL_RETENTION_DAYS} days"
+    end
+
+    def cleanup_old_armory_news
+      cutoff = ARMORY_NEWS_RETENTION_DAYS.days.ago
+      deleted_count = ArmoryNewsEntry.where("occurred_at < ?", cutoff).delete_all
+
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} armory news entries older than #{ARMORY_NEWS_RETENTION_DAYS} days"
     end
   end
 end

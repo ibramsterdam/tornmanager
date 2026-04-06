@@ -53,6 +53,10 @@ Rails.application.routes.draw do
       end
       resource :activity, only: [ :show ], controller: "factions/leadership/activity"
 
+      resource :armory, only: [ :show ], controller: "factions/leadership/armory" do
+        post :sync
+      end
+
       resource :war_polling, only: [], controller: "factions/leadership/war_polling" do
         post :start
         delete :stop
@@ -101,6 +105,7 @@ Rails.application.routes.draw do
       member do
         patch :toggle_ssl
         patch :toggle_public_wars
+        post :backfill_armory_news
       end
     end
     resources :api_logs, only: [ :index ]

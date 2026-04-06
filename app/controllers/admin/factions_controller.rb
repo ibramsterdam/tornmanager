@@ -1,7 +1,7 @@
 module Admin
   class FactionsController < ApplicationController
     before_action :require_admin
-    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_ssl, :toggle_public_wars ]
+    before_action :set_faction, only: [ :edit, :update, :destroy, :toggle_ssl, :toggle_public_wars, :backfill_armory_news ]
 
     def index
       @factions = Faction.includes(:users).order(:name)
@@ -80,6 +80,11 @@ module Admin
       render json: { success: true, ssl_user: user.ssl_user, user_name: user.name }
     rescue StandardError => e
       render json: { success: false, error: e.message }, status: :unprocessable_entity
+    end
+
+    def backfill_armory_news
+      BackfillArmoryNewsJob.perform_later(@faction.id)
+      redirect_to admin_factions_path, notice: "Armory news backfill started for #{@faction.name}."
     end
 
     def toggle_public_wars

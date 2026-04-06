@@ -44,6 +44,7 @@ module TornApi
     rescue InvalidKeyError, ApiError => e
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, e.message)
+      notify_discord_error(path, merged_params, e)
       raise
     rescue Net::ReadTimeout, Net::OpenTimeout => e
       handle_timeout(uri, api_params, e, retries, start_time)
@@ -172,6 +173,35 @@ module TornApi
     rescue => e
       Rails.logger.error("Failed to log API call: #{e.message}")
       Rails.logger.error(e.backtrace.first(5).join("\n"))
+    end
+
+    def notify_discord_error(path, params, error)
+      selections = params[:selections]
+      owner = resolve_api_key_owner
+      owner_label = if owner
+        faction = owner.faction
+        faction ? "#{owner.name} [#{faction.name}]" : owner.name
+      else
+        "Unknown"
+      end
+
+      Discord::Notifier.notify(
+        webhook_key: :error_webhook_url,
+        embed: {
+          title: "Torn API Error",
+          description: "```#{error.message}```",
+          color: 15_158_332,
+          fields: [
+            { name: "Endpoint", value: path, inline: true },
+            { name: "Selections", value: selections || "N/A", inline: true },
+            { name: "Owner", value: owner_label, inline: true }
+          ],
+          footer: { text: "TornManager API Monitor" },
+          timestamp: Time.current.iso8601
+        }
+      )
+    rescue => e
+      Rails.logger.error("[Discord API Error Notify] Failed: #{e.message}")
     end
 
     def resolve_api_key_owner
