@@ -95,7 +95,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "purge_data clears api_key" do
-    @user.update!(api_key: "test_key_123")
+    @user.set_api_key!("test_key_123", "Limited Access")
 
     delete settings_purge_data_path
 
@@ -246,7 +246,7 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update_api_key with same key returns error" do
-    @user.update!(api_key: "current_key_123")
+    @user.set_api_key!("current_key_123", "Limited Access")
 
     patch settings_update_api_key_path, params: { api_key: "current_key_123" }, as: :json
     assert_response :success
@@ -289,8 +289,8 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Limited Access", json["access_type"]
 
     @user.reload
-    assert_equal "new_key_456", @user.api_key
-    assert_equal "Limited Access", @user.api_access_type
+    assert_equal "new_key_456", @user.torn_api_key.key
+    assert_equal "Limited Access", @user.torn_api_key.access_type
   end
 
   test "update_api_key handles invalid key from Torn API" do

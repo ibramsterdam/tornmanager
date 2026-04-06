@@ -50,11 +50,11 @@ else
 
   # Dev user
   print "  Seeding dev user..."
-  User.find_or_create_by!(torn_id: 2728237) do |user|
-    user.name = "Bram"
-    user.level = 69
-    user.api_key = AdminCredentials.api_key
+  user = User.find_or_create_by!(torn_id: 2728237) do |u|
+    u.name = "Bram"
+    u.level = 69
   end
+  user.set_api_key!(AdminCredentials.api_key, "Limited Access") unless user.api_key.present?
   puts " done."
 
   print "Finished!\n"

@@ -21,8 +21,6 @@ class SessionsController < ApplicationController
 
       user.assign_attributes(
         torn_id: profile.id,
-        api_key: api_key,
-        api_access_type: key_info.access.type,
         name: profile.name,
         level: profile.level,
         profile_image: profile.image
@@ -47,6 +45,7 @@ class SessionsController < ApplicationController
       end
 
       user.save!
+      user.set_api_key!(api_key, key_info.access.type)
 
       start_new_session_for user
       notify_sign_in(user)

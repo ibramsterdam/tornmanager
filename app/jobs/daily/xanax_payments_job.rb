@@ -50,16 +50,14 @@ module Daily
       User.create!(
         torn_id: profile.id,
         name: profile.name,
-        level: profile.level,
-        api_key: nil
+        level: profile.level
       )
     rescue TornApi::ApiError => e
       Rails.logger.warn "Could not fetch profile for #{torn_id}: #{e.message}. Creating minimal user record."
       User.create!(
         torn_id: torn_id,
         name: "User #{torn_id}",
-        level: 1,
-        api_key: nil
+        level: 1
       )
     end
   end

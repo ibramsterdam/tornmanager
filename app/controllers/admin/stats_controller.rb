@@ -19,7 +19,7 @@ module Admin
       @tracked_users = User.tracked_for_stats.count
       @active_subscribers = User.active_subscribers.count
       @hof_stats_users = User.hof_stats_users.count
-      @api_keys_configured = User.where.not(api_key: nil).count
+      @api_keys_configured = ApiKey::Torn.where.not(user_id: nil).count
     end
 
     def load_faction_stats

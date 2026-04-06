@@ -8,9 +8,8 @@ class User < ApplicationRecord
   has_many :faction_subscription_grants, through: :subscription_grants
   has_many :granted_faction_subscriptions, class_name: "FactionSubscriptionGrant", foreign_key: :granted_by_id
   has_many :api_calls, dependent: :destroy
+  has_one :torn_api_key, class_name: "ApiKey::Torn", foreign_key: :user_id, dependent: :destroy
 
-
-  validates :api_key, uniqueness: true, allow_nil: true
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :level, presence: true
@@ -27,6 +26,10 @@ class User < ApplicationRecord
   }
 
   LIMITED_ACCESS_TYPES = [ "Limited Access", "Full Access", "Custom" ].freeze
+
+  def self.find_by_api_key(key)
+    joins(:torn_api_key).find_by(api_keys: { key: key })
+  end
 
   def subscribed?
     subscription_expires_at.present? && subscription_expires_at > Time.current
@@ -67,6 +70,25 @@ class User < ApplicationRecord
 
   def has_limited_access?
     LIMITED_ACCESS_TYPES.include?(api_access_type)
+  end
+
+  def api_key
+    torn_api_key&.key
+  end
+
+  def api_access_type
+    torn_api_key&.access_type
+  end
+
+  def set_api_key!(key, access_type)
+    if key.nil?
+      torn_api_key&.destroy!
+      self.torn_api_key = nil
+    elsif torn_api_key
+      torn_api_key.update!(key: key, access_type: access_type)
+    else
+      create_torn_api_key!(key: key, access_type: access_type)
+    end
   end
 
   def backfill_in_progress?

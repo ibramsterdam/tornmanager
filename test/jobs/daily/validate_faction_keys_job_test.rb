@@ -9,7 +9,6 @@ class Daily::ValidateFactionKeysJobTest < ActiveJob::TestCase
     @api_key = ApiKey::Torn.create!(faction: @faction, key: "FACTION_KEY_123", access_type: "Limited Access")
 
     # Clear fixture user keys and other faction keys to isolate tests
-    User.update_all(api_key: nil, api_access_type: nil)
     ApiKey::Torn.where.not(id: @api_key.id).destroy_all
   end
 
@@ -48,7 +47,7 @@ class Daily::ValidateFactionKeysJobTest < ActiveJob::TestCase
     stub_key_valid(faction: true)
 
     user = users(:bram)
-    user.update!(api_key: "USER_KEY_ABC", api_access_type: "Limited Access")
+    user.set_api_key!("USER_KEY_ABC", "Limited Access")
 
     invalid_info = stub
     invalid_info.stubs(:fetch).raises(TornApi::InvalidKeyError)

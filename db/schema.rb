@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_05_213233) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_094633) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -33,12 +33,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_05_213233) do
     t.string "access_type"
     t.datetime "created_at", null: false
     t.boolean "faction_access", default: false, null: false
-    t.integer "faction_id", null: false
+    t.integer "faction_id"
     t.string "key", null: false
     t.string "type", null: false
     t.datetime "updated_at", null: false
+    t.integer "user_id"
     t.index ["faction_id", "type"], name: "index_api_keys_on_faction_id_and_type", unique: true
     t.index ["faction_id"], name: "index_api_keys_on_faction_id"
+    t.index ["user_id", "type"], name: "index_api_keys_on_user_id_and_type", unique: true, where: "user_id IS NOT NULL"
   end
 
   create_table "faction_settings", force: :cascade do |t|
