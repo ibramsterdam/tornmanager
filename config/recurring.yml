@@ -34,6 +34,10 @@ production:
     class: Daily::XanaxPaymentsJob
     queue: default
     schedule: at 4am every day
+  validate_faction_keys:
+    class: Daily::ValidateFactionKeysJob
+    queue: default
+    schedule: at 1am every day
   member_activity_poll:
     class: MemberActivityPollJob
     queue: default
