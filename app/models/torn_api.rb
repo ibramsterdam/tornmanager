@@ -194,7 +194,8 @@ module TornApi
           fields: [
             { name: "Endpoint", value: path, inline: true },
             { name: "Selections", value: selections || "N/A", inline: true },
-            { name: "Owner", value: owner_label, inline: true }
+            { name: "Owner", value: owner_label, inline: true },
+            { name: "Environment", value: Rails.env, inline: true }
           ],
           footer: { text: "TornManager API Monitor" },
           timestamp: Time.current.iso8601
