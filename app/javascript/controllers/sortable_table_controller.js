@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["header", "body"]
+  static targets = ["header", "body", "arrow"]
 
   sort(event) {
     const th = event.currentTarget
@@ -12,17 +12,23 @@ export default class extends Controller {
 
     this.headerTargets.forEach(h => {
       h.dataset.sortDir = "none"
-      h.classList.remove("sorted-asc", "sorted-desc")
+    })
+
+    this.arrowTargets.forEach(arrow => {
+      arrow.classList.remove("active", "asc")
     })
 
     th.dataset.sortDir = newDir
-    th.classList.add(`sorted-${newDir}`)
+    const arrow = th.querySelector(".sort-arrow")
+    if (arrow) {
+      arrow.classList.add("active")
+      if (newDir === "asc") arrow.classList.add("asc")
+    }
 
     const table = this.element.querySelector("table")
     const bodies = this.bodyTargets
 
     if (bodies.length > 1) {
-      // Multiple tbodies: sort entire tbodies by their first row
       bodies.sort((a, b) => {
         const aVal = this.getCellValue(a.rows[0], column, type)
         const bVal = this.getCellValue(b.rows[0], column, type)
@@ -34,7 +40,6 @@ export default class extends Controller {
 
       bodies.forEach(tbody => table.appendChild(tbody))
     } else if (bodies.length === 1) {
-      // Single tbody: sort rows
       const rows = Array.from(bodies[0].querySelectorAll("tr"))
 
       rows.sort((a, b) => {
