@@ -25,7 +25,12 @@ module Admin
     def load_faction_stats
       @total_factions = Faction.count
       @factions_with_backfill = Faction.where("backfill_ends_at > ?", Time.current).count
-      @faction_stats = Faction.left_joins(:users).group("factions.id", "factions.name").count("users.id")
+      @faction_details = Faction
+        .left_joins(:users)
+        .includes(:torn_api_key, :tornstats_api_key)
+        .group("factions.id")
+        .select("factions.*, COUNT(users.id) as member_count")
+        .order(setup_completed: :desc, name: :asc)
     end
 
     def load_snapshot_stats
@@ -33,6 +38,14 @@ module Admin
       @earliest_snapshot = PersonalStatSnapshot.minimum(:timestamp)
       @latest_snapshot = PersonalStatSnapshot.maximum(:timestamp)
       @unique_snapshot_days = PersonalStatSnapshot.distinct.pluck(Arel.sql("DATE(timestamp, 'unixepoch')")).count
+
+      @activity_total_snapshots = MemberActivitySnapshot.count
+      @activity_total_polls = MemberActivitySnapshot.distinct.count(:recorded_at)
+      @activity_members_tracked = MemberActivitySnapshot.distinct.count(:torn_member_id)
+      @activity_factions_polled = Faction.where(setup_completed: true).joins(:torn_api_key).count
+      @activity_earliest = MemberActivitySnapshot.minimum(:recorded_at)
+      @activity_latest = MemberActivitySnapshot.maximum(:recorded_at)
+      @activity_daily_growth = @activity_total_polls > 0 ? (@activity_total_snapshots / [ @activity_total_polls, 1 ].max) * 96 : 0
     end
 
     def load_activity_stats

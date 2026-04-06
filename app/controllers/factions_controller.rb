@@ -36,7 +36,14 @@ class FactionsController < ApplicationController
   def setup_unavailable
   end
 
+  MAX_FACTIONS = 15
+
   def create
+    if Faction.where(setup_completed: true).count >= MAX_FACTIONS
+      flash.now[:alert] = "Maximum number of factions (#{MAX_FACTIONS}) has been reached. Join our Discord from the menu and mention it in #support."
+      return render :setup, status: :unprocessable_entity
+    end
+
     api_key = params[:api_key].to_s.strip
 
     begin

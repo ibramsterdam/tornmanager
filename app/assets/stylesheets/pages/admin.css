@@ -180,8 +180,19 @@
 
 .admin-stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--space-3, 12px);
+}
+
+.admin-stats-hint {
+  font-size: 0.625rem;
+  color: var(--gray-500);
+  font-weight: 400;
+}
+
+.admin-center {
+  text-align: center !important;
+  width: 2.5rem;
 }
 
 .admin-stats-panel {
@@ -233,9 +244,9 @@
   letter-spacing: 0;
 }
 
-.admin-stat-value.success { color: #22c55e; }
-.admin-stat-value.warning { color: #f59e0b; }
-.admin-stat-value.error { color: #ef4444; }
+.admin-stat-value.success, .admin-stats-table td.success { color: #22c55e; }
+.admin-stat-value.warning, .admin-stats-table td.warning { color: #f59e0b; }
+.admin-stat-value.error, .admin-stats-table td.error { color: #ef4444; }
 
 .admin-stats-table {
   width: 100%;
@@ -270,12 +281,6 @@
 .admin-stats-table th:last-child {
   text-align: right;
   font-family: "Geist Mono", monospace;
-}
-
-@media (max-width: 1200px) {
-  .admin-stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (max-width: 900px) {
