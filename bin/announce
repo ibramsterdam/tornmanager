@@ -3,38 +3,28 @@ require_relative "../config/environment"
 require "net/http"
 require "json"
 
-# CHANNEL_ID = 1490353824169328690
-CHANNEL_ID = 1490451144818819193 # test channel
+CHANNEL_ID = 1490353824169328690
+# CHANNEL_ID = 1490451144818819193 # test channel
 
 embed = {
-  title: "New Subscription Model",
+  title: "Subscription Update",
   color: 0x5865F2,
   description: [
-    "The subscription system has been reworked to be simpler and fairer.",
+    "The subscription system has been reworked. This update improves how subscriptions work under the hood and introduces faction-wide subscriptions.",
     "",
     "**What changed**",
     "- Subscriptions are now **faction-wide**, one subscription covers all members",
     "- No more individual subscriptions needed when your faction is subscribed",
-    "- Cost scales with faction size",
+    "- Leadership of a faction can transfer their personal subscription time to the faction in **Leadership > Settings**",
     "- All features included, no tiers",
     "",
-    "**How to pay**",
-    "- Send Xanax to Bram [2728237] in-game",
-    "- Go to **Leadership > Settings** and transfer to your faction",
-    "- The whole faction gets access as long as the subscription is active",
+    "**What about existing factions?**",
+    "I have reached out to every faction currently using TornManager and will manually extend your subscription since you are all helping me with testing. You don't need to do anything right now! :-)",
     "",
-    "**Monthly cost**",
-    "- 10 members: ~6 Xanax/month",
-    "- 25 members: ~14 Xanax/month",
-    "- 50 members: ~26 Xanax/month",
-    "- 75 members: ~38 Xanax/month",
-    "- 100 members: ~50 Xanax/month",
+    "**Pricing**",
+    "The pricing model is still being discussed and might change. For now the cost scales with faction size. I will share more details once finalized. Feel free to share your thoughts in <#1490344856134881383>.",
     "",
-    "**Existing factions**",
-    "- All factions with completed setup have received **1 month free**",
-    "- New factions get a **14-day trial** on setup",
-    "",
-    "Questions? Drop them in <#1490354149030891664>."
+    "New factions get a **14-day free trial** on setup."
   ].join("\n")
 }
 
