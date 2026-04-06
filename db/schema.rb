@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_06_184323) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_06_195106) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -83,6 +83,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_06_184323) do
   end
 
   create_table "factions", force: :cascade do |t|
+    t.boolean "armory_backfill_pending", default: false, null: false
     t.datetime "backfill_ends_at"
     t.date "backfill_target_date"
     t.datetime "created_at", null: false

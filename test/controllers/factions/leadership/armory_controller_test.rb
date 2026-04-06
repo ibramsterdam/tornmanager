@@ -61,8 +61,9 @@ class Factions::Leadership::ArmoryControllerTest < ActionDispatch::IntegrationTe
     assert_match(/AK-47/, response.body)
   end
 
-  test "shows backfill banner when no news entries exist" do
+  test "shows backfill banner when backfill is pending" do
     stub_armory_api
+    @faction.update!(armory_backfill_pending: true)
     sign_in_as(@bram)
     get faction_leadership_armory_path(@faction)
     assert_response :success

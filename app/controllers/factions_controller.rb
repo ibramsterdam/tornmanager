@@ -104,6 +104,7 @@ class FactionsController < ApplicationController
       backfill_target_date: start_date
     )
 
+    @faction.update!(armory_backfill_pending: true)
     BackfillArmoryNewsJob.perform_later(@faction.id)
     BackfillRankedWarsJob.perform_later(@faction.id)
     BackfillPersonalStatsJob.perform_later(
