@@ -57,9 +57,9 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
   test "dashboard shows faction targets" do
     sign_in_as(@bram)
     get faction_path(@faction)
-    assert_select ".target-info li", /Xanax.*2\.5\/day/
-    assert_select ".target-info li", /Energy Refills.*1\.0\/day/
-    assert_select ".target-info li", /Nerve Refills.*1\.0\/day/
+    assert_select ".target-info-inline", /Xanax 2\.5\/day/
+    assert_select ".target-info-inline", /Energy 1\.0\/day/
+    assert_select ".target-info-inline", /Nerve 1\.0\/day/
   end
 
   test "dashboard shows scroll cards for navigation" do
