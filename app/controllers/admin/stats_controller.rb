@@ -10,6 +10,7 @@ module Admin
       load_data_health
       load_api_stats
       load_sign_in_stats
+      load_armory_stats
     end
 
     private
@@ -117,6 +118,27 @@ module Admin
 
       @first_session_dates = first_session_dates
       @new_sign_ins = User.where(id: first_session_dates.keys).order(created_at: :desc)
+    end
+
+    def load_armory_stats
+      @armory_total_entries = ArmoryNewsEntry.count
+      @armory_earliest = ArmoryNewsEntry.minimum(:occurred_at)
+      @armory_latest = ArmoryNewsEntry.maximum(:occurred_at)
+
+      @armory_by_faction = Faction
+        .where(setup_completed: true)
+        .includes(:torn_api_key)
+        .order(:name)
+        .map do |f|
+          entries = f.armory_news_entries
+          {
+            faction: f,
+            count: entries.count,
+            earliest: entries.minimum(:occurred_at),
+            latest: entries.maximum(:occurred_at),
+            backfill_pending: f.armory_backfill_pending?
+          }
+        end
     end
 
     def calculate_snapshot_gaps
