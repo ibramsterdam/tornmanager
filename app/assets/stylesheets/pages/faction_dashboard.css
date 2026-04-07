@@ -11,7 +11,7 @@
 
 /* Hero Section */
 .dashboard-hero {
-  min-height: calc(100vh - 60px); /* Account for header height */
+  min-height: calc(100vh - 40px); /* Account for header height */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -524,7 +524,7 @@
 
 /* Full Page Sections */
 .dashboard-fullpage {
-  min-height: calc(100vh - 60px); /* Account for header height */
+  min-height: calc(100vh - 40px); /* Account for header height */
   display: flex;
   flex-direction: column;
   padding: var(--space-12) var(--space-6);
@@ -909,9 +909,9 @@
 
 /* Training Section - fit in viewport */
 #training {
-  height: calc(100vh - 60px); /* Exact viewport height minus header */
-  min-height: calc(100vh - 60px);
-  max-height: calc(100vh - 60px);
+  height: calc(100vh - 40px); /* Exact viewport height minus header */
+  min-height: calc(100vh - 40px);
+  max-height: calc(100vh - 40px);
   overflow: hidden;
   padding-top: var(--space-4);
   padding-bottom: var(--space-2);
@@ -938,27 +938,37 @@
 
 #training .compliance-summary {
   flex-shrink: 0;
-  padding: var(--space-3) var(--space-4);
-  gap: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  gap: var(--space-3);
 }
 
-#training .target-info h3 {
+#training .target-info-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 0.75rem;
-  margin-bottom: var(--space-2);
+  color: var(--gray-400);
 }
 
-#training .target-info li {
-  font-size: 0.75rem;
-  padding: 2px 0;
+#training .target-info-inline .target-label {
+  font-weight: 600;
+  color: var(--gray-300);
+  text-transform: uppercase;
+  font-size: 0.625rem;
+  letter-spacing: 0.05em;
+}
+
+#training .target-info-inline .target-separator {
+  color: var(--gray-600);
 }
 
 #training .stat-box {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-1) var(--space-3);
 }
 
 #training .stat-box .count {
-  font-size: 1.5rem;
-  margin-bottom: var(--space-1);
+  font-size: 1.25rem;
+  margin-bottom: 0;
 }
 
 #training .stat-box .label {
