@@ -7,27 +7,16 @@ require "json"
 CHANNEL_ID = 1490451144818819193 # test channel
 
 embed = {
-  title: "Armoury & Compliance Update",
+  title: "Armoury Update #2",
   color: 0x5865F2,
   description: [
-    "A first crack at the Armoury page and a redesigned Training Compliance table are now live! :-)",
+    "Some improvements to the Armoury page!",
     "",
     "**Armoury**",
-    "- See who has what gear loaned across all equipment slots (Head, Chest, Gloves, Pants, Boots, Primary, Secondary, Melee)",
-    "- Items are color-coded by armor set (Assault, Delta, Riot, Dune, Combat)",
-    "- Filter by armor set and search by member name or item name with highlighted results",
-    "- Full activity log showing loans, returns, deposits, and item usage",
-    "- Expandable loan history per member",
-    "- Activity data is backfilled from January 1st 2026 and synced daily (you can do the daily sync yourself too by pressing the Sync button in the table)",
-    "- Available under **Leadership > Armoury**",
+    "- Per-member stats when expanding a row: Loans, Returns, Blood Bags consumed, Filled, Deposited, Items Used",
+    "- Duplicate filter: quickly find members hoarding multiple items in the same slot (Armor, Weapons, or Both)",
     "",
-    "**note:** still invetigating if we can make the UI more interesting by analyzing the logs of a faction and showing some extra data! e.g flag who is hoarding weapons or smth",
-    "",
-    "**Training Compliance**",
-    "- Redesigned to fit more data on screen",
-    "",
-    "**Other**",
-    "- Updated landing page and legal/privacy documentation because of usage of the new api endpoints used for armoury"
+    "If you'd like to see additional member stats pulled from the activity logs (e.g. energy point refills used), let me know in <#1490344856134881383>!"
   ].join("\n")
 }
 
