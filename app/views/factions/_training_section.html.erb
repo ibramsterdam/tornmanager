@@ -104,13 +104,13 @@
         <%= render "factions/training/table_skeleton" %>
       <% else %>
         <div class="compliance-summary">
-          <div class="target-info">
-            <h3>Daily Targets</h3>
-            <ul>
-              <li><strong>Xanax:</strong> <%= @xanax_target %>/day</li>
-              <li><strong>Energy Refills:</strong> <%= energy_enabled ? "#{@energy_target}/day" : "Disabled" %></li>
-              <li><strong>Nerve Refills:</strong> <%= nerve_enabled ? "#{@nerve_target}/day" : "Disabled" %></li>
-            </ul>
+          <div class="target-info-inline">
+            <span class="target-label">Targets:</span>
+            <span>Xanax <%= @xanax_target %>/day</span>
+            <span class="target-separator">&middot;</span>
+            <span>Energy <%= energy_enabled ? "#{@energy_target}/day" : "Off" %></span>
+            <span class="target-separator">&middot;</span>
+            <span>Nerve <%= nerve_enabled ? "#{@nerve_target}/day" : "Off" %></span>
           </div>
           
           <div class="compliance-stats">
