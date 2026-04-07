@@ -80,13 +80,19 @@ module TornApi
         case after_name
         when /\Aloaned (\d+)x (.+?) to/
           [ :loaned, $2 ]
+        when /\Agave (\d+)x (.+?) to/
+          [ :loaned, $2 ]
         when /\Areturned (\d+)x (.+)/
           [ :returned, $2 ]
-        when /\Adeposited (\d+)x (.+)/
+        when /\Aretrieved (\d+)x (.+?) from/
+          [ :returned, $2 ]
+        when /\Adeposited (\d+)\s*x (.+)/
           [ :deposited, $2 ]
         when /\Aused one of the faction's (.+?) items/
           [ :used, $1 ]
         when /\Afilled .+ to create a (.+)/
+          [ :filled, $1 ]
+        when /\Afilled one of the faction's (.+?) items/
           [ :filled, $1 ]
         else
           [ :unknown, after_name ]

@@ -23,6 +23,24 @@ class Factions::Leadership::ArmoryController < Factions::Leadership::BaseControl
     @news_by_member = @armory_news
       .select { |e| e[:action].in?([ :loaned, :returned ]) }
       .group_by { |e| e[:player_id] }
+
+    action_counts = @faction.armory_news_entries
+      .group(:player_id, :action)
+      .count
+
+    blood_bag_counts = @faction.armory_news_entries
+      .where(action: "used")
+      .where("item LIKE ?", "Blood Bag%")
+      .group(:player_id)
+      .count
+
+    @member_stats = Hash.new { |h, k| h[k] = {} }
+    action_counts.each do |(pid, action), count|
+      @member_stats[pid][action.to_sym] = count
+    end
+    blood_bag_counts.each do |pid, count|
+      @member_stats[pid][:blood_bags] = count
+    end
   rescue TornApi::InvalidKeyError => e
     redirect_to faction_leadership_path(@faction), alert: "API key error: #{e.message}"
   rescue TornApi::ApiError => e

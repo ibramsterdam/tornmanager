@@ -112,34 +112,64 @@
               </tr>
               <tr class="coverage-detail-row" data-coverage-row-target="details" style="display: none;">
                 <td colspan="10">
+                  <% stats = @member_stats[member[:torn_id]] || {} %>
+                  <div class="armory-member-stats">
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:loaned] || 0 %></span>
+                      <span class="armory-member-stat-label">Loans</span>
+                    </div>
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:returned] || 0 %></span>
+                      <span class="armory-member-stat-label">Returns</span>
+                    </div>
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:blood_bags] || 0 %></span>
+                      <span class="armory-member-stat-label">Blood Bags</span>
+                    </div>
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:filled] || 0 %></span>
+                      <span class="armory-member-stat-label">Filled</span>
+                    </div>
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:deposited] || 0 %></span>
+                      <span class="armory-member-stat-label">Deposited</span>
+                    </div>
+                    <div class="armory-member-stat">
+                      <span class="armory-member-stat-value"><%= stats[:used] || 0 %></span>
+                      <span class="armory-member-stat-label">Items Used</span>
+                    </div>
+                  </div>
+
                   <div class="armory-history">
                     <div class="armory-history-title">Loan History</div>
                     <% history = @news_by_member[member[:torn_id]] || [] %>
                     <% if history.any? %>
-                      <table class="armory-history-table">
-                        <thead>
-                          <tr>
-                            <th>Action</th>
-                            <th>Item</th>
-                            <th>Date</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <% history.each do |entry| %>
+                      <div class="armory-history-scroll">
+                        <table class="armory-history-table">
+                          <thead>
                             <tr>
-                              <td>
-                                <span class="armory-action-badge armory-action-<%= entry[:action] %>">
-                                  <%= entry[:action].to_s.capitalize %>
-                                </span>
-                              </td>
-                              <td><%= entry[:item] %></td>
-                              <td class="text-muted"><%= Time.at(entry[:timestamp]).strftime("%d %b %Y %H:%M") %></td>
+                              <th>Action</th>
+                              <th>Item</th>
+                              <th>Date</th>
                             </tr>
-                          <% end %>
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            <% history.each do |entry| %>
+                              <tr>
+                                <td>
+                                  <span class="armory-action-badge armory-action-<%= entry[:action] %>">
+                                    <%= entry[:action].to_s.capitalize %>
+                                  </span>
+                                </td>
+                                <td><%= entry[:item] %></td>
+                                <td class="text-muted"><%= Time.at(entry[:timestamp]).strftime("%d %b %Y %H:%M") %></td>
+                              </tr>
+                            <% end %>
+                          </tbody>
+                        </table>
+                      </div>
                     <% else %>
-                      <p class="text-muted" style="margin: 0.5rem 0;">No loan activity in the last year.</p>
+                      <p class="text-muted" style="margin: 0.5rem 0;">No loan activity in the last 2 months.</p>
                     <% end %>
                   </div>
                 </td>
