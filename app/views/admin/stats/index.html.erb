@@ -164,6 +164,43 @@
       </div>
     </div>
 
+    <%# ── Armoury News ── %>
+    <div class="admin-stats-panel">
+      <h2>Armoury News</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total entries</span>
+          <span class="admin-stat-value"><%= number_with_delimiter(@armory_total_entries) %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Earliest</span>
+          <span class="admin-stat-value"><%= @armory_earliest&.strftime("%d %b %Y") || "N/A" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Latest</span>
+          <span class="admin-stat-value"><%= @armory_latest&.strftime("%d %b %Y") || "N/A" %></span>
+        </div>
+      </div>
+      <% if @armory_by_faction.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Faction</th><th>Entries</th><th>Earliest</th><th>Latest</th><th>BF</th></tr>
+          </thead>
+          <tbody>
+            <% @armory_by_faction.each do |f| %>
+              <tr>
+                <td><%= f[:faction].name %></td>
+                <td><%= number_with_delimiter(f[:count]) %></td>
+                <td><%= f[:earliest]&.strftime("%d %b") || "&mdash;".html_safe %></td>
+                <td><%= f[:latest]&.strftime("%d %b") || "&mdash;".html_safe %></td>
+                <td class="admin-center <%= f[:backfill_pending] ? 'warning' : 'success' %>"><%= f[:backfill_pending] ? "&#9679;".html_safe : "&#10003;".html_safe %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    </div>
+
     <%# ── Torn API ── %>
     <div class="admin-stats-panel">
       <h2>Torn API <span class="admin-stats-retention">30d retention</span></h2>
