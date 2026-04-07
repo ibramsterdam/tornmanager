@@ -3,28 +3,31 @@ require_relative "../config/environment"
 require "net/http"
 require "json"
 
-CHANNEL_ID = 1490353824169328690
-# CHANNEL_ID = 1490451144818819193 # test channel
+# CHANNEL_ID = 1490353824169328690
+CHANNEL_ID = 1490451144818819193 # test channel
 
 embed = {
-  title: "Subscription Update",
+  title: "Armoury & Compliance Update",
   color: 0x5865F2,
   description: [
-    "The subscription system has been reworked. This update improves how subscriptions work under the hood and introduces faction-wide subscriptions.",
+    "A first crack at the Armoury page and a redesigned Training Compliance table are now live! :-)",
     "",
-    "**What changed**",
-    "- Subscriptions are now **faction-wide**, one subscription covers all members",
-    "- No more individual subscriptions needed when your faction is subscribed",
-    "- Leadership of a faction can transfer their personal subscription time to the faction in **Leadership > Settings**",
-    "- All features included, no tiers",
+    "**Armoury**",
+    "- See who has what gear loaned across all equipment slots (Head, Chest, Gloves, Pants, Boots, Primary, Secondary, Melee)",
+    "- Items are color-coded by armor set (Assault, Delta, Riot, Dune, Combat)",
+    "- Filter by armor set and search by member name or item name with highlighted results",
+    "- Full activity log showing loans, returns, deposits, and item usage",
+    "- Expandable loan history per member",
+    "- Activity data is backfilled from January 1st 2026 and synced daily (you can do the daily sync yourself too by pressing the Sync button in the table)",
+    "- Available under **Leadership > Armoury**",
     "",
-    "**What about existing factions?**",
-    "I have reached out to every faction currently using TornManager and will manually extend your subscription since you are all helping me with testing. You don't need to do anything right now! :-)",
+    "**note:** still invetigating if we can make the UI more interesting by analyzing the logs of a faction and showing some extra data! e.g flag who is hoarding weapons or smth",
     "",
-    "**Pricing**",
-    "The pricing model is still being discussed and might change. For now the cost scales with faction size. I will share more details once finalized. Feel free to share your thoughts in <#1490344856134881383>.",
+    "**Training Compliance**",
+    "- Redesigned to fit more data on screen",
     "",
-    "New factions get a **14-day free trial** on setup."
+    "**Other**",
+    "- Updated landing page and legal/privacy documentation because of usage of the new api endpoints used for armoury"
   ].join("\n")
 }
 

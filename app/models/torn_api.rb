@@ -32,7 +32,7 @@ module TornApi
       log_request(uri)
 
       response = perform_request(uri)
-      body = parse_response(response)
+      body = parse_response(response, path)
 
       check_for_errors(body)
 
@@ -74,10 +74,12 @@ module TornApi
       end
     end
 
-    def parse_response(response)
-      unless response.code.to_i == 200
-        Rails.logger.error("HTTP #{response.code} from Torn API: #{response.body[0..500]}")
-        raise ApiError, "Torn API request failed (HTTP #{response.code})"
+    def parse_response(response, path = nil)
+      status = response.code.to_i
+      unless status == 200
+        Rails.logger.error("HTTP #{status} from Torn API: #{response.body[0..500]}")
+        notify_torn_degraded(path, status) if status >= 500
+        raise ApiError, "Torn API request failed (HTTP #{status})"
       end
 
       JSON.parse(response.body)
@@ -203,6 +205,34 @@ module TornApi
       )
     rescue => e
       Rails.logger.error("[Discord API Error Notify] Failed: #{e.message}")
+    end
+
+    def sanitize_path(path)
+      path.gsub(%r{/\d+(?=/|$)}, "/{id}")
+    end
+
+    def notify_torn_degraded(path, status)
+      return unless Rails.env.production?
+
+      cache_key = "torn_degraded:#{sanitize_path(path)}"
+      return if Rails.cache.exist?(cache_key)
+
+      Rails.cache.write(cache_key, true, expires_in: 10.minutes)
+
+      Discord::Notifier.send_to_channel(
+        "1491152993859670167",
+        embed: {
+          title: ":red_circle: Torn API Degraded",
+          description: "```Torn API request failed (HTTP #{status})```\n**Endpoint:** `#{sanitize_path(path)}`\n\nTornManager services may be affected. Next health check <t:#{(Time.current + 5.minutes).to_i}:R>.",
+          color: 15_158_332,
+          footer: { text: "TornManager Status Monitor" },
+          timestamp: Time.current.iso8601
+        }
+      )
+
+      TornApiHealthCheckJob.perform_later(path)
+    rescue => e
+      Rails.logger.error("[Discord Torn Degraded Notify] Failed: #{e.message}")
     end
 
     def resolve_api_key_owner
