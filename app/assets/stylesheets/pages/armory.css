@@ -94,6 +94,19 @@
   border: 1px solid rgba(148, 163, 184, 0.3);
 }
 
+/* Duplicate filter chips (off by default) */
+.armory-dup-filter {
+  background: rgba(148, 163, 184, 0.15);
+  color: rgb(148, 163, 184);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+.armory-dup-filter[data-filter-active="true"] {
+  background: rgba(59, 130, 246, 0.15);
+  color: rgb(96, 165, 250);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
 /* Slot cells */
 .armory-slot-cell {
   vertical-align: top;
