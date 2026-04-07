@@ -46,6 +46,14 @@
             <span class="member-status war-filter-toggle armory-set-other" data-filter-active="true" data-filter-group="set" data-filter-value="other" onclick="window.armoryToggleFilter(this)">Other</span>
           </div>
         </div>
+        <div class="war-filter-group">
+          <span class="war-filter-label">Duplicates</span>
+          <div class="war-filter-options">
+            <span class="member-status war-filter-toggle armory-dup-filter" data-filter-active="false" data-filter-group="dup" data-filter-value="armor" onclick="window.armoryToggleDup(this)">Armor</span>
+            <span class="member-status war-filter-toggle armory-dup-filter" data-filter-active="false" data-filter-group="dup" data-filter-value="weapons" onclick="window.armoryToggleDup(this)">Weapons</span>
+            <span class="member-status war-filter-toggle armory-dup-filter" data-filter-active="false" data-filter-group="dup" data-filter-value="both" onclick="window.armoryToggleDup(this)">Both</span>
+          </div>
+        </div>
       </div>
 
       <div class="live-war-table-scroll">
@@ -89,9 +97,13 @@
               all_items = member[:slots].values.flatten.map(&:downcase)
               armor_sets = %w[assault delta riot dune combat].select { |s| all_items.any? { |i| i.start_with?(s) } }
               armor_sets << "other" if all_items.any? { |i| %w[assault delta riot dune combat].none? { |s| i.start_with?(s) } }
+              armor_slots = [:head, :chest, :gloves, :pants, :boots]
+              weapon_slots = [:primary, :secondary, :melee]
+              has_dup_armor = armor_slots.any? { |s| member[:slots][s].size > 1 }
+              has_dup_weapons = weapon_slots.any? { |s| member[:slots][s].size > 1 }
             %>
             <% search_text = ([member[:name]] + member[:slots].values.flatten).join(" ").downcase %>
-            <tbody data-sortable-table-target="body" data-controller="coverage-row" class="armory-row-group" data-search="<%= search_text %>" data-sets="<%= armor_sets.join(',') %>">
+            <tbody data-sortable-table-target="body" data-controller="coverage-row" class="armory-row-group" data-search="<%= search_text %>" data-sets="<%= armor_sets.join(',') %>" data-dup-armor="<%= has_dup_armor %>" data-dup-weapons="<%= has_dup_weapons %>">
               <tr class="coverage-member-row" data-action="click->coverage-row#toggle">
                 <td>
                   <a href="https://www.torn.com/profiles.php?XID=<%= member[:torn_id] %>" target="_blank" class="member-profile-link"><%= member[:name] %></a>
@@ -212,6 +224,24 @@
         window.armoryFilter();
       };
 
+      window.armoryToggleDup = function(el) {
+        const wasActive = el.dataset.filterActive === "true";
+
+        document.querySelectorAll('[data-filter-group="dup"]').forEach(e => {
+          e.dataset.filterActive = "false";
+          e.classList.remove("filter-disabled");
+        });
+
+        if (!wasActive) {
+          el.dataset.filterActive = "true";
+          document.querySelectorAll('[data-filter-group="dup"][data-filter-active="false"]').forEach(e => {
+            e.classList.add("filter-disabled");
+          });
+        }
+
+        window.armoryFilter();
+      };
+
       window.armoryHighlight = function(text, search) {
         if (!search) return text;
         const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -222,11 +252,20 @@
         const search = document.getElementById('armory-search').value.toLowerCase();
         const activeSets = [...document.querySelectorAll('[data-filter-group="set"][data-filter-active="true"]')].map(e => e.dataset.filterValue);
 
+        const activeDup = document.querySelector('[data-filter-group="dup"][data-filter-active="true"]');
+        const dupValue = activeDup ? activeDup.dataset.filterValue : null;
+
         document.querySelectorAll('.armory-row-group').forEach(el => {
           const matchSearch = !search || el.dataset.search.includes(search);
           const memberSets = (el.dataset.sets || '').split(',');
           const matchSet = memberSets.some(s => activeSets.includes(s));
-          el.style.display = (matchSearch && matchSet) ? '' : 'none';
+
+          let matchDup = true;
+          if (dupValue === 'armor') matchDup = el.dataset.dupArmor === 'true';
+          else if (dupValue === 'weapons') matchDup = el.dataset.dupWeapons === 'true';
+          else if (dupValue === 'both') matchDup = el.dataset.dupArmor === 'true' && el.dataset.dupWeapons === 'true';
+
+          el.style.display = (matchSearch && matchSet && matchDup) ? '' : 'none';
 
           // Highlight matching text
           const row = el.querySelector('tr');
