@@ -178,6 +178,11 @@ module TornApi
     end
 
     def notify_discord_error(path, params, error)
+      cache_key = "discord_api_error:#{error.class}:#{sanitize_path(path)}"
+      return if Rails.cache.exist?(cache_key)
+
+      Rails.cache.write(cache_key, true, expires_in: 10.minutes)
+
       selections = params[:selections]
       owner = resolve_api_key_owner
       owner_label = if owner
@@ -194,9 +199,10 @@ module TornApi
           description: "```#{error.message}```",
           color: 15_158_332,
           fields: [
-            { name: "Endpoint", value: path, inline: true },
+            { name: "Endpoint", value: sanitize_path(path), inline: true },
             { name: "Selections", value: selections || "N/A", inline: true },
             { name: "Owner", value: owner_label, inline: true },
+            { name: "Key", value: "#{api_key[0..7]}...", inline: true },
             { name: "Environment", value: Rails.env, inline: true }
           ],
           footer: { text: "TornManager API Monitor" },

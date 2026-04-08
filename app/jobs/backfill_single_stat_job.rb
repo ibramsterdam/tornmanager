@@ -27,7 +27,7 @@ class BackfillSingleStatJob < FactionApiJob
       timestamp: date.end_of_day.to_i,
       stat_batch: stat_batch
     ).fetch
-  rescue TornApi::ApiError => e
+  rescue TornApi::ApiError, TornApi::InvalidKeyError => e
     Rails.logger.error("API error fetching stats: #{e.message}")
     nil
   end
