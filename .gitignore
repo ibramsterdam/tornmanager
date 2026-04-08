@@ -37,3 +37,9 @@
 # Ignore key files for decrypting credentials and more.
 /config/credentials/*.key
 
+# Python venv for ML training
+/lib/recon/.venv/
+
+# Trained ONNX model (regenerate with: rake recon:train)
+/lib/recon/model.onnx
+

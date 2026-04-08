@@ -82,6 +82,14 @@ module Admin
 
     private
 
+    def fetch_personalstats_for_predict(api_key, torn_id)
+      batches = Recon::FeatureSet::API_STAT_NAMES.each_slice(10).to_a
+      batches.reduce({}) do |result, batch|
+        stats = Recon::TornApi::PersonalStats.new(api_key, torn_id, stats: batch, timestamp: Time.now.to_i).fetch
+        result.merge(stats)
+      end
+    end
+
     def compute_distribution(col, values)
       sorted = values.sort
       count = sorted.size
@@ -113,6 +121,39 @@ module Admin
     end
 
     public
+
+    def predict
+      torn_id = params[:torn_id].to_s.strip
+      if torn_id.blank?
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Please enter a Torn ID." })
+      end
+
+      api_key = AdminCredentials.api_key
+      unless api_key
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Admin API key not configured." })
+      end
+
+      unless Recon::Predictor.trained?
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Model not trained. Run: rake recon:train" })
+      end
+
+      personalstats = fetch_personalstats_for_predict(api_key, torn_id)
+      profile = Recon::TornApi::Profile.new(api_key, torn_id).fetch
+      features = Recon::FeatureSet.build(personalstats: personalstats, profile: profile)
+
+      predictor = Recon::Predictor.new
+      prediction = predictor.predict(features)
+
+      render turbo_stream: turbo_stream.replace("predict-result",
+        partial: "admin/recon/predict_result",
+        locals: { prediction: prediction, torn_id: torn_id, features: features, profile: profile, error: nil })
+    rescue TornApi::ApiError, TornApi::InvalidKeyError, TornApi::NotFoundError => e
+      render turbo_stream: turbo_stream.replace("predict-result",
+        partial: "admin/recon/predict_result", locals: { error: "API error: #{e.message}" })
+    end
 
     def import
       raw_data = params[:spy_data]

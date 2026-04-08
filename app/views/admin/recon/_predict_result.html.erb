@@ -1,0 +1,30 @@
+<div id="predict-result">
+  <% if local_assigns[:error] && error.present? %>
+    <div class="predict-error"><%= error %></div>
+  <% elsif local_assigns[:prediction] %>
+    <div class="predict-success">
+      <div class="predict-main">
+        <div class="predict-label">Estimated Total Battle Stats</div>
+        <div class="predict-value"><%= number_with_delimiter(prediction) %></div>
+        <div class="predict-player">
+          <a href="https://www.torn.com/profiles.php?XID=<%= torn_id %>" target="_blank" class="player-link">
+            Player <%= torn_id %>
+          </a>
+          <span class="predict-meta">Level <%= features["level"] %></span>
+        </div>
+      </div>
+
+      <details class="predict-features-details">
+        <summary>Feature values used</summary>
+        <div class="predict-features">
+          <% features.sort_by { |k, _| Recon::TrainingSample::FEATURE_COLUMNS.index(k) || 99 }.each do |key, value| %>
+            <div class="predict-feature">
+              <span class="predict-feature-label"><%= key %></span>
+              <span class="predict-feature-value"><%= number_with_delimiter(value) %></span>
+            </div>
+          <% end %>
+        </div>
+      </details>
+    </div>
+  <% end %>
+</div>
