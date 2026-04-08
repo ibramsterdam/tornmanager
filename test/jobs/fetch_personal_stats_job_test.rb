@@ -57,6 +57,23 @@ class FetchPersonalStatsJobTest < ActiveJob::TestCase
     refute @user.reload.hof_stats_user
   end
 
+  test "retries on InvalidKeyError" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError, "auth failed")
+
+    assert_enqueued_with(job: FetchPersonalStatsJob) do
+      FetchPersonalStatsJob.perform_now(@user, batch: 1, stats_date: @stats_date, retries: 0)
+    end
+  end
+
+  test "gives up after max retries on InvalidKeyError" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError, "auth failed")
+    Discord::Notifier.expects(:notify).once
+
+    assert_no_enqueued_jobs(only: FetchPersonalStatsJob) do
+      FetchPersonalStatsJob.perform_now(@user, batch: 1, stats_date: @stats_date, retries: 3)
+    end
+  end
+
   test "hof eligibility check only runs on batch 1" do
     stats_with_enhancers = @batch2_stats.merge(items_used_stat_enhancers: 500)
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(stats_with_enhancers)

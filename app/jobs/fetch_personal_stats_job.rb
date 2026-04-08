@@ -1,11 +1,34 @@
 class FetchPersonalStatsJob < AdminApiJob
-  def perform(user, batch: 1, stats_date: Date.current.yesterday)
+  MAX_RETRIES = 3
+
+  def perform(user, batch: 1, stats_date: Date.current.yesterday, retries: 0)
     stats = fetch_stats(user, batch, stats_date)
 
     user.check_hof_eligibility!(stats[:items_used_stat_enhancers]) if batch == 1
     save_snapshot(user, stats, stats_date)
 
     FetchPersonalStatsJob.perform_later(user, batch: 2, stats_date: stats_date) if batch == 1
+  rescue TornApi::InvalidKeyError => e
+    if retries < MAX_RETRIES
+      Rails.logger.warn("FetchPersonalStatsJob: Failed for #{user.name} (#{user.torn_id}): #{e.message}, retry #{retries + 1}/#{MAX_RETRIES} in 1 hour")
+      FetchPersonalStatsJob.set(wait: 1.hour).perform_later(user, batch: batch, stats_date: stats_date, retries: retries + 1)
+    else
+      Rails.logger.error("FetchPersonalStatsJob: Giving up on #{user.name} (#{user.torn_id}) after #{MAX_RETRIES} retries: #{e.message}")
+      Discord::Notifier.notify(
+        webhook_key: :error_webhook_url,
+        embed: {
+          title: "Personal Stats Fetch Failed",
+          description: "Gave up after #{MAX_RETRIES} retries.\n```#{e.message}```",
+          color: 15_158_332,
+          fields: [
+            { name: "User", value: "#{user.name} [#{user.torn_id}]", inline: true },
+            { name: "Date", value: stats_date.to_s, inline: true }
+          ],
+          footer: { text: "TornManager Error Reporter" },
+          timestamp: Time.current.iso8601
+        }
+      )
+    end
   end
 
   private
