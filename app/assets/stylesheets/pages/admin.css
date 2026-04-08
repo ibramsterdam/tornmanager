@@ -983,3 +983,131 @@
 .admin-sub-info strong {
   color: var(--color-text);
 }
+
+/* Recon Predict */
+.recon-predict-card {
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.recon-predict-card h2 {
+  margin: 0 0 var(--space-2);
+  font-size: 1.125rem;
+}
+
+.predict-form {
+  margin-top: var(--space-4);
+}
+
+.predict-input-row {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.predict-input {
+  background: var(--gray-1000);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  color: var(--gray-200);
+  font-size: 0.875rem;
+  padding: var(--space-2) var(--space-3);
+  width: 180px;
+}
+
+.predict-input:focus {
+  outline: none;
+  border-color: var(--gray-600);
+}
+
+.predict-input::placeholder {
+  color: var(--gray-600);
+}
+
+.predict-error {
+  margin-top: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md);
+  color: #fca5a5;
+  font-size: 0.8125rem;
+}
+
+.predict-success {
+  margin-top: var(--space-4);
+}
+
+.predict-main {
+  padding: var(--space-4) var(--space-5);
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: var(--radius-md);
+}
+
+.predict-label {
+  font-size: 0.75rem;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-1);
+}
+
+.predict-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #4ade80;
+  font-variant-numeric: tabular-nums;
+}
+
+.predict-player {
+  margin-top: var(--space-2);
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.predict-meta {
+  color: var(--gray-500);
+}
+
+.predict-features-details {
+  margin-top: var(--space-3);
+}
+
+.predict-features-details summary {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+  cursor: pointer;
+  user-select: none;
+}
+
+.predict-features {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.predict-feature {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  background: var(--gray-1000);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+}
+
+.predict-feature-label {
+  color: var(--gray-400);
+}
+
+.predict-feature-value {
+  color: var(--gray-200);
+  font-variant-numeric: tabular-nums;
+}
