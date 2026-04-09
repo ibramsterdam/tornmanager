@@ -118,6 +118,8 @@ Rails.application.routes.draw do
     resource :recon, only: [ :show ], controller: "recon" do
       post :import
       get :stats
+      post :predict
+      post :quick_add
     end
   end
 

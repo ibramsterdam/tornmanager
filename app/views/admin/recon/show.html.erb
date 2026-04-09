@@ -19,6 +19,38 @@
   </div>
 </div>
 
+<% if Recon::Predictor.trained? %>
+  <div class="recon-predict-card">
+    <h2>Predict Battle Stats</h2>
+    <p class="recon-import-hint">Enter a Torn player ID to estimate their total battle stats using the trained model.</p>
+
+    <%= form_with url: predict_admin_recon_path, method: :post, class: "predict-form", data: { turbo_stream: true } do |form| %>
+      <div class="predict-input-row">
+        <%= form.text_field :torn_id, placeholder: "Torn ID", class: "predict-input", autofocus: true, inputmode: "numeric" %>
+        <%= form.submit "Predict", class: "btn btn-primary" %>
+      </div>
+    <% end %>
+
+    <div id="predict-result"></div>
+  </div>
+<% end %>
+
+<div class="recon-import-card">
+  <h2>Quick Add Sample</h2>
+  <p class="recon-import-hint">Manually add a training sample. Personalstats will be fetched automatically from the API.</p>
+
+  <%= form_with url: quick_add_admin_recon_path, method: :post, class: "predict-form" do |form| %>
+    <div class="quick-add-grid">
+      <%= form.text_field :torn_id, placeholder: "Torn ID", class: "predict-input", inputmode: "numeric" %>
+      <%= form.text_field :strength, placeholder: "STR", class: "predict-input" %>
+      <%= form.text_field :defense, placeholder: "DEF", class: "predict-input" %>
+      <%= form.text_field :speed, placeholder: "SPD", class: "predict-input" %>
+      <%= form.text_field :dexterity, placeholder: "DEX", class: "predict-input" %>
+      <%= form.submit "Add Sample", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
+
 <% if @import_in_progress %>
   <% seconds_remaining = (@import_ends_at - Time.current).to_i %>
   <div class="backfill-banner" data-controller="backfill-countdown" data-backfill-countdown-seconds-remaining-value="<%= seconds_remaining %>">
