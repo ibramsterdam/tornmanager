@@ -1111,3 +1111,18 @@
   color: var(--gray-200);
   font-variant-numeric: tabular-nums;
 }
+
+.quick-add-grid {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.quick-add-grid .predict-input {
+  width: 120px;
+}
+
+.quick-add-grid .predict-input:first-child {
+  width: 140px;
+}
