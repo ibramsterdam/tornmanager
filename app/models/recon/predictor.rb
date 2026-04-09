@@ -1,7 +1,7 @@
 require "onnxruntime"
 
 class Recon::Predictor
-  MODEL_PATH = Rails.root.join("lib/recon/model.onnx")
+  MODEL_DIR = Rails.root.join("lib/recon")
 
   # Must match ALL_FEATURES order in train_model.py
   FEATURE_ORDER = (
@@ -19,22 +19,59 @@ class Recon::Predictor
     total_energy
   ].to_set.freeze
 
-  def initialize
-    raise "Model not found at #{MODEL_PATH}. Run: rake recon:train" unless MODEL_PATH.exist?
+  # Must match TIERS in train_model.py
+  TIERS = [
+    [ :low,  0,          1e9  ],
+    [ :mid,  1e9,        5e9  ],
+    [ :high, 5e9,        Float::INFINITY ]
+  ].freeze
 
-    @model = OnnxRuntime::Model.new(MODEL_PATH.to_s)
+  def initialize
+    global_path = MODEL_DIR.join("model_global.onnx")
+    raise "Global model not found at #{global_path}. Run: rake recon:train" unless global_path.exist?
+
+    @global_model = OnnxRuntime::Model.new(global_path.to_s)
+
+    @tier_models = {}
+    TIERS.each do |name, _, _|
+      path = MODEL_DIR.join("model_#{name}.onnx")
+      @tier_models[name] = OnnxRuntime::Model.new(path.to_s) if path.exist?
+    end
   end
 
   def predict(features)
-    input = FEATURE_ORDER.map do |f|
-      val = (features[f] || 0).to_f
-      LOG_FEATURES.include?(f) ? Math.log1p([ val, 0 ].max) : val
+    input = build_input(features)
+
+    # First pass: global model for rough estimate to pick tier
+    rough = run_model(@global_model, input)
+
+    # Pick tier model
+    tier_name = TIERS.find { |_, lo, hi| rough >= lo && rough < hi }&.first
+    tier_model = @tier_models[tier_name]
+
+    # Second pass: tier model for refined prediction (fall back to global)
+    if tier_model
+      run_model(tier_model, input)
+    else
+      rough
     end
-    log_prediction = @model.predict({ "features" => [input] }).values.first.flatten.first
-    Math.expm1(log_prediction).round.to_i.clamp(0..)
   end
 
   def self.trained?
-    MODEL_PATH.exist?
+    MODEL_DIR.join("model_global.onnx").exist?
+  end
+
+  private
+
+  def build_input(features)
+    FEATURE_ORDER.map do |f|
+      val = (features[f] || 0).to_f
+      LOG_FEATURES.include?(f) ? Math.log1p([ val, 0 ].max) : val
+    end
+  end
+
+  def run_model(model, input)
+    log_prediction = model.predict({ "features" => [ input ] }).values.first.flatten.first
+    Math.expm1(log_prediction).round.to_i.clamp(0..)
   end
 end

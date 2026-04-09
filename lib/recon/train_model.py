@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Train a Random Forest model on recon training samples and export to ONNX."""
+"""Train Random Forest models on recon training samples and export to ONNX.
+
+Trains a global model (for routing) plus tier-specific models for refined predictions.
+"""
 
 import sqlite3
 import sys
@@ -29,7 +32,7 @@ ENGINEERED_FEATURES = [
     "total_energy",          # xantaken * 250 + refills * 150 + energydrinkused * 100 — estimated lifetime energy from items
     "energy_per_day",        # total_energy / real_age — daily energy from items
     "boosters_per_day",      # boostersused / real_age
-    "has_se",                # binary: statenhancersused > 0
+    "has_se",                # binary: statenhancersused >= 3
 ]
 
 # Full feature list as seen by the model (must match Ruby's Predictor)
@@ -45,7 +48,15 @@ LOG_FEATURES = {
     "total_energy",
 }
 
+# Tier boundaries for specialized models
+TIERS = [
+    ("low",  0,    1e9),   # < 1B
+    ("mid",  1e9,  5e9),   # 1B - 5B
+    ("high", 5e9,  1e18),  # 5B+
+]
+
 MIN_SAMPLES = 100
+MIN_TIER_SAMPLES = 50
 
 
 def add_engineered_features(X, columns):
@@ -83,9 +94,34 @@ def log1p_transform(X, columns):
     return X
 
 
+def train_and_export(X, y_log, name, output_dir):
+    """Train a Random Forest and export to ONNX. Returns the model."""
+    model = RandomForestRegressor(
+        n_estimators=200,
+        max_depth=10,
+        min_samples_leaf=10,
+        n_jobs=-1,
+        random_state=42,
+    )
+    model.fit(X, y_log)
+
+    scores = cross_val_score(model, X, y_log, cv=5, scoring="r2")
+    print(f"  R² (log-space): {scores.mean():.4f} (±{scores.std():.4f})")
+
+    initial_type = [("features", FloatTensorType([None, X.shape[1]]))]
+    onnx_model = convert_sklearn(model, initial_types=initial_type)
+
+    output_path = output_dir / f"model_{name}.onnx"
+    with open(output_path, "wb") as f:
+        f.write(onnx_model.SerializeToString())
+    print(f"  Saved to {output_path}")
+
+    return model
+
+
 def main():
     db_path = sys.argv[1] if len(sys.argv) > 1 else "storage/development.sqlite3"
-    output_path = sys.argv[2] if len(sys.argv) > 2 else "lib/recon/model.onnx"
+    output_dir = Path(sys.argv[2]) if len(sys.argv) > 2 else Path("lib/recon")
 
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
@@ -114,7 +150,7 @@ def main():
     stats = stats[nonzero]
     max_stat_ratio = stats.max(axis=1) / np.maximum(y, 1)
     balanced = max_stat_ratio <= 0.95
-    X, y, stats = X[balanced], y[balanced], stats[balanced]
+    X, y = X[balanced], y[balanced]
 
     # Remove outliers: clip top/bottom 1% by log(total_stats)
     y_log_raw = np.log1p(y)
@@ -135,36 +171,32 @@ def main():
     # Log-transform target (inverse in Ruby via exp)
     y_log = np.log1p(y)
 
-    print(f"Training on {len(y)} samples, {len(ALL_FEATURES)} features")
-    print(f"Target range: {y.min():.0f} – {y.max():.0f} (log: {y_log.min():.2f} – {y_log.max():.2f})")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
-    model = RandomForestRegressor(
-        n_estimators=200,
-        max_depth=10,
-        min_samples_leaf=10,
-        n_jobs=-1,
-        random_state=42,
-    )
-    model.fit(X, y_log)
-
-    scores = cross_val_score(model, X, y_log, cv=5, scoring="r2")
-    print(f"Cross-val R² (log-space): {scores.mean():.4f} (±{scores.std():.4f})")
+    # Train global model (used for routing)
+    print(f"\n=== Global model ({len(y)} samples, {len(ALL_FEATURES)} features) ===")
+    global_model = train_and_export(X, y_log, "global", output_dir)
 
     importances = sorted(
-        zip(ALL_FEATURES, model.feature_importances_), key=lambda x: -x[1]
+        zip(ALL_FEATURES, global_model.feature_importances_), key=lambda x: -x[1]
     )
-    print("Top features:")
-    for name, imp in importances[:15]:
-        print(f"  {name}: {imp:.4f}")
+    print("  Top features:")
+    for name, imp in importances[:10]:
+        print(f"    {name}: {imp:.4f}")
 
-    initial_type = [("features", FloatTensorType([None, len(ALL_FEATURES)]))]
-    onnx_model = convert_sklearn(model, initial_types=initial_type)
+    # Train tier-specific models
+    for tier_name, lo, hi in TIERS:
+        tier_mask = (y >= lo) & (y < hi)
+        n_tier = tier_mask.sum()
 
-    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "wb") as f:
-        f.write(onnx_model.SerializeToString())
+        if n_tier < MIN_TIER_SAMPLES:
+            print(f"\n=== Tier '{tier_name}' — skipped ({n_tier} samples, need {MIN_TIER_SAMPLES}) ===")
+            continue
 
-    print(f"Model saved to {output_path}")
+        print(f"\n=== Tier '{tier_name}' ({n_tier} samples) ===")
+        train_and_export(X[tier_mask], y_log[tier_mask], tier_name, output_dir)
+
+    print("\nDone!")
 
 
 if __name__ == "__main__":

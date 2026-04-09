@@ -182,7 +182,9 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
       Recon::TornApi::Profile::ProfileData.new(age: 1000, level: 80, property: "Private Island", last_action_timestamp: Time.now.to_i)
     )
     Recon::Predictor.stubs(:trained?).returns(true)
-    Recon::Predictor.any_instance.stubs(:predict).returns(2_500_000_000)
+    mock_predictor = mock
+    mock_predictor.stubs(:predict).returns(2_500_000_000)
+    Recon::Predictor.stubs(:new).returns(mock_predictor)
 
     post predict_admin_recon_path, params: { torn_id: "12345" }, as: :turbo_stream
     assert_response :success
