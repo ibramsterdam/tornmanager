@@ -74,10 +74,44 @@ class Recon::FeatureSetTest < ActiveSupport::TestCase
     end
   end
 
-  test "returns no extra keys beyond feature columns" do
+  test "returns engineered feature keys" do
     features = build_features
-    extra = features.keys - Recon::TrainingSample::FEATURE_COLUMNS
-    assert_empty extra, "Unexpected keys: #{extra}"
+    %w[xan_per_day refills_per_day edrink_per_day se_per_day
+       total_energy energy_per_day boosters_per_day has_se].each do |col|
+      assert features.key?(col), "Missing engineered feature: #{col}"
+    end
+  end
+
+  test "total_energy combines xan refills and energy drinks" do
+    features = build_features(personalstats: {
+      "xantaken" => 100, "refills" => 50, "energydrinkused" => 20
+    })
+    assert_equal 100 * 250 + 50 * 150 + 20 * 100, features["total_energy"]
+  end
+
+  test "per_day features divide by real_age" do
+    features = build_features(
+      personalstats: { "xantaken" => 500, "refills" => 100 },
+      age: 500, last_action_timestamp: Time.now.to_i
+    )
+    assert_in_delta 1.0, features["xan_per_day"], 0.01
+    assert_in_delta 0.2, features["refills_per_day"], 0.01
+  end
+
+  test "has_se is 1.0 when statenhancersused >= 3" do
+    features = build_features(personalstats: { "statenhancersused" => 3 })
+    assert_equal 1.0, features["has_se"]
+  end
+
+  test "has_se is 0.0 when statenhancersused < 3" do
+    features = build_features(personalstats: { "statenhancersused" => 2 })
+    assert_equal 0.0, features["has_se"]
+  end
+
+  test "engineered features handle zero real_age safely" do
+    features = build_features(age: 0, last_action_timestamp: nil)
+    assert features["xan_per_day"].finite?
+    assert features["energy_per_day"].finite?
   end
 
   private

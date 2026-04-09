@@ -43,6 +43,7 @@ gem "thruster", require: false
 gem "image_processing", "~> 1.2"
 
 gem "appsignal"
+gem "onnxruntime"
 gem "discordrb", require: false
 
 group :development, :test do

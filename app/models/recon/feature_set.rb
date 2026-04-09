@@ -57,6 +57,29 @@ class Recon::FeatureSet
     features["property_happy"] = resolve_property_happy(profile.property)
     features["real_age"] = calculate_real_age(profile.age, profile.last_action_timestamp)
 
+    add_engineered_features(features)
+
+    features
+  end
+
+  def self.add_engineered_features(features)
+    age = [ features["real_age"], 1 ].max.to_f
+    xan = (features["xantaken"] || 0).to_f
+    refills = (features["refills"] || 0).to_f
+    edrink = (features["energydrinkused"] || 0).to_f
+    se = (features["statenhancersused"] || 0).to_f
+    boosters = (features["boostersused"] || 0).to_f
+
+    total_energy = xan * 250 + refills * 150 + edrink * 100
+
+    features["xan_per_day"] = xan / age
+    features["refills_per_day"] = refills / age
+    features["edrink_per_day"] = edrink / age
+    features["se_per_day"] = se / age
+    features["total_energy"] = total_energy
+    features["energy_per_day"] = total_energy / age
+    features["boosters_per_day"] = boosters / age
+    features["has_se"] = se >= 3 ? 1.0 : 0.0
     features
   end
 

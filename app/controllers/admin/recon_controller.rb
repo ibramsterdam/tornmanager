@@ -82,6 +82,14 @@ module Admin
 
     private
 
+    def fetch_personalstats_for_predict(api_key, torn_id)
+      batches = Recon::FeatureSet::API_STAT_NAMES.each_slice(10).to_a
+      batches.reduce({}) do |result, batch|
+        stats = Recon::TornApi::PersonalStats.new(api_key, torn_id, stats: batch, timestamp: Time.now.to_i).fetch
+        result.merge(stats)
+      end
+    end
+
     def compute_distribution(col, values)
       sorted = values.sort
       count = sorted.size
@@ -113,6 +121,61 @@ module Admin
     end
 
     public
+
+    def predict
+      torn_id = params[:torn_id].to_s.strip
+      if torn_id.blank?
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Please enter a Torn ID." })
+      end
+
+      api_key = AdminCredentials.api_key
+      unless api_key
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Admin API key not configured." })
+      end
+
+      unless Recon::Predictor.trained?
+        return render turbo_stream: turbo_stream.replace("predict-result",
+          partial: "admin/recon/predict_result", locals: { error: "Model not trained. Run: rake recon:train" })
+      end
+
+      personalstats = fetch_personalstats_for_predict(api_key, torn_id)
+      profile = Recon::TornApi::Profile.new(api_key, torn_id).fetch
+      features = Recon::FeatureSet.build(personalstats: personalstats, profile: profile)
+
+      predictor = Recon::Predictor.new
+      prediction = predictor.predict(features)
+
+      render turbo_stream: turbo_stream.replace("predict-result",
+        partial: "admin/recon/predict_result",
+        locals: { prediction: prediction, torn_id: torn_id, features: features, profile: profile, error: nil })
+    rescue TornApi::ApiError, TornApi::InvalidKeyError, TornApi::NotFoundError => e
+      render turbo_stream: turbo_stream.replace("predict-result",
+        partial: "admin/recon/predict_result", locals: { error: "API error: #{e.message}" })
+    end
+
+    def quick_add
+      torn_id = params[:torn_id].to_s.strip
+      strength = params[:strength].to_s.gsub(/[^0-9]/, "").to_i
+      defense = params[:defense].to_s.gsub(/[^0-9]/, "").to_i
+      speed = params[:speed].to_s.gsub(/[^0-9]/, "").to_i
+      dexterity = params[:dexterity].to_s.gsub(/[^0-9]/, "").to_i
+
+      if torn_id.blank? || (strength + defense + speed + dexterity) == 0
+        return redirect_to admin_recon_path, alert: "Torn ID and at least one stat are required."
+      end
+
+      spied_at = Date.current
+
+      sample = Recon::TrainingSample.find_or_initialize_by(player_id: torn_id, spied_at: spied_at)
+      sample.update!(strength: strength, defense: defense, speed: speed, dexterity: dexterity)
+
+      Recon::CollectTrainingSampleJob.perform_later(player_id: torn_id.to_i, spied_at: spied_at.to_s)
+
+      total = ActiveSupport::NumberHelper.number_to_delimited(strength + defense + speed + dexterity)
+      redirect_to admin_recon_path, notice: "Added sample for #{torn_id} (#{total} total). Collecting personalstats..."
+    end
 
     def import
       raw_data = params[:spy_data]
