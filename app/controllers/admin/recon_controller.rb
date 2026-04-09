@@ -155,6 +155,28 @@ module Admin
         partial: "admin/recon/predict_result", locals: { error: "API error: #{e.message}" })
     end
 
+    def quick_add
+      torn_id = params[:torn_id].to_s.strip
+      strength = params[:strength].to_s.gsub(/[^0-9]/, "").to_i
+      defense = params[:defense].to_s.gsub(/[^0-9]/, "").to_i
+      speed = params[:speed].to_s.gsub(/[^0-9]/, "").to_i
+      dexterity = params[:dexterity].to_s.gsub(/[^0-9]/, "").to_i
+
+      if torn_id.blank? || (strength + defense + speed + dexterity) == 0
+        return redirect_to admin_recon_path, alert: "Torn ID and at least one stat are required."
+      end
+
+      spied_at = Date.current
+
+      sample = Recon::TrainingSample.find_or_initialize_by(player_id: torn_id, spied_at: spied_at)
+      sample.update!(strength: strength, defense: defense, speed: speed, dexterity: dexterity)
+
+      Recon::CollectTrainingSampleJob.perform_later(player_id: torn_id.to_i, spied_at: spied_at.to_s)
+
+      total = ActiveSupport::NumberHelper.number_to_delimited(strength + defense + speed + dexterity)
+      redirect_to admin_recon_path, notice: "Added sample for #{torn_id} (#{total} total). Collecting personalstats..."
+    end
+
     def import
       raw_data = params[:spy_data]
 
