@@ -40,6 +40,6 @@
 # Python venv for ML training
 /lib/recon/.venv/
 
-# Trained ONNX model (regenerate with: rake recon:train)
-/lib/recon/model.onnx
+# Trained ONNX models (regenerate with: rake recon:train)
+/lib/recon/model_*.onnx
 

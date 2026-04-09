@@ -20,7 +20,7 @@ class Recon::CollectTrainingSampleJob < ApplicationJob
 
     features = Recon::FeatureSet.build(personalstats: personalstats, profile: profile)
 
-    sample.update!(features)
+    sample.update!(features.slice(*Recon::TrainingSample::FEATURE_COLUMNS))
   rescue TornApi::ApiError => e
     Rails.logger.error("Recon::CollectTrainingSampleJob failed for player #{player_id}: #{e.message}")
   end
