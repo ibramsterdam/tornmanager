@@ -44,7 +44,7 @@ module TornApi
     rescue InvalidKeyError, ApiError => e
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, e.message)
-      notify_discord_error(path, merged_params, e)
+      notify_discord_error(path, merged_params, e) unless e.is_a?(InvalidKeyError) || e.is_a?(RateLimitError) || e.is_a?(NotFoundError)
       raise
     rescue Net::ReadTimeout, Net::OpenTimeout => e
       handle_timeout(uri, api_params, e, retries, start_time)
@@ -95,20 +95,45 @@ module TornApi
       error_msg = error["error"]
 
       case error_code
-      when 2
-        raise InvalidKeyError, "Invalid API key"
-      when 5
-        raise RateLimitError, "Too many requests: #{error_msg}"
-      when 6
-        raise NotFoundError, "Incorrect ID: #{error_msg}"
-      when 8
-        raise ApiError, "IP block: #{error_msg}"
-      when 9
-        raise ApiError, "API disabled: #{error_msg}"
-      when 10
-        raise InvalidKeyError, "Key owner is in federal jail"
-      when 13
-        raise RateLimitError, "Key rate limit reached: #{error_msg}"
+      # Key errors — user-resolvable, no Discord alert needed
+      when 1      then raise InvalidKeyError, "API key is empty"
+      when 2      then raise InvalidKeyError, "Invalid API key"
+      when 10     then raise InvalidKeyError, "Key owner is in federal jail"
+      when 12     then raise InvalidKeyError, "Key read error"
+      when 13     then raise InvalidKeyError, "Key temporarily disabled due to owner inactivity"
+      when 16     then raise InvalidKeyError, "Access level of this key is not high enough"
+      when 18     then raise InvalidKeyError, "API key has been paused by the owner"
+
+      # Rate limiting
+      when 5      then raise RateLimitError, "Too many requests"
+      when 8      then raise RateLimitError, "IP blocked for abuse"
+      when 14     then raise RateLimitError, "Daily read limit reached"
+
+      # Bad request — wrong ID or selections
+      when 6      then raise NotFoundError, "Incorrect ID: #{error_msg}"
+      when 7      then raise NotFoundError, "Requested data is private"
+
+      # Torn infrastructure issues
+      when 9      then raise ApiError, "Torn API is currently disabled"
+      when 17     then raise ApiError, "Torn backend error, please try again"
+      when 24     then raise ApiError, "Torn API temporarily closed"
+
+      # Request parameter errors
+      when 3      then raise ApiError, "Wrong type requested: #{error_msg}"
+      when 4      then raise ApiError, "Wrong fields requested: #{error_msg}"
+      when 11     then raise ApiError, "Can only change API key once every 60 seconds"
+      when 15     then raise ApiError, "Temporary error: #{error_msg}"
+      when 19     then raise ApiError, "Must be migrated to crimes 2.0"
+      when 20     then raise ApiError, "Race not yet finished"
+      when 21     then raise ApiError, "Incorrect category: #{error_msg}"
+      when 22     then raise ApiError, "Selection only available in API v1"
+      when 23     then raise ApiError, "Selection only available in API v2"
+      when 25     then raise ApiError, "Invalid stat requested: #{error_msg}"
+      when 26     then raise ApiError, "Only category or stats can be requested"
+      when 27     then raise ApiError, "Must be migrated to organized crimes 2.0"
+      when 28     then raise ApiError, "Incorrect log ID"
+      when 29     then raise ApiError, "Category selection not available for interaction logs"
+
       else
         raise ApiError, "API error #{error_code}: #{error_msg}"
       end
