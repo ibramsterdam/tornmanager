@@ -25,7 +25,7 @@ module TornApi
         if response["factionhof"].present?
           parse(response["factionhof"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response}"
+          raise ApiError, "No faction HOF data returned: #{response}"
         end
       end
 

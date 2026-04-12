@@ -45,6 +45,7 @@ module TornApi
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, e.message)
       notify_discord_error(path, merged_params, e) unless e.is_a?(InvalidKeyError) || e.is_a?(RateLimitError) || e.is_a?(NotFoundError)
+      invalidate_api_key! if e.is_a?(InvalidKeyError)
       raise
     rescue Net::ReadTimeout, Net::OpenTimeout => e
       handle_timeout(uri, api_params, e, retries, start_time)
@@ -264,6 +265,21 @@ module TornApi
       TornApiHealthCheckJob.perform_later(path)
     rescue => e
       Rails.logger.error("[Discord Torn Degraded Notify] Failed: #{e.message}")
+    end
+
+    def invalidate_api_key!
+      return if api_key == AdminCredentials.api_key
+
+      record = ::ApiKey.find_by(key: api_key)
+      return unless record
+
+      if record.faction_id?
+        record.faction.handle_invalid_api_key!
+      else
+        record.destroy!
+      end
+    rescue => e
+      Rails.logger.error("[TornAPI] Failed to invalidate API key: #{e.message}")
     end
 
     def resolve_api_key_owner

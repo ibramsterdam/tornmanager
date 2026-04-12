@@ -29,7 +29,7 @@ module TornApi
         if response["profile"].present?
           parse_profile(response["profile"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response}"
+          raise ApiError, "No user data returned: #{response}"
         end
       end
 

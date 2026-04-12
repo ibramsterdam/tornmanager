@@ -34,6 +34,8 @@ class FetchMemberActivityJob < FactionApiJob
     end
 
     MemberActivitySnapshot.insert_all(snapshots) if snapshots.any?
+  rescue TornApi::InvalidKeyError => e
+    Rails.logger.error("FetchMemberActivityJob: Invalid API key for faction #{faction_id}: #{e.message}")
   rescue TornApi::ApiError => e
     Rails.logger.error("FetchMemberActivityJob: Failed for faction #{faction_id}: #{e.message}")
   end

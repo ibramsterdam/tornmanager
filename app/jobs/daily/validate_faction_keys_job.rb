@@ -14,15 +14,16 @@ module Daily
         info = TornApi::Key::Info.new(api_key.key).fetch
 
         unless info.access.faction == true
-          Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: no faction access, destroying key")
-          destroy_faction_key(api_key)
+          Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: no faction access, invalidating key")
+          api_key.faction.handle_invalid_api_key!
           next
         end
 
         api_key.update!(faction_access: true) unless api_key.faction_access?
       rescue TornApi::InvalidKeyError
-        Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: invalid key, destroying")
-        destroy_faction_key(api_key)
+        # Usually already handled by TornApi::Base#invalidate_api_key!, but ensure cleanup
+        api_key.faction.handle_invalid_api_key!
+        Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: invalid key handled")
       rescue TornApi::ApiError => e
         Rails.logger.warn("[ValidateKeys] Faction #{api_key.faction.name}: #{e.message}")
       ensure
@@ -43,10 +44,5 @@ module Daily
       end
     end
 
-    def destroy_faction_key(api_key)
-      faction = api_key.faction
-      api_key.destroy!
-      faction.update!(setup_completed: false)
-    end
   end
 end
