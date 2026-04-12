@@ -4,6 +4,7 @@ module Admin
 
     def index
       load_user_stats
+      load_subscription_stats
       load_faction_stats
       load_snapshot_stats
       load_activity_stats
@@ -21,6 +22,18 @@ module Admin
       @active_subscribers = User.active_subscribers.count
       @hof_stats_users = User.hof_stats_users.count
       @api_keys_configured = ApiKey::Torn.where.not(user_id: nil).count
+    end
+
+    def load_subscription_stats
+      @total_subscribers = Subscription.where("expires_at > ?", Time.current).count
+      @subscribed_factions = Faction
+        .joins(:subscription)
+        .where("subscriptions.expires_at > ?", Time.current)
+        .includes(:subscription)
+        .order(:name)
+      @xanax_received_past_month = XanaxPayment
+        .where("processed_at >= ?", 1.month.ago)
+        .sum(:xanax_amount)
     end
 
     def load_faction_stats

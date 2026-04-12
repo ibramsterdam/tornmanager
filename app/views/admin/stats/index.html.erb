@@ -61,6 +61,37 @@
       <% end %>
     </div>
 
+    <%# ── Subscriptions ── %>
+    <div class="admin-stats-panel">
+      <h2>Subscriptions</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Total active</span>
+          <span class="admin-stat-value"><%= @total_subscribers %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Xanax received (30d)</span>
+          <span class="admin-stat-value"><%= @xanax_received_past_month %></span>
+        </div>
+      </div>
+      <% if @subscribed_factions.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Faction</th><th>Expires</th><th>Days</th></tr>
+          </thead>
+          <tbody>
+            <% @subscribed_factions.each do |f| %>
+              <tr>
+                <td><%= f.name %></td>
+                <td><%= f.subscription.expires_at.strftime("%d %b %Y") %></td>
+                <td><%= f.subscription.days_remaining %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
+    </div>
+
     <%# ── Factions ── %>
     <div class="admin-stats-panel">
       <h2>Factions <span class="admin-stats-retention"><%= @total_factions %> / 15</span></h2>
