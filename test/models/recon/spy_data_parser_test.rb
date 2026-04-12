@@ -164,4 +164,71 @@ class Recon::SpyDataParserTest < ActiveSupport::TestCase
     assert_equal [], Recon::SpyDataParser.parse("")
     assert_equal [], Recon::SpyDataParser.parse(nil)
   end
+
+  # -- JSONL format --
+
+  test "jsonl: parses a single line" do
+    input = '{"Name": "Alice [111]", "Level": "100", "Faction": "Test", "Strength": "1,000", "Defense": "2,000", "Speed": "500", "Dexterity": "300", "Total": "3,800", "FF Bonus": "3.00", "Last Update": "14/03/24"}'
+
+    results = Recon::SpyDataParser.parse_jsonl(input)
+    assert_equal 1, results.size
+
+    row = results.first
+    assert_equal 111, row.player_id
+    assert_equal "Alice", row.name
+    assert_equal 100, row.level
+    assert_equal 1000, row.strength
+    assert_equal 2000, row.defense
+    assert_equal 500, row.speed
+    assert_equal 300, row.dexterity
+    assert_equal Date.new(2024, 3, 14), row.spied_at
+  end
+
+  test "jsonl: parses multiple lines" do
+    input = <<~JSONL
+      {"Name": "Alice [111]", "Level": "100", "Strength": "1,000", "Defense": "2,000", "Speed": "500", "Dexterity": "300", "Total": "3,800", "FF Bonus": "3.00", "Last Update": "14/03/24"}
+      {"Name": "Bob [222]", "Level": "50", "Strength": "500", "Defense": "500", "Speed": "100", "Dexterity": "100", "Total": "1,200", "FF Bonus": "3.00", "Last Update": "01/07/23"}
+    JSONL
+
+    results = Recon::SpyDataParser.parse_jsonl(input)
+    assert_equal 2, results.size
+  end
+
+  test "jsonl: strips commas from large numbers" do
+    input = '{"Name": "Tim [179208]", "Level": "100", "Strength": "1,000,004,235,571,900", "Defense": "1,232,505,463", "Speed": "423,436,139,476", "Dexterity": "5,017,752,739,987", "Total": "1,005,446,656,956,826", "FF Bonus": "3.00", "Last Update": "17/02/26"}'
+
+    row = Recon::SpyDataParser.parse_jsonl(input).first
+    assert_equal 1_000_004_235_571_900, row.strength
+    assert_equal 1_232_505_463, row.defense
+  end
+
+  test "jsonl: skips lines without valid player ID" do
+    input = '{"Name": "BadData", "Strength": "100", "Last Update": "14/03/24"}'
+
+    results = Recon::SpyDataParser.parse_jsonl(input)
+    assert_equal 0, results.size
+  end
+
+  test "jsonl: skips lines without valid date" do
+    input = '{"Name": "Alice [111]", "Strength": "100", "Defense": "100", "Speed": "100", "Dexterity": "100", "Last Update": "N/A"}'
+
+    results = Recon::SpyDataParser.parse_jsonl(input)
+    assert_equal 0, results.size
+  end
+
+  test "jsonl: skips malformed JSON lines" do
+    input = <<~JSONL
+      not valid json
+      {"Name": "Alice [111]", "Level": "100", "Strength": "1,000", "Defense": "2,000", "Speed": "500", "Dexterity": "300", "Total": "3,800", "FF Bonus": "3.00", "Last Update": "14/03/24"}
+    JSONL
+
+    results = Recon::SpyDataParser.parse_jsonl(input)
+    assert_equal 1, results.size
+    assert_equal 111, results.first.player_id
+  end
+
+  test "jsonl: returns empty array for empty input" do
+    assert_equal [], Recon::SpyDataParser.parse_jsonl("")
+    assert_equal [], Recon::SpyDataParser.parse_jsonl(nil)
+  end
 end

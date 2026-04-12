@@ -107,6 +107,39 @@ class Recon::SpyDataParser
     nil
   end
 
-  private_class_method :parse_row, :parse_format_1, :parse_format_2,
+  def self.parse_jsonl(input)
+    return [] if input.blank?
+
+    input.each_line.filter_map do |line|
+      line = line.strip
+      next if line.empty?
+
+      parse_jsonl_line(line)
+    end
+  end
+
+  def self.parse_jsonl_line(line)
+    data = JSON.parse(line)
+    _, player_id = extract_name_and_id(data["Name"])
+    return nil unless player_id
+
+    spied_at = parse_date(data["Last Update"])
+    return nil unless spied_at
+
+    SpyRow.new(
+      player_id: player_id,
+      name: data["Name"]&.sub(/\s*\[\d+\]\s*$/, ""),
+      level: data["Level"]&.to_i,
+      strength: parse_number(data["Strength"]),
+      defense: parse_number(data["Defense"]),
+      speed: parse_number(data["Speed"]),
+      dexterity: parse_number(data["Dexterity"]),
+      spied_at: spied_at
+    )
+  rescue JSON::ParserError
+    nil
+  end
+
+  private_class_method :parse_row, :parse_format_1, :parse_format_2, :parse_jsonl_line,
     :format_with_faction?, :extract_name_and_id, :parse_number, :parse_level, :parse_date
 end

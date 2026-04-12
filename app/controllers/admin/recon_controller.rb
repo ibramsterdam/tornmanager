@@ -82,6 +82,55 @@ module Admin
 
     private
 
+    def import_rows(rows)
+      seconds_per_job = 9 # 3 API calls/job, ~20 calls/min max
+
+      existing_ends_at = Rails.cache.read("recon:import_ends_at")
+      queue_starts_at = if existing_ends_at.present? && existing_ends_at > Time.current
+        existing_ends_at
+      else
+        Time.current
+      end
+
+      queued = 0
+      skipped = 0
+      rows.each do |row|
+        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at)
+          skipped += 1
+          next
+        end
+
+        Recon::TrainingSample.create!(
+          player_id: row.player_id,
+          strength: row.strength,
+          defense: row.defense,
+          speed: row.speed,
+          dexterity: row.dexterity,
+          spied_at: row.spied_at
+        )
+
+        Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
+          player_id: row.player_id,
+          spied_at: row.spied_at.to_s
+        )
+        queued += 1
+      end
+
+      if queued > 0
+        new_ends_at = queue_starts_at + (queued * seconds_per_job).seconds
+        remaining_seconds = (new_ends_at - Time.current).to_i
+
+        Rails.cache.write("recon:import_ends_at", new_ends_at, expires_in: remaining_seconds.seconds)
+      end
+
+      skip_msg = skipped > 0 ? " #{skipped} already collected." : ""
+      if queued > 0
+        redirect_to admin_recon_path, notice: "Queued #{queued} training samples.#{skip_msg} ~#{queued * 3} API calls, ~#{((queued * seconds_per_job) / 60.0).ceil} min."
+      else
+        redirect_to admin_recon_path, notice: "All #{skipped} samples already collected. Nothing to queue."
+      end
+    end
+
     def fetch_personalstats_for_predict(api_key, torn_id)
       batches = Recon::FeatureSet::API_STAT_NAMES.each_slice(10).to_a
       batches.reduce({}) do |result, batch|
@@ -177,6 +226,22 @@ module Admin
       redirect_to admin_recon_path, notice: "Added sample for #{torn_id} (#{total} total). Collecting personalstats..."
     end
 
+    def import_file
+      file = params[:file]
+      unless file.present?
+        return redirect_to admin_recon_path, alert: "Please select a file to upload."
+      end
+
+      content = file.read.force_encoding("UTF-8")
+      rows = Recon::SpyDataParser.parse_jsonl(content)
+
+      if rows.empty?
+        return redirect_to admin_recon_path, alert: "Could not parse any rows. Check the file format."
+      end
+
+      import_rows(rows)
+    end
+
     def import
       raw_data = params[:spy_data]
 
@@ -190,52 +255,7 @@ module Admin
         return redirect_to admin_recon_path, alert: "Could not parse any rows. Check the format."
       end
 
-      seconds_per_job = 9 # 3 API calls/job, ~20 calls/min max
-
-      existing_ends_at = Rails.cache.read("recon:import_ends_at")
-      queue_starts_at = if existing_ends_at.present? && existing_ends_at > Time.current
-        existing_ends_at
-      else
-        Time.current
-      end
-
-      queued = 0
-      skipped = 0
-      rows.each do |row|
-        if Recon::TrainingSample.exists?(player_id: row.player_id, spied_at: row.spied_at)
-          skipped += 1
-          next
-        end
-
-        Recon::TrainingSample.create!(
-          player_id: row.player_id,
-          strength: row.strength,
-          defense: row.defense,
-          speed: row.speed,
-          dexterity: row.dexterity,
-          spied_at: row.spied_at
-        )
-
-        Recon::CollectTrainingSampleJob.set(wait_until: queue_starts_at + (queued * seconds_per_job).seconds).perform_later(
-          player_id: row.player_id,
-          spied_at: row.spied_at.to_s
-        )
-        queued += 1
-      end
-
-      if queued > 0
-        new_ends_at = queue_starts_at + (queued * seconds_per_job).seconds
-        remaining_seconds = (new_ends_at - Time.current).to_i
-
-        Rails.cache.write("recon:import_ends_at", new_ends_at, expires_in: remaining_seconds.seconds)
-      end
-
-      skip_msg = skipped > 0 ? " #{skipped} already collected." : ""
-      if queued > 0
-        redirect_to admin_recon_path, notice: "Queued #{queued} training samples.#{skip_msg} ~#{queued * 3} API calls, ~#{((queued * seconds_per_job) / 60.0).ceil} min."
-      else
-        redirect_to admin_recon_path, notice: "All #{skipped} samples already collected. Nothing to queue."
-      end
+      import_rows(rows)
     end
   end
 end

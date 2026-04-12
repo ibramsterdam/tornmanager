@@ -79,7 +79,6 @@ class Faction < ApplicationRecord
 
   def handle_invalid_api_key!
     transaction do
-      faction_name = name
       torn_api_key&.destroy!
       self.torn_api_key = nil
       update!(setup_completed: false)
@@ -89,23 +88,7 @@ class Faction < ApplicationRecord
     end
 
     Rails.logger.info("[InvalidKey] Invalidated API key for faction #{name} (#{torn_id}), cancelled jobs")
-
-    Discord::Notifier.notify(
-      webhook_key: :error_webhook_url,
-      embed: {
-        title: "API Key Invalidated",
-        description: "The Torn API key for **#{name}** was rejected by Torn and has been removed. All background jobs for this faction have been cancelled.",
-        color: 15_105_570,
-        fields: [
-          { name: "Faction", value: "#{name} [#{torn_id}]", inline: true },
-          { name: "Action Required", value: "A leader must provide a new API key in faction settings", inline: false }
-        ],
-        footer: { text: "TornManager Key Monitor" },
-        timestamp: Time.current.iso8601
-      }
-    )
-  rescue => e
-    Rails.logger.error("[InvalidKey] Discord notification failed: #{e.message}")
+    notify_key_invalidated
   end
 
   def delete_all_data!
@@ -157,5 +140,24 @@ class Faction < ApplicationRecord
     SolidQueue::Semaphore.where(key: "war_polling_faction_#{id}").delete_all
   rescue => e
     Rails.logger.warn("Failed to cancel faction jobs for faction #{torn_id}: #{e.class} - #{e.message}")
+  end
+
+  def notify_key_invalidated
+    Discord::Notifier.notify(
+      webhook_key: :error_webhook_url,
+      embed: {
+        title: "API Key Invalidated",
+        description: "The Torn API key for **#{name}** was rejected by Torn and has been removed. All background jobs for this faction have been cancelled.",
+        color: 15_105_570,
+        fields: [
+          { name: "Faction", value: "#{name} [#{torn_id}]", inline: true },
+          { name: "Action Required", value: "A leader must provide a new API key in faction settings", inline: false }
+        ],
+        footer: { text: "TornManager Key Monitor" },
+        timestamp: Time.current.iso8601
+      }
+    )
+  rescue => e
+    Rails.logger.error("[InvalidKey] Discord notification failed for #{name}: #{e.message}")
   end
 end

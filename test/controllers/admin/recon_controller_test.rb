@@ -299,6 +299,73 @@ class Admin::ReconControllerTest < ActionDispatch::IntegrationTest
     assert_match /required/, flash[:alert]
   end
 
+  # -- Import file --
+
+  test "import_file uploads JSONL and queues jobs" do
+    tmpfile = Tempfile.new([ "spies", ".jsonl" ])
+    tmpfile.write('{"Name": "Alice [111]", "Level": "100", "Faction": "Test", "Strength": "1,000", "Defense": "2,000", "Speed": "500", "Dexterity": "300", "Total": "3,800", "FF Bonus": "3.00", "Last Update": "14/03/24"}')
+    tmpfile.rewind
+
+    file = Rack::Test::UploadedFile.new(tmpfile.path, "application/json")
+
+    assert_difference "Recon::TrainingSample.count", 1 do
+      assert_enqueued_with(job: Recon::CollectTrainingSampleJob) do
+        post import_file_admin_recon_path, params: { file: file }
+      end
+    end
+
+    sample = Recon::TrainingSample.last
+    assert_equal 111, sample.player_id
+    assert_equal 1000, sample.strength
+    assert_equal 2000, sample.defense
+    assert_equal Date.new(2024, 3, 14), sample.spied_at
+
+    assert_redirected_to admin_recon_path
+    assert_match /Queued 1/, flash[:notice]
+  ensure
+    tmpfile&.close!
+  end
+
+  test "import_file rejects missing file" do
+    post import_file_admin_recon_path
+    assert_redirected_to admin_recon_path
+    assert_match /select a file/, flash[:alert]
+  end
+
+  test "import_file rejects empty JSONL" do
+    tmpfile = Tempfile.new([ "empty", ".jsonl" ])
+    tmpfile.rewind
+
+    file = Rack::Test::UploadedFile.new(tmpfile.path, "application/json")
+    post import_file_admin_recon_path, params: { file: file }
+
+    assert_redirected_to admin_recon_path
+    assert_match /Could not parse/, flash[:alert]
+  ensure
+    tmpfile&.close!
+  end
+
+  test "import_file skips existing samples" do
+    Recon::TrainingSample.create!(
+      player_id: 111, strength: 1, defense: 1, speed: 1, dexterity: 1,
+      spied_at: Date.new(2024, 3, 14)
+    )
+
+    tmpfile = Tempfile.new([ "spies", ".jsonl" ])
+    tmpfile.write('{"Name": "Alice [111]", "Level": "100", "Faction": "Test", "Strength": "1,000", "Defense": "2,000", "Speed": "500", "Dexterity": "300", "Total": "3,800", "FF Bonus": "3.00", "Last Update": "14/03/24"}')
+    tmpfile.rewind
+
+    file = Rack::Test::UploadedFile.new(tmpfile.path, "application/json")
+
+    assert_no_difference "Recon::TrainingSample.count" do
+      post import_file_admin_recon_path, params: { file: file }
+    end
+
+    assert_match /already collected/, flash[:notice]
+  ensure
+    tmpfile&.close!
+  end
+
   test "import handles format 2 with separate rank column" do
     spy_data = "1\tPenicillin [1517799]\t100\t655,000,300,610,300\t2,761,464,594,401,500\t8,940,446,370,100\t12,344,518,438\t3,425,417,685,900,338\t30/03/26\t16 minutes ago\t81,243,777"
 
