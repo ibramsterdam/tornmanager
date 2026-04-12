@@ -17,7 +17,7 @@ module TornApi
         if response["basic"].present?
           response["basic"]
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response}"
+          raise ApiError, "No faction data returned: #{response}"
         end
       end
 

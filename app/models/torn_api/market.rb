@@ -7,7 +7,7 @@ module TornApi
       if response["pointsmarket"].present?
         response["pointsmarket"]
       else
-        raise InvalidKeyError, "Torn API authentication failed: #{response}"
+        raise ApiError, "No market data returned: #{response}"
       end
     end
   end

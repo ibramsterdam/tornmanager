@@ -39,7 +39,7 @@ module TornApi
         if response["members"].present?
           parse(response["members"])
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response}"
+          raise ApiError, "No members data returned: #{response}"
         end
       end
 

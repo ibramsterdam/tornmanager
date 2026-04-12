@@ -61,4 +61,12 @@ class FetchMemberActivityJobTest < ActiveJob::TestCase
       FetchMemberActivityJob.perform_now(@faction.id)
     end
   end
+
+  test "handles invalid key errors gracefully" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).raises(TornApi::InvalidKeyError.new("Invalid API key"))
+
+    assert_nothing_raised do
+      FetchMemberActivityJob.perform_now(@faction.id)
+    end
+  end
 end

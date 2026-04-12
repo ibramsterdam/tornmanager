@@ -24,7 +24,7 @@ module TornApi
         if response["personalstats"].present? || response["personalstats"].is_a?(Array)
           parse_personalstats(response["personalstats"], stat_batch)
         else
-          raise InvalidKeyError, "Torn API authentication failed: #{response}"
+          raise ApiError, "No personal stats data returned: #{response}"
         end
       end
 

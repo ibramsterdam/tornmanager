@@ -77,6 +77,37 @@ class Faction < ApplicationRecord
     report.save!
   end
 
+  def handle_invalid_api_key!
+    transaction do
+      faction_name = name
+      torn_api_key&.destroy!
+      self.torn_api_key = nil
+      update!(setup_completed: false)
+      stop_war_polling! if war_polling_active?
+      clear_backfill_status! if backfill_in_progress?
+      cancel_background_jobs(users.pluck(:id))
+    end
+
+    Rails.logger.info("[InvalidKey] Invalidated API key for faction #{name} (#{torn_id}), cancelled jobs")
+
+    Discord::Notifier.notify(
+      webhook_key: :error_webhook_url,
+      embed: {
+        title: "API Key Invalidated",
+        description: "The Torn API key for **#{name}** was rejected by Torn and has been removed. All background jobs for this faction have been cancelled.",
+        color: 15_105_570,
+        fields: [
+          { name: "Faction", value: "#{name} [#{torn_id}]", inline: true },
+          { name: "Action Required", value: "A leader must provide a new API key in faction settings", inline: false }
+        ],
+        footer: { text: "TornManager Key Monitor" },
+        timestamp: Time.current.iso8601
+      }
+    )
+  rescue => e
+    Rails.logger.error("[InvalidKey] Discord notification failed: #{e.message}")
+  end
+
   def delete_all_data!
     transaction do
       stop_war_polling! if war_polling_active?
@@ -109,6 +140,7 @@ class Faction < ApplicationRecord
         BackfillRankedWarsJob
         ClearBackfillStatusJob
         FetchArmoryNewsJob
+        FetchMemberActivityJob
         WarPollingJob
       ])
       .where("arguments LIKE ?", "%\"arguments\":[#{id},%")
