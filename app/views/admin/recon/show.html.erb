@@ -87,6 +87,18 @@
   <% end %>
 </div>
 
+<div class="recon-import-card">
+  <h2>Upload JSONL File</h2>
+  <p class="recon-import-hint">Upload a JSONL file with spy data. Each line should be a JSON object with Name (including [ID]), Strength, Defense, Speed, Dexterity, and Last Update fields.</p>
+
+  <%= form_with url: import_file_admin_recon_path, method: :post, multipart: true, class: "recon-import-form" do |form| %>
+    <div class="recon-import-actions">
+      <%= form.file_field :file, accept: ".jsonl,.json", class: "form-input" %>
+      <%= form.submit "Upload & Queue Jobs", class: "btn btn-primary" %>
+    </div>
+  <% end %>
+</div>
+
 <div class="table-container recon-samples-container <%= 'table-disabled' if @import_in_progress %>">
   <h2>Training Samples (<%= number_with_delimiter(@training_sample_count) %>)</h2>
 

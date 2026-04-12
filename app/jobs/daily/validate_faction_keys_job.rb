@@ -21,9 +21,8 @@ module Daily
 
         api_key.update!(faction_access: true) unless api_key.faction_access?
       rescue TornApi::InvalidKeyError
-        # Usually already handled by TornApi::Base#invalidate_api_key!, but ensure cleanup
         api_key.faction.handle_invalid_api_key!
-        Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: invalid key handled")
+        Rails.logger.info("[ValidateKeys] Faction #{api_key.faction.name}: invalid key, invalidated")
       rescue TornApi::ApiError => e
         Rails.logger.warn("[ValidateKeys] Faction #{api_key.faction.name}: #{e.message}")
       ensure
