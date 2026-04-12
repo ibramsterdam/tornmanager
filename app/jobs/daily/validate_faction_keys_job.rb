@@ -43,6 +43,5 @@ module Daily
         sleep 1
       end
     end
-
   end
 end
