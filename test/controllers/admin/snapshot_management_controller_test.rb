@@ -21,16 +21,16 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "backfill_user falls back to admin key for hof user without faction" do
+  test "backfill_user falls back to kaneki key for hof user without faction" do
     sign_in_as(@bram)
     stub_solid_queue_count
-    AdminCredentials.stubs(:api_key).returns("admin_fallback_key")
+    Rails.application.credentials.stubs(:dig).with(:kaneki, :api_key).returns("kaneki_key")
 
     hof_user = users(:user_hof_no_faction)
 
     assert_enqueued_with(
       job: BackfillSingleStatJob,
-      args: ->(args) { args.last[:api_key] == "admin_fallback_key" }
+      args: ->(args) { args.last[:api_key] == "kaneki_key" }
     ) do
       post backfill_user_admin_snapshot_management_path(hof_user)
     end
@@ -39,7 +39,7 @@ class Admin::SnapshotManagementControllerTest < ActionDispatch::IntegrationTest
   test "backfill_user returns error when no api key available" do
     sign_in_as(@bram)
     stub_solid_queue_count
-    AdminCredentials.stubs(:api_key).returns(nil)
+    Rails.application.credentials.stubs(:dig).with(:kaneki, :api_key).returns(nil)
 
     hof_user = users(:user_hof_no_faction)
     post backfill_user_admin_snapshot_management_path(hof_user)

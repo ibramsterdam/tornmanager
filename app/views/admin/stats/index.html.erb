@@ -271,6 +271,24 @@
           <span class="admin-stat-value"><%= @admin_api_peak_today %>/min</span>
         </div>
       </div>
+      <% if @api_key_breakdown.any? %>
+        <table class="admin-stats-table">
+          <thead>
+            <tr><th>Key</th><th>Owner</th><th>Calls (24h)</th><th>Peak/min</th><th>Errors</th></tr>
+          </thead>
+          <tbody>
+            <% @api_key_breakdown.each do |row| %>
+              <tr>
+                <td><code><%= row[:display_key] %></code></td>
+                <td><%= row[:owner] %></td>
+                <td><%= number_with_delimiter(row[:total]) %></td>
+                <td class="<%= row[:peak_rate] > 50 ? 'warning' : '' %>"><%= row[:peak_rate] %>/min</td>
+                <td class="<%= row[:errors] > 0 ? 'warning' : '' %>"><%= row[:errors] %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% end %>
     </div>
 
     <%# ── Data Health ── %>

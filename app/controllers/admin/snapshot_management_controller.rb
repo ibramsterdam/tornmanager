@@ -5,14 +5,16 @@ module Admin
     SECONDS_PER_API_CALL = 1.1
 
     def index
-      @users_with_gaps = users_with_missing_snapshots
+      all_gaps = users_with_missing_snapshots
+      @faction_users_with_gaps = all_gaps.select { |u| u[:user].faction_id.present? }
+      @hof_users_with_gaps = all_gaps.reject { |u| u[:user].faction_id.present? }
       @summary = calculate_summary
     end
 
     def backfill_user
       user = User.find(params[:id])
       missing_dates = missing_dates_for_user(user)
-      api_key = user.faction&.torn_api_key&.key || AdminCredentials.api_key
+      api_key = resolve_api_key(user)
 
       return render json: { success: false, message: "No API key available for #{user.name}" }, status: :unprocessable_entity if api_key.blank?
 
@@ -31,6 +33,14 @@ module Admin
     end
 
     private
+
+    def resolve_api_key(user)
+      if user.faction&.torn_api_key&.key
+        user.faction.torn_api_key.key
+      else
+        Rails.application.credentials.dig(:kaneki, :api_key)
+      end
+    end
 
     def users_with_missing_snapshots
       tracked_user_ids = User.tracked_for_stats.pluck(:id)
