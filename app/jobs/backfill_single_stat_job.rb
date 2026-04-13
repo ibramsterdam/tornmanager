@@ -4,9 +4,8 @@ class BackfillSingleStatJob < FactionApiJob
   def perform(user_id, date_str, faction_id:, batch: 1, api_key: nil)
     user = User.find(user_id)
     date = Date.parse(date_str)
-    api_key = api_key.presence || AdminCredentials.api_key
 
-    return Rails.logger.error("No API key found") if api_key.blank?
+    return Rails.logger.error("BackfillSingleStatJob: No API key for #{user.name}, skipping") if api_key.blank?
 
     stats = fetch_stats(user, date, api_key, batch)
     return if stats.nil?

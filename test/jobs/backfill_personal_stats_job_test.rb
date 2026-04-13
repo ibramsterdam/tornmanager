@@ -10,12 +10,11 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
       .merge(date: Date.parse(@date_str))
   end
 
-  test "batch 1 saves snapshot and chains batch 2" do
-    AdminCredentials.stubs(:api_key).returns("test_key")
+  test "batch 1 saves snapshot and chains batch 2 with api_key" do
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
 
     assert_enqueued_with(job: BackfillSingleStatJob, args: [ @user.id, @date_str, { faction_id: @faction.id, batch: 2, api_key: "test_key" } ]) do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1, api_key: "test_key")
     end
 
     snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
@@ -24,7 +23,6 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
   end
 
   test "batch 2 does not chain further" do
-    AdminCredentials.stubs(:api_key).returns("test_key")
     @user.personal_stat_snapshots.create!(date: @date_str, drugs_xanax: 42)
 
     batch2_stats = PersonalStatSnapshot::TRACKED_STATS_BATCH_2.values.index_with { |_| 99 }
@@ -32,13 +30,11 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(batch2_stats)
 
     assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 2)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 2, api_key: "test_key")
     end
   end
 
-  test "logs error and returns when api key is blank" do
-    AdminCredentials.stubs(:api_key).returns(nil)
-
+  test "skips when no api_key passed" do
     assert_nothing_raised do
       BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id)
     end
@@ -47,35 +43,13 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
   end
 
   test "handles API error gracefully without saving snapshot" do
-    AdminCredentials.stubs(:api_key).returns("test_key")
     TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
 
     assert_nothing_raised do
-      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id)
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, api_key: "test_key")
     end
 
     assert_nil @user.personal_stat_snapshots.find_by(date: @date_str)
-  end
-
-  test "uses passed api_key instead of AdminCredentials" do
-    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
-
-    AdminCredentials.expects(:api_key).never
-
-    BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1, api_key: "faction_key_123")
-
-    snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
-    assert snapshot, "Expected snapshot to be saved"
-  end
-
-  test "falls back to AdminCredentials when no api_key passed" do
-    AdminCredentials.stubs(:api_key).returns("owner_key")
-    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@batch1_stats)
-
-    BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 1)
-
-    snapshot = @user.personal_stat_snapshots.find_by(date: @date_str)
-    assert snapshot, "Expected snapshot to be saved"
   end
 
   test "chains batch 2 with the same api_key" do
@@ -111,18 +85,14 @@ class BackfillPersonalStatsJobTest < ActiveJob::TestCase
     end
   end
 
-  test "falls back to AdminCredentials api_key when faction has no api key" do
+  test "skips when faction has no api key" do
     @faction.api_keys.destroy_all
     @faction.reload
-    AdminCredentials.stubs(:api_key).returns("owner_fallback_key")
 
     start_date = Date.new(2026, 2, 20)
     end_date = Date.new(2026, 2, 20)
 
-    assert_enqueued_with(
-      job: BackfillSingleStatJob,
-      args: [ @user.id, "2026-02-20", { faction_id: @faction.id, api_key: "owner_fallback_key" } ]
-    ) do
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
       BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
     end
   end
@@ -140,7 +110,6 @@ class BackfillPersonalStatsJobTest < ActiveJob::TestCase
     BackfillPersonalStatsJob.perform_now(@faction.id, start_date.to_s, end_date.to_s)
 
     @faction.reload
-    assert_equal original_ends_at.to_i, @faction.backfill_ends_at.to_i,
-      "backfill_ends_at should not be overwritten by the job"
+    assert_equal original_ends_at.to_i, @faction.backfill_ends_at.to_i
   end
 end

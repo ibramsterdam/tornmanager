@@ -5,8 +5,8 @@ class BackfillRankedWarsJob < FactionApiJob
     faction = Faction.find_by(id: faction_id)
     return unless faction
 
-    api_key = faction.torn_api_key&.key || AdminCredentials.api_key
-    return unless api_key.present?
+    api_key = faction.torn_api_key&.key
+    return Rails.logger.warn("BackfillRankedWarsJob: No API key for faction #{faction.name}, skipping") unless api_key
 
     wars = TornApi::Faction::RankedWars.new(api_key, faction.torn_id).fetch(limit: limit)
     wars_needing_reports = []

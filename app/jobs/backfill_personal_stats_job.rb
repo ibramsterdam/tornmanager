@@ -5,7 +5,8 @@ class BackfillPersonalStatsJob < ApplicationJob
 
   def perform(faction_id, start_date, end_date)
     faction = Faction.find(faction_id)
-    api_key = faction.torn_api_key&.key || AdminCredentials.api_key
+    api_key = faction.torn_api_key&.key
+    return Rails.logger.warn("BackfillPersonalStatsJob: No API key for faction #{faction.name}, skipping") unless api_key
     users = faction.users.active.to_a
     dates = (start_date.to_date..end_date.to_date).to_a
 

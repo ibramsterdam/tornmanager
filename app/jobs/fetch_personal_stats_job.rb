@@ -1,17 +1,19 @@
-class FetchPersonalStatsJob < AdminApiJob
+class FetchPersonalStatsJob < FactionApiJob
+  limits_concurrency to: 1, key: ->(user, api_key:, **) { api_key }, group: "PersonalStatsApiCalls"
+
   MAX_RETRIES = 3
 
-  def perform(user, batch: 1, stats_date: Date.current.yesterday, retries: 0)
-    stats = fetch_stats(user, batch, stats_date)
+  def perform(user, api_key:, batch: 1, stats_date: Date.current.yesterday, retries: 0)
+    stats = fetch_stats(api_key, user, batch, stats_date)
 
     user.check_hof_eligibility!(stats[:items_used_stat_enhancers]) if batch == 1
     save_snapshot(user, stats, stats_date)
 
-    FetchPersonalStatsJob.perform_later(user, batch: 2, stats_date: stats_date) if batch == 1
+    FetchPersonalStatsJob.perform_later(user, api_key: api_key, batch: 2, stats_date: stats_date) if batch == 1
   rescue TornApi::InvalidKeyError => e
     if retries < MAX_RETRIES
       Rails.logger.warn("FetchPersonalStatsJob: Failed for #{user.name} (#{user.torn_id}): #{e.message}, retry #{retries + 1}/#{MAX_RETRIES} in 1 hour")
-      FetchPersonalStatsJob.set(wait: 1.hour).perform_later(user, batch: batch, stats_date: stats_date, retries: retries + 1)
+      FetchPersonalStatsJob.set(wait: 1.hour).perform_later(user, api_key: api_key, batch: batch, stats_date: stats_date, retries: retries + 1)
     else
       Rails.logger.error("FetchPersonalStatsJob: Giving up on #{user.name} (#{user.torn_id}) after #{MAX_RETRIES} retries: #{e.message}")
       Discord::Notifier.notify(
@@ -33,11 +35,11 @@ class FetchPersonalStatsJob < AdminApiJob
 
   private
 
-  def fetch_stats(user, batch, stats_date)
+  def fetch_stats(api_key, user, batch, stats_date)
     stat_batch = batch == 1 ? PersonalStatSnapshot::TRACKED_STATS_BATCH_1 : PersonalStatSnapshot::TRACKED_STATS_BATCH_2
 
     TornApi::User::PersonalStats.new(
-      AdminCredentials.api_key,
+      api_key,
       user.torn_id,
       timestamp: stats_date.end_of_day.to_i,
       stat_batch: stat_batch
