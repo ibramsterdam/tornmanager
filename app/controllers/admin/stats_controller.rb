@@ -108,6 +108,27 @@ module Admin
       @admin_api_total = admin_calls.count
       @admin_api_peak_all_time = peak_rate(admin_calls)
       @admin_api_peak_today = peak_rate(admin_calls.today)
+
+      @api_key_breakdown = ApiCall.where("created_at > ?", 1.day.ago)
+        .group(:api_key)
+        .select(
+          "api_key",
+          "COUNT(*) as total_calls",
+          "SUM(CASE WHEN status = 'error' THEN 1 ELSE 0 END) as error_count"
+        )
+        .order("total_calls DESC")
+        .map do |row|
+          key = row.api_key
+          owner = resolve_key_owner(key)
+          {
+            key: key,
+            display_key: "#{key[0..3]}...#{key[-4..]}",
+            owner: owner,
+            total: row.total_calls,
+            errors: row.error_count,
+            peak_rate: peak_rate(ApiCall.where(api_key: key))
+          }
+        end
     end
 
     def peak_rate(scope)
@@ -152,6 +173,20 @@ module Admin
             backfill_pending: f.armory_backfill_pending?
           }
         end
+    end
+
+    def resolve_key_owner(key)
+      return "Admin" if key == AdminCredentials.api_key
+      return "Kaneki (HoF)" if key == Rails.application.credentials.dig(:kaneki, :api_key)
+
+      api_key = ApiKey.find_by(key: key)
+      if api_key&.faction
+        api_key.faction.name
+      elsif api_key&.user
+        api_key.user.name
+      else
+        "Unknown"
+      end
     end
 
     def calculate_snapshot_gaps
