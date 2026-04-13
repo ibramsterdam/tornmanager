@@ -6,7 +6,6 @@ class AdminApiJobTest < ActiveJob::TestCase
   end
 
   test "subclasses inherit the admin queue" do
-    assert_equal "admin", FetchPersonalStatsJob.new.queue_name
     assert_equal "admin", SyncFactionMembersJob.new.queue_name
     assert_equal "admin", Daily::XanaxPaymentsJob.new.queue_name
     assert_equal "admin", Daily::StockDividendJob.new.queue_name

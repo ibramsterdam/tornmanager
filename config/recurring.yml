@@ -18,18 +18,18 @@ production:
     class: Daily::DataRetentionCleanupJob
     queue: default
     schedule: at 12am every day
-  faction_membership_sync:
-    class: Daily::FactionMembershipSyncJob
+  faction_member_sync:
+    class: Daily::FactionMemberSyncJob
     queue: default
     schedule: at 2:30am every day
+  hof_member_sync:
+    class: Daily::HofMemberSyncJob
+    queue: default
+    schedule: at 3am every day
   ranked_war_refresh:
     class: Daily::RankedWarRefreshJob
     queue: default
     schedule: at 2am every day
-  daily_stats_harvest:
-    class: Daily::PersonalStatsJob
-    queue: default
-    schedule: at 3am every day
   fetch_xanax_payments:
     class: Daily::XanaxPaymentsJob
     queue: default
@@ -49,10 +49,6 @@ production:
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob
-#     queue: default
-#     schedule: every 20 seconds
-#   daily_stats_harvest:
-#     class: Daily::PersonalStatsJob
 #     queue: default
 #     schedule: every 20 seconds
 
