@@ -65,9 +65,7 @@ class Daily::HofMemberSyncJobTest < ActiveJob::TestCase
 
   test "does not backfill when hof user has no gaps" do
     (PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date).each do |date|
-      @kaneki.personal_stat_snapshots.find_or_create_by!(date: date) do |s|
-        s.drugs_xanax = 100
-      end
+      create_complete_snapshot(@kaneki, date)
     end
 
     Daily::HofMemberSyncJob.perform_now

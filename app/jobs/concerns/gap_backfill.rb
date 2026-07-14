@@ -8,14 +8,17 @@ module GapBackfill
   private
 
   def backfill_gaps(user, api_key)
+    window_start = PersonalStatSnapshot.tracking_start_date
+    window_end = PersonalStatSnapshot.tracking_end_date
     existing = user.personal_stat_snapshots.pluck(:date).to_set
-    expected = (PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date).to_a
+    partial = user.personal_stat_snapshots.partial.where(date: window_start..window_end).pluck(:date)
     yesterday = Date.current.yesterday
 
-    missing = expected.reject { |d| existing.include?(d) || d == yesterday }
-    return if missing.empty?
+    missing = (window_start..window_end).reject { |d| existing.include?(d) || d == yesterday }
+    targets = (missing + partial.reject { |d| d == yesterday }).uniq.sort
+    return if targets.empty?
 
-    missing.last(BACKFILL_GAP_LIMIT).each do |date|
+    targets.last(BACKFILL_GAP_LIMIT).each do |date|
       BackfillSingleStatJob.perform_later(user.id, date.to_s, faction_id: user.faction_id, api_key: api_key)
     end
   end

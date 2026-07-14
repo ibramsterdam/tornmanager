@@ -215,6 +215,25 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/stale 40d/, row.text)
   end
 
+  test "completeness counts partially-filled snapshots as incomplete" do
+    PersonalStatSnapshot.delete_all
+    PersonalStatSnapshot.create!(
+      user: @admin, date: 3.days.ago.to_date,
+      drugs_xanax: 1, items_used_energy_drinks: 1, other_refills_energy: 1,
+      other_refills_nerve: 1, items_used_boosters: 1, items_used_stat_enhancers: 1,
+      missions_contracts_total: 1, crimes_offenses_total: 1, other_activity_time: 1,
+      networth_total: 1, attacking_networth_money_mugged: 1
+    )
+    PersonalStatSnapshot.create!(user: @bert, date: 3.days.ago.to_date, drugs_xanax: 5)
+
+    get admin_stats_path
+    assert_response :success
+
+    row = css_select(".admin-stat-row").find { |r| r.text.include?("Complete / incomplete") }
+    assert_includes row.css(".admin-stat-value").text, "1 / 1",
+      "a row missing batch-2 columns must count as incomplete"
+  end
+
   test "gap stats are computed correctly" do
     PersonalStatSnapshot.stubs(:tracking_start_date).returns(Date.new(2024, 1, 1))
     PersonalStatSnapshot.stubs(:tracking_end_date).returns(Date.new(2024, 1, 2))
