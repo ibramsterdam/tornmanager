@@ -2,6 +2,10 @@ module Admin
   class StatsController < ApplicationController
     before_action :require_admin
 
+    # Factions with no completed setup and no key that haven't changed in this
+    # long are surfaced as "stale" (and are the target of the upcoming cleanup).
+    STALE_FACTION_AFTER = 30.days
+
     def index
       load_user_stats
       load_subscription_stats
@@ -12,6 +16,7 @@ module Admin
       load_api_stats
       load_sign_in_stats
       load_armory_stats
+      load_pipeline_stats
     end
 
     private
@@ -39,12 +44,39 @@ module Admin
     def load_faction_stats
       @total_factions = Faction.count
       @factions_with_backfill = Faction.where("backfill_ends_at > ?", Time.current).count
-      @faction_details = Faction
+
+      last_sync_by_faction = Rails.cache.fetch("admin_stats:faction_last_sync", expires_in: 15.minutes) do
+        MemberActivitySnapshot.group(:faction_id).maximum(:recorded_at)
+      end
+
+      details = Faction
         .left_joins(:users)
         .includes(:torn_api_key, :tornstats_api_key)
         .group("factions.id")
         .select("factions.*, COUNT(users.id) as member_count")
-        .order(setup_completed: :desc, name: :asc)
+
+      @faction_rows = details.map do |f|
+        status, stale_days =
+          if f.setup_completed?
+            [ :active, nil ]
+          elsif f.updated_at < STALE_FACTION_AFTER.ago
+            [ :stale, (Date.current - f.updated_at.to_date).to_i ]
+          else
+            [ :no_setup, nil ]
+          end
+
+        {
+          faction: f,
+          member_count: f.member_count,
+          status: status,
+          stale_days: stale_days,
+          caps: [ f.setup_completed?, f.torn_api_key.present?, f.tornstats_api_key.present?,
+                  f.setup_completed? && f.torn_api_key.present?, f.backfill_in_progress? ],
+          last_sync: last_sync_by_faction[f.id]
+        }
+      end.sort_by { |row| [ { active: 0, stale: 1, no_setup: 2 }[row[:status]], -row[:member_count] ] }
+
+      @active_factions = @faction_rows.count { |r| r[:status] == :active }
     end
 
     def load_snapshot_stats
@@ -109,6 +141,7 @@ module Admin
         )
         .count
       @incomplete_snapshots = @total_snapshots - @complete_snapshots
+      @completeness_pct = @total_snapshots > 0 ? ((@complete_snapshots.to_f / @total_snapshots) * 100).round(1) : nil
     end
 
     def load_api_stats
@@ -151,6 +184,25 @@ module Admin
             peak_rate: peak_by_key[key]
           }
         end
+
+      @per_key_budget = TornApi::RateLimiter::REQUESTS_PER_MINUTE
+      @global_budget = TornApi::RateLimiter::GLOBAL_REQUESTS_PER_MINUTE
+      @keys_over_budget = @api_key_breakdown.count { |r| r[:peak_rate] > @per_key_budget }
+      @api_key_rows, singles = @api_key_breakdown.partition { |r| r[:total] > 1 || r[:errors] > 0 }
+      @api_single_call_keys = singles.size
+    end
+
+    # Failed/blocked counts live in the solid_queue database; guard so a
+    # queue-db hiccup can't take down the stats page.
+    def load_pipeline_stats
+      @pipeline_stats = {
+        failed: SolidQueue::FailedExecution.count,
+        blocked: SolidQueue::BlockedExecution.count,
+        scheduled: SolidQueue::ScheduledExecution.count
+      }
+    rescue => e
+      Rails.logger.error("[Admin::Stats] pipeline stats unavailable: #{e.message}")
+      @pipeline_stats = nil
     end
 
     def peak_rate(scope)

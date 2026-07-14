@@ -1126,3 +1126,128 @@
 .quick-add-grid .predict-input:first-child {
   width: 140px;
 }
+
+/* ── System Stats redesign ──────────────────────────────────────────── */
+
+.admin-stats-asof {
+  margin-left: auto;
+  color: var(--gray-500);
+  font-size: 11.5px;
+}
+
+/* health strip */
+.admin-health { display: flex; gap: 10px; flex-wrap: wrap; margin: var(--space-4) 0 var(--space-5); }
+.admin-hpill {
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--gray-700); border-radius: 999px;
+  padding: 6px 14px 6px 10px; font-size: 12.5px;
+  background: var(--gray-900); color: var(--gray-200);
+  text-decoration: none;
+}
+.admin-hpill .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.admin-hpill b { font-weight: 700; }
+.admin-hpill .why { color: var(--gray-400); }
+.admin-hpill.ok { border-color: rgba(34, 197, 94, 0.4); }
+.admin-hpill.ok .dot { background: #22c55e; }
+.admin-hpill.warn { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.08); }
+.admin-hpill.warn .dot { background: #f59e0b; }
+.admin-hpill.bad { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.08); }
+.admin-hpill.bad .dot { background: #ef4444; }
+
+/* KPI hero row */
+.admin-kpis {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px; margin-bottom: var(--space-8);
+}
+.admin-kpi {
+  background: var(--gray-900); border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md); padding: 12px 14px;
+}
+.admin-kpi .v { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+.admin-kpi .v small { font-size: 12px; color: var(--gray-500); font-weight: 400; }
+.admin-kpi .k { font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+.admin-kpi .sub { font-size: 11.5px; color: var(--gray-400); margin-top: 4px; }
+.admin-kpi.warn .v { color: #f59e0b; }
+.admin-kpi.bad .v { color: #ef4444; }
+.admin-kpi.good .v { color: #22c55e; }
+
+/* sections */
+.admin-stats-section { margin-bottom: var(--space-8); }
+.admin-stats-sechead {
+  display: flex; align-items: baseline; gap: 10px;
+  border-bottom: 1px solid var(--gray-800);
+  padding-bottom: 8px; margin-bottom: var(--space-4);
+}
+.admin-stats-sechead h2 {
+  font-size: 13px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.12em; margin: 0; border: none; padding: 0;
+}
+.admin-stats-panel h3 {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--gray-400); margin: 0 0 10px;
+}
+.admin-span2 { grid-column: span 2; }
+.admin-stats-grid-api { grid-template-columns: minmax(280px, 1fr) 2fr; }
+@media (max-width: 900px) {
+  .admin-stats-grid-api { grid-template-columns: 1fr; }
+  .admin-span2 { grid-column: auto; }
+}
+
+/* scrollable tables: constant page height, whatever the row count */
+.admin-tscroll {
+  overflow: auto;
+  max-height: 320px;
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-sm);
+  background: var(--gray-1000);
+}
+.admin-tscroll.tall { max-height: 420px; }
+.admin-tscroll .admin-stats-table { margin-top: 0; }
+.admin-tscroll thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--gray-1000);
+}
+.admin-tscroll td, .admin-tscroll th { white-space: nowrap; padding: 5px 12px; }
+.admin-tscroll thead th { padding-top: 7px; padding-bottom: 7px; }
+.admin-num { text-align: right; font-variant-numeric: tabular-nums; }
+th.admin-num { text-align: right; }
+.admin-muted { color: var(--gray-500); }
+.admin-folded td { color: var(--gray-500); }
+.admin-stats-footnote { color: var(--gray-500); font-size: 11px; margin: 8px 0 0; }
+.admin-plain-link { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+
+/* status chips */
+.admin-chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; border-radius: 4px; padding: 1px 8px;
+}
+.admin-chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+.admin-chip.ok { background: rgba(34, 197, 94, 0.12); color: #22c55e; }
+.admin-chip.ok::before { background: #22c55e; }
+.admin-chip.warn { background: rgba(245, 158, 11, 0.12); color: #f59e0b; }
+.admin-chip.warn::before { background: #f59e0b; }
+.admin-chip.off { background: rgba(115, 115, 115, 0.15); color: var(--gray-500); }
+.admin-chip.off::before { background: var(--gray-500); }
+
+/* faction capability dots */
+.admin-caps { display: inline-flex; gap: 5px; }
+.admin-cap { width: 8px; height: 8px; border-radius: 2px; background: var(--gray-700); }
+.admin-cap.on { background: #22c55e; }
+
+/* api key budget bars */
+.admin-bud { display: inline-flex; align-items: center; gap: 8px; }
+.admin-bud .track { width: 72px; height: 6px; border-radius: 3px; background: var(--gray-700); overflow: hidden; flex: none; }
+.admin-bud .fill { height: 100%; border-radius: 3px; background: var(--blue-500); }
+.admin-bud.over .fill { background: #ef4444; }
+.admin-bud .n { min-width: 58px; text-align: right; font-variant-numeric: tabular-nums; }
+.admin-bud.over .n { color: #ef4444; font-weight: 700; }
+
+/* 7-day snapshot chart */
+.admin-chart { padding: 6px 2px 0; margin-top: var(--space-3); }
+.admin-chart-title { font-size: 11px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; }
+.admin-chart-plot { display: flex; align-items: flex-end; gap: 6px; height: 110px; }
+.admin-chart-bar { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; gap: 4px; }
+.admin-chart-bar .b { width: 100%; max-width: 44px; background: var(--blue-500); border-radius: 3px 3px 0 0; }
+.admin-chart-bar .n { font-size: 11px; color: var(--gray-400); font-variant-numeric: tabular-nums; }
+.admin-chart-x { display: flex; gap: 6px; margin-top: 6px; }
+.admin-chart-x span { flex: 1; text-align: center; font-size: 10.5px; color: var(--gray-500); }
