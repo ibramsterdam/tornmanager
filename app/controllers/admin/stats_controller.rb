@@ -51,14 +51,26 @@ module Admin
       @total_snapshots = PersonalStatSnapshot.count
       @earliest_snapshot = PersonalStatSnapshot.minimum(:timestamp)
       @latest_snapshot = PersonalStatSnapshot.maximum(:timestamp)
-      @unique_snapshot_days = PersonalStatSnapshot.distinct.pluck(Arel.sql("DATE(timestamp, 'unixepoch')")).count
+      @unique_snapshot_days = PersonalStatSnapshot.distinct.count(:date)
 
-      @activity_total_snapshots = MemberActivitySnapshot.count
-      @activity_total_polls = MemberActivitySnapshot.distinct.count(:recorded_at)
-      @activity_members_tracked = MemberActivitySnapshot.distinct.count(:torn_member_id)
+      # member_activity_snapshots is millions of rows and grows ~5.7k/day;
+      # the distinct counts are full scans, so serve them from cache.
+      activity = Rails.cache.fetch("admin_stats:member_activity", expires_in: 15.minutes) do
+        {
+          total: MemberActivitySnapshot.count,
+          polls: MemberActivitySnapshot.distinct.count(:recorded_at),
+          members: MemberActivitySnapshot.distinct.count(:torn_member_id),
+          earliest: MemberActivitySnapshot.minimum(:recorded_at),
+          latest: MemberActivitySnapshot.maximum(:recorded_at)
+        }
+      end
+
+      @activity_total_snapshots = activity[:total]
+      @activity_total_polls = activity[:polls]
+      @activity_members_tracked = activity[:members]
       @activity_factions_polled = Faction.where(setup_completed: true).joins(:torn_api_key).count
-      @activity_earliest = MemberActivitySnapshot.minimum(:recorded_at)
-      @activity_latest = MemberActivitySnapshot.maximum(:recorded_at)
+      @activity_earliest = activity[:earliest]
+      @activity_latest = activity[:latest]
       @activity_daily_growth = @activity_total_polls > 0 ? (@activity_total_snapshots / [ @activity_total_polls, 1 ].max) * 96 : 0
     end
 
@@ -109,6 +121,16 @@ module Admin
       @admin_api_peak_all_time = peak_rate(admin_calls)
       @admin_api_peak_today = peak_rate(admin_calls.today)
 
+      # One pass over the 24h window for every key's peak — per-key
+      # peak_rate() calls were a full table scan each.
+      peak_by_key = Hash.new(0)
+      ApiCall.where("created_at > ?", 1.day.ago)
+        .group(:api_key, ApiCall::MINUTE_BUCKET)
+        .count
+        .each do |(key, _bucket), calls|
+          peak_by_key[key] = calls if calls > peak_by_key[key]
+        end
+
       @api_key_breakdown = ApiCall.where("created_at > ?", 1.day.ago)
         .group(:api_key)
         .select(
@@ -126,7 +148,7 @@ module Admin
             owner: owner,
             total: row.total_calls,
             errors: row.error_count,
-            peak_rate: peak_rate(ApiCall.where(api_key: key))
+            peak_rate: peak_by_key[key]
           }
         end
     end
@@ -159,17 +181,20 @@ module Admin
       @armory_earliest = ArmoryNewsEntry.minimum(:occurred_at)
       @armory_latest = ArmoryNewsEntry.maximum(:occurred_at)
 
+      counts = ArmoryNewsEntry.group(:faction_id).count
+      earliest = ArmoryNewsEntry.group(:faction_id).minimum(:occurred_at)
+      latest = ArmoryNewsEntry.group(:faction_id).maximum(:occurred_at)
+
       @armory_by_faction = Faction
         .where(setup_completed: true)
         .includes(:torn_api_key)
         .order(:name)
         .map do |f|
-          entries = f.armory_news_entries
           {
             faction: f,
-            count: entries.count,
-            earliest: entries.minimum(:occurred_at),
-            latest: entries.maximum(:occurred_at),
+            count: counts.fetch(f.id, 0),
+            earliest: earliest[f.id],
+            latest: latest[f.id],
             backfill_pending: f.armory_backfill_pending?
           }
         end
@@ -193,34 +218,23 @@ module Admin
       tracked_user_ids = User.tracked_for_stats.pluck(:id)
       return set_empty_gap_stats if tracked_user_ids.empty?
 
-      existing_snapshots = PersonalStatSnapshot
-        .where(user_id: tracked_user_ids)
-        .pluck(:user_id, :date)
-        .group_by(&:first)
-        .transform_values { |pairs| pairs.map(&:last).to_set }
-
       start_date = PersonalStatSnapshot.tracking_start_date
       end_date = PersonalStatSnapshot.tracking_end_date
-      expected_dates = (start_date..end_date).to_a
+      expected_days = (start_date..end_date).count
+      window = PersonalStatSnapshot.where(user_id: tracked_user_ids, date: start_date..end_date)
 
-      users_with_gaps = 0
-      total_missing = 0
-      missing_by_date = Hash.new(0)
+      # Two grouped queries instead of loading every (user_id, date) pair
+      # into Ruby.
+      days_per_user = window.group(:user_id).distinct.count(:date)
+      users_per_date = window.group(:date).distinct.count(:user_id)
 
-      tracked_user_ids.each do |user_id|
-        user_snapshots = existing_snapshots[user_id] || Set.new
-        missing_dates = expected_dates - user_snapshots.to_a
-
-        if missing_dates.any?
-          users_with_gaps += 1
-          total_missing += missing_dates.size
-          missing_dates.each { |d| missing_by_date[d] += 1 }
-        end
-      end
-
-      @users_with_gaps = users_with_gaps
-      @total_missing_snapshot_days = total_missing
-      @missing_dates_summary = missing_by_date.sort_by { |date, _| date }.last(10).reverse
+      @users_with_gaps = tracked_user_ids.count { |id| days_per_user.fetch(id, 0) < expected_days }
+      @total_missing_snapshot_days = tracked_user_ids.sum { |id| expected_days - days_per_user.fetch(id, 0) }
+      @missing_dates_summary = (start_date..end_date)
+        .map { |date| [ date, tracked_user_ids.size - users_per_date.fetch(date, 0) ] }
+        .select { |_, missing| missing.positive? }
+        .last(10)
+        .reverse
     end
 
     def set_empty_gap_stats
