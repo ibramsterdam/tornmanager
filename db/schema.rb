@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_07_200222) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_14_210000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -23,6 +23,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_200222) do
     t.integer "torn_api_timestamp"
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
+    t.index ["api_key", "created_at"], name: "index_api_calls_on_api_key_and_created_at"
     t.index ["created_at"], name: "index_api_calls_on_created_at"
     t.index ["faction_id"], name: "index_api_calls_on_faction_id"
     t.index ["user_id", "created_at"], name: "index_api_calls_on_user_id_and_created_at"
@@ -57,6 +58,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_200222) do
     t.index ["faction_id", "player_id", "action"], name: "idx_on_faction_id_player_id_action_86316add96"
     t.index ["faction_id", "torn_news_id"], name: "index_armory_news_entries_on_faction_id_and_torn_news_id", unique: true
     t.index ["faction_id"], name: "index_armory_news_entries_on_faction_id"
+    t.index ["occurred_at"], name: "index_armory_news_entries_on_occurred_at"
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -113,6 +115,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_07_200222) do
     t.index ["faction_id", "recorded_at"], name: "index_member_activity_snapshots_on_faction_id_and_recorded_at"
     t.index ["faction_id", "torn_member_id", "recorded_at"], name: "idx_activity_faction_member_time"
     t.index ["faction_id"], name: "index_member_activity_snapshots_on_faction_id"
+    t.index ["recorded_at"], name: "index_member_activity_snapshots_on_recorded_at"
   end
 
   create_table "personal_stat_snapshots", force: :cascade do |t|

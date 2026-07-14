@@ -164,4 +164,42 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "h1", text: "System Stats"
   end
+
+  test "api key breakdown peak reflects only the last 24 hours" do
+    key = "PEAKWINDOWKEY123"
+    # burst of 3 calls in one minute, two days ago — outside the 24h window
+    travel_to 2.days.ago.change(min: 0, sec: 0) do
+      3.times { ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key) }
+    end
+    # one call now — inside the window
+    ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key)
+
+    get admin_stats_path
+    assert_response :success
+
+    row = css_select(".admin-stats-table tr").find { |r| r.text.include?("PEAK...Y123") }
+    assert row, "breakdown row for the key must render"
+    assert_includes row.text, "1/min", "peak must come from the 24h window, not all history"
+  end
+
+  test "gap stats are computed correctly" do
+    PersonalStatSnapshot.stubs(:tracking_start_date).returns(Date.new(2024, 1, 1))
+    PersonalStatSnapshot.stubs(:tracking_end_date).returns(Date.new(2024, 1, 2))
+
+    gapless = User.create!(torn_id: 555_111, name: "Gapless", level: 5, hof_stats_user: true)
+    gapless.personal_stat_snapshots.create!(date: Date.new(2024, 1, 1))
+    gapless.personal_stat_snapshots.create!(date: Date.new(2024, 1, 2))
+
+    tracked_count = User.tracked_for_stats.count
+
+    get admin_stats_path
+    assert_response :success
+
+    # every tracked user except Gapless misses both window days
+    gap_row = css_select(".admin-stat-row").find { |r| r.text.include?("Users with gaps") }
+    assert_equal (tracked_count - 1).to_s, gap_row.css(".admin-stat-value").text.strip
+
+    missing_row = css_select(".admin-stat-row").find { |r| r.text.include?("Total missing days") }
+    assert_equal ((tracked_count - 1) * 2).to_s, missing_row.css(".admin-stat-value").text.strip
+  end
 end
