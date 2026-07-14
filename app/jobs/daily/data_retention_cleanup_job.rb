@@ -10,6 +10,7 @@ module Daily
       cleanup_old_sessions
       cleanup_old_api_calls
       cleanup_old_armory_news
+      cleanup_stale_factions
     end
 
     private
@@ -33,6 +34,20 @@ module Daily
       deleted_count = ArmoryNewsEntry.where("occurred_at < ?", cutoff).delete_all
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} armory news entries older than #{ARMORY_NEWS_RETENTION_DAYS} days"
+    end
+
+    # destroy (not delete_all) so dependent data goes with the faction and
+    # members are detached via the users association's nullify.
+    def cleanup_stale_factions
+      removed = []
+      Faction.stale.find_each do |faction|
+        faction.destroy!
+        removed << "#{faction.name} [#{faction.torn_id}]"
+      rescue => e
+        Rails.logger.error "DataRetentionCleanupJob: Failed to remove stale faction #{faction.name}: #{e.message}"
+      end
+
+      Rails.logger.info "DataRetentionCleanupJob: Removed #{removed.size} stale factions (#{Faction::STALE_AFTER.inspect} without setup or key): #{removed.join(', ')}" if removed.any?
     end
   end
 end
