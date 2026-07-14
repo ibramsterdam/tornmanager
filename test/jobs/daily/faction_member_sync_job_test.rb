@@ -114,9 +114,7 @@ class Daily::FactionMemberSyncJobTest < ActiveJob::TestCase
 
     existing_dates = PersonalStatSnapshot.tracking_start_date..3.days.ago.to_date
     existing_dates.each do |date|
-      @bram.personal_stat_snapshots.find_or_create_by!(date: date) do |s|
-        s.drugs_xanax = 100
-      end
+      create_complete_snapshot(@bram, date)
     end
 
     Daily::FactionMemberSyncJob.perform_now
@@ -130,9 +128,7 @@ class Daily::FactionMemberSyncJobTest < ActiveJob::TestCase
     TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
 
     (PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date).each do |date|
-      @bram.personal_stat_snapshots.find_or_create_by!(date: date) do |s|
-        s.drugs_xanax = 100
-      end
+      create_complete_snapshot(@bram, date)
     end
 
     Daily::FactionMemberSyncJob.perform_now

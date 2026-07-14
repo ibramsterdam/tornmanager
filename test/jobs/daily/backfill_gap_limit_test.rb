@@ -42,9 +42,36 @@ class BackfillGapLimitTest < ActiveJob::TestCase
     end
   end
 
+  test "partial rows count as gaps and get re-fetched" do
+    (@window_start..@window_end).each do |date|
+      @user.personal_stat_snapshots.create!(
+        date: date,
+        drugs_xanax: 1, items_used_energy_drinks: 1, other_refills_energy: 1,
+        other_refills_nerve: 1, items_used_boosters: 1, items_used_stat_enhancers: 1,
+        missions_contracts_total: 1, crimes_offenses_total: 1, other_activity_time: 1,
+        networth_total: 1, attacking_networth_money_mugged: 1
+      )
+    end
+    partial = @user.personal_stat_snapshots.find_by(date: @window_start + 10)
+    partial.update!(attacking_networth_money_mugged: nil)
+
+    assert_enqueued_jobs 1, only: BackfillSingleStatJob do
+      Daily::FactionMemberSyncJob.new.send(:backfill_gaps, @user, "FACTION_KEY_123")
+    end
+
+    enqueued_date = enqueued_jobs.find { |j| j[:job] == BackfillSingleStatJob }[:args][1]
+    assert_equal (@window_start + 10).to_s, enqueued_date
+  end
+
   test "no jobs are enqueued when there are no gaps" do
     (@window_start..@window_end).each do |date|
-      @user.personal_stat_snapshots.create!(date: date)
+      @user.personal_stat_snapshots.create!(
+        date: date,
+        drugs_xanax: 1, items_used_energy_drinks: 1, other_refills_energy: 1,
+        other_refills_nerve: 1, items_used_boosters: 1, items_used_stat_enhancers: 1,
+        missions_contracts_total: 1, crimes_offenses_total: 1, other_activity_time: 1,
+        networth_total: 1, attacking_networth_money_mugged: 1
+      )
     end
 
     assert_no_enqueued_jobs(only: BackfillSingleStatJob) do

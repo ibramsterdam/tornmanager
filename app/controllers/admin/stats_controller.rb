@@ -128,15 +128,8 @@ module Admin
 
       calculate_snapshot_gaps
 
-      @complete_snapshots = PersonalStatSnapshot
-        .where.not(
-          drugs_xanax: nil, items_used_energy_drinks: nil, other_refills_energy: nil,
-          other_refills_nerve: nil, items_used_boosters: nil, items_used_stat_enhancers: nil,
-          missions_contracts_total: nil, crimes_offenses_total: nil, other_activity_time: nil,
-          networth_total: nil, attacking_networth_money_mugged: nil
-        )
-        .count
-      @incomplete_snapshots = @total_snapshots - @complete_snapshots
+      @incomplete_snapshots = PersonalStatSnapshot.partial.count
+      @complete_snapshots = @total_snapshots - @incomplete_snapshots
       @completeness_pct = @total_snapshots > 0 ? ((@complete_snapshots.to_f / @total_snapshots) * 100).round(1) : nil
     end
 

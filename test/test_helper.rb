@@ -14,6 +14,15 @@ module ActiveSupport
 
     # Add more helper methods to be used by all tests here...
 
+    # A snapshot with every tracked stat filled — rows with any nil column
+    # count as "partial" and are re-fetched by the nightly gap scan.
+    def create_complete_snapshot(user, date)
+      attrs = PersonalStatSnapshot::TRACKED_STATS.values.index_with { 1 }
+      user.personal_stat_snapshots.find_or_create_by!(date: date) do |s|
+        s.assign_attributes(attrs)
+      end
+    end
+
     # Helper to grant a subscription to a user or faction via the Subscription model
     def grant_subscription(subscribable, expires_at:)
       sub = subscribable.subscription || subscribable.build_subscription
