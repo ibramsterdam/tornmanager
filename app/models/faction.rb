@@ -14,6 +14,19 @@ class Faction < ApplicationRecord
   has_many :leadership, -> { where(leadership_access: true) }, class_name: "User"
   has_one :subscription, as: :subscribable, dependent: :destroy
 
+  # Abandoned signups: never completed setup, hold no API key, and haven't
+  # changed in this long. Surfaced as "stale" on admin stats and removed by
+  # the nightly retention cleanup (see the privacy policy's retention table).
+  STALE_AFTER = 30.days
+
+  scope :stale, -> {
+    where(setup_completed: false)
+      .where.missing(:torn_api_key)
+      .where(updated_at: ...STALE_AFTER.ago)
+      .left_joins(:subscription)
+      .where("subscriptions.id IS NULL OR subscriptions.expires_at <= ?", Time.current)
+  }
+
   validates :torn_id, presence: true, uniqueness: true
   validates :name, presence: true
   validates :xanax_target, presence: true, numericality: { greater_than: 0 }

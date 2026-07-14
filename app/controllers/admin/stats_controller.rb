@@ -2,10 +2,6 @@ module Admin
   class StatsController < ApplicationController
     before_action :require_admin
 
-    # Factions with no completed setup and no key that haven't changed in this
-    # long are surfaced as "stale" (and are the target of the upcoming cleanup).
-    STALE_FACTION_AFTER = 30.days
-
     def index
       load_user_stats
       load_subscription_stats
@@ -59,7 +55,7 @@ module Admin
         status, stale_days =
           if f.setup_completed?
             [ :active, nil ]
-          elsif f.updated_at < STALE_FACTION_AFTER.ago
+          elsif f.torn_api_key.blank? && f.updated_at < Faction::STALE_AFTER.ago
             [ :stale, (Date.current - f.updated_at.to_date).to_i ]
           else
             [ :no_setup, nil ]
