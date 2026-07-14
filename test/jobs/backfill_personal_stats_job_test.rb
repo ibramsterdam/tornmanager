@@ -42,8 +42,8 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     assert_nil @user.personal_stat_snapshots.find_by(date: @date_str)
   end
 
-  test "handles API error gracefully without saving snapshot" do
-    TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Rate limited")
+  test "skips unrecoverable errors without saving snapshot" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).raises(TornApi::NotFoundError, "Requested data is private")
 
     assert_nothing_raised do
       BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, api_key: "test_key")

@@ -1,5 +1,6 @@
 class FetchPersonalStatsJob < FactionApiJob
-  limits_concurrency to: 1, key: ->(user, api_key:, **) { api_key }, group: "PersonalStatsApiCalls"
+  queue_with_priority 50
+  limits_concurrency to: 1, key: ->(user, api_key:, **) { api_key }, group: CONCURRENCY_GROUP
 
   MAX_RETRIES = 3
 

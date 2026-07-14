@@ -5,6 +5,10 @@ module TornApi
   class InvalidKeyError < StandardError; end
   class ApiError < StandardError; end
   class RateLimitError < ApiError; end
+  # Torn-side hiccups that heal on their own (5xx, empty payloads during the
+  # nightly stats-cache rebuild, "backend error, please try again") — jobs
+  # retry these with a delay instead of failing.
+  class TransientError < ApiError; end
   class NotFoundError < ApiError; end
   class TimeoutError < ApiError; end
 
@@ -31,6 +35,7 @@ module TornApi
 
       log_request(uri)
 
+      RateLimiter.acquire!(api_key)
       response = perform_request(uri)
       body = parse_response(response, path)
 
@@ -41,6 +46,8 @@ module TornApi
       log_success(uri)
 
       body
+    rescue TransientError => e
+      handle_transient(uri, api_params, e, retries, start_time)
     rescue InvalidKeyError, ApiError => e
       response_time = ((Time.current - start_time) * 1000).to_i
       log_api_call(path, merged_params, "error", response_time, nil, e.message)
@@ -79,7 +86,10 @@ module TornApi
       status = response.code.to_i
       unless status == 200
         Rails.logger.error("HTTP #{status} from Torn API: #{response.body[0..500]}")
-        notify_torn_degraded(path, status) if status >= 500
+        if status >= 500
+          notify_torn_degraded(path, status)
+          raise TransientError, "Torn API request failed (HTTP #{status})"
+        end
         raise ApiError, "Torn API request failed (HTTP #{status})"
       end
 
@@ -114,16 +124,16 @@ module TornApi
       when 6      then raise NotFoundError, "Incorrect ID: #{error_msg}"
       when 7      then raise NotFoundError, "Requested data is private"
 
-      # Torn infrastructure issues
+      # Torn infrastructure issues — 15/17 heal on retry, 9/24 can last hours
       when 9      then raise ApiError, "Torn API is currently disabled"
-      when 17     then raise ApiError, "Torn backend error, please try again"
+      when 17     then raise TransientError, "Torn backend error, please try again"
       when 24     then raise ApiError, "Torn API temporarily closed"
 
       # Request parameter errors
       when 3      then raise ApiError, "Wrong type requested: #{error_msg}"
       when 4      then raise ApiError, "Wrong fields requested: #{error_msg}"
       when 11     then raise ApiError, "Can only change API key once every 60 seconds"
-      when 15     then raise ApiError, "Temporary error: #{error_msg}"
+      when 15     then raise TransientError, "Temporary error: #{error_msg}"
       when 19     then raise ApiError, "Must be migrated to crimes 2.0"
       when 20     then raise ApiError, "Race not yet finished"
       when 21     then raise ApiError, "Incorrect category: #{error_msg}"
@@ -137,6 +147,19 @@ module TornApi
 
       else
         raise ApiError, "API error #{error_code}: #{error_msg}"
+      end
+    end
+
+    def handle_transient(uri, api_params, error, retries, start_time)
+      if retries < MAX_RETRIES
+        Rails.logger.warn("Transient Torn error for #{uri}, retrying (#{retries + 1}/#{MAX_RETRIES}): #{error.message}")
+        sleep(1 * (retries + 1))
+        get(uri.path.sub(/^\//, ""), api_params, retries: retries + 1)
+      else
+        response_time = ((Time.current - start_time) * 1000).to_i
+        log_api_call(uri.path.sub(/^\//, ""), api_params, "error", response_time, nil, error.message)
+        Rails.logger.error("Transient Torn error for #{uri} after #{MAX_RETRIES} retries: #{error.message}")
+        raise error
       end
     end
 

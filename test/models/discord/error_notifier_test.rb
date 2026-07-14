@@ -51,4 +51,38 @@ class Discord::ErrorNotifierTest < ActiveSupport::TestCase
 
     Discord::ErrorNotifier.new.report(error, handled: true, severity: :warning, context: {})
   end
+
+  # During the 04:30 rate-limit incident the reporter posted ~25 identical
+  # embeds in one minute. Identical errors within a short window must collapse
+  # into a single Discord notification (mirroring the 10-minute dedupe
+  # TornApi::Base already applies to its own API-error notifications).
+
+  test "identical errors within the window are reported once" do
+    Rails.stubs(:cache).returns(ActiveSupport::Cache::MemoryStore.new)
+    error = TornApi::RateLimitError.new("Too many requests")
+    Discord::Notifier.expects(:notify).once
+
+    5.times do
+      Discord::ErrorNotifier.new.report(error, handled: false, severity: :error, context: {}, source: "application.solid_queue")
+    end
+  end
+
+  test "different error classes are reported separately" do
+    Rails.stubs(:cache).returns(ActiveSupport::Cache::MemoryStore.new)
+    Discord::Notifier.expects(:notify).twice
+
+    Discord::ErrorNotifier.new.report(TornApi::RateLimitError.new("Too many requests"), handled: false, severity: :error, context: {}, source: "application.solid_queue")
+    Discord::ErrorNotifier.new.report(TornApi::ApiError.new("Too many requests"), handled: false, severity: :error, context: {}, source: "application.solid_queue")
+  end
+
+  test "the same error is reported again after the window expires" do
+    Rails.stubs(:cache).returns(ActiveSupport::Cache::MemoryStore.new)
+    error = TornApi::RateLimitError.new("Too many requests")
+    Discord::Notifier.expects(:notify).twice
+
+    Discord::ErrorNotifier.new.report(error, handled: false, severity: :error, context: {}, source: "application.solid_queue")
+    travel 11.minutes do
+      Discord::ErrorNotifier.new.report(error, handled: false, severity: :error, context: {}, source: "application.solid_queue")
+    end
+  end
 end

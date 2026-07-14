@@ -6,8 +6,8 @@ class StockDividendJobTest < ActiveJob::TestCase
     @prn_stock = torn_stocks(:prn)
   end
 
-  test "enqueues to the admin queue" do
-    assert_equal "admin", Daily::StockDividendJob.new.queue_name
+  test "enqueues to the torn_api queue" do
+    assert_equal "torn_api", Daily::StockDividendJob.new.queue_name
   end
 
   test "updates dividend values from API response" do

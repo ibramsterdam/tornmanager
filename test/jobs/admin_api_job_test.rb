@@ -1,14 +1,14 @@
 require "test_helper"
 
 class AdminApiJobTest < ActiveJob::TestCase
-  test "enqueues to the admin queue" do
-    assert_equal "admin", AdminApiJob.new.queue_name
+  test "routes to the shared torn_api queue" do
+    assert_equal "torn_api", AdminApiJob.new.queue_name
   end
 
-  test "subclasses inherit the admin queue" do
-    assert_equal "admin", SyncFactionMembersJob.new.queue_name
-    assert_equal "admin", Daily::XanaxPaymentsJob.new.queue_name
-    assert_equal "admin", Daily::StockDividendJob.new.queue_name
+  test "subclasses inherit the torn_api queue" do
+    assert_equal "torn_api", SyncFactionMembersJob.new.queue_name
+    assert_equal "torn_api", Daily::XanaxPaymentsJob.new.queue_name
+    assert_equal "torn_api", Daily::StockDividendJob.new.queue_name
   end
 
   test "has a 1 second rate limit sleep constant" do
@@ -27,13 +27,14 @@ class AdminApiJobTest < ActiveJob::TestCase
     job.perform_now
   end
 
-  test "rate limit math stays under 50 req per minute" do
+  test "pacing keeps a single stream under the per-key budget" do
     sleep_duration = AdminApiJob::RATE_LIMIT_SLEEP
-    polling_interval = 1.1
+    api_call_time = 0.5
 
-    cycle_time = sleep_duration + polling_interval
+    cycle_time = sleep_duration + api_call_time
     max_requests_per_minute = 60.0 / cycle_time
 
-    assert max_requests_per_minute < 50, "Expected < 50 req/min, got #{max_requests_per_minute.round(1)}"
+    assert max_requests_per_minute < TornApi::RateLimiter::REQUESTS_PER_MINUTE,
+      "Expected < #{TornApi::RateLimiter::REQUESTS_PER_MINUTE} req/min, got #{max_requests_per_minute.round(1)}"
   end
 end

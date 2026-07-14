@@ -1,5 +1,7 @@
 module Daily
   class FactionMemberSyncJob < ApplicationJob
+    include GapBackfill
+
     queue_as :default
 
     def perform
@@ -51,19 +53,6 @@ module Daily
         user.save!
 
         schedule_backfill(user, api_key) if new_member
-      end
-    end
-
-    def backfill_gaps(user, api_key)
-      existing = user.personal_stat_snapshots.pluck(:date).to_set
-      expected = (PersonalStatSnapshot.tracking_start_date..PersonalStatSnapshot.tracking_end_date).to_a
-      yesterday = Date.current.yesterday
-
-      missing = expected.reject { |d| existing.include?(d) || d == yesterday }
-      return if missing.empty?
-
-      missing.each do |date|
-        BackfillSingleStatJob.perform_later(user.id, date.to_s, faction_id: user.faction_id, api_key: api_key)
       end
     end
 

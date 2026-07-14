@@ -1,5 +1,6 @@
 class FetchMemberActivityJob < FactionApiJob
-  limits_concurrency to: 1, key: ->(faction_id) { faction_id }, group: "FactionApiCalls"
+  queue_with_priority 10
+  limits_concurrency to: 1, key: FACTION_KEY_LOOKUP, group: CONCURRENCY_GROUP
 
   def perform(faction_id)
     faction = Faction.find_by(id: faction_id)

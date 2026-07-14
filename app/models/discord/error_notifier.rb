@@ -1,9 +1,13 @@
 module Discord
   class ErrorNotifier
     APP_TRACE_LIMIT = 8
+    # A failing serialized job stream produces the same error every ~2s;
+    # collapse identical errors into one embed per window.
+    DEDUP_WINDOW = 10.minutes
 
     def report(error, handled:, severity:, context:, source: nil)
       return if handled
+      return if duplicate_report?(error)
 
       fields = [
         { name: "Source", value: source || "unknown", inline: true },
@@ -30,6 +34,14 @@ module Discord
     end
 
     private
+
+    def duplicate_report?(error)
+      cache_key = "discord_error_report:#{error.class}:#{Digest::MD5.hexdigest(error.message.to_s)}"
+      return true if Rails.cache.exist?(cache_key)
+
+      Rails.cache.write(cache_key, true, expires_in: DEDUP_WINDOW)
+      false
+    end
 
     def app_backtrace(error)
       return nil unless error.backtrace
