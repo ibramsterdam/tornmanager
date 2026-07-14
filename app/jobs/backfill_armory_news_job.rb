@@ -2,7 +2,8 @@ class BackfillArmoryNewsJob < FactionApiJob
   BACKFILL_FLOOR = Time.utc(2026, 1, 1).to_i
   PAGE_DELAY = 1.minute
 
-  limits_concurrency to: 1, key: ->(faction_id, _cursor = nil) { faction_id }, group: "FactionApiCalls"
+  queue_with_priority 100
+  limits_concurrency to: 1, key: FACTION_KEY_LOOKUP, group: CONCURRENCY_GROUP
 
   def perform(faction_id, cursor = nil)
     faction = Faction.find_by(id: faction_id)

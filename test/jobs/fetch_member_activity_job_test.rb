@@ -46,12 +46,11 @@ class FetchMemberActivityJobTest < ActiveJob::TestCase
     assert FetchMemberActivityJob < FactionApiJob
   end
 
-  test "limits concurrency per faction in FactionApiCalls group" do
+  test "limits concurrency per api key in the shared TornApiCalls group" do
     assert_equal 1, FetchMemberActivityJob.concurrency_limit
-    assert_equal "FactionApiCalls", FetchMemberActivityJob.concurrency_group
 
     job = FetchMemberActivityJob.new(@faction.id)
-    assert_equal "FactionApiCalls/#{@faction.id}", job.concurrency_key
+    assert_equal "TornApiCalls/#{@faction.torn_api_key.key}", job.concurrency_key
   end
 
   test "handles api errors gracefully" do

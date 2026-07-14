@@ -13,8 +13,8 @@ class DailyXanaxPaymentsJobTest < ActiveJob::TestCase
     )
   end
 
-  test "enqueues to the admin queue" do
-    assert_equal "admin", Daily::XanaxPaymentsJob.new.queue_name
+  test "enqueues to the torn_api queue" do
+    assert_equal "torn_api", Daily::XanaxPaymentsJob.new.queue_name
   end
 
   test "processes new xanax payment from existing user" do

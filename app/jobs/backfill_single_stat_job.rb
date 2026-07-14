@@ -1,5 +1,6 @@
 class BackfillSingleStatJob < FactionApiJob
-  limits_concurrency to: 1, key: ->(user_id, date_str, faction_id:, **) { faction_id }, group: "FactionApiCalls"
+  queue_with_priority 100
+  limits_concurrency to: 1, key: ->(user_id, date_str, faction_id:, api_key: nil, **) { api_key }, group: CONCURRENCY_GROUP
 
   def perform(user_id, date_str, faction_id:, batch: 1, api_key: nil)
     user = User.find(user_id)
@@ -26,7 +27,10 @@ class BackfillSingleStatJob < FactionApiJob
       timestamp: date.end_of_day.to_i,
       stat_batch: stat_batch
     ).fetch
-  rescue TornApi::ApiError, TornApi::InvalidKeyError => e
+  rescue TornApi::NotFoundError, TornApi::InvalidKeyError => e
+    # Unrecoverable for this user/key — skip the date. Rate limits and
+    # transient errors propagate so retry_on reschedules instead of the
+    # gap silently re-enqueueing every night.
     Rails.logger.error("API error fetching stats: #{e.message}")
     nil
   end

@@ -94,8 +94,9 @@ class FetchPersonalStatsJobTest < ActiveJob::TestCase
     end
   end
 
-  test "inherits from FactionApiJob" do
+  test "inherits from TornApiJob via the FactionApiJob alias" do
     assert FetchPersonalStatsJob < FactionApiJob
-    assert_equal "faction", FetchPersonalStatsJob.new.queue_name
+    assert FetchPersonalStatsJob < TornApiJob
+    assert_equal "torn_api", FetchPersonalStatsJob.new.queue_name
   end
 end
