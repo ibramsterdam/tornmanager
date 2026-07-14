@@ -2,336 +2,417 @@
   <div class="admin-stats-header">
     <%= link_to "&larr; Admin".html_safe, admin_dashboard_path, class: "back-link" %>
     <h1>System Stats</h1>
+    <span class="admin-stats-asof">as of <%= Time.current.strftime("%d %b %Y %H:%M") %> TCT &middot; activity metrics cached &le;15 min</span>
   </div>
 
-  <div class="admin-stats-grid">
-    <%# ── Users & Sign-ins ── %>
+  <%# ── 1. Health strip: do I need to act? ── %>
+  <div class="admin-health">
+    <% if @users_missing_yesterday > 0 %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Collection</b><span class="why"><%= @users_missing_yesterday %> users missing yesterday's snapshot</span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Collection</b><span class="why">all tracked users snapshotted yesterday</span></span>
+    <% end %>
+
+    <% if @keys_over_budget > 0 %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Budget</b><span class="why"><%= @keys_over_budget %> keys peaked over <%= @per_key_budget %>/min (24h)</span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Budget</b><span class="why">all keys &le;<%= @per_key_budget %>/min (24h)</span></span>
+    <% end %>
+
+    <% if @pipeline_stats %>
+      <% if @pipeline_stats[:failed] > 0 %>
+        <%= link_to "/jobs", class: "admin-hpill bad", data: { turbo_prefetch: false, turbo: false } do %><span class="dot"></span><b>Queue</b><span class="why"><%= number_with_delimiter(@pipeline_stats[:failed]) %> failed jobs awaiting triage</span><% end %>
+      <% else %>
+        <span class="admin-hpill ok"><span class="dot"></span><b>Queue</b><span class="why">no failed jobs</span></span>
+      <% end %>
+    <% end %>
+
+    <% if @api_peak_rate_today > @global_budget %>
+      <span class="admin-hpill bad"><span class="dot"></span><b>Aggregate API</b><span class="why"><%= @api_peak_rate_today %>/min peak today &middot; global cap <%= @global_budget %></span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Aggregate API</b><span class="why"><%= @api_peak_rate_today %>/min peak today &middot; global cap <%= @global_budget %></span></span>
+    <% end %>
+
+    <% if @completeness_pct %>
+      <span class="admin-hpill <%= @completeness_pct >= 100 ? 'ok' : 'warn' %>"><span class="dot"></span><b>Completeness</b><span class="why"><%= @completeness_pct %>% of <%= number_with_delimiter(@total_snapshots) %> snapshots</span></span>
+    <% end %>
+  </div>
+
+  <%# ── 2. KPI hero row ── %>
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <div class="v"><%= @tracked_users %></div>
+      <div class="k">Tracked users</div>
+      <div class="sub">of <%= number_with_delimiter(@total_users) %> total</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= @total_subscribers %></div>
+      <div class="k">Active subs</div>
+      <div class="sub"><%= @xanax_received_past_month %> xanax (30d)</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@api_calls_today) %></div>
+      <div class="k">API calls today</div>
+      <div class="sub"><%= number_with_delimiter(@api_calls_this_week) %> this week</div>
+    </div>
+    <div class="admin-kpi <%= @api_peak_rate_today > @global_budget ? 'bad' : 'good' %>">
+      <div class="v"><%= @api_peak_rate_today %><small>/min</small></div>
+      <div class="k">Peak today</div>
+      <div class="sub">global budget <%= @global_budget %>/min</div>
+    </div>
+    <div class="admin-kpi <%= 'warn' if @users_missing_yesterday > 0 %>">
+      <div class="v"><%= @users_missing_yesterday %></div>
+      <div class="k">Missing yesterday</div>
+      <div class="sub">of <%= @tracked_users %> tracked (03:00 TCT)</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@snapshots_this_week) %></div>
+      <div class="k">Snapshots this week</div>
+      <div class="sub">today: <%= @snapshots_today %></div>
+    </div>
+  </div>
+
+  <%# ── 3. Data collection ── %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Data Collection</h2><span class="admin-stats-hint">snapshots &middot; gaps &middot; the nightly pipeline's output</span></div>
+    <div class="admin-stats-grid">
+
+      <div class="admin-stats-panel">
+        <h3>Snapshot coverage</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@total_snapshots) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Days with data</span>
+            <span class="admin-stat-value"><%= @unique_snapshot_days %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d %b %Y") : "N/A" %> &ndash; <%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Complete / incomplete</span>
+            <span class="admin-stat-value"><span class="success"><%= number_with_delimiter(@complete_snapshots) %></span> / <span class="<%= 'warning' if @incomplete_snapshots > 0 %>"><%= number_with_delimiter(@incomplete_snapshots) %></span></span>
+          </div>
+        </div>
+        <% if @daily_snapshots.any? %>
+          <% max_daily = [ @daily_snapshots.map(&:last).max, 1 ].max %>
+          <div class="admin-chart">
+            <div class="admin-chart-title">Snapshots per day &mdash; last <%= @daily_snapshots.size %></div>
+            <div class="admin-chart-plot">
+              <% @daily_snapshots.each do |_date, count| %>
+                <div class="admin-chart-bar">
+                  <span class="n"><%= count %></span>
+                  <div class="b" style="height: <%= ((count.to_f / max_daily) * 100).round %>%"></div>
+                </div>
+              <% end %>
+            </div>
+            <div class="admin-chart-x">
+              <% @daily_snapshots.each do |date, _count| %>
+                <span><%= Date.parse(date.to_s).strftime("%d") %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Gaps <span class="admin-stats-hint">&mdash; what backfill chases tonight</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Users with gaps</span>
+            <span class="admin-stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total missing days</span>
+            <span class="admin-stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Missing yesterday <span class="admin-stats-hint">(03:00 TCT)</span></span>
+            <span class="admin-stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %></span>
+          </div>
+        </div>
+        <% if @missing_dates_summary.any? %>
+          <div class="admin-tscroll" style="max-height: 240px">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Date</th><th class="admin-num">Missing</th><th class="admin-num">of tracked</th></tr>
+              </thead>
+              <tbody>
+                <% @missing_dates_summary.each do |date, count| %>
+                  <tr>
+                    <td><%= date.strftime("%d %b") %></td>
+                    <td class="admin-num <%= 'warning' if count > @tracked_users * 0.05 %>"><%= count %></td>
+                    <td class="admin-num admin-muted"><%= @tracked_users > 0 ? "#{((count.to_f / @tracked_users) * 100).round(1)}%" : "—" %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Pipeline health</h3>
+        <% if @pipeline_stats %>
+          <div class="admin-stats-rows">
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Failed jobs</span>
+              <span class="admin-stat-value <%= @pipeline_stats[:failed] > 0 ? 'error' : 'success' %>"><%= link_to number_with_delimiter(@pipeline_stats[:failed]), "/jobs", class: "admin-plain-link", data: { turbo_prefetch: false, turbo: false } %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Blocked (semaphores)</span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@pipeline_stats[:blocked]) %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Scheduled retries</span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@pipeline_stats[:scheduled]) %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Latest snapshot written</span>
+              <span class="admin-stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %H:%M") : "N/A" %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Latest armoury entry</span>
+              <span class="admin-stat-value"><%= @armory_latest&.strftime("%d %b %H:%M") || "N/A" %></span>
+            </div>
+          </div>
+          <p class="admin-stats-footnote">Counts come from solid_queue. Failed &gt; 0 turns the header pill red &mdash; it's the "act now" signal.</p>
+        <% else %>
+          <p class="admin-stats-footnote">Queue database unavailable.</p>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+
+  <%# ── 4. Torn API ── %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Torn API</h2><span class="admin-stats-hint">30d retention &middot; budget: <%= @per_key_budget %>/min per key &middot; <%= @global_budget %>/min global</span></div>
+    <div class="admin-stats-grid admin-stats-grid-api">
+
+      <div class="admin-stats-panel">
+        <h3>Aggregate</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total calls</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@total_api_calls) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Peak rate</span>
+            <span class="admin-stat-value"><%= @api_peak_rate_all_time %>/min</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Peak today</span>
+            <span class="admin-stat-value <%= @api_peak_rate_today > @global_budget ? 'error' : 'success' %>"><%= @api_peak_rate_today %>/min</span>
+          </div>
+        </div>
+        <div class="admin-stats-rows admin-stats-sub">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin key calls</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@admin_api_total) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin peak rate</span>
+            <span class="admin-stat-value"><%= @admin_api_peak_all_time %>/min</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin peak today</span>
+            <span class="admin-stat-value"><%= @admin_api_peak_today %>/min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-stats-panel admin-span2">
+        <h3>Per key &mdash; last 24h <span class="admin-stats-hint">&middot; single-call keys folded</span></h3>
+        <% if @api_key_breakdown.any? %>
+          <div class="admin-tscroll">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Owner</th><th>Key</th><th class="admin-num">Calls</th><th>Peak vs <%= @per_key_budget %>/min</th><th class="admin-num">Errors</th></tr>
+              </thead>
+              <tbody>
+                <% @api_key_rows.each do |row| %>
+                  <% over = row[:peak_rate] > @per_key_budget %>
+                  <tr>
+                    <td><%= row[:owner] %></td>
+                    <td class="admin-muted"><code><%= row[:display_key] %></code></td>
+                    <td class="admin-num"><%= number_with_delimiter(row[:total]) %></td>
+                    <td>
+                      <span class="admin-bud <%= 'over' if over %>">
+                        <span class="track"><span class="fill" style="width: <%= [ (row[:peak_rate].to_f / @per_key_budget * 100).round, 100 ].min %>%"></span></span>
+                        <span class="n"><%= row[:peak_rate] %>/min</span>
+                      </span>
+                    </td>
+                    <td class="admin-num <%= 'error' if row[:errors] > 0 %>"><%= row[:errors] %></td>
+                  </tr>
+                <% end %>
+                <% if @api_single_call_keys > 0 %>
+                  <tr class="admin-folded">
+                    <td class="admin-muted">+ <%= @api_single_call_keys %> keys with 1 call</td>
+                    <td class="admin-muted">&mdash;</td>
+                    <td class="admin-num admin-muted"><%= @api_single_call_keys %></td>
+                    <td class="admin-muted">1/min</td>
+                    <td class="admin-num admin-muted">0</td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <p class="admin-stats-footnote">Bars measure 24h peak against the <%= @per_key_budget %>/min client budget &mdash; a red bar after the redesign deploy is a real violation.</p>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+
+  <%# ── 5. Factions ── %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Factions</h2><span class="admin-stats-hint"><%= @total_factions %> total &middot; <%= @active_factions %> active &middot; sorted by status, then members</span></div>
     <div class="admin-stats-panel">
-      <h2>Users</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@total_users) %></span>
+      <% if @faction_rows.any? %>
+        <div class="admin-tscroll tall">
+          <table class="admin-stats-table">
+            <thead>
+              <tr><th>Faction</th><th class="admin-num">Members</th><th>Status</th><th>Setup &middot; API &middot; TS &middot; Poll &middot; BF</th><th>Last sync</th></tr>
+            </thead>
+            <tbody>
+              <% @faction_rows.each do |row| %>
+                <tr>
+                  <td><%= row[:faction].name %></td>
+                  <td class="admin-num"><%= row[:member_count] %></td>
+                  <td>
+                    <% case row[:status] %>
+                    <% when :active %>
+                      <span class="admin-chip ok">active</span>
+                    <% when :stale %>
+                      <span class="admin-chip warn">stale <%= row[:stale_days] %>d</span>
+                    <% else %>
+                      <span class="admin-chip off">no setup</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="admin-caps">
+                      <% row[:caps].each do |on| %>
+                        <span class="admin-cap <%= 'on' if on %>"></span>
+                      <% end %>
+                    </span>
+                  </td>
+                  <td class="admin-muted"><%= row[:last_sync]&.strftime("%d %b %H:%M") || "&mdash;".html_safe %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
         </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Tracked</span>
-          <span class="admin-stat-value"><%= @tracked_users %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Subscribers</span>
-          <span class="admin-stat-value"><%= @active_subscribers %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">HoF Users</span>
-          <span class="admin-stat-value"><%= @hof_stats_users %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">API Keys</span>
-          <span class="admin-stat-value"><%= @api_keys_configured %></span>
-        </div>
-      </div>
-      <div class="admin-stats-rows admin-stats-sub">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Sessions this week</span>
-          <span class="admin-stat-value"><%= @sign_ins_this_week %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Unique this week</span>
-          <span class="admin-stat-value"><%= @unique_sign_ins_this_week %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">First-time</span>
-          <span class="admin-stat-value"><%= @new_sign_ins.size %></span>
-        </div>
-      </div>
-      <% if @new_sign_ins.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>New User</th><th>Joined</th></tr>
-          </thead>
-          <tbody>
-            <% @new_sign_ins.each do |user| %>
-              <tr>
-                <td><a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a></td>
-                <td><%= @first_session_dates[user.id]&.strftime("%d %b") || "&mdash;".html_safe %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
+        <p class="admin-stats-footnote">"stale" = no setup, no key, unchanged for 30+ days &mdash; the target of the upcoming faction cleanup.</p>
       <% end %>
     </div>
+  </section>
 
-    <%# ── Subscriptions ── %>
-    <div class="admin-stats-panel">
-      <h2>Subscriptions</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total active</span>
-          <span class="admin-stat-value"><%= @total_subscribers %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Xanax received (30d)</span>
-          <span class="admin-stat-value"><%= @xanax_received_past_month %></span>
+  <%# ── 6. Storage & volume ── %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Storage &amp; Volume</h2><span class="admin-stats-hint">big tables, slow growth</span></div>
+    <div class="admin-stats-grid">
+
+      <div class="admin-stats-panel">
+        <h3>Member activity <span class="admin-stats-hint">&middot; kept forever</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Snapshots</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_snapshots) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Growth</span>
+            <span class="admin-stat-value">~<%= number_with_delimiter(@activity_daily_growth) %>/day</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Polls / members</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_polls) %> / <%= @activity_members_tracked %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @activity_earliest&.strftime("%d %b %Y") || "N/A" %> &ndash; <%= @activity_latest&.strftime("%d %b %Y") || "N/A" %></span>
+          </div>
         </div>
       </div>
-      <% if @subscribed_factions.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Faction</th><th>Expires</th><th>Days</th></tr>
-          </thead>
-          <tbody>
+
+      <div class="admin-stats-panel">
+        <h3>Armoury news <span class="admin-stats-hint">&middot; 365d retention</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Entries</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@armory_total_entries) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @armory_earliest&.strftime("%d %b %Y") || "N/A" %> &ndash; <%= @armory_latest&.strftime("%d %b %Y") || "N/A" %></span>
+          </div>
+        </div>
+        <% if @armory_by_faction.any? %>
+          <div class="admin-tscroll" style="max-height: 200px">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Faction</th><th class="admin-num">Entries</th><th>Backfill</th></tr>
+              </thead>
+              <tbody>
+                <% @armory_by_faction.sort_by { |f| -f[:count] }.each do |f| %>
+                  <tr>
+                    <td><%= f[:faction].name %></td>
+                    <td class="admin-num"><%= number_with_delimiter(f[:count]) %></td>
+                    <td><span class="admin-chip <%= f[:backfill_pending] ? 'warn' : 'ok' %>"><%= f[:backfill_pending] ? "running" : "done" %></span></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Users &amp; sessions</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">HoF users</span>
+            <span class="admin-stat-value"><%= @hof_stats_users %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">API keys</span>
+            <span class="admin-stat-value"><%= @api_keys_configured %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Sessions this week</span>
+            <span class="admin-stat-value"><%= @sign_ins_this_week %> &middot; <%= @unique_sign_ins_this_week %> unique</span>
+          </div>
+        </div>
+        <% if @subscribed_factions.any? %>
+          <div class="admin-stats-rows admin-stats-sub">
             <% @subscribed_factions.each do |f| %>
-              <tr>
-                <td><%= f.name %></td>
-                <td><%= f.subscription.expires_at.strftime("%d %b %Y") %></td>
-                <td><%= f.subscription.days_remaining %></td>
-              </tr>
+              <div class="admin-stat-row">
+                <span class="admin-stat-label"><%= f.name %></span>
+                <span class="admin-stat-value"><%= f.subscription.days_remaining %>d left</span>
+              </div>
             <% end %>
-          </tbody>
-        </table>
-      <% end %>
-    </div>
+          </div>
+        <% end %>
+        <% if @new_sign_ins.any? %>
+          <table class="admin-stats-table">
+            <thead>
+              <tr><th>New User</th><th>Joined</th></tr>
+            </thead>
+            <tbody>
+              <% @new_sign_ins.each do |user| %>
+                <tr>
+                  <td><a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a></td>
+                  <td><%= @first_session_dates[user.id]&.strftime("%d %b") || "&mdash;".html_safe %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
 
-    <%# ── Factions ── %>
-    <div class="admin-stats-panel">
-      <h2>Factions <span class="admin-stats-retention"><%= @total_factions %> / 15</span></h2>
-      <% if @faction_details.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Faction</th><th class="admin-center">Mbr</th><th class="admin-center">Set</th><th class="admin-center">API</th><th class="admin-center">TS</th><th class="admin-center">Pol</th><th class="admin-center">BF</th></tr>
-          </thead>
-          <tbody>
-            <% @faction_details.each do |f| %>
-              <% polling = f.setup_completed? && f.torn_api_key %>
-              <% backfilling = f.backfill_in_progress? %>
-              <tr>
-                <td><%= f.name %></td>
-                <td class="admin-center"><%= f.member_count %></td>
-                <td class="admin-center <%= f.setup_completed? ? 'success' : 'error' %>"><%= f.setup_completed? ? "&#10003;".html_safe : "&#10007;".html_safe %></td>
-                <td class="admin-center <%= f.torn_api_key ? 'success' : 'error' %>"><%= f.torn_api_key ? "&#10003;".html_safe : "&#10007;".html_safe %></td>
-                <td class="admin-center <%= f.tornstats_api_key ? 'success' : 'error' %>"><%= f.tornstats_api_key ? "&#10003;".html_safe : "&#10007;".html_safe %></td>
-                <td class="admin-center <%= polling ? 'success' : 'error' %>"><%= polling ? "&#10003;".html_safe : "&#10007;".html_safe %></td>
-                <td class="admin-center <%= backfilling ? 'warning' : 'error' %>"><%= backfilling ? "&#10003;".html_safe : "&#10007;".html_safe %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
     </div>
-
-    <%# ── Personal Stat Snapshots ── %>
-    <div class="admin-stats-panel">
-      <h2>Personal Stat Snapshots</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@total_snapshots) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Days with data</span>
-          <span class="admin-stat-value"><%= @unique_snapshot_days %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Earliest</span>
-          <span class="admin-stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Latest</span>
-          <span class="admin-stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
-        </div>
-      </div>
-      <div class="admin-stats-rows admin-stats-sub">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Today <span class="admin-stats-hint">(03:00 TCT)</span></span>
-          <span class="admin-stat-value"><%= @snapshots_today %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">This week</span>
-          <span class="admin-stat-value"><%= @snapshots_this_week %></span>
-        </div>
-      </div>
-      <% if @daily_snapshots.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Date</th><th>Count</th></tr>
-          </thead>
-          <tbody>
-            <% @daily_snapshots.each do |date, count| %>
-              <tr><td><%= date %></td><td><%= count %></td></tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
-    </div>
-
-    <%# ── Member Activity Snapshots ── %>
-    <div class="admin-stats-panel">
-      <h2>Member Activity</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total snapshots</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_snapshots) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Polls completed</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_polls) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Members tracked</span>
-          <span class="admin-stat-value"><%= @activity_members_tracked %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Est. daily rows</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@activity_daily_growth) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Earliest</span>
-          <span class="admin-stat-value"><%= @activity_earliest&.strftime("%d %b %Y %H:%M") || "N/A" %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Latest</span>
-          <span class="admin-stat-value"><%= @activity_latest&.strftime("%d %b %Y %H:%M") || "N/A" %></span>
-        </div>
-      </div>
-    </div>
-
-    <%# ── Armoury News ── %>
-    <div class="admin-stats-panel">
-      <h2>Armoury News</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total entries</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@armory_total_entries) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Earliest</span>
-          <span class="admin-stat-value"><%= @armory_earliest&.strftime("%d %b %Y") || "N/A" %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Latest</span>
-          <span class="admin-stat-value"><%= @armory_latest&.strftime("%d %b %Y") || "N/A" %></span>
-        </div>
-      </div>
-      <% if @armory_by_faction.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Faction</th><th>Entries</th><th>Earliest</th><th>Latest</th><th>BF</th></tr>
-          </thead>
-          <tbody>
-            <% @armory_by_faction.each do |f| %>
-              <tr>
-                <td><%= f[:faction].name %></td>
-                <td><%= number_with_delimiter(f[:count]) %></td>
-                <td><%= f[:earliest]&.strftime("%d %b") || "&mdash;".html_safe %></td>
-                <td><%= f[:latest]&.strftime("%d %b") || "&mdash;".html_safe %></td>
-                <td class="admin-center <%= f[:backfill_pending] ? 'warning' : 'success' %>"><%= f[:backfill_pending] ? "&#9679;".html_safe : "&#10003;".html_safe %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
-    </div>
-
-    <%# ── Torn API ── %>
-    <div class="admin-stats-panel">
-      <h2>Torn API <span class="admin-stats-retention">30d retention</span></h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total calls</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@total_api_calls) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Peak rate</span>
-          <span class="admin-stat-value"><%= @api_peak_rate_all_time %>/min</span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Peak today</span>
-          <span class="admin-stat-value"><%= @api_peak_rate_today %>/min</span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">API calls today</span>
-          <span class="admin-stat-value"><%= @api_calls_today %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">API calls this week</span>
-          <span class="admin-stat-value"><%= @api_calls_this_week %></span>
-        </div>
-      </div>
-      <div class="admin-stats-rows admin-stats-sub">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Admin key calls</span>
-          <span class="admin-stat-value"><%= number_with_delimiter(@admin_api_total) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Admin peak rate</span>
-          <span class="admin-stat-value"><%= @admin_api_peak_all_time %>/min</span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Admin peak today</span>
-          <span class="admin-stat-value"><%= @admin_api_peak_today %>/min</span>
-        </div>
-      </div>
-      <% if @api_key_breakdown.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Key</th><th>Owner</th><th>Calls (24h)</th><th>Peak/min</th><th>Errors</th></tr>
-          </thead>
-          <tbody>
-            <% @api_key_breakdown.each do |row| %>
-              <tr>
-                <td><code><%= row[:display_key] %></code></td>
-                <td><%= row[:owner] %></td>
-                <td><%= number_with_delimiter(row[:total]) %></td>
-                <td class="<%= row[:peak_rate] > 50 ? 'warning' : '' %>"><%= row[:peak_rate] %>/min</td>
-                <td class="<%= row[:errors] > 0 ? 'warning' : '' %>"><%= row[:errors] %></td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
-    </div>
-
-    <%# ── Data Health ── %>
-    <div class="admin-stats-panel">
-      <h2>Data Health</h2>
-      <div class="admin-stats-rows">
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Missing yesterday <span class="admin-stats-hint">(03:00 TCT)</span></span>
-          <span class="admin-stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Users with gaps</span>
-          <span class="admin-stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Total missing days</span>
-          <span class="admin-stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Complete</span>
-          <span class="admin-stat-value success"><%= number_with_delimiter(@complete_snapshots) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Incomplete</span>
-          <span class="admin-stat-value <%= 'warning' if @incomplete_snapshots > 0 %>"><%= number_with_delimiter(@incomplete_snapshots) %></span>
-        </div>
-        <div class="admin-stat-row">
-          <span class="admin-stat-label">Completeness</span>
-          <span class="admin-stat-value"><%= @total_snapshots > 0 ? "#{((@complete_snapshots.to_f / @total_snapshots) * 100).round(1)}%" : "N/A" %></span>
-        </div>
-      </div>
-      <% if @missing_dates_summary.any? %>
-        <table class="admin-stats-table">
-          <thead>
-            <tr><th>Date</th><th>Missing</th></tr>
-          </thead>
-          <tbody>
-            <% @missing_dates_summary.each do |date, count| %>
-              <tr><td><%= date.strftime("%d %b") %></td><td><%= count %></td></tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% end %>
-    </div>
-  </div>
+  </section>
 </div>

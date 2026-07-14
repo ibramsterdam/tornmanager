@@ -19,25 +19,33 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "renders all panels" do
+  test "renders all sections" do
     get admin_stats_path
     assert_response :success
 
-    assert_select "h2", text: "Users"
-    assert_select "h2", text: /Factions/
-    assert_select "h2", text: "Personal Stat Snapshots"
-    assert_select "h2", text: "Member Activity"
-    assert_select "h2", text: /Torn API/
-    assert_select "h2", text: "Data Health"
+    assert_select "h2", text: "Data Collection"
+    assert_select "h2", text: "Torn API"
+    assert_select "h2", text: "Factions"
+    assert_select "h2", text: /Storage/
   end
 
-  test "shows user stats" do
+  test "health strip renders verdict pills" do
     get admin_stats_path
     assert_response :success
 
-    assert_select ".admin-stat-label", text: "Total"
-    assert_select ".admin-stat-label", text: "Subscribers"
-    assert_select ".admin-stat-label", text: "API Keys"
+    assert_select ".admin-hpill", minimum: 3
+    assert_select ".admin-hpill b", text: "Collection"
+    assert_select ".admin-hpill b", text: "Budget"
+  end
+
+  test "shows kpi tiles and user stats" do
+    get admin_stats_path
+    assert_response :success
+
+    assert_select ".admin-kpi .k", text: "Tracked users"
+    assert_select ".admin-kpi .k", text: "Active subs"
+    assert_select ".admin-stat-label", text: "API keys"
+    assert_select ".admin-stat-label", text: "HoF users"
   end
 
   test "shows faction stats with member table" do
@@ -92,8 +100,6 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select ".admin-stat-label", text: "Sessions this week"
-    assert_select ".admin-stat-label", text: "Unique this week"
-    assert_select ".admin-stat-label", text: "First-time"
   end
 
   test "shows first-time sign-ins table" do
@@ -139,13 +145,13 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".admin-stats-table td a", text: /OldPlayer/, count: 0
   end
 
-  test "shows daily snapshots table" do
+  test "shows daily snapshots chart" do
     PersonalStatSnapshot.create!(user: @admin, date: Date.yesterday, timestamp: Date.yesterday.to_time.to_i)
 
     get admin_stats_path
     assert_response :success
 
-    assert_select ".admin-stats-table th", text: "Count"
+    assert_select ".admin-chart-bar", minimum: 1
   end
 
   test "shows data health warning colors for missing data" do
@@ -171,8 +177,13 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     travel_to 2.days.ago.change(min: 0, sec: 0) do
       3.times { ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key) }
     end
-    # one call now — inside the window
-    ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key)
+    # two calls now, in different minutes — inside the window
+    travel_to Time.current.change(sec: 0) do
+      ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key)
+    end
+    travel_to Time.current.change(sec: 0) + 1.minute do
+      ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key)
+    end
 
     get admin_stats_path
     assert_response :success
@@ -180,6 +191,28 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     row = css_select(".admin-stats-table tr").find { |r| r.text.include?("PEAK...Y123") }
     assert row, "breakdown row for the key must render"
     assert_includes row.text, "1/min", "peak must come from the 24h window, not all history"
+  end
+
+  test "single-call keys are folded into one row" do
+    # fixture key ABCDEF has exactly 1 call and 0 errors -> folded
+    get admin_stats_path
+    assert_response :success
+
+    assert_select ".admin-folded td", text: /keys with 1 call/
+    folded_away = css_select(".admin-stats-table tr").none? { |r| r.text.include?("ABCD...CDEF") }
+    assert folded_away, "single-call keys must not get their own row"
+  end
+
+  test "abandoned factions show a stale chip" do
+    faction = Faction.create!(torn_id: 88888, name: "Ghost Crew", xanax_target: 2.5, setup_completed: false)
+    faction.update_column(:updated_at, 40.days.ago)
+
+    get admin_stats_path
+    assert_response :success
+
+    row = css_select(".admin-stats-table tr").find { |r| r.text.include?("Ghost Crew") }
+    assert row, "faction row must render"
+    assert_match(/stale 40d/, row.text)
   end
 
   test "gap stats are computed correctly" do
