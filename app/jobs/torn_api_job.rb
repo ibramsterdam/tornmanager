@@ -18,7 +18,10 @@ class TornApiJob < ApplicationJob
   # Concurrency key for jobs that receive a faction_id instead of an api key.
   FACTION_KEY_LOOKUP = ->(faction_id, *, **) { Faction.find_by(id: faction_id)&.torn_api_key&.key }
 
-  RATE_LIMIT_SLEEP = 1.0
+  # 1.0s paced a stream at ~46 calls/min — close enough to the 50/min budget
+  # that batch chains and activity polls on the same key tripped it nightly.
+  # 1.5s paces at ~31/min, leaving genuine headroom.
+  RATE_LIMIT_SLEEP = 1.5
 
   retry_on TornApi::RateLimitError, wait: 2.minutes, attempts: 5
   retry_on TornApi::TransientError, wait: 15.minutes, attempts: 3

@@ -14,6 +14,12 @@ class BackfillSingleStatJob < FactionApiJob
     save_snapshot(user, stats, date)
 
     BackfillSingleStatJob.perform_later(user_id, date_str, faction_id: faction_id, batch: 2, api_key: api_key) if batch == 1
+  rescue TornApi::NoDataError
+    # Torn has nothing for this player/date — tombstone the date so the
+    # nightly gap scan stops re-fetching it forever.
+    tombstone = user.personal_stat_snapshots.find_or_initialize_by(date: date)
+    tombstone.update!(torn_data_missing: true)
+    Rails.logger.info("BackfillSingleStatJob: tombstoned #{user.name} #{date} — no data at Torn")
   end
 
   private

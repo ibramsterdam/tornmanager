@@ -11,8 +11,10 @@ class AdminApiJobTest < ActiveJob::TestCase
     assert_equal "torn_api", Daily::StockDividendJob.new.queue_name
   end
 
-  test "has a 1 second rate limit sleep constant" do
-    assert_equal 1.0, AdminApiJob::RATE_LIMIT_SLEEP
+  test "pacing sleep leaves real headroom under the per-key budget" do
+    # 1.0s pacing produced ~46 calls/min in production - close enough to the
+    # 50/min budget that batch chains and activity polls tripped it nightly.
+    assert_operator AdminApiJob::RATE_LIMIT_SLEEP, :>=, 1.5
   end
 
   test "around_perform sleeps after execution" do
@@ -23,7 +25,7 @@ class AdminApiJobTest < ActiveJob::TestCase
     end
 
     job = job_class.new
-    job.expects(:sleep).with(1.0).once
+    job.expects(:sleep).with(AdminApiJob::RATE_LIMIT_SLEEP).once
     job.perform_now
   end
 

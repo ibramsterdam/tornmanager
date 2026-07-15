@@ -40,6 +40,21 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     assert_not @user.personal_stat_snapshots.exists?(date: Date.parse(@date_str))
   end
 
+  test "a date torn has no data for gets a tombstone instead of endless retries" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch)
+      .raises(TornApi::NoDataError, "No personal stats data returned")
+
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, api_key: "FACTION_KEY_123")
+    end
+
+    tombstone = @user.personal_stat_snapshots.find_by(date: Date.parse(@date_str))
+    assert tombstone, "tombstone row must exist so the gap scan stops re-fetching"
+    assert tombstone.torn_data_missing?
+    assert_not PersonalStatSnapshot.partial.exists?(id: tombstone.id),
+      "tombstones must not count as partial rows"
+  end
+
   test "transient errors propagate so the job retries" do
     TornApi::User::PersonalStats.any_instance.stubs(:fetch)
       .raises(TornApi::TransientError, "Torn backend error, please try again")

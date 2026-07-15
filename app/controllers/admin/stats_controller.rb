@@ -129,8 +129,11 @@ module Admin
       calculate_snapshot_gaps
 
       @incomplete_snapshots = PersonalStatSnapshot.partial.count
-      @complete_snapshots = @total_snapshots - @incomplete_snapshots
-      @completeness_pct = @total_snapshots > 0 ? ((@complete_snapshots.to_f / @total_snapshots) * 100).round(1) : nil
+      @tombstoned_snapshots = PersonalStatSnapshot.where(torn_data_missing: true).count
+      @complete_snapshots = @total_snapshots - @incomplete_snapshots - @tombstoned_snapshots
+      # Tombstoned rows are resolved (Torn has no data to fetch), so they
+      # count as accounted-for — otherwise 100% would be unreachable.
+      @completeness_pct = @total_snapshots > 0 ? (((@complete_snapshots + @tombstoned_snapshots).to_f / @total_snapshots) * 100).round(1) : nil
     end
 
     def load_api_stats

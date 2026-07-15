@@ -9,6 +9,10 @@ module TornApi
   # nightly stats-cache rebuild, "backend error, please try again") — jobs
   # retry these with a delay instead of failing.
   class TransientError < ApiError; end
+  # Torn returned an empty payload. For live fetches this is transient (cache
+  # rebuild); for historical backfills it usually means no data exists for
+  # that player/date and the date should be tombstoned, not retried forever.
+  class NoDataError < TransientError; end
   class NotFoundError < ApiError; end
   class TimeoutError < ApiError; end
 
