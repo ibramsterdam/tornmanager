@@ -24,9 +24,7 @@ module TornApi
         if response["personalstats"].present? || response["personalstats"].is_a?(Array)
           parse_personalstats(response["personalstats"], stat_batch)
         else
-          # Torn intermittently returns a nil payload around the nightly
-          # stats-cache rebuild — retryable, not fatal.
-          raise TransientError, "No personal stats data returned: #{response}"
+          raise NoDataError, "No personal stats data returned: #{response}"
         end
       end
 

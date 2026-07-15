@@ -5,9 +5,11 @@ class PersonalStatSnapshot < ApplicationRecord
 
   # Rows missing any tracked stat: written before a column existed, or a
   # batch-2 fetch that never completed. The nightly gap scan re-fetches these
-  # the same as fully missing dates.
+  # the same as fully missing dates. Tombstoned rows (Torn has no data for
+  # that player/date) are excluded — re-fetching them can never succeed.
   scope :partial, -> {
     TRACKED_STATS.values.map { |column| where(column => nil) }.reduce(:or)
+      .where(torn_data_missing: false)
   }
 
   def self.tracking_start_date

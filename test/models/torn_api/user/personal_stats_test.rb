@@ -1,13 +1,18 @@
 require "test_helper"
 
 class TornApi::User::PersonalStatsTest < ActiveSupport::TestCase
-  test "an empty personalstats payload raises TransientError so jobs retry" do
-    # Torn intermittently returns {"personalstats" => nil} around the nightly
-    # stats-cache rebuild (the 04:50 errors). That's retryable, not fatal.
+  test "an empty personalstats payload raises NoDataError" do
+    # Torn returns {"personalstats" => nil} both transiently (nightly cache
+    # rebuild) and permanently (no data exists for that player/date). Jobs
+    # decide which: daily fetches retry it, historical backfills tombstone it.
     stats = TornApi::User::PersonalStats.new("FACTION_KEY_123", 12345)
     stats.stubs(:get).returns({ "personalstats" => nil })
 
-    assert_raises(TornApi::TransientError) { stats.fetch }
+    assert_raises(TornApi::NoDataError) { stats.fetch }
+  end
+
+  test "NoDataError is still a TransientError so daily fetches retry it" do
+    assert TornApi::NoDataError < TornApi::TransientError
   end
 
   test "a populated personalstats payload parses normally" do

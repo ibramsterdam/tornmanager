@@ -96,6 +96,12 @@
             <span class="admin-stat-label">Complete / incomplete</span>
             <span class="admin-stat-value"><span class="success"><%= number_with_delimiter(@complete_snapshots) %></span> / <span class="<%= 'warning' if @incomplete_snapshots > 0 %>"><%= number_with_delimiter(@incomplete_snapshots) %></span></span>
           </div>
+          <% if @tombstoned_snapshots > 0 %>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">No data at Torn <span class="admin-stats-hint">(tombstoned)</span></span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@tombstoned_snapshots) %></span>
+            </div>
+          <% end %>
         </div>
         <% if @daily_snapshots.any? %>
           <% max_daily = [ @daily_snapshots.map(&:last).max, 1 ].max %>

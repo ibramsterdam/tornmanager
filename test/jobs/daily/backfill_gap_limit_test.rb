@@ -63,6 +63,16 @@ class BackfillGapLimitTest < ActiveJob::TestCase
     assert_equal (@window_start + 10).to_s, enqueued_date
   end
 
+  test "tombstoned dates are not re-fetched" do
+    (@window_start..@window_end).each { |date| create_complete_snapshot(@user, date) }
+    @user.personal_stat_snapshots.find_by(date: @window_start + 5)
+      .update!(drugs_xanax: nil, torn_data_missing: true)
+
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
+      Daily::FactionMemberSyncJob.new.send(:backfill_gaps, @user, "FACTION_KEY_123")
+    end
+  end
+
   test "no jobs are enqueued when there are no gaps" do
     (@window_start..@window_end).each do |date|
       @user.personal_stat_snapshots.create!(

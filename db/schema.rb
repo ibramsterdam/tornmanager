@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_14_210000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_15_070000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -133,6 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_14_210000) do
     t.integer "other_refills_energy"
     t.integer "other_refills_nerve"
     t.integer "timestamp"
+    t.boolean "torn_data_missing", default: false, null: false
     t.datetime "updated_at", null: false
     t.integer "user_id", null: false
     t.index ["user_id", "date"], name: "index_personal_stat_snapshots_on_user_id_and_date", unique: true
