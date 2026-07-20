@@ -26,8 +26,12 @@ class TornApiJob < ApplicationJob
   retry_on TornApi::RateLimitError, wait: 2.minutes, attempts: 5
   retry_on TornApi::TransientError, wait: 15.minutes, attempts: 3
 
+  # Every Torn call made from a job runs in "background" mode: the rate limiter
+  # reserves the top slice of each key's budget for the owner's live web traffic
+  # (which isn't paced or serialized), so a saturating backfill can't starve an
+  # interactive request on the same key.
   around_perform do |_job, block|
-    block.call
+    TornApi::RateLimiter.reserving_headroom_for_live_traffic { block.call }
     sleep(RATE_LIMIT_SLEEP)
   end
 end

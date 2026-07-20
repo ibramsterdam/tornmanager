@@ -19,11 +19,33 @@ module TornApi
     GLOBAL_REQUESTS_PER_MINUTE = 300
     WINDOW_SECONDS = 60
 
+    # Background jobs (nightly fetches, backfills, activity polls) yield the top
+    # slice of each key's budget to the key owner's live web traffic: they stop
+    # at 85% of the per-key budget so the remaining ~15% stays available for
+    # interactive requests, which aren't paced or serialized and would otherwise
+    # be starved whenever a signup backfill is saturating that key. Web requests
+    # run outside background mode and may use the full per-key budget.
+    BACKGROUND_RESERVE = 0.15
+    BACKGROUND_REQUESTS_PER_MINUTE = (REQUESTS_PER_MINUTE * (1 - BACKGROUND_RESERVE)).floor
+
     class << self
+      # Runs the block in background mode — acquire! applies the reduced budget
+      # that reserves headroom for live traffic. Reentrant and thread-scoped so
+      # it's safe across the shared job worker pool.
+      def reserving_headroom_for_live_traffic
+        prior = Thread.current[:torn_api_reserve_headroom]
+        Thread.current[:torn_api_reserve_headroom] = true
+        yield
+      ensure
+        Thread.current[:torn_api_reserve_headroom] = prior
+      end
+
       def acquire!(api_key)
+        limit = reserving_headroom? ? BACKGROUND_REQUESTS_PER_MINUTE : REQUESTS_PER_MINUTE
+
         key_count = increment(key_window(api_key))
-        if key_count > REQUESTS_PER_MINUTE
-          raise RateLimitError, "Too many requests (client-side key budget of #{REQUESTS_PER_MINUTE}/min spent)"
+        if key_count > limit
+          raise RateLimitError, "Too many requests (client-side key budget of #{limit}/min spent)"
         end
 
         global_count = increment(global_window)
@@ -39,6 +61,10 @@ module TornApi
       end
 
       private
+
+      def reserving_headroom?
+        Thread.current[:torn_api_reserve_headroom] == true
+      end
 
       # Null cache stores (test default) return nil from increment; treat as
       # unlimited rather than blocking every call.
