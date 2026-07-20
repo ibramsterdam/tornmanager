@@ -56,6 +56,35 @@ class TornApi::RateLimiterTest < ActiveSupport::TestCase
     assert_equal 40, TornApi::RateLimiter.remaining("FACTION_KEY_123")
   end
 
+  test "background work stops at 85% of the key budget" do
+    assert_equal 42, TornApi::RateLimiter::BACKGROUND_REQUESTS_PER_MINUTE
+
+    TornApi::RateLimiter.reserving_headroom_for_live_traffic do
+      assert_nothing_raised { 42.times { TornApi::RateLimiter.acquire!("FACTION_KEY_123") } }
+      assert_raises(TornApi::RateLimitError) { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+    end
+  end
+
+  test "live traffic keeps the headroom a saturating background job leaves" do
+    # Background work (a backfill) fills up to its reserved threshold and yields.
+    TornApi::RateLimiter.reserving_headroom_for_live_traffic do
+      42.times { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+      assert_raises(TornApi::RateLimitError) { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+    end
+
+    # An interactive web request may still use the reserved slice of the budget.
+    assert_nothing_raised { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+  end
+
+  test "background mode does not leak across the thread after the block" do
+    TornApi::RateLimiter.reserving_headroom_for_live_traffic { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+
+    # Back in interactive mode, the full per-key budget is available again.
+    assert_nothing_raised do
+      49.times { TornApi::RateLimiter.acquire!("FACTION_KEY_123") }
+    end
+  end
+
   # The per-key budget alone lets 30 keys sum to ~1500/min from one server IP.
   # Torn documents no aggregate limit, but error code 8 ("IP blocked for
   # abuse") exists — so the aggregate ceiling must be an explicit budget, not

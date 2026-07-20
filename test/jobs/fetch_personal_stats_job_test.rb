@@ -94,6 +94,19 @@ class FetchPersonalStatsJobTest < ActiveJob::TestCase
     end
   end
 
+  test "no data from Torn is skipped quietly without retrying or paging" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch)
+      .raises(TornApi::NoDataError, "No personal stats data returned")
+    Discord::Notifier.expects(:notify).never
+
+    assert_no_enqueued_jobs(only: FetchPersonalStatsJob) do
+      FetchPersonalStatsJob.perform_now(@user, api_key: @api_key, batch: 1, stats_date: @stats_date)
+    end
+
+    assert_not @user.personal_stat_snapshots.exists?(date: @stats_date),
+      "nightly fetch must leave the date to the gap scan, not tombstone or save it"
+  end
+
   test "inherits from TornApiJob via the FactionApiJob alias" do
     assert FetchPersonalStatsJob < FactionApiJob
     assert FetchPersonalStatsJob < TornApiJob

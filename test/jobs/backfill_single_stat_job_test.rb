@@ -55,6 +55,24 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
       "tombstones must not count as partial rows"
   end
 
+  test "exhausted rate-limit retries drop quietly instead of paging" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch)
+      .raises(TornApi::RateLimitError, "Too many requests")
+    Discord::Notifier.expects(:notify).never
+
+    job = BackfillSingleStatJob.new(@user.id, @date_str, faction_id: @faction.id, api_key: "FACTION_KEY_123")
+    # Pretend the shared retry budget is already spent so the next failure
+    # exhausts retry_on and runs the give-up block rather than re-enqueueing.
+    job.exception_executions = { "[TornApi::RateLimitError]" => 15 }
+
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
+      assert_nothing_raised { job.perform_now }
+    end
+
+    assert_not @user.personal_stat_snapshots.exists?(date: Date.parse(@date_str)),
+      "a rate-limited backfill leaves the date for the nightly gap scan"
+  end
+
   test "transient errors propagate so the job retries" do
     TornApi::User::PersonalStats.any_instance.stubs(:fetch)
       .raises(TornApi::TransientError, "Torn backend error, please try again")

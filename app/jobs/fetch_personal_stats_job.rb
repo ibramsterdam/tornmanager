@@ -11,6 +11,15 @@ class FetchPersonalStatsJob < FactionApiJob
     save_snapshot(user, stats, stats_date)
 
     FetchPersonalStatsJob.perform_later(user, api_key: api_key, batch: 2, stats_date: stats_date) if batch == 1
+  rescue TornApi::NoDataError => e
+    # Torn returned no personalstats for this user/date. This runs at 2:30am
+    # TCT — well after the stats cache settles (~1am) — so a nil payload here
+    # is almost always a new/inactive member or data Torn simply doesn't have,
+    # not a cache-rebuild blip. Skip quietly: the nightly gap scan re-attempts
+    # the date once it's older and BackfillSingleStatJob tombstones it if the
+    # gap is permanent. Letting this propagate just burns 3x15min of retries
+    # and pages a false alarm for something the gap scan already recovers.
+    Rails.logger.info("FetchPersonalStatsJob: no data for #{user.name} (#{user.torn_id}) on #{stats_date}, batch #{batch} — leaving to nightly gap scan (#{e.message})")
   rescue TornApi::InvalidKeyError => e
     if retries < MAX_RETRIES
       Rails.logger.warn("FetchPersonalStatsJob: Failed for #{user.name} (#{user.torn_id}): #{e.message}, retry #{retries + 1}/#{MAX_RETRIES} in 1 hour")
