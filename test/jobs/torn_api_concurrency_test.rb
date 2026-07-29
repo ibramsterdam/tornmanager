@@ -1,10 +1,7 @@
 require "test_helper"
 
-# All jobs that hit the Torn API with the same api key must share ONE
-# solid_queue semaphore, regardless of job class. Today FetchPersonalStatsJob
-# serializes per api_key while the FactionApiCalls group serializes per
-# faction_id — so several parallel streams can hammer the same key (worst on
-# the kaneki key during HOF sync, where users span many faction_ids).
+# Every job that hits the Torn API with the same api key must share ONE
+# solid_queue semaphore, regardless of job class.
 class TornApiConcurrencyTest < ActiveJob::TestCase
   setup do
     @faction = Faction.create!(

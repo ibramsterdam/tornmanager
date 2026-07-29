@@ -101,17 +101,64 @@ class ComplianceSummaryTest < ActiveSupport::TestCase
     end
   end
 
-  test "worst_performers returns lowest compliance scores first" do
+  test "worst_performers puts the lowest compliance score first" do
     with_memory_cache do
-      other_user = users(:kaneki)
-      other_user.update!(faction: @faction, fallen: false)
-      create_snapshots(other_user, @start_date - 1.day, @end_date, xanax_base: 100)
+      slacker = users(:kaneki)
+      slacker.update!(faction: @faction, fallen: false)
+      create_snapshots(slacker, @start_date - 1.day, @end_date, xanax_step: 0)
 
       summary = ComplianceSummary.new(@faction, start_date: @start_date, end_date: @end_date)
       worst = summary.worst_performers(1)
 
       assert_equal 1, worst.size
-      assert worst.first[:compliance_score] <= summary.member_rows.map { |r| r[:compliance_score] }.max
+      assert_equal slacker.torn_id, worst.first[:torn_id],
+        "the member with zero xanax gained must rank worst"
+    end
+  end
+
+  test "loads snapshots for the whole roster in a single query" do
+    with_memory_cache do
+      other_user = users(:kaneki)
+      other_user.update!(faction: @faction, fallen: false)
+      create_snapshots(other_user, @start_date - 1.day, @end_date)
+
+      snapshot_queries = 0
+      counter = ->(_name, _start, _finish, _id, payload) do
+        sql = payload[:sql].to_s
+        snapshot_queries += 1 if sql.start_with?("SELECT") && sql.include?("personal_stat_snapshots")
+      end
+
+      ActiveSupport::Notifications.subscribed(counter, "sql.active_record") do
+        summary = ComplianceSummary.new(@faction, start_date: @start_date, end_date: @end_date)
+        assert_equal 2, summary.member_rows.size
+      end
+
+      assert_equal 1, snapshot_queries
+    end
+  end
+
+  test "ssl users pass xanax compliance regardless of the target" do
+    with_memory_cache do
+      @user.update!(ssl_user: true)
+      @faction.update!(xanax_target: 100.0)
+
+      summary = ComplianceSummary.new(@faction, start_date: @start_date, end_date: @end_date)
+      row = summary.member_rows.first
+
+      assert row[:ssl_user]
+      assert_equal :green, row[:xanax_compliance]
+    end
+  end
+
+  test "a member with a single snapshot is skipped rather than scored on zero days" do
+    with_memory_cache do
+      one_day_user = users(:kaneki)
+      one_day_user.update!(faction: @faction, fallen: false)
+      create_snapshots(one_day_user, @start_date, @start_date)
+
+      summary = ComplianceSummary.new(@faction, start_date: @start_date, end_date: @end_date)
+
+      assert_not_includes summary.member_rows.map { |r| r[:torn_id] }, one_day_user.torn_id
     end
   end
 
@@ -138,12 +185,12 @@ class ComplianceSummaryTest < ActiveSupport::TestCase
 
   private
 
-  def create_snapshots(user, from_date, to_date, xanax_base: 0)
+  def create_snapshots(user, from_date, to_date, xanax_base: 0, xanax_step: 3)
     (from_date..to_date).each_with_index do |date, i|
       PersonalStatSnapshot.create!(
         user: user,
         date: date,
-        drugs_xanax: xanax_base + (i * 3),
+        drugs_xanax: xanax_base + (i * xanax_step),
         other_refills_energy: i * 1,
         other_refills_nerve: i * 1,
         missions_contracts_total: i * 2,

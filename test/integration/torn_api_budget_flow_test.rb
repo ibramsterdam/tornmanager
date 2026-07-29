@@ -1,11 +1,8 @@
 require "test_helper"
 
-# End-to-end composition of the three layers: a job whose key is out of budget
-# is rejected before any HTTP happens and re-scheduled, while a job on a
-# different key sails through the whole real pipeline (budget gate -> HTTP ->
-# parse -> snapshot) at the same moment.
 class TornApiBudgetFlowTest < ActiveJob::TestCase
   setup do
+    freeze_time # budget windows are 60s wide; a boundary mid-test resets them
     Rails.stubs(:cache).returns(ActiveSupport::Cache::MemoryStore.new)
 
     @faction = Faction.create!(

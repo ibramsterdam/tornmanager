@@ -68,8 +68,10 @@ class User < ApplicationRecord
     subscription.update!(expires_at: subscription.expires_at - weeks.weeks)
   end
 
+  ADMIN_TORN_ID = 2728237
+
   def admin?
-    torn_id == 2728237
+    torn_id == ADMIN_TORN_ID
   end
 
   def hof_access?

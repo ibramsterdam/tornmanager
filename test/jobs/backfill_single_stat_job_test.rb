@@ -1,9 +1,5 @@
 require "test_helper"
 
-# BackfillSingleStatJob currently swallows every API error and returns nil,
-# which silently leaves the date missing — so the nightly gap scan re-enqueues
-# it forever, compounding API load. Retryable errors must propagate to the
-# job-level retry; only genuinely unrecoverable ones may skip.
 class BackfillSingleStatJobTest < ActiveJob::TestCase
   setup do
     @faction = Faction.create!(
@@ -27,6 +23,26 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     end
 
     assert @user.personal_stat_snapshots.exists?(date: Date.parse(@date_str))
+  end
+
+  test "batch 2 completes the chain without enqueueing further work" do
+    TornApi::User::PersonalStats.any_instance.stubs(:fetch).returns(@stats)
+
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id, batch: 2, api_key: "FACTION_KEY_123")
+    end
+
+    assert @user.personal_stat_snapshots.exists?(date: Date.parse(@date_str))
+  end
+
+  test "a missing api key skips the date without touching the API" do
+    TornApi::User::PersonalStats.any_instance.expects(:fetch).never
+
+    assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
+      BackfillSingleStatJob.perform_now(@user.id, @date_str, faction_id: @faction.id)
+    end
+
+    assert_not @user.personal_stat_snapshots.exists?(date: Date.parse(@date_str))
   end
 
   test "rate limit errors propagate so the job retries instead of losing the date" do
@@ -61,8 +77,7 @@ class BackfillSingleStatJobTest < ActiveJob::TestCase
     Discord::Notifier.expects(:notify).never
 
     job = BackfillSingleStatJob.new(@user.id, @date_str, faction_id: @faction.id, api_key: "FACTION_KEY_123")
-    # Pretend the shared retry budget is already spent so the next failure
-    # exhausts retry_on and runs the give-up block rather than re-enqueueing.
+    # Spend the retry budget so the next failure runs the give-up block.
     job.exception_executions = { "[TornApi::RateLimitError]" => 15 }
 
     assert_no_enqueued_jobs(only: BackfillSingleStatJob) do
