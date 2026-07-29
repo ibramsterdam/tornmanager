@@ -2,16 +2,9 @@ class BackfillSingleStatJob < FactionApiJob
   queue_with_priority 100
   limits_concurrency to: 1, key: ->(user_id, date_str, faction_id:, api_key: nil, **) { api_key }, group: CONCURRENCY_GROUP
 
-  # Backfill is the lowest-priority work on a contended key. A faction signup
-  # fans thousands of these onto one key at once (Jan 1 → yesterday per member),
-  # right when the leader is actively browsing their new dashboard — so the key
-  # budget is regularly spent and these trip the client-side rate limiter. That
-  # is expected back-pressure, not a failure: background work must yield to live
-  # traffic. So retry patiently and with jitter (a re-enqueue releases the worker
-  # and the per-key concurrency lock means retries never pile up, so attempts are
-  # cheap) — this lets a signup backfill drain itself once traffic quiets instead
-  # of dribbling in at the gap scan's 30/user/night cap. If even that patience is
-  # exhausted, drop quietly with a log line; the nightly gap scan is the backstop.
+  # A faction signup fans thousands of these onto one key at once, so rate-limit
+  # rejections here are expected back-pressure, not failures: retry patiently,
+  # and if retries run out, drop quietly — the nightly gap scan is the backstop.
   retry_on TornApi::RateLimitError, wait: 2.minutes, attempts: 15, jitter: 0.5 do |job, error|
     user_id, date_str = job.arguments
     Rails.logger.warn("BackfillSingleStatJob: gave up on user #{user_id} #{date_str} after rate-limit retries — nightly gap scan will retry (#{error.message})")
@@ -30,8 +23,7 @@ class BackfillSingleStatJob < FactionApiJob
 
     BackfillSingleStatJob.perform_later(user_id, date_str, faction_id: faction_id, batch: 2, api_key: api_key) if batch == 1
   rescue TornApi::NoDataError
-    # Torn has nothing for this player/date — tombstone the date so the
-    # nightly gap scan stops re-fetching it forever.
+    # Tombstone the date so the nightly gap scan stops re-fetching it.
     tombstone = user.personal_stat_snapshots.find_or_initialize_by(date: date)
     tombstone.update!(torn_data_missing: true)
     Rails.logger.info("BackfillSingleStatJob: tombstoned #{user.name} #{date} — no data at Torn")
@@ -49,9 +41,7 @@ class BackfillSingleStatJob < FactionApiJob
       stat_batch: stat_batch
     ).fetch
   rescue TornApi::NotFoundError, TornApi::InvalidKeyError => e
-    # Unrecoverable for this user/key — skip the date. Rate limits and
-    # transient errors propagate so retry_on reschedules instead of the
-    # gap silently re-enqueueing every night.
+    # Unrecoverable for this user/key — skip the date; retryable errors propagate to retry_on.
     Rails.logger.error("API error fetching stats: #{e.message}")
     nil
   end

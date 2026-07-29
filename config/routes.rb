@@ -73,8 +73,6 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :welcome, only: [ :index ]
-
   get "hall-of-famers", to: "hall_of_famers#index", as: :hall_of_famers
 
   get "user/api-calls", to: "user_api_calls#index", as: :user_api_calls
