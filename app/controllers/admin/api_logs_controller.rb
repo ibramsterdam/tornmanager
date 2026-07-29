@@ -4,7 +4,7 @@ module Admin
 
     def index
       admin_api_key = AdminCredentials.api_key
-      admin_user = User.find_by(torn_id: 2728237)
+      admin_user = User.find_by(torn_id: User::ADMIN_TORN_ID)
 
       base_scope = ApiCall
         .where(api_key: admin_api_key)

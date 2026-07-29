@@ -3,10 +3,8 @@ class PersonalStatSnapshot < ApplicationRecord
 
   validates :date, presence: true, uniqueness: { scope: :user_id }
 
-  # Rows missing any tracked stat: written before a column existed, or a
-  # batch-2 fetch that never completed. The nightly gap scan re-fetches these
-  # the same as fully missing dates. Tombstoned rows (Torn has no data for
-  # that player/date) are excluded — re-fetching them can never succeed.
+  # Rows missing any tracked stat — the nightly gap scan re-fetches them.
+  # Tombstoned rows are excluded: re-fetching those can never succeed.
   scope :partial, -> {
     TRACKED_STATS.values.map { |column| where(column => nil) }.reduce(:or)
       .where(torn_data_missing: false)
