@@ -1,35 +1,20 @@
-# Base class for every job that calls the Torn API. API discipline lives here
-# exactly once:
-#
-#   1. Serialize — subclasses declare `limits_concurrency` in CONCURRENCY_GROUP
-#      keyed by the api key, so each key has ONE job in flight cluster-wide.
-#      On a contended key, solid_queue releases blocked jobs by priority:
-#      0 interactive · 10 recurring polls · 50 nightly · 100 backfill.
-#   2. Pace — the 1s sleep keeps a serialized stream at ~38 calls/min, safely
-#      under the 50/min per-key budget TornApi::RateLimiter enforces.
-#   3. Retry — rate limits heal in a minute, Torn hiccups heal in a few;
-#      both re-schedule instead of failing (and feeding tomorrow's backfill).
+# Base class for every job that calls the Torn API: one job in flight per api
+# key cluster-wide, paced under the budget TornApi::RateLimiter enforces.
+# Queue priorities: 0 interactive · 10 recurring polls · 50 nightly · 100 backfill.
 class TornApiJob < ApplicationJob
   queue_as :torn_api
   queue_with_priority 0
 
   CONCURRENCY_GROUP = "TornApiCalls"
 
-  # Concurrency key for jobs that receive a faction_id instead of an api key.
   FACTION_KEY_LOOKUP = ->(faction_id, *, **) { Faction.find_by(id: faction_id)&.torn_api_key&.key }
 
-  # 1.0s paced a stream at ~46 calls/min — close enough to the 50/min budget
-  # that batch chains and activity polls on the same key tripped it nightly.
-  # 1.5s paces at ~31/min, leaving genuine headroom.
+  # 1.0s paced ~46 calls/min and tripped the 50/min budget nightly; 1.5s leaves headroom.
   RATE_LIMIT_SLEEP = 1.5
 
   retry_on TornApi::RateLimitError, wait: 2.minutes, attempts: 5
   retry_on TornApi::TransientError, wait: 15.minutes, attempts: 3
 
-  # Every Torn call made from a job runs in "background" mode: the rate limiter
-  # reserves the top slice of each key's budget for the owner's live web traffic
-  # (which isn't paced or serialized), so a saturating backfill can't starve an
-  # interactive request on the same key.
   around_perform do |_job, block|
     TornApi::RateLimiter.reserving_headroom_for_live_traffic { block.call }
     sleep(RATE_LIMIT_SLEEP)
