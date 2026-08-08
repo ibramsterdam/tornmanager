@@ -312,58 +312,98 @@
   border-radius: 10px;
 }
 
-.tm-war-line {
+.tm-war-head {
+  margin-bottom: 14px;
+}
+
+.tm-war-head-row {
   display: flex;
   align-items: baseline;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 14px;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.tm-war-head-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
   font-size: 13px;
   color: #888;
 }
 
-.tm-war-line--muted {
+.tm-war-head-left--muted {
   color: #666;
 }
 
-.tm-war-line--error {
+.tm-war-head-left--error {
   color: #e53935;
 }
 
-.tm-war-line-vs {
+.tm-war-head-vs {
   font-size: 11px;
   font-style: italic;
   color: #666;
 }
 
-.tm-war-line-enemy {
+.tm-war-head-enemy {
   font-size: 14px;
   font-weight: 700;
   color: #e53935;
   text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.tm-war-line-enemy:hover {
+.tm-war-head-enemy:hover {
   color: #ff6659;
   text-decoration: underline;
 }
 
-.tm-war-line-score {
+.tm-war-head-score {
+  flex: none;
+  font-size: 15px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
 
-.tm-war-line-score--up {
+.tm-war-score--up {
   color: #4caf50;
 }
 
-.tm-war-line-score--down {
+.tm-war-score--down {
   color: #e53935;
 }
 
-.tm-war-line-sep {
+.tm-war-head-sep {
   font-weight: 400;
   color: #555;
+}
+
+.tm-war-head-target {
+  font-size: 12px;
+  font-weight: 400;
+  color: #555;
+}
+
+.tm-war-bar {
+  height: 3px;
+  border-radius: 2px;
+  background: #2a2a2c;
+  overflow: hidden;
+}
+
+.tm-war-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  background: #4caf50;
+  transition: width 0.5s ease;
+}
+
+.tm-war-bar-fill--losing {
+  background: #e53935;
 }
 
 .tm-tt-add {
@@ -377,8 +417,8 @@
 .tm-tt-add-input {
   flex: 1;
   min-width: 160px;
-  padding: 8px 12px;
-  font-size: 13px;
+  padding: 7px 11px;
+  font-size: 12.5px;
   color: #fff;
   background: #111;
   border: 1px solid #333;
@@ -393,7 +433,7 @@
 }
 
 .tm-tt-add-button {
-  padding: 8px 14px;
+  padding: 7px 16px;
   font-size: 12.5px;
   font-weight: 600;
   color: #fff;
@@ -483,8 +523,16 @@
   border-bottom: none;
 }
 
+.tm-tt tbody tr {
+  cursor: pointer;
+}
+
 .tm-tt tbody tr:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tm-tt tbody tr:hover .tm-tt-name {
+  color: #ff6659;
 }
 
 .tm-tt-name {
@@ -528,7 +576,13 @@
   border: none;
   border-radius: 4px;
   cursor: pointer;
-  transition: color 0.15s ease, background 0.15s ease;
+  opacity: 0.25;
+  transition: color 0.15s ease, background 0.15s ease, opacity 0.15s ease;
+}
+
+.tm-tt tbody tr:hover .tm-tt-remove,
+.tm-tt-remove:focus-visible {
+  opacity: 1;
 }
 
 .tm-tt-remove:hover {
@@ -631,6 +685,37 @@
 .tm-timer-sep {
   font-weight: 400;
   color: #555;
+}
+
+.tm-tt [data-timer-until]:hover,
+.tm-tt [data-travel-eta]:hover,
+.tm-tt [data-travel-fast-eta]:hover {
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+}
+
+.tm-toast {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  z-index: 1000000;
+  padding: 8px 16px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #fff;
+  background: #2a2a2c;
+  border: 1px solid #444;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.tm-toast--visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
 }
 
 @keyframes tm-pulse {

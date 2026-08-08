@@ -525,7 +525,7 @@ export default class extends Controller {
     const timerHtml = this.renderTimer(member)
     const lastActionHtml = this.renderLastAction(member)
     const statsHtml = this.hideStatsValue ? "" : this.renderStats(member)
-    const attackUrl = `https://www.torn.com/loader.php?sid=attack&user2ID=${member.torn_id}`
+    const attackUrl = `https://www.torn.com/page.php?sid=attack&user2ID=${member.torn_id}`
     const profileUrl = `https://www.torn.com/profiles.php?XID=${member.torn_id}`
 
     return `

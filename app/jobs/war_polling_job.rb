@@ -23,6 +23,7 @@ class WarPollingJob < ApplicationJob
 
     @previous_data = Rails.cache.read(faction.war_cache_key) || {}
 
+    refresh_war_scores(faction, war)
     war_data = build_war_data(faction, war)
     Rails.cache.write(faction.war_cache_key, war_data, expires_in: CACHE_TTL)
 
@@ -33,6 +34,22 @@ class WarPollingJob < ApplicationJob
   end
 
   private
+
+  # Scores otherwise only refresh via the daily 2am backfill, which leaves a
+  # war that starts mid-day stuck at 0-0 all day. Failures here must not stop
+  # member polling.
+  def refresh_war_scores(faction, war)
+    latest = TornApi::Faction::RankedWars.new(faction.torn_api_key.key, faction.torn_id).fetch(limit: 1).first
+    return unless latest && latest["id"] == war.torn_war_id
+
+    ours = latest["factions"].find { |f| f["id"] == faction.torn_id }
+    theirs = latest["factions"].find { |f| f["id"] != faction.torn_id }
+    return unless ours && theirs
+
+    war.update!(our_score: ours["score"], their_score: theirs["score"])
+  rescue TornApi::ApiError => e
+    Rails.logger.warn("WarPollingJob: Score refresh failed for faction #{faction.id}: #{e.message}")
+  end
 
   def build_war_data(faction, war)
     enemy_members = fetch_enemy_members(faction.torn_api_key.key, war.opponent_faction_id)
