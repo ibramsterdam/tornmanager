@@ -199,7 +199,7 @@ export class TargetTable {
   }
 
   renderRow({ id, member }) {
-    const attackUrl = `https://www.torn.com/loader.php?sid=attack&user2ID=${id}`;
+    const attackUrl = `https://www.torn.com/page.php?sid=attack&user2ID=${id}`;
     const removeCell = `<td class="tm-tt-remove-cell"><button type="button" class="tm-tt-remove" data-id="${id}" title="Remove target">×</button></td>`;
 
     if (!member) {
