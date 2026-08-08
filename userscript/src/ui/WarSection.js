@@ -1,192 +1,179 @@
+import { Targets } from "../core/Targets.js";
+import { TargetTable } from "./TargetTable.js";
+
+const POLL_INTERVAL_MS = 6000;
+
 export class WarSection {
   constructor(api) {
     this.api = api;
+    this.targets = new Targets();
+    this.members = {};
+    this.war = null;
+    this.pollInterval = null;
+    this.table = null;
   }
 
   render() {
-    const section = document.createElement("div");
-    section.className = "tm-war";
+    this.section = document.createElement("div");
+    this.section.className = "tm-war";
 
-    const title = document.createElement("h2");
-    title.className = "tm-war-title";
-    title.textContent = "Ranked War";
-    section.appendChild(title);
+    this.warLine = document.createElement("div");
+    this.warLine.className = "tm-war-line tm-war-line--muted";
+    this.warLine.textContent = "Loading war status...";
+    this.section.appendChild(this.warLine);
 
-    const content = document.createElement("div");
-    content.className = "tm-war-content";
-    section.appendChild(content);
+    this.section.appendChild(this.createAddForm());
 
-    this.loadWarStatus(content);
+    this.table = new TargetTable({ onRemove: (id) => this.removeTarget(id) });
+    this.tableWrap = this.table.render();
+    this.section.appendChild(this.tableWrap);
 
-    return section;
+    this.emptyEl = document.createElement("p");
+    this.emptyEl.className = "tm-tt-empty";
+    this.emptyEl.textContent = "No targets yet. Add a player by their Torn ID.";
+    this.section.appendChild(this.emptyEl);
+
+    this.refreshTable();
+    this.poll();
+    this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+
+    return this.section;
   }
 
-  loadWarStatus(container) {
-    container.innerHTML = "";
+  destroy() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+    if (this.table) {
+      this.table.destroy();
+      this.table = null;
+    }
+  }
 
-    const loading = document.createElement("p");
-    loading.className = "tm-war-loading-text";
-    loading.textContent = "Loading...";
-    container.appendChild(loading);
+  createAddForm() {
+    const form = document.createElement("form");
+    form.className = "tm-tt-add";
 
+    this.input = document.createElement("input");
+    this.input.type = "text";
+    this.input.className = "tm-tt-add-input";
+    this.input.placeholder = "Torn ID or profile link";
+    this.input.autocomplete = "off";
+    this.input.spellcheck = false;
+
+    const button = document.createElement("button");
+    button.type = "submit";
+    button.className = "tm-tt-add-button";
+    button.textContent = "Add target";
+
+    this.addError = document.createElement("span");
+    this.addError.className = "tm-tt-add-error";
+
+    form.appendChild(this.input);
+    form.appendChild(button);
+    form.appendChild(this.addError);
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      this.addTarget(this.input.value);
+    });
+
+    return form;
+  }
+
+  addTarget(value) {
+    this.addError.textContent = "";
+
+    const id = Targets.parseId(value);
+    if (!id) {
+      this.addError.textContent = "Enter a Torn ID or profile link.";
+      return;
+    }
+
+    if (!this.targets.add(id)) {
+      this.addError.textContent = "Already in your list.";
+      return;
+    }
+
+    this.input.value = "";
+    this.refreshTable();
+  }
+
+  removeTarget(id) {
+    this.targets.remove(id);
+    this.refreshTable();
+  }
+
+  refreshTable() {
+    const ids = this.targets.getAll();
+
+    this.emptyEl.style.display = ids.length ? "none" : "";
+    this.tableWrap.style.display = ids.length ? "" : "none";
+
+    this.table.update(ids.map((id) => ({ id, member: this.members[id] || null })));
+  }
+
+  poll() {
     this.api
       .fetchCurrentWar()
       .then((response) => {
-        container.innerHTML = "";
-
-        if (!response.war) {
-          const noWar = document.createElement("p");
-          noWar.className = "tm-war-none";
-          noWar.textContent = "No active war.";
-          container.appendChild(noWar);
-          return;
-        }
-
-        this.renderWarStatus(container, response.war);
+        this.war = response.war || null;
+        this.members = this.war?.members || {};
+        this.updateWarLine();
+        this.refreshTable();
       })
       .catch((err) => {
-        container.innerHTML = "";
-
-        const errorEl = document.createElement("p");
-        errorEl.className = "tm-war-error";
-        errorEl.textContent = err.message || "Could not load war data.";
-        container.appendChild(errorEl);
+        this.warLine.className = "tm-war-line tm-war-line--error";
+        this.warLine.textContent = err.message || "Could not load war data.";
       });
   }
 
-  renderWarStatus(container, war) {
-    const members = war.members || {};
-    const memberList = Object.values(members);
-    const totalMembers = memberList.length;
+  updateWarLine() {
+    this.warLine.className = "tm-war-line";
+    this.warLine.innerHTML = "";
 
-    const hospitalCount = memberList.filter(
-      (m) => m.status?.state === "Hospital"
-    ).length;
-    const travelingCount = memberList.filter(
-      (m) => m.status?.state === "Traveling" || m.status?.state === "Abroad"
-    ).length;
-    const jailCount = memberList.filter(
-      (m) => m.status?.state === "Jail"
-    ).length;
-    const okayCount = totalMembers - hospitalCount - travelingCount - jailCount;
-
-    const onlineCount = memberList.filter(
-      (m) => m.last_action?.status === "Online"
-    ).length;
-    const idleCount = memberList.filter(
-      (m) => m.last_action?.status === "Idle"
-    ).length;
-
-    if (war.enemy_faction_name) {
-      const enemy = document.createElement("div");
-      enemy.className = "tm-war-enemy";
-
-      const label = document.createElement("span");
-      label.className = "tm-war-enemy-label";
-      label.textContent = "vs";
-
-      const name = document.createElement("a");
-      name.className = "tm-war-enemy-name";
-      name.href = `https://www.torn.com/factions.php?step=profile&ID=${war.enemy_faction_id}`;
-      name.target = "_blank";
-      name.rel = "noopener";
-      name.textContent = war.enemy_faction_name;
-
-      enemy.appendChild(label);
-      enemy.appendChild(name);
-      container.appendChild(enemy);
+    if (!this.war) {
+      this.warLine.classList.add("tm-war-line--muted");
+      this.warLine.textContent = "No active war.";
+      return;
     }
 
-    if (war.our_score != null && war.their_score != null) {
-      const score = document.createElement("div");
-      score.className = "tm-war-score";
+    const vs = document.createElement("span");
+    vs.className = "tm-war-line-vs";
+    vs.textContent = "vs";
 
-      const ourScore = document.createElement("span");
-      ourScore.className = "tm-war-score-ours";
-      ourScore.textContent = war.our_score;
+    const enemy = document.createElement("a");
+    enemy.className = "tm-war-line-enemy";
+    enemy.href = `https://www.torn.com/factions.php?step=profile&ID=${this.war.enemy_faction_id}`;
+    enemy.target = "_blank";
+    enemy.rel = "noopener";
+    enemy.textContent = this.war.enemy_faction_name || "Unknown faction";
 
-      const separator = document.createElement("span");
-      separator.className = "tm-war-score-sep";
-      separator.textContent = " \u2013 ";
+    const ours = this.war.our_score || 0;
+    const theirs = this.war.their_score || 0;
 
-      const theirScore = document.createElement("span");
-      theirScore.className = "tm-war-score-theirs";
-      theirScore.textContent = war.their_score;
+    const score = document.createElement("span");
+    score.className = "tm-war-line-score";
 
-      score.appendChild(ourScore);
-      score.appendChild(separator);
-      score.appendChild(theirScore);
+    const ourScore = document.createElement("span");
+    ourScore.className = ours >= theirs ? "tm-war-line-score--up" : "tm-war-line-score--down";
+    ourScore.textContent = ours.toLocaleString();
 
-      if (war.target_score) {
-        const target = document.createElement("span");
-        target.className = "tm-war-score-target";
-        target.textContent = ` / ${war.target_score}`;
-        score.appendChild(target);
-      }
+    const separator = document.createElement("span");
+    separator.className = "tm-war-line-sep";
+    separator.textContent = " – ";
 
-      container.appendChild(score);
-    }
+    const theirScore = document.createElement("span");
+    theirScore.className = theirs >= ours ? "tm-war-line-score--up" : "tm-war-line-score--down";
+    theirScore.textContent = theirs.toLocaleString();
 
-    const breakdown = document.createElement("div");
-    breakdown.className = "tm-war-breakdown";
+    score.appendChild(ourScore);
+    score.appendChild(separator);
+    score.appendChild(theirScore);
 
-    const statItems = [
-      { label: "Okay", value: okayCount, cls: "okay" },
-      { label: "Hospital", value: hospitalCount, cls: "hospital" },
-      { label: "Traveling", value: travelingCount, cls: "traveling" },
-      { label: "Jail", value: jailCount, cls: "jail" },
-    ];
-
-    for (const item of statItems) {
-      if (item.value === 0) continue;
-
-      const row = document.createElement("div");
-      row.className = `tm-war-breakdown-item tm-war-breakdown--${item.cls}`;
-      row.innerHTML = `<span class="tm-war-breakdown-value">${item.value}</span><span class="tm-war-breakdown-label">${item.label}</span>`;
-      breakdown.appendChild(row);
-    }
-
-    container.appendChild(breakdown);
-
-    const activity = document.createElement("div");
-    activity.className = "tm-war-activity";
-
-    const activityItems = [
-      { label: "Online", value: onlineCount, cls: "online" },
-      { label: "Idle", value: idleCount, cls: "idle" },
-    ];
-
-    for (const item of activityItems) {
-      const row = document.createElement("div");
-      row.className = `tm-war-activity-item tm-war-activity--${item.cls}`;
-      row.innerHTML = `<span class="tm-war-activity-value">${item.value}</span><span class="tm-war-activity-label">${item.label}</span>`;
-      activity.appendChild(row);
-    }
-
-    container.appendChild(activity);
-
-    if (war.started_at) {
-      const elapsed = Date.now() - new Date(war.started_at).getTime();
-      if (elapsed > 0) {
-        const duration = document.createElement("div");
-        duration.className = "tm-war-duration";
-        duration.textContent = `Started ${this.formatDuration(elapsed)} ago`;
-        container.appendChild(duration);
-      }
-    }
-  }
-
-  formatDuration(ms) {
-    const totalSeconds = Math.floor(ms / 1000);
-    const days = Math.floor(totalSeconds / 86400);
-    const hours = Math.floor((totalSeconds % 86400) / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-
-    const parts = [];
-    if (days > 0) parts.push(`${days}d`);
-    if (hours > 0) parts.push(`${hours}h`);
-    if (minutes > 0 || parts.length === 0) parts.push(`${minutes}m`);
-
-    return parts.join(" ");
+    this.warLine.appendChild(vs);
+    this.warLine.appendChild(enemy);
+    this.warLine.appendChild(score);
   }
 }

@@ -594,7 +594,7 @@ export default class extends Controller {
   renderTravelTimer(status) {
     const destination = status.destination
     const description = status.description || ""
-    const isReturning = description.toLowerCase().includes("returning")
+    const isReturning = status.returning === true || description.toLowerCase().includes("returning")
     const directionPrefix = isReturning ? "\u2190 " : ""
     const directionSuffix = isReturning ? "" : " \u2192"
 
@@ -609,7 +609,7 @@ export default class extends Controller {
 
     const flightData = FLIGHT_TIMES[destination]
     if (!flightData) {
-      const displayText = isReturning ? `\u2190 Torn` : `${destination} \u2192`
+      const displayText = isReturning ? `\u2190 Torn` : `${destination || "Unknown"} \u2192`
       return `<span class="travel-timer" title="${this.escapeHtml(description)}">${this.escapeHtml(displayText)}</span>`
     }
 

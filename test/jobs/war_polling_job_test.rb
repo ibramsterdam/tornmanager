@@ -155,7 +155,51 @@ class WarPollingJobTest < ActiveJob::TestCase
     end
   end
 
-  test "outbound traveler includes destination and description" do
+  test "outbound traveler parses destination from new Torn travel format" do
+    traveling_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Traveling from Torn to Switzerland", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ traveling_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      status = cached[:members][6666666][:status]
+
+      assert_equal "Traveling", status[:state]
+      assert_equal "Switzerland", status[:destination]
+      assert_equal false, status[:returning]
+    end
+  end
+
+  test "returning traveler resolves origin country as destination in new Torn travel format" do
+    returning_member = TornApi::Faction::Members::Member.new(
+      6666666, "TravelingPlayer", 50, 30,
+      "Online", 1708000000, "5 minutes ago",
+      "Traveling from Switzerland to Torn", "", "Traveling", "blue", nil, "airliner",
+      "Everyone", "Member", true, false, false, false
+    )
+
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ returning_member ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      status = cached[:members][6666666][:status]
+
+      assert_equal "Traveling", status[:state]
+      assert_equal "Switzerland", status[:destination]
+      assert_equal true, status[:returning]
+    end
+  end
+
+  test "outbound traveler in legacy format still parses destination" do
     traveling_member = TornApi::Faction::Members::Member.new(
       6666666, "TravelingPlayer", 50, 30,
       "Online", 1708000000, "5 minutes ago",
@@ -171,13 +215,12 @@ class WarPollingJobTest < ActiveJob::TestCase
       cached = Rails.cache.read(@faction.war_cache_key)
       status = cached[:members][6666666][:status]
 
-      assert_equal "Traveling", status[:state]
       assert_equal "Switzerland", status[:destination]
-      assert_equal "Traveling to Switzerland", status[:description]
+      assert_equal false, status[:returning]
     end
   end
 
-  test "returning traveler includes destination and description with returning text" do
+  test "returning traveler in legacy format still parses destination" do
     returning_member = TornApi::Faction::Members::Member.new(
       6666666, "TravelingPlayer", 50, 30,
       "Online", 1708000000, "5 minutes ago",
@@ -193,9 +236,8 @@ class WarPollingJobTest < ActiveJob::TestCase
       cached = Rails.cache.read(@faction.war_cache_key)
       status = cached[:members][6666666][:status]
 
-      assert_equal "Traveling", status[:state]
       assert_equal "Switzerland", status[:destination]
-      assert_equal "Returning to Torn from Switzerland", status[:description]
+      assert_equal true, status[:returning]
     end
   end
 

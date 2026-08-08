@@ -61,8 +61,8 @@ dependencies, built with Vite + vite-plugin-monkey into a single file. It calls 
 JSON API (`POST /api/session`, `/api/subscription`, `/api/current_war`) via
 `GM.xmlHttpRequest`, sending the user's Torn API key in the request body.
 
-- `userscript/src/core/` — services (Auth, ApiClient, Dom, Logger)
-- `userscript/src/ui/` — view components (Overlay, Sidebar, AuthScreen, SubscriptionSection, WarSection)
+- `userscript/src/core/` — services (Auth, ApiClient, Dom, Logger, Targets)
+- `userscript/src/ui/` — view components (Overlay, Sidebar, AuthScreen, SubscriptionSection, WarSection, TargetTable)
 - `cd userscript && npm run dev` — watch build against `http://localhost:3000`
 - `cd userscript && npm run build` — production build (`dist/tornmanager.user.js`, unminified on purpose)
 - Releases are uploaded through `/admin/script_versions` and served at `/userscript/download`

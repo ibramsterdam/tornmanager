@@ -2,8 +2,6 @@ class WarPollingJob < ApplicationJob
   POLL_INTERVAL = 6.seconds
   CACHE_TTL = 30.seconds
 
-  DESTINATION_PATTERN = /(?:Traveling to |Returning to Torn from |In )(.+)/i
-
   queue_as :war
   limits_concurrency to: 1, key: ->(faction_id) { "war_polling_faction_#{faction_id}" }
 
@@ -96,7 +94,11 @@ class WarPollingJob < ApplicationJob
 
       if state == "Traveling"
         status[:plane_type] = member.plane_image_type
-        status[:destination] = extract_destination(member.status_description)
+        travel = parse_travel(member.status_description)
+        if travel
+          status[:destination] = travel[:destination]
+          status[:returning] = travel[:returning]
+        end
         status[:travel_started_at] = resolve_travel_started_at(member)
       end
 
@@ -106,11 +108,21 @@ class WarPollingJob < ApplicationJob
     end
   end
 
-  def extract_destination(description)
+  # Torn describes travel as "Traveling from Torn to Canada" (outbound) or
+  # "Traveling from Canada to Torn" (returning). Destination is always the
+  # non-Torn side, since flight times are symmetric. Legacy formats kept as
+  # fallback for cached blobs written before the API change.
+  def parse_travel(description)
     return nil unless description.present?
 
-    match = description.match(DESTINATION_PATTERN)
-    match&.[](1)
+    if (match = description.match(/Traveling from (.+) to (.+)/i))
+      returning = match[2].strip.casecmp?("Torn")
+      { destination: returning ? match[1].strip : match[2].strip, returning: returning }
+    elsif (match = description.match(/Returning to Torn from (.+)/i))
+      { destination: match[1].strip, returning: true }
+    elsif (match = description.match(/Traveling to (.+)/i))
+      { destination: match[1].strip, returning: false }
+    end
   end
 
   def resolve_travel_started_at(member)
