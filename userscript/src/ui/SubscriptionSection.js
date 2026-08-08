@@ -1,6 +1,7 @@
 export class SubscriptionSection {
-  constructor(auth) {
+  constructor(auth, onUpdate) {
     this.auth = auth;
+    this.onUpdate = onUpdate;
     this.countdownInterval = null;
   }
 
@@ -54,6 +55,7 @@ export class SubscriptionSection {
       .fetchSubscription({ refresh })
       .then((sub) => {
         this.renderSubscription(sub);
+        if (this.onUpdate) this.onUpdate(sub);
       })
       .catch((err) => {
         if (err.rateLimited) {

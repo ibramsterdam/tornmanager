@@ -2,6 +2,9 @@ import { AuthScreen } from "./AuthScreen.js";
 import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 
+const LOCK_ICON =
+  '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+
 export class Overlay {
   constructor(auth, api, logger) {
     this.auth = auth;
@@ -11,6 +14,9 @@ export class Overlay {
     this.panel = null;
     this.isOpen = false;
     this.subscriptionSection = null;
+    this.warSection = null;
+    this.subscription = null;
+    this.activeTab = "subscription";
   }
 
   open() {
@@ -32,13 +38,20 @@ export class Overlay {
   close() {
     if (!this.overlay || !this.isOpen) return;
 
+    this.destroySections();
+    this.overlay.classList.remove("tm-overlay--visible");
+    this.isOpen = false;
+  }
+
+  destroySections() {
     if (this.subscriptionSection) {
       this.subscriptionSection.destroy();
       this.subscriptionSection = null;
     }
-
-    this.overlay.classList.remove("tm-overlay--visible");
-    this.isOpen = false;
+    if (this.warSection) {
+      this.warSection.destroy();
+      this.warSection = null;
+    }
   }
 
   toggle() {
@@ -71,6 +84,8 @@ export class Overlay {
   }
 
   renderPanel() {
+    this.destroySections();
+    this.panel.classList.remove("tm-overlay-panel--war");
     this.panel.innerHTML = "";
 
     const closeBtn = document.createElement("button");
@@ -92,28 +107,106 @@ export class Overlay {
     const user = this.auth.getUser();
 
     const title = document.createElement("h1");
-    title.className = "tm-overlay-title";
+    title.className = "tm-overlay-title tm-overlay-title--left";
     title.textContent = `Welcome, ${user.name}`;
     this.panel.appendChild(title);
 
-    this.subscriptionSection = new SubscriptionSection(this.auth);
-    this.panel.appendChild(this.subscriptionSection.render());
+    this.panel.appendChild(this.createTabBar());
 
-    const warSection = new WarSection(this.api);
-    this.panel.appendChild(warSection.render());
+    this.tabContent = document.createElement("div");
+    this.tabContent.className = "tm-tab-content";
+    this.panel.appendChild(this.tabContent);
+
+    this.renderActiveTab();
+  }
+
+  createTabBar() {
+    const tabs = document.createElement("div");
+    tabs.className = "tm-tabs";
+
+    this.subscriptionTab = this.createTab("Subscription", "subscription");
+    this.warTab = this.createTab("Ranked War", "war");
+
+    this.warTabLock = document.createElement("span");
+    this.warTabLock.className = "tm-tab-lock";
+    this.warTabLock.innerHTML = LOCK_ICON;
+    this.warTab.appendChild(this.warTabLock);
+
+    tabs.appendChild(this.subscriptionTab);
+    tabs.appendChild(this.warTab);
+
+    return tabs;
+  }
+
+  createTab(label, name) {
+    const tab = document.createElement("button");
+    tab.className = "tm-tab";
+    tab.textContent = label;
+    tab.onclick = () => this.selectTab(name);
+    return tab;
+  }
+
+  selectTab(name) {
+    if (this.activeTab === name) return;
+    this.activeTab = name;
+    this.renderActiveTab();
+  }
+
+  renderActiveTab() {
+    if (this.activeTab === "war" && !this.subscription?.active) {
+      this.activeTab = "subscription";
+    }
+
+    this.destroySections();
+    this.updateTabState();
+    this.panel.classList.toggle("tm-overlay-panel--war", this.activeTab === "war");
+    this.tabContent.innerHTML = "";
+
+    if (this.activeTab === "war") {
+      this.renderWarTab();
+    } else {
+      this.renderSubscriptionTab();
+    }
+  }
+
+  updateTabState() {
+    const locked = !this.subscription?.active;
+    this.subscriptionTab.classList.toggle("tm-tab--active", this.activeTab === "subscription");
+    this.warTab.classList.toggle("tm-tab--active", this.activeTab === "war");
+    this.warTab.disabled = locked;
+    this.warTabLock.style.display = locked ? "" : "none";
+
+    if (locked) {
+      this.warTab.title = "Requires an active subscription";
+    } else {
+      this.warTab.removeAttribute("title");
+    }
+  }
+
+  setSubscription(subscription) {
+    this.subscription = subscription;
+    if (this.warTab) this.updateTabState();
+  }
+
+  renderSubscriptionTab() {
+    this.subscriptionSection = new SubscriptionSection(this.auth, (sub) => this.setSubscription(sub));
+    this.tabContent.appendChild(this.subscriptionSection.render());
 
     const removeBtn = document.createElement("button");
     removeBtn.className = "tm-remove-key";
     removeBtn.textContent = "Remove API key";
     removeBtn.onclick = () => {
-      if (this.subscriptionSection) {
-        this.subscriptionSection.destroy();
-        this.subscriptionSection = null;
-      }
       this.auth.clear();
+      this.subscription = null;
+      this.activeTab = "subscription";
       this.renderPanel();
     };
-    this.panel.appendChild(removeBtn);
+    this.tabContent.appendChild(removeBtn);
+  }
+
+  renderWarTab() {
+    this.warSection = new WarSection(this.api);
+    this.tabContent.appendChild(this.warSection.render());
   }
 
   renderUnauthenticatedPanel() {
