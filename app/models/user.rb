@@ -8,6 +8,9 @@ class User < ApplicationRecord
   has_many :faction_subscription_grants, through: :subscription_grants
   has_many :granted_faction_subscriptions, class_name: "FactionSubscriptionGrant", foreign_key: :granted_by_id
   has_many :api_calls, dependent: :destroy
+  has_many :chat_memberships, dependent: :delete_all
+  has_many :chat_rooms, through: :chat_memberships
+  has_many :hosted_chat_rooms, class_name: "ChatRoom", foreign_key: :host_user_id, dependent: :destroy
   has_one :torn_api_key, class_name: "ApiKey::Torn", foreign_key: :user_id, dependent: :destroy
   has_one :subscription, as: :subscribable, dependent: :destroy
 

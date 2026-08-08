@@ -7,6 +7,15 @@ Rails.application.routes.draw do
     post :subscription, to: "subscriptions#show"
     post :war, to: "wars#show"
     post :current_war, to: "current_war#show"
+
+    scope :chat do
+      post :rooms, to: "chat_rooms#index", as: :chat_rooms
+      post :create_room, to: "chat_rooms#create", as: :chat_create_room
+      post :join, to: "chat_rooms#join", as: :chat_join
+      post :leave, to: "chat_rooms#leave", as: :chat_leave
+      post :messages, to: "chat_messages#index", as: :chat_messages
+      post :send_message, to: "chat_messages#create", as: :chat_send_message
+    end
   end
 
   resource :session

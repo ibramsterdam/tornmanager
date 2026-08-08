@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_15_070000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_08_220000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -59,6 +59,41 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_070000) do
     t.index ["faction_id", "torn_news_id"], name: "index_armory_news_entries_on_faction_id_and_torn_news_id", unique: true
     t.index ["faction_id"], name: "index_armory_news_entries_on_faction_id"
     t.index ["occurred_at"], name: "index_armory_news_entries_on_occurred_at"
+  end
+
+  create_table "chat_memberships", force: :cascade do |t|
+    t.integer "chat_room_id", null: false
+    t.datetime "created_at", null: false
+    t.boolean "host", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["chat_room_id", "user_id"], name: "index_chat_memberships_on_chat_room_id_and_user_id", unique: true
+    t.index ["chat_room_id"], name: "index_chat_memberships_on_chat_room_id"
+    t.index ["user_id"], name: "index_chat_memberships_on_user_id"
+  end
+
+  create_table "chat_messages", force: :cascade do |t|
+    t.string "body", null: false
+    t.integer "chat_room_id", null: false
+    t.datetime "created_at", null: false
+    t.string "sender_name"
+    t.integer "sender_torn_id"
+    t.boolean "system", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["chat_room_id"], name: "index_chat_messages_on_chat_room_id"
+    t.index ["user_id"], name: "index_chat_messages_on_user_id"
+  end
+
+  create_table "chat_rooms", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.integer "host_user_id", null: false
+    t.string "invite_token", null: false
+    t.datetime "last_message_at", null: false
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["host_user_id"], name: "index_chat_rooms_on_host_user_id"
+    t.index ["invite_token"], name: "index_chat_rooms_on_invite_token", unique: true
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -373,6 +408,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_15_070000) do
   end
 
   add_foreign_key "armory_news_entries", "factions"
+  add_foreign_key "chat_memberships", "chat_rooms"
+  add_foreign_key "chat_memberships", "users"
+  add_foreign_key "chat_messages", "chat_rooms"
+  add_foreign_key "chat_messages", "users"
+  add_foreign_key "chat_rooms", "users", column: "host_user_id"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "member_activity_snapshots", "factions"

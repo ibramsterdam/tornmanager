@@ -1,3 +1,5 @@
+import { copyText } from "../core/Clipboard.js";
+
 // Sort orders and travel timing ported from app/javascript/controllers/war_dashboard_controller.js.
 const FLIGHT_TIMES = {
   "Mexico":         { standard: 1560,  airstrip: 1080,  wlt: 780,  bct: 480 },
@@ -403,47 +405,12 @@ export class TargetTable {
       }
     }
 
-    if (message) this.copyToClipboard(message);
+    if (message) copyText(message);
   }
 
   // TCT is UTC.
   formatTct(date) {
     return date.toISOString().slice(11, 19);
-  }
-
-  copyToClipboard(text) {
-    const done = () => this.showToast("Copied to clipboard");
-
-    const fallback = () => {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      done();
-    };
-
-    if (navigator.clipboard?.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(fallback);
-    } else {
-      fallback();
-    }
-  }
-
-  showToast(text) {
-    const toast = document.createElement("div");
-    toast.className = "tm-toast";
-    toast.textContent = text;
-    document.body.appendChild(toast);
-
-    requestAnimationFrame(() => toast.classList.add("tm-toast--visible"));
-    setTimeout(() => {
-      toast.classList.remove("tm-toast--visible");
-      setTimeout(() => toast.remove(), 300);
-    }, 1600);
   }
 
   formatCountdown(totalSeconds) {

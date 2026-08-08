@@ -1,0 +1,92 @@
+require "test_helper"
+
+class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    @bram = users(:bram)
+    @bert = users(:bert)
+    Rails.cache.clear
+
+    @room = ChatRoom.create!(name: "Hawaii squad", host_user: @bram, last_message_at: Time.current)
+    @room.chat_memberships.create!(user: @bram, host: true)
+    @room.chat_memberships.create!(user: @bert)
+  end
+
+  test "sending a message returns it and fetching with since_id picks it up" do
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "wheels up in 5" }, as: :json
+
+    assert_response :created
+    sent = JSON.parse(response.body)["message"]
+    assert_equal "wheels up in 5", sent["body"]
+    assert_equal @bram.torn_id, sent["torn_id"]
+    assert_equal @bram.name, sent["name"]
+    assert_not sent["system"]
+
+    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: 0 }, as: :json
+
+    assert_response :ok
+    messages = JSON.parse(response.body)["messages"]
+    assert_equal [ "wheels up in 5" ], messages.map { |m| m["body"] }
+
+    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: sent["id"] }, as: :json
+
+    assert_empty JSON.parse(response.body)["messages"]
+  end
+
+  test "sending updates the room's last_message_at" do
+    @room.update!(last_message_at: 2.days.ago)
+
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "ping" }, as: :json
+
+    assert_response :created
+    assert @room.reload.last_message_at > 1.minute.ago
+  end
+
+  test "rejects messages over the length limit" do
+    post api_chat_send_message_path,
+      params: { api_key: @bram.api_key, room_id: @room.id, body: "x" * (ChatMessage::MAX_LENGTH + 1) }, as: :json
+
+    assert_response :unprocessable_entity
+  end
+
+  test "rejects blank messages" do
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "   " }, as: :json
+
+    assert_response :unprocessable_entity
+  end
+
+  test "rate limits rapid sending" do
+    with_memory_cache do
+      post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "one" }, as: :json
+      assert_response :created
+
+      post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "two" }, as: :json
+      assert_response :too_many_requests
+    end
+  end
+
+  test "non-members cannot read messages" do
+    outsider = users(:kaneki)
+
+    post api_chat_messages_path, params: { api_key: outsider.api_key, room_id: @room.id, since_id: 0 }, as: :json
+
+    assert_response :not_found
+  end
+
+  test "non-members cannot send messages" do
+    outsider = users(:kaneki)
+
+    post api_chat_send_message_path, params: { api_key: outsider.api_key, room_id: @room.id, body: "hi" }, as: :json
+
+    assert_response :not_found
+  end
+
+  private
+
+  def with_memory_cache
+    original_cache = Rails.cache
+    Rails.cache = ActiveSupport::Cache::MemoryStore.new
+    yield
+  ensure
+    Rails.cache = original_cache
+  end
+end
