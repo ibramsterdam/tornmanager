@@ -33,7 +33,7 @@ TornManager is a Rails 8 management and analytics tool for the game [Torn City](
 | Deployment       | Kamal to single server (Docker, amd64)          |
 | CI               | GitHub Actions                                  |
 
-No Redis, no PostgreSQL, no Node.js build step. This is a "Solid trifecta" Rails 8 app.
+No Redis, no PostgreSQL, no Node.js build step in the Rails app. This is a "Solid trifecta" Rails 8 app. The browser userscript in `userscript/` is the one exception: it has its own Vite build, fully isolated from the Rails asset pipeline.
 
 ## Key Architecture Decisions
 
@@ -53,6 +53,19 @@ Solid Queue runs in-process with Puma (`SOLID_QUEUE_IN_PUMA=true`), not as a sep
 ### Torn API Integration
 
 API wrapper models live in `app/models/torn_api/` with sub-modules for different API categories (Faction, User, Torn, Key, Market). Each API call includes a ~1 second sleep to respect rate limits.
+
+### Userscript (`userscript/`)
+
+The Tampermonkey userscript that runs on torn.com. Plain ES6 classes, no runtime
+dependencies, built with Vite + vite-plugin-monkey into a single file. It calls the
+JSON API (`POST /api/session`, `/api/subscription`, `/api/current_war`) via
+`GM.xmlHttpRequest`, sending the user's Torn API key in the request body.
+
+- `userscript/src/core/` — services (Auth, ApiClient, Dom, Logger)
+- `userscript/src/ui/` — view components (Overlay, Sidebar, AuthScreen, SubscriptionSection, WarSection)
+- `cd userscript && npm run dev` — watch build against `http://localhost:3000`
+- `cd userscript && npm run build` — production build (`dist/tornmanager.user.js`, unminified on purpose)
+- Releases are uploaded through `/admin/script_versions` and served at `/userscript/download`
 
 ### Multi-Database
 
@@ -127,4 +140,6 @@ config/
 test/
   fixtures/             # Test fixtures
   test_helpers/         # Custom test helpers
+userscript/
+  src/                  # Tampermonkey userscript source (Vite + vite-plugin-monkey)
 ```
