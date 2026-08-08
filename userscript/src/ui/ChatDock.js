@@ -5,22 +5,9 @@ import { showToast } from "../core/Clipboard.js";
 const OPEN_KEY = "tm_chat_open";
 const SEEN_KEY = "tm_chat_seen";
 const UNREAD_POLL_MS = 8000;
-const REPOSITION_MS = 1500;
-const DOCK_GAP = 12;
-const MIN_VISIBLE_WIDTH = 350;
 
-// Torn's chat elements carry stable ids (unlike its hashed CSS classes):
-// strip buttons and opened panels. Used to measure how far its dock reaches.
-const TORN_CHAT_SELECTOR = [
-  '[id^="channel_panel_button"]',
-  "#notes_panel_button",
-  "#people_panel_button",
-  "#notes_settings_button",
-  '[id^="private-"]',
-  '[id^="faction-"]',
-  '[id^="company-"]',
-  '[id^="public_"]',
-].join(", ");
+const CHAT_ICON =
+  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>';
 
 export class ChatDock {
   constructor(auth, client, logger) {
@@ -29,7 +16,9 @@ export class ChatDock {
     this.logger = logger;
     this.rooms = [];
     this.boxes = new Map();
-    this.buttons = new Map();
+    this.menuItems = new Map();
+    this.unread = new Set();
+    this.menuOpen = false;
     this.unreadInterval = null;
   }
 
@@ -37,63 +26,39 @@ export class ChatDock {
     if (!this.auth.isAuthenticated()) return;
 
     Dom.ready("body", () => {
-      this.strip = document.createElement("div");
-      this.strip.className = "tm-chat-strip";
+      this.fab = document.createElement("button");
+      this.fab.type = "button";
+      this.fab.className = "tm-chat-fab";
+      this.fab.title = "TornManager chats";
+      this.fab.innerHTML = `${CHAT_ICON}<span class="tm-chat-fab-dot"></span>`;
+      this.fab.style.display = "none";
+      this.fab.onclick = (e) => {
+        e.stopPropagation();
+        this.toggleMenu(!this.menuOpen);
+      };
+
+      this.menu = document.createElement("div");
+      this.menu.className = "tm-chat-menu";
 
       this.boxesEl = document.createElement("div");
       this.boxesEl.className = "tm-chat-boxes";
 
-      document.body.appendChild(this.strip);
+      document.body.appendChild(this.fab);
+      document.body.appendChild(this.menu);
       document.body.appendChild(this.boxesEl);
 
-      this.updatePosition();
-      window.addEventListener("resize", () => this.updatePosition());
-      setInterval(() => this.updatePosition(), REPOSITION_MS);
-      this.observeTornChat();
+      document.addEventListener("click", (e) => {
+        if (this.menuOpen && !this.menu.contains(e.target)) this.toggleMenu(false);
+      });
 
       this.handleInviteHash().then(() => this.refresh());
       this.unreadInterval = setInterval(() => this.pollUnread(), UNREAD_POLL_MS);
     });
   }
 
-  // Keep our dock just left of Torn's chat strip and any open chat panels.
-  updatePosition() {
-    if (!this.strip) return;
-
-    const offset = Math.max(
-      DOCK_GAP,
-      Math.min(this.tornChatWidth() + DOCK_GAP, window.innerWidth - MIN_VISIBLE_WIDTH)
-    );
-
-    this.strip.style.right = `${offset}px`;
-    this.boxesEl.style.right = `${offset}px`;
-  }
-
-  tornChatWidth() {
-    const chatRoot = document.getElementById("chatRoot");
-    if (!chatRoot) return 8;
-
-    let minLeft = window.innerWidth;
-    for (const el of chatRoot.querySelectorAll(TORN_CHAT_SELECTOR)) {
-      const rect = el.getBoundingClientRect();
-      if (!rect.width && !rect.height) continue;
-      if (rect.left < minLeft) minLeft = rect.left;
-    }
-
-    return Math.max(0, window.innerWidth - minLeft);
-  }
-
-  observeTornChat() {
-    Dom.ready("#chatRoot", (chatRoot) => {
-      this.updatePosition();
-
-      let debounce = null;
-      const observer = new MutationObserver(() => {
-        clearTimeout(debounce);
-        debounce = setTimeout(() => this.updatePosition(), 120);
-      });
-      observer.observe(chatRoot, { childList: true, subtree: true });
-    });
+  toggleMenu(open) {
+    this.menuOpen = open;
+    this.menu.classList.toggle("tm-chat-menu--open", open);
   }
 
   async handleInviteHash() {
@@ -117,38 +82,44 @@ export class ChatDock {
       .listRooms()
       .then((rooms) => {
         this.rooms = rooms;
-        this.renderStrip();
+        this.renderMenu();
         this.syncBoxes();
       })
       .catch((err) => this.logger.log(err, "chat rooms list"));
   }
 
-  renderStrip() {
-    this.strip.innerHTML = "";
-    this.buttons.clear();
+  renderMenu() {
+    if (!this.menu) return;
+
+    this.menu.innerHTML = "";
+    this.menuItems.clear();
 
     for (const room of this.rooms) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "tm-chat-tab";
-      button.title = room.name;
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "tm-chat-menu-item";
+      item.title = room.name;
 
       const label = document.createElement("span");
-      label.className = "tm-chat-tab-label";
+      label.className = "tm-chat-menu-item-label";
       label.textContent = room.name;
 
       const dot = document.createElement("span");
-      dot.className = "tm-chat-tab-dot";
+      dot.className = "tm-chat-menu-item-dot";
 
-      button.appendChild(label);
-      button.appendChild(dot);
-      button.onclick = () => this.toggleRoom(room.id);
+      item.appendChild(label);
+      item.appendChild(dot);
+      item.onclick = () => {
+        this.toggleRoom(room.id);
+        this.toggleMenu(false);
+      };
 
-      this.buttons.set(room.id, button);
-      this.strip.appendChild(button);
+      this.menuItems.set(room.id, item);
+      this.menu.appendChild(item);
     }
 
-    this.strip.style.display = this.rooms.length ? "" : "none";
+    this.fab.style.display = this.rooms.length ? "" : "none";
+    this.updateUnreadUI();
   }
 
   syncBoxes() {
@@ -165,7 +136,7 @@ export class ChatDock {
       if (!this.boxes.has(id)) this.mountBox(id);
     }
 
-    this.updateButtonStates();
+    this.updateUnreadUI();
   }
 
   mountBox(roomId) {
@@ -190,7 +161,7 @@ export class ChatDock {
     if (index === -1) this.rooms.push(room);
     else this.rooms[index] = room;
 
-    this.renderStrip();
+    this.renderMenu();
     this.markOpen(room.id, true);
   }
 
@@ -208,13 +179,6 @@ export class ChatDock {
     this.saveOpenIds(ids);
     if (open) this.setUnread(roomId, false);
     this.syncBoxes();
-  }
-
-  updateButtonStates() {
-    const openIds = this.getOpenIds();
-    for (const [id, button] of this.buttons) {
-      button.classList.toggle("tm-chat-tab--open", openIds.includes(id));
-    }
   }
 
   pollUnread() {
@@ -237,9 +201,22 @@ export class ChatDock {
   }
 
   setUnread(roomId, unread) {
-    const button = this.buttons.get(roomId);
-    if (button) button.classList.toggle("tm-chat-tab--unread", unread);
-    if (!unread) this.markSeen(roomId);
+    if (unread) {
+      this.unread.add(roomId);
+    } else {
+      this.unread.delete(roomId);
+      this.markSeen(roomId);
+    }
+    this.updateUnreadUI();
+  }
+
+  updateUnreadUI() {
+    const openIds = this.getOpenIds();
+    for (const [id, item] of this.menuItems) {
+      item.classList.toggle("tm-chat-menu-item--unread", this.unread.has(id));
+      item.classList.toggle("tm-chat-menu-item--open", openIds.includes(id));
+    }
+    this.fab?.classList.toggle("tm-chat-fab--unread", this.unread.size > 0);
   }
 
   markSeen(roomId) {

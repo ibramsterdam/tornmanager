@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Builds a new public userscript release and stages it for commit.
+#
+#   bin/publish           # patch bump (0.3.1 -> 0.3.2)
+#   bin/publish minor     # 0.3.1 -> 0.4.0
+#   bin/publish major     # 0.3.1 -> 1.0.0
+#   bin/publish 1.2.3     # explicit version
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$ROOT/userscript"
+
+VERSION=$(npm version "${1:-patch}" --no-git-tag-version)
+npm run release --silent
+
+cd "$ROOT"
+git add userscript/package.json userscript/package-lock.json userscript/tornmanager.user.js
+
+echo
+echo "Userscript $VERSION built and staged:"
+git diff --cached --stat -- userscript/ | sed 's/^/  /'
+echo
+echo "Install link: https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js"
+echo "Next: commit and push. Deploy the Rails app first if this release needs new API endpoints."

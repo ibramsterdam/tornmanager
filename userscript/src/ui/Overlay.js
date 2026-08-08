@@ -163,6 +163,8 @@ export class Overlay {
   }
 
   renderActiveTab() {
+    if (!this.tabContent) return;
+
     if (this.activeTab === "war" && !this.subscription?.active) {
       this.activeTab = "subscription";
     }

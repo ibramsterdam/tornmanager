@@ -19,7 +19,8 @@ chatDock.init();
 window.addEventListener("error", (e) => {
   const msg = e.error?.message || e.message || "";
   if (msg.includes("ResizeObserver")) return;
-  logger.log(e.error || msg, "uncaught");
+  const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
+  logger.log(e.error || msg, `uncaught (${source})`);
 });
 
 window.addEventListener("unhandledrejection", (e) => {
