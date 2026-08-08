@@ -10,6 +10,7 @@ module Daily
       cleanup_old_sessions
       cleanup_old_api_calls
       cleanup_old_armory_news
+      cleanup_idle_chat_rooms
       cleanup_stale_factions
     end
 
@@ -34,6 +35,12 @@ module Daily
       deleted_count = ArmoryNewsEntry.where("occurred_at < ?", cutoff).delete_all
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} armory news entries older than #{ARMORY_NEWS_RETENTION_DAYS} days"
+    end
+
+    def cleanup_idle_chat_rooms
+      deleted_count = ChatRoom.idle.destroy_all.size
+
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} chat rooms idle for #{ChatRoom::IDLE_RETENTION_DAYS}+ days"
     end
 
     # destroy (not delete_all) so dependent data goes with the faction and

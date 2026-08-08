@@ -1,20 +1,23 @@
 import { AuthScreen } from "./AuthScreen.js";
 import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
+import { ChatsSection } from "./ChatsSection.js";
 
 const LOCK_ICON =
   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
 export class Overlay {
-  constructor(auth, api, logger) {
+  constructor(auth, api, logger, chatDock) {
     this.auth = auth;
     this.api = api;
     this.logger = logger;
+    this.chatDock = chatDock;
     this.overlay = null;
     this.panel = null;
     this.isOpen = false;
     this.subscriptionSection = null;
     this.warSection = null;
+    this.chatsSection = null;
     this.subscription = null;
     this.activeTab = "subscription";
   }
@@ -51,6 +54,10 @@ export class Overlay {
     if (this.warSection) {
       this.warSection.destroy();
       this.warSection = null;
+    }
+    if (this.chatsSection) {
+      this.chatsSection.destroy();
+      this.chatsSection = null;
     }
   }
 
@@ -132,8 +139,11 @@ export class Overlay {
     this.warTabLock.innerHTML = LOCK_ICON;
     this.warTab.appendChild(this.warTabLock);
 
+    this.chatsTab = this.createTab("Chats", "chats");
+
     tabs.appendChild(this.subscriptionTab);
     tabs.appendChild(this.warTab);
+    tabs.appendChild(this.chatsTab);
 
     return tabs;
   }
@@ -164,6 +174,8 @@ export class Overlay {
 
     if (this.activeTab === "war") {
       this.renderWarTab();
+    } else if (this.activeTab === "chats") {
+      this.renderChatsTab();
     } else {
       this.renderSubscriptionTab();
     }
@@ -173,6 +185,7 @@ export class Overlay {
     const locked = !this.subscription?.active;
     this.subscriptionTab.classList.toggle("tm-tab--active", this.activeTab === "subscription");
     this.warTab.classList.toggle("tm-tab--active", this.activeTab === "war");
+    this.chatsTab.classList.toggle("tm-tab--active", this.activeTab === "chats");
     this.warTab.disabled = locked;
     this.warTabLock.style.display = locked ? "" : "none";
 
@@ -207,6 +220,11 @@ export class Overlay {
   renderWarTab() {
     this.warSection = new WarSection(this.api);
     this.tabContent.appendChild(this.warSection.render());
+  }
+
+  renderChatsTab() {
+    this.chatsSection = new ChatsSection(this.chatDock);
+    this.tabContent.appendChild(this.chatsSection.render());
   }
 
   renderUnauthenticatedPanel() {
