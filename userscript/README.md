@@ -34,10 +34,18 @@ JSON API (`/api/session`, `/api/subscription`, `/api/current_war`) — against
 
 ## Release
 
-Build the production script and upload it as a new version in the admin
-Script Versions section (`/admin/script_versions`), which serves it at
-`/userscript/download`:
+Releases are published as GitHub release assets. The public install link —
+open it in a browser with Tampermonkey and it prompts to install — is always:
+
+    https://github.com/ibramsterdam/tornmanager/releases/latest/download/tornmanager.user.js
+
+Installed scripts auto-update from that same URL (`@updateURL`/`@downloadURL`).
 
 ```bash
 cd userscript && npm run build   # outputs dist/tornmanager.user.js
+gh release create userscript-v$(node -p "require('./package.json').version") \
+  dist/tornmanager.user.js --title "Userscript v$(node -p "require('./package.json').version")"
 ```
+
+Deploy the Rails app first when the release depends on new API endpoints —
+Tampermonkey rolls the update out to everyone within a day.
