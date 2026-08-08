@@ -7,8 +7,8 @@ const isDev = process.env.NODE_ENV === "development";
 
 const API_BASE = isDev ? "http://localhost:3000" : "https://tornmanager.com";
 
-// Public install + auto-update link: always the newest GitHub release asset.
-const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/releases/latest/download/tornmanager.user.js";
+// Public install + auto-update link: the built script committed in this repo.
+const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
 
 export default defineConfig({
   define: {

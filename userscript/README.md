@@ -34,18 +34,22 @@ JSON API (`/api/session`, `/api/subscription`, `/api/current_war`) — against
 
 ## Release
 
-Releases are published as GitHub release assets. The public install link —
-open it in a browser with Tampermonkey and it prompts to install — is always:
+The public install link — opening it with Tampermonkey installed prompts to
+install immediately — is the built script committed in this repo:
 
-    https://github.com/ibramsterdam/tornmanager/releases/latest/download/tornmanager.user.js
+    https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js
 
-Installed scripts auto-update from that same URL (`@updateURL`/`@downloadURL`).
+Installed scripts auto-update from that same URL (`@updateURL`/`@downloadURL`)
+whenever the committed file's `@version` increases.
 
 ```bash
-cd userscript && npm run build   # outputs dist/tornmanager.user.js
-gh release create userscript-v$(node -p "require('./package.json').version") \
-  dist/tornmanager.user.js --title "Userscript v$(node -p "require('./package.json').version")"
+cd userscript
+npm run release   # production build + copies dist/ to userscript/tornmanager.user.js
 ```
 
-Deploy the Rails app first when the release depends on new API endpoints —
-Tampermonkey rolls the update out to everyone within a day.
+Then commit `userscript/tornmanager.user.js` and push. Bump the version in
+`package.json` first — Tampermonkey only updates when `@version` increases —
+and deploy the Rails app before pushing when the release depends on new API
+endpoints. Never commit a dev build here (`npm run dev` writes a
+localhost-flavored file to `dist/`; the release script always rebuilds for
+production first).
