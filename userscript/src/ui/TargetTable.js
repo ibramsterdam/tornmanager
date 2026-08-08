@@ -94,7 +94,21 @@ export class TargetTable {
     this.tbody = document.createElement("tbody");
     this.tbody.addEventListener("click", (e) => {
       const button = e.target.closest(".tm-tt-remove");
-      if (button) this.onRemove(parseInt(button.dataset.id, 10));
+      if (button) {
+        this.onRemove(parseInt(button.dataset.id, 10));
+        return;
+      }
+
+      const timer = e.target.closest("[data-timer-until], [data-travel-eta], [data-travel-fast-eta]");
+      if (timer) {
+        this.copyEta(timer);
+        return;
+      }
+
+      if (e.target.closest("a")) return;
+
+      const row = e.target.closest("tr[data-attack-url]");
+      if (row) window.location.href = row.dataset.attackUrl;
     });
     table.appendChild(this.tbody);
 
@@ -115,6 +129,7 @@ export class TargetTable {
 
   update(rows) {
     this.rows = rows;
+    this.rowsById = new Map(rows.map((row) => [String(row.id), row]));
     this.renderBody();
   }
 
@@ -204,7 +219,7 @@ export class TargetTable {
 
     if (!member) {
       return `
-        <tr>
+        <tr data-id="${id}" data-attack-url="${attackUrl}">
           <td><a href="${attackUrl}" class="tm-tt-name tm-tt-name--unknown" title="Not in the current war data">ID ${id}</a></td>
           <td><span class="tm-tt-nodata">-</span></td>
           <td><span class="tm-tt-nodata">-</span></td>
@@ -218,7 +233,7 @@ export class TargetTable {
     const name = this.escapeHtml(member.name || `ID ${id}`);
 
     return `
-      <tr>
+      <tr data-id="${id}" data-attack-url="${attackUrl}">
         <td><a href="${attackUrl}" class="tm-tt-name" title="Attack ${name}">${name}</a></td>
         <td><span class="tm-status ${statusClass}">${this.escapeHtml(status.state || "Unknown")}</span></td>
         <td>${this.renderActivity(member)}</td>
@@ -253,7 +268,7 @@ export class TargetTable {
     if (remaining <= 0) return '<span class="tm-tt-nodata">-</span>';
 
     const soonClass = remaining < 60 ? " tm-timer--soon" : "";
-    return `<span class="tm-timer tm-timer--hospital${soonClass}" data-timer-until="${status.until}">${this.formatCountdown(remaining)}</span>`;
+    return `<span class="tm-timer tm-timer--hospital${soonClass}" data-timer-until="${status.until}" title="Click to copy release time">${this.formatCountdown(remaining)}</span>`;
   }
 
   renderTravelTimer(status) {
@@ -284,7 +299,7 @@ export class TargetTable {
       const fastText = fastRemaining <= 0 ? "About to land" : this.formatCountdown(fastRemaining);
       const soonClass = fastRemaining > 0 && fastRemaining < 60 ? " tm-timer--soon" : "";
 
-      return `<span class="tm-timer tm-timer--travel${soonClass}" data-travel-fast-eta="${new Date(fastEtaMs).toISOString()}" data-travel-slow-eta="${new Date(slowEtaMs).toISOString()}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">`
+      return `<span class="tm-timer tm-timer--travel${soonClass}" data-travel-fast-eta="${new Date(fastEtaMs).toISOString()}" data-travel-slow-eta="${new Date(slowEtaMs).toISOString()}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)} · Click to copy ETA">`
         + `<span class="tm-tt-travel-fast">${prefix}${fastText}</span>`
         + `<span class="tm-timer-sep"> / </span>`
         + `<span class="tm-tt-travel-slow">${this.formatCountdown(slowRemaining)}${suffix}</span>`
@@ -297,7 +312,7 @@ export class TargetTable {
     if (remaining <= 0) return '<span class="tm-timer tm-timer--landing">About to land</span>';
 
     const soonClass = remaining < 60 ? " tm-timer--soon" : "";
-    return `<span class="tm-timer tm-timer--travel${soonClass}" data-travel-eta="${new Date(etaMs).toISOString()}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)}">${prefix}${this.formatCountdown(remaining)}${suffix}</span>`;
+    return `<span class="tm-timer tm-timer--travel${soonClass}" data-travel-eta="${new Date(etaMs).toISOString()}" data-travel-returning="${isReturning}" title="${this.escapeHtml(description)} · Click to copy ETA">${prefix}${this.formatCountdown(remaining)}${suffix}</span>`;
   }
 
   tickTimers() {
@@ -351,6 +366,84 @@ export class TargetTable {
         el.className = fastRemaining > 0 && fastRemaining < 60 ? "tm-timer tm-timer--travel tm-timer--soon" : "tm-timer tm-timer--travel";
       }
     });
+  }
+
+  copyEta(el) {
+    const row = el.closest("tr");
+    const id = row?.dataset.id;
+    if (!id) return;
+
+    const member = this.rowsById?.get(id)?.member;
+    const label = `${member?.name || "User"} [${id}]`;
+
+    let message = null;
+
+    if (el.dataset.travelEta) {
+      const eta = new Date(el.dataset.travelEta);
+      const remaining = Math.floor((eta - Date.now()) / 1000);
+      if (remaining > 0) {
+        message = `${label} will land in ${this.formatCountdown(remaining)} or at ${this.formatTct(eta)} TCT (estimate).`;
+      }
+    } else if (el.dataset.travelFastEta) {
+      const fast = new Date(el.dataset.travelFastEta);
+      const slow = new Date(el.dataset.travelSlowEta);
+      const fastRemaining = Math.floor((fast - Date.now()) / 1000);
+      const slowRemaining = Math.floor((slow - Date.now()) / 1000);
+      if (slowRemaining > 0) {
+        message = fastRemaining > 0
+          ? `${label} will land in ${this.formatCountdown(fastRemaining)} – ${this.formatCountdown(slowRemaining)}, between ${this.formatTct(fast)} and ${this.formatTct(slow)} TCT (estimate).`
+          : `${label} will land within ${this.formatCountdown(slowRemaining)}, by ${this.formatTct(slow)} TCT (estimate).`;
+      }
+    } else if (el.dataset.timerUntil) {
+      const until = new Date(el.dataset.timerUntil);
+      const remaining = Math.floor((until - Date.now()) / 1000);
+      if (remaining > 0) {
+        const place = member?.status?.state === "Jail" ? "jail" : "hospital";
+        message = `${label} is out of ${place} in ${this.formatCountdown(remaining)}, at ${this.formatTct(until)} TCT.`;
+      }
+    }
+
+    if (message) this.copyToClipboard(message);
+  }
+
+  // TCT is UTC.
+  formatTct(date) {
+    return date.toISOString().slice(11, 19);
+  }
+
+  copyToClipboard(text) {
+    const done = () => this.showToast("Copied to clipboard");
+
+    const fallback = () => {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      done();
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text).then(done).catch(fallback);
+    } else {
+      fallback();
+    }
+  }
+
+  showToast(text) {
+    const toast = document.createElement("div");
+    toast.className = "tm-toast";
+    toast.textContent = text;
+    document.body.appendChild(toast);
+
+    requestAnimationFrame(() => toast.classList.add("tm-toast--visible"));
+    setTimeout(() => {
+      toast.classList.remove("tm-toast--visible");
+      setTimeout(() => toast.remove(), 300);
+    }, 1600);
   }
 
   formatCountdown(totalSeconds) {

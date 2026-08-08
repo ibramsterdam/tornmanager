@@ -22,6 +22,8 @@ class WarPollingJobTest < ActiveJob::TestCase
       "In hospital for 1 hour", "", "Hospital", "red", (Time.current + 1.hour).to_i, nil,
       "Everyone", "Member", true, false, false, false
     )
+
+    TornApi::Faction::RankedWars.any_instance.stubs(:fetch).returns([])
   end
 
   test "writes war data to cache" do
@@ -73,6 +75,63 @@ class WarPollingJobTest < ActiveJob::TestCase
       cached = Rails.cache.read(@faction.war_cache_key)
       member_data = cached[:members][5555555]
       assert_equal "Hospital", member_data[:status][:state]
+    end
+  end
+
+  test "refreshes live war scores from rankedwars on every poll" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+    TornApi::Faction::RankedWars.any_instance.stubs(:fetch).returns([
+      {
+        "id" => 1001,
+        "factions" => [
+          { "id" => 99999, "name" => "Test Faction", "score" => 45 },
+          { "id" => 88888, "name" => "Enemy Faction", "score" => 33 }
+        ]
+      }
+    ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      assert_equal 45, @war.reload.our_score
+      assert_equal 33, @war.their_score
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      assert_equal 45, cached[:our_score]
+      assert_equal 33, cached[:their_score]
+    end
+  end
+
+  test "ignores rankedwars entries for a different war" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+    TornApi::Faction::RankedWars.any_instance.stubs(:fetch).returns([
+      {
+        "id" => 9999,
+        "factions" => [
+          { "id" => 99999, "score" => 90 },
+          { "id" => 88888, "score" => 10 }
+        ]
+      }
+    ])
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      assert_equal 30, @war.reload.our_score
+      assert_equal 20, @war.their_score
+    end
+  end
+
+  test "keeps polling members when the score refresh fails" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @enemy_member ])
+    TornApi::Faction::RankedWars.any_instance.stubs(:fetch).raises(TornApi::ApiError, "Torn hiccup")
+
+    with_memory_cache do
+      WarPollingJob.perform_now(@faction.id)
+
+      cached = Rails.cache.read(@faction.war_cache_key)
+      assert cached[:members].key?(5555555)
+      assert_equal 30, cached[:our_score]
     end
   end
 

@@ -17,11 +17,7 @@ export class WarSection {
     this.section = document.createElement("div");
     this.section.className = "tm-war";
 
-    this.warLine = document.createElement("div");
-    this.warLine.className = "tm-war-line tm-war-line--muted";
-    this.warLine.textContent = "Loading war status...";
-    this.section.appendChild(this.warLine);
-
+    this.section.appendChild(this.createHeader());
     this.section.appendChild(this.createAddForm());
 
     this.table = new TargetTable({ onRemove: (id) => this.removeTarget(id) });
@@ -51,6 +47,35 @@ export class WarSection {
     }
   }
 
+  createHeader() {
+    const header = document.createElement("div");
+    header.className = "tm-war-head";
+
+    const row = document.createElement("div");
+    row.className = "tm-war-head-row";
+
+    this.headLeft = document.createElement("div");
+    this.headLeft.className = "tm-war-head-left";
+    this.headLeft.textContent = "Loading war status...";
+
+    this.headScore = document.createElement("div");
+    this.headScore.className = "tm-war-head-score";
+
+    row.appendChild(this.headLeft);
+    row.appendChild(this.headScore);
+    header.appendChild(row);
+
+    this.bar = document.createElement("div");
+    this.bar.className = "tm-war-bar";
+    this.bar.style.display = "none";
+    this.barFill = document.createElement("div");
+    this.barFill.className = "tm-war-bar-fill";
+    this.bar.appendChild(this.barFill);
+    header.appendChild(this.bar);
+
+    return header;
+  }
+
   createAddForm() {
     const form = document.createElement("form");
     form.className = "tm-tt-add";
@@ -65,7 +90,7 @@ export class WarSection {
     const button = document.createElement("button");
     button.type = "submit";
     button.className = "tm-tt-add-button";
-    button.textContent = "Add target";
+    button.textContent = "Add";
 
     this.addError = document.createElement("span");
     this.addError.className = "tm-tt-add-error";
@@ -120,60 +145,74 @@ export class WarSection {
       .then((response) => {
         this.war = response.war || null;
         this.members = this.war?.members || {};
-        this.updateWarLine();
+        this.updateHeader();
         this.refreshTable();
       })
       .catch((err) => {
-        this.warLine.className = "tm-war-line tm-war-line--error";
-        this.warLine.textContent = err.message || "Could not load war data.";
+        this.headLeft.className = "tm-war-head-left tm-war-head-left--error";
+        this.headLeft.textContent = err.message || "Could not load war data.";
       });
   }
 
-  updateWarLine() {
-    this.warLine.className = "tm-war-line";
-    this.warLine.innerHTML = "";
+  updateHeader() {
+    this.headLeft.className = "tm-war-head-left";
+    this.headLeft.innerHTML = "";
+    this.headScore.innerHTML = "";
 
     if (!this.war) {
-      this.warLine.classList.add("tm-war-line--muted");
-      this.warLine.textContent = "No active war.";
+      this.headLeft.classList.add("tm-war-head-left--muted");
+      this.headLeft.textContent = "No active war.";
+      this.bar.style.display = "none";
       return;
     }
 
     const vs = document.createElement("span");
-    vs.className = "tm-war-line-vs";
+    vs.className = "tm-war-head-vs";
     vs.textContent = "vs";
 
     const enemy = document.createElement("a");
-    enemy.className = "tm-war-line-enemy";
+    enemy.className = "tm-war-head-enemy";
     enemy.href = `https://www.torn.com/factions.php?step=profile&ID=${this.war.enemy_faction_id}`;
     enemy.target = "_blank";
     enemy.rel = "noopener";
     enemy.textContent = this.war.enemy_faction_name || "Unknown faction";
 
+    this.headLeft.appendChild(vs);
+    this.headLeft.appendChild(enemy);
+
     const ours = this.war.our_score || 0;
     const theirs = this.war.their_score || 0;
-
-    const score = document.createElement("span");
-    score.className = "tm-war-line-score";
+    const target = this.war.target_score || 0;
+    const lead = ours - theirs;
 
     const ourScore = document.createElement("span");
-    ourScore.className = ours >= theirs ? "tm-war-line-score--up" : "tm-war-line-score--down";
+    ourScore.className = ours >= theirs ? "tm-war-score--up" : "tm-war-score--down";
     ourScore.textContent = ours.toLocaleString();
 
     const separator = document.createElement("span");
-    separator.className = "tm-war-line-sep";
+    separator.className = "tm-war-head-sep";
     separator.textContent = " – ";
 
     const theirScore = document.createElement("span");
-    theirScore.className = theirs >= ours ? "tm-war-line-score--up" : "tm-war-line-score--down";
+    theirScore.className = theirs >= ours ? "tm-war-score--up" : "tm-war-score--down";
     theirScore.textContent = theirs.toLocaleString();
 
-    score.appendChild(ourScore);
-    score.appendChild(separator);
-    score.appendChild(theirScore);
+    this.headScore.appendChild(ourScore);
+    this.headScore.appendChild(separator);
+    this.headScore.appendChild(theirScore);
 
-    this.warLine.appendChild(vs);
-    this.warLine.appendChild(enemy);
-    this.warLine.appendChild(score);
+    if (target > 0) {
+      const targetEl = document.createElement("span");
+      targetEl.className = "tm-war-head-target";
+      targetEl.textContent = ` / ${target.toLocaleString()}`;
+      this.headScore.appendChild(targetEl);
+
+      const percentage = Math.min(Math.max((lead / target) * 100, 0), 100);
+      this.bar.style.display = "";
+      this.barFill.style.width = `${percentage}%`;
+      this.barFill.classList.toggle("tm-war-bar-fill--losing", lead < 0);
+    } else {
+      this.bar.style.display = "none";
+    }
   }
 }
