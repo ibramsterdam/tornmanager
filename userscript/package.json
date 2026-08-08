@@ -1,0 +1,15 @@
+{
+  "name": "tornmanager-userscript",
+  "version": "0.1.2",
+  "description": "Torn Manager userscript",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_ENV=development vite build --watch",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5",
+    "vite-plugin-monkey": "^5.0.8"
+  }
+}

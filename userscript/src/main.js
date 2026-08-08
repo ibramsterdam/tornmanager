@@ -1,0 +1,31 @@
+import "./main.css";
+import { Logger } from "./core/Logger.js";
+import { Auth } from "./core/Auth.js";
+import { ApiClient } from "./core/ApiClient.js";
+import { Overlay } from "./ui/Overlay.js";
+import { Sidebar } from "./ui/Sidebar.js";
+
+const logger = new Logger();
+const auth = new Auth();
+const api = new ApiClient(auth);
+
+window.addEventListener("error", (e) => {
+  const msg = e.error?.message || e.message || "";
+  if (msg.includes("ResizeObserver")) return;
+  logger.log(e.error || msg, "uncaught");
+});
+
+window.addEventListener("unhandledrejection", (e) => {
+  logger.log(e.reason, "unhandled promise");
+});
+
+console.log(
+  "%cTorn%cManager %cis running.",
+  "font-size: 30px; font-weight: 600; color: #42a5f5;",
+  "font-size: 30px; font-weight: 600; color: #fff;",
+  "font-size: 30px;"
+);
+
+const overlay = new Overlay(auth, api, logger);
+const sidebar = new Sidebar(overlay);
+sidebar.init();
