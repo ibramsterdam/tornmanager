@@ -970,40 +970,69 @@
   text-align: center;
 }
 
+.tm-chats-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: #888;
+  cursor: pointer;
+  user-select: none;
+}
+
+.tm-chats-toggle input {
+  accent-color: #0070f3;
+  cursor: pointer;
+}
+
 /* --- Chat rooms: dock strip + boxes --- */
 
 .tm-chat-fab {
   position: fixed;
-  right: 16px;
-  bottom: 96px;
+  right: 14px;
+  bottom: 110px;
   z-index: 99990;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 46px;
-  height: 46px;
+  width: 34px;
+  height: 34px;
   padding: 0;
   border: none;
-  border-radius: 50%;
-  color: #fff;
-  background: #0070f3;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-  transition: background 0.15s ease, transform 0.15s ease;
+  border-radius: 8px;
+  background: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  opacity: 0.9;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
 .tm-chat-fab:hover {
-  background: #0061d5;
-  transform: scale(1.05);
+  opacity: 1;
+  transform: scale(1.06);
+}
+
+.tm-chat-fab:active {
+  cursor: grabbing;
+}
+
+.tm-chat-fab svg {
+  display: block;
+  border-radius: 8px;
+  pointer-events: none;
 }
 
 .tm-chat-fab-dot {
   display: none;
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 11px;
-  height: 11px;
+  top: -3px;
+  right: -3px;
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
   background: #e53935;
   border: 2px solid #1c1c1e;

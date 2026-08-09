@@ -4,10 +4,13 @@ import { showToast } from "../core/Clipboard.js";
 
 const OPEN_KEY = "tm_chat_open";
 const SEEN_KEY = "tm_chat_seen";
+const FAB_POS_KEY = "tm_chat_fab_pos";
+const FAB_HIDDEN_KEY = "tm_chat_fab_hidden";
 const UNREAD_POLL_MS = 8000;
+const DRAG_THRESHOLD_PX = 6;
 
-const CHAT_ICON =
-  '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>';
+const TM_LOGO =
+  '<svg width="34" height="34" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0070f3"/><text x="16" y="22" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="15" fill="#fff">TM</text></svg>';
 
 export class ChatDock {
   constructor(auth, client, logger) {
@@ -29,13 +32,9 @@ export class ChatDock {
       this.fab = document.createElement("button");
       this.fab.type = "button";
       this.fab.className = "tm-chat-fab";
-      this.fab.title = "TornManager chats";
-      this.fab.innerHTML = `${CHAT_ICON}<span class="tm-chat-fab-dot"></span>`;
+      this.fab.title = "TornManager chats — drag to move";
+      this.fab.innerHTML = `${TM_LOGO}<span class="tm-chat-fab-dot"></span>`;
       this.fab.style.display = "none";
-      this.fab.onclick = (e) => {
-        e.stopPropagation();
-        this.toggleMenu(!this.menuOpen);
-      };
 
       this.menu = document.createElement("div");
       this.menu.className = "tm-chat-menu";
@@ -47,8 +46,14 @@ export class ChatDock {
       document.body.appendChild(this.menu);
       document.body.appendChild(this.boxesEl);
 
+      this.makeFabDraggable();
+      this.applyFabPos();
+      window.addEventListener("resize", () => this.applyFabPos());
+
       document.addEventListener("click", (e) => {
-        if (this.menuOpen && !this.menu.contains(e.target)) this.toggleMenu(false);
+        if (this.menuOpen && !this.menu.contains(e.target) && !this.fab.contains(e.target)) {
+          this.toggleMenu(false);
+        }
       });
 
       this.handleInviteHash().then(() => this.refresh());
@@ -59,6 +64,113 @@ export class ChatDock {
   toggleMenu(open) {
     this.menuOpen = open;
     this.menu.classList.toggle("tm-chat-menu--open", open);
+    if (open) this.positionMenu();
+  }
+
+  // A tap toggles the menu; moving past the threshold drags the button instead.
+  makeFabDraggable() {
+    let start = null;
+    let dragging = false;
+
+    this.fab.addEventListener("pointerdown", (e) => {
+      const rect = this.fab.getBoundingClientRect();
+      start = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
+      dragging = false;
+      this.fab.setPointerCapture(e.pointerId);
+    });
+
+    this.fab.addEventListener("pointermove", (e) => {
+      if (!start) return;
+
+      const dx = e.clientX - start.x;
+      const dy = e.clientY - start.y;
+      if (!dragging && Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
+
+      dragging = true;
+      this.toggleMenu(false);
+      this.moveFab(start.left + dx, start.top + dy);
+    });
+
+    const finish = () => {
+      if (!start) return;
+      if (dragging) {
+        this.saveFabPos();
+      } else {
+        this.toggleMenu(!this.menuOpen);
+      }
+      start = null;
+    };
+
+    this.fab.addEventListener("pointerup", finish);
+    this.fab.addEventListener("pointercancel", () => {
+      start = null;
+    });
+  }
+
+  moveFab(left, top) {
+    const size = this.fab.offsetWidth || 34;
+    const clampedLeft = Math.min(Math.max(left, 4), window.innerWidth - size - 4);
+    const clampedTop = Math.min(Math.max(top, 4), window.innerHeight - size - 4);
+
+    this.fab.style.left = `${clampedLeft}px`;
+    this.fab.style.top = `${clampedTop}px`;
+    this.fab.style.right = "auto";
+    this.fab.style.bottom = "auto";
+  }
+
+  saveFabPos() {
+    const rect = this.fab.getBoundingClientRect();
+    try {
+      localStorage.setItem(FAB_POS_KEY, JSON.stringify({ left: Math.round(rect.left), top: Math.round(rect.top) }));
+    } catch {
+      // localStorage full or unavailable
+    }
+  }
+
+  applyFabPos() {
+    try {
+      const raw = localStorage.getItem(FAB_POS_KEY);
+      if (!raw) return;
+      const pos = JSON.parse(raw);
+      if (typeof pos?.left === "number" && typeof pos?.top === "number") {
+        this.moveFab(pos.left, pos.top);
+      }
+    } catch {
+      // ignore corrupt position data
+    }
+  }
+
+  positionMenu() {
+    const rect = this.fab.getBoundingClientRect();
+    const right = Math.min(Math.max(window.innerWidth - rect.right, 8), window.innerWidth - 200);
+    this.menu.style.right = `${right}px`;
+
+    if (rect.top > 300) {
+      this.menu.style.bottom = `${window.innerHeight - rect.top + 8}px`;
+      this.menu.style.top = "auto";
+    } else {
+      this.menu.style.top = `${rect.bottom + 8}px`;
+      this.menu.style.bottom = "auto";
+    }
+  }
+
+  isFabHidden() {
+    return localStorage.getItem(FAB_HIDDEN_KEY) === "1";
+  }
+
+  setFabVisible(visible) {
+    try {
+      localStorage.setItem(FAB_HIDDEN_KEY, visible ? "0" : "1");
+    } catch {
+      // localStorage full or unavailable
+    }
+    if (!visible) this.toggleMenu(false);
+    this.updateFabDisplay();
+  }
+
+  updateFabDisplay() {
+    if (!this.fab) return;
+    this.fab.style.display = this.rooms.length && !this.isFabHidden() ? "" : "none";
   }
 
   async handleInviteHash() {
@@ -118,7 +230,7 @@ export class ChatDock {
       this.menu.appendChild(item);
     }
 
-    this.fab.style.display = this.rooms.length ? "" : "none";
+    this.updateFabDisplay();
     this.updateUnreadUI();
   }
 

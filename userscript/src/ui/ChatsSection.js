@@ -21,6 +21,21 @@ export class ChatsSection {
     hint.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
     this.section.appendChild(hint);
 
+    const toggle = document.createElement("label");
+    toggle.className = "tm-chats-toggle";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !this.chatDock.isFabHidden();
+    checkbox.onchange = () => this.chatDock.setFabVisible(checkbox.checked);
+
+    const caption = document.createElement("span");
+    caption.textContent = "Show floating chat button (drag it anywhere)";
+
+    toggle.appendChild(checkbox);
+    toggle.appendChild(caption);
+    this.section.appendChild(toggle);
+
     this.refresh();
 
     return this.section;
