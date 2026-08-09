@@ -2,6 +2,7 @@ module Api
   class BaseController < ActionController::API
     before_action :require_api_key
     before_action :set_user
+    before_action :reject_banned
 
     private
 
@@ -12,6 +13,12 @@ module Api
     def set_user
       @user = User.find_by_api_key(params[:api_key].to_s.strip)
       render json: { error: "Unknown API key. Please sign in first." }, status: :not_found unless @user
+    end
+
+    def reject_banned
+      return unless @user&.banned?
+
+      render json: { error: "Your access to TornManager has been suspended." }, status: :forbidden
     end
   end
 end

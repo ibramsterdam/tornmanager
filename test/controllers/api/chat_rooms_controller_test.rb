@@ -161,6 +161,15 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :bad_request
   end
 
+  test "a banned user is rejected from chat endpoints" do
+    @bram.ban!
+
+    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+
+    assert_response :forbidden
+    assert_equal "Your access to TornManager has been suspended.", JSON.parse(response.body)["error"]
+  end
+
   test "rejects unknown api keys" do
     post api_chat_rooms_path, params: { api_key: "nonexistent" }, as: :json
 

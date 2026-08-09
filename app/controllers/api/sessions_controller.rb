@@ -12,6 +12,10 @@ module Api
 
       user = User.find_by(torn_id: profile.id) || User.new
 
+      if user.persisted? && user.banned?
+        return render json: { error: "Your access to TornManager has been suspended." }, status: :forbidden
+      end
+
       user.assign_attributes(
         torn_id: profile.id,
         name: profile.name,
