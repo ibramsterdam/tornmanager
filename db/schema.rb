@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_170000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -87,6 +87,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_160000) do
 
   create_table "chat_rooms", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "emptied_at"
     t.boolean "encrypted", default: false, null: false
     t.integer "host_user_id"
     t.string "invite_token", null: false
@@ -94,6 +95,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_160000) do
     t.datetime "last_message_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index ["emptied_at"], name: "index_chat_rooms_on_emptied_at"
     t.index ["host_user_id"], name: "index_chat_rooms_on_host_user_id"
     t.index ["invite_token"], name: "index_chat_rooms_on_invite_token", unique: true
     t.index ["kind"], name: "index_chat_rooms_on_kind"

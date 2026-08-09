@@ -57,9 +57,11 @@ module Api
       room = membership.chat_room
       membership.destroy!
 
-      # Public rooms are permanent; private rooms disappear with their last member.
+      # Public rooms are permanent. A private room that just lost its last
+      # member starts a 7-day self-destruct clock (see ChatRoom.abandoned) —
+      # it survives so people can rejoin via the invite link in the meantime.
       if !room.public? && room.chat_memberships.none?
-        room.destroy!
+        room.update!(emptied_at: Time.current)
       elsif !room.public?
         room.post_system_message("#{@user.name} left.")
       end
@@ -84,6 +86,7 @@ module Api
         if room.public?
           @user.chat_anon_name!
         else
+          room.update!(emptied_at: nil) if room.emptied_at
           room.post_system_message("#{@user.name} joined.")
         end
       end

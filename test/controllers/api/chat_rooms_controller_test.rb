@@ -146,13 +146,40 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, room.chat_memberships.count
   end
 
-  test "the last member leaving destroys the room" do
+  test "the last member leaving starts the self-destruct clock instead of deleting" do
     room = create_room(@bram, "Hawaii squad")
 
     post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
 
     assert_response :ok
-    assert_not ChatRoom.exists?(room.id)
+    assert ChatRoom.exists?(room.id)
+    assert_not_nil room.reload.emptied_at
+  end
+
+  test "rejoining an emptied room resets its self-destruct clock" do
+    room = create_room(@bram, "Hawaii squad")
+    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
+    assert_not_nil room.reload.emptied_at
+
+    post api_chat_join_path, params: { api_key: @bram.api_key, token: room.invite_token }, as: :json
+
+    assert_response :ok
+    assert_nil room.reload.emptied_at
+  end
+
+  test "abandoned scope catches rooms empty past the retention window" do
+    fresh = create_room(@bram, "Just left")
+    fresh.update!(emptied_at: 1.day.ago)
+
+    stale = create_room(@bert, "Long gone")
+    stale.update!(emptied_at: (ChatRoom::EMPTY_RETENTION_DAYS + 1).days.ago)
+
+    active = create_room(users(:kaneki), "Still used")
+
+    abandoned = ChatRoom.abandoned
+    assert_includes abandoned, stale
+    assert_not_includes abandoned, fresh
+    assert_not_includes abandoned, active
   end
 
   test "requires an api key" do

@@ -10,7 +10,7 @@ module Daily
       cleanup_old_sessions
       cleanup_old_api_calls
       cleanup_old_armory_news
-      cleanup_idle_chat_rooms
+      cleanup_abandoned_chat_rooms
       cleanup_public_chat_messages
       cleanup_stale_factions
     end
@@ -38,10 +38,10 @@ module Daily
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} armory news entries older than #{ARMORY_NEWS_RETENTION_DAYS} days"
     end
 
-    def cleanup_idle_chat_rooms
-      deleted_count = ChatRoom.idle.destroy_all.size
+    def cleanup_abandoned_chat_rooms
+      deleted_count = ChatRoom.abandoned.destroy_all.size
 
-      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} chat rooms idle for #{ChatRoom::IDLE_RETENTION_DAYS}+ days"
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} chat rooms empty for #{ChatRoom::EMPTY_RETENTION_DAYS}+ days"
     end
 
     # Public rooms are permanent, but their messages are short-lived to keep the

@@ -1,5 +1,11 @@
 import { copyText, showToast } from "../core/Clipboard.js";
 import { ChatCrypto } from "../core/ChatCrypto.js";
+import { Preferences, FONT_SIZES } from "../core/Preferences.js";
+
+const INVITE_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+const LEAVE_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
 
 export class ChatsSection {
   constructor(chatDock) {
@@ -36,6 +42,8 @@ export class ChatsSection {
     toggle.appendChild(checkbox);
     toggle.appendChild(caption);
     this.section.appendChild(toggle);
+
+    this.section.appendChild(this.createFontControl());
 
     this.refresh();
 
@@ -136,13 +144,13 @@ export class ChatsSection {
       this.listEl.appendChild(empty);
     } else {
       this.listEl.appendChild(this.sectionLabel("Your rooms"));
-      this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. Deleted 7 days after the last message."));
+      this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. A room self-destructs 7 days after everyone leaves."));
       for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
     }
 
     if (publicRooms.length) {
       this.listEl.appendChild(this.sectionLabel("Public rooms · anonymous"));
-      this.listEl.appendChild(this.sectionNote("Messages are cleared every 48 hours."));
+      this.listEl.appendChild(this.sectionNote("Messages older than 24 hours are deleted."));
       for (const room of publicRooms) {
         this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
       }
@@ -156,6 +164,36 @@ export class ChatsSection {
     return label;
   }
 
+  createFontControl() {
+    const row = document.createElement("div");
+    row.className = "tm-chats-fontrow";
+
+    const label = document.createElement("span");
+    label.textContent = "Chat text size";
+
+    const options = document.createElement("div");
+    options.className = "tm-prefs-fonts";
+
+    const current = Preferences.chatFontSize();
+    for (const size of FONT_SIZES) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tm-prefs-font";
+      button.textContent = size.label;
+      button.classList.toggle("tm-prefs-font--active", size.px === current);
+      button.onclick = () => {
+        Preferences.setChatFontSize(size.px);
+        options.querySelectorAll(".tm-prefs-font").forEach((b) => b.classList.remove("tm-prefs-font--active"));
+        button.classList.add("tm-prefs-font--active");
+      };
+      options.appendChild(button);
+    }
+
+    row.appendChild(label);
+    row.appendChild(options);
+    return row;
+  }
+
   sectionNote(text) {
     const note = document.createElement("p");
     note.className = "tm-chats-section-note";
@@ -164,35 +202,17 @@ export class ChatsSection {
   }
 
   renderPublicRoom(room, joined) {
-    const row = document.createElement("div");
-    row.className = "tm-chats-room";
+    const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
+    const row = this.roomRow(room.name, `${members} · anonymous`);
+    row.onclick = () => this.openPublic(room);
 
-    const info = document.createElement("div");
-    info.className = "tm-chats-room-info";
+    if (!joined) {
+      const tag = document.createElement("span");
+      tag.className = "tm-chats-room-tag";
+      tag.textContent = "Join";
+      row.querySelector(".tm-chats-room-actions").appendChild(tag);
+    }
 
-    const name = document.createElement("span");
-    name.className = "tm-chats-room-name";
-    name.textContent = room.name;
-
-    const meta = document.createElement("span");
-    meta.className = "tm-chats-room-meta";
-    meta.textContent = `${room.member_count} member${room.member_count === 1 ? "" : "s"} · you appear anonymously`;
-
-    info.appendChild(name);
-    info.appendChild(meta);
-
-    const actions = document.createElement("div");
-    actions.className = "tm-chats-room-actions";
-
-    const open = document.createElement("button");
-    open.type = "button";
-    open.className = "tm-chats-btn tm-chats-btn--primary";
-    open.textContent = joined ? "Open" : "Join";
-    open.onclick = () => this.openPublic(room, open);
-    actions.appendChild(open);
-
-    row.appendChild(info);
-    row.appendChild(actions);
     return row;
   }
 
@@ -211,8 +231,7 @@ export class ChatsSection {
     copyText(`${room.invite_url}~${key}`, "Invite link copied");
   }
 
-  openPublic(room, button) {
-    button.disabled = true;
+  openPublic(room) {
     this.client
       .joinPublic(room.id)
       .then((joined) => {
@@ -221,61 +240,83 @@ export class ChatsSection {
       })
       .catch((err) => {
         this.error.textContent = err.message || "Could not open the room.";
-        button.disabled = false;
       });
   }
 
   renderRoom(room) {
+    const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
+    const row = this.roomRow(room.name, `${members}${room.host ? " · host" : ""}`);
+    row.onclick = () => this.chatDock.openRoomById(room.id);
+
+    const actions = row.querySelector(".tm-chats-room-actions");
+
+    if (room.host && room.invite_url) {
+      actions.appendChild(
+        this.iconButton(INVITE_ICON, "Copy invite link", () => this.copyInvite(room))
+      );
+    }
+
+    actions.appendChild(
+      this.iconButton(LEAVE_ICON, "Leave room", () => {
+        this.client.leaveRoom(room.id).then(() => {
+          this.chatDock.refresh();
+          this.refresh();
+        });
+      }, "tm-chats-icon-btn--danger")
+    );
+
+    return row;
+  }
+
+  // A compact one-line room row: click anywhere to open; small icon buttons on
+  // the right handle secondary actions without stealing the row's click.
+  roomRow(name, meta) {
     const row = document.createElement("div");
     row.className = "tm-chats-room";
+    row.setAttribute("role", "button");
+    row.tabIndex = 0;
 
     const info = document.createElement("div");
     info.className = "tm-chats-room-info";
 
-    const name = document.createElement("span");
-    name.className = "tm-chats-room-name";
-    name.textContent = room.name;
+    const nameEl = document.createElement("span");
+    nameEl.className = "tm-chats-room-name";
+    nameEl.textContent = name;
 
-    const meta = document.createElement("span");
-    meta.className = "tm-chats-room-meta";
-    meta.textContent = `${room.member_count} member${room.member_count === 1 ? "" : "s"}${room.host ? " · host" : ""}`;
+    const metaEl = document.createElement("span");
+    metaEl.className = "tm-chats-room-meta";
+    metaEl.textContent = meta;
 
-    info.appendChild(name);
-    info.appendChild(meta);
+    info.appendChild(nameEl);
+    info.appendChild(metaEl);
 
     const actions = document.createElement("div");
     actions.className = "tm-chats-room-actions";
 
-    const open = document.createElement("button");
-    open.type = "button";
-    open.className = "tm-chats-btn tm-chats-btn--primary";
-    open.textContent = "Open";
-    open.onclick = () => this.chatDock.openRoomById(room.id);
-    actions.appendChild(open);
-
-    if (room.host && room.invite_url) {
-      const invite = document.createElement("button");
-      invite.type = "button";
-      invite.className = "tm-chats-btn";
-      invite.textContent = "Invite";
-      invite.onclick = () => this.copyInvite(room);
-      actions.appendChild(invite);
-    }
-
-    const leave = document.createElement("button");
-    leave.type = "button";
-    leave.className = "tm-chats-btn tm-chats-btn--danger";
-    leave.textContent = "Leave";
-    leave.onclick = () => {
-      this.client.leaveRoom(room.id).then(() => {
-        this.chatDock.refresh();
-        this.refresh();
-      });
-    };
-    actions.appendChild(leave);
-
     row.appendChild(info);
     row.appendChild(actions);
+
+    row.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        row.click();
+      }
+    });
+
     return row;
+  }
+
+  iconButton(icon, title, onClick, extraClass = "") {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `tm-chats-icon-btn ${extraClass}`.trim();
+    button.title = title;
+    button.setAttribute("aria-label", title);
+    button.innerHTML = icon;
+    button.onclick = (e) => {
+      e.stopPropagation();
+      onClick();
+    };
+    return button;
   }
 }

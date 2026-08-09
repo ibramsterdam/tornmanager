@@ -1,8 +1,8 @@
 class ChatRoom < ApplicationRecord
   MEMBER_LIMIT = 20
   PER_USER_LIMIT = 10
-  IDLE_RETENTION_DAYS = 7
-  PUBLIC_MESSAGE_RETENTION = 48.hours
+  EMPTY_RETENTION_DAYS = 7
+  PUBLIC_MESSAGE_RETENTION = 24.hours
 
   ANON_ADJECTIVES = %w[
     Silent Crimson Shadow Golden Iron Swift Frost Ember Storm Lunar
@@ -25,7 +25,9 @@ class ChatRoom < ApplicationRecord
 
   scope :private_rooms, -> { where(kind: "private") }
   scope :public_rooms, -> { where(kind: "public") }
-  scope :idle, -> { private_rooms.where(last_message_at: ...IDLE_RETENTION_DAYS.days.ago) }
+  # Empty (no members) for the retention window — the beginless range excludes
+  # rooms whose emptied_at is nil (i.e. rooms that still have members).
+  scope :abandoned, -> { private_rooms.where(emptied_at: ..EMPTY_RETENTION_DAYS.days.ago) }
 
   def public?
     kind == "public"
