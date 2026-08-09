@@ -36,6 +36,7 @@ export default defineConfig({
           "torn.com",
           "api.torn.com",
           "tornmanager.com",
+          "raw.githubusercontent.com",
           ...(isDev ? ["localhost"] : []),
         ],
         "run-at": "document-start",

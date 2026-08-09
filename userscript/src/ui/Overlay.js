@@ -3,6 +3,7 @@ import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
 import { copyText } from "../core/Clipboard.js";
+import { UpdateCheck, DOWNLOAD_URL } from "../core/UpdateCheck.js";
 
 const LOCK_ICON =
   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -24,6 +25,8 @@ export class Overlay {
     this.chatsSection = null;
     this.subscription = null;
     this.activeTab = "chats";
+    this.updateChecked = false;
+    this.latestVersion = null;
   }
 
   open() {
@@ -35,11 +38,49 @@ export class Overlay {
     }
 
     this.renderPanel();
+    this.renderUpdateNotice();
 
     // Force reflow so the transition triggers
     this.overlay.offsetHeight;
     this.overlay.classList.add("tm-overlay--visible");
     this.isOpen = true;
+
+    this.checkForUpdate();
+  }
+
+  checkForUpdate() {
+    if (this.updateChecked) return;
+    this.updateChecked = true;
+
+    UpdateCheck.outdatedVersion()
+      .then((latest) => {
+        if (!latest) return;
+        this.latestVersion = latest;
+        this.renderUpdateNotice();
+      })
+      .catch(() => {});
+  }
+
+  renderUpdateNotice() {
+    if (!this.latestVersion || !this.panel) return;
+    if (this.panel.querySelector(".tm-update-notice")) return;
+
+    const notice = document.createElement("div");
+    notice.className = "tm-update-notice";
+
+    const text = document.createElement("span");
+    text.textContent = `Update available — you're on v${UpdateCheck.current}, latest is v${this.latestVersion}.`;
+
+    const link = document.createElement("a");
+    link.href = DOWNLOAD_URL;
+    link.target = "_blank";
+    link.rel = "noopener";
+    link.className = "tm-update-link";
+    link.textContent = "Update now";
+
+    notice.appendChild(text);
+    notice.appendChild(link);
+    this.panel.insertBefore(notice, this.panel.firstChild);
   }
 
   close() {
