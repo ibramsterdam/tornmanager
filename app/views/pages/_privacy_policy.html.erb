@@ -8,15 +8,14 @@
       This Privacy Policy explains how I collect, use, and safeguard your data when you use my service.
     </p>
     <p>
-      TornManager is available as a web application at tornmanager.com and as a browser userscript that runs on Torn.com.
-      Both use the same backend and this policy applies equally to both.
+      TornManager is available as a web application at tornmanager.com.
     </p>
   </section>
 
   <section class="content-section">
     <h2 id="pp-information-i-collect">Information I Collect</h2>
     <p>
-      When you sign in (either on the web application or through the browser userscript), you provide your 
+      When you sign in, you provide your
       Torn API key. I securely store this key in my database and use it to fetch your game data from Torn's 
       official API. I require a minimum of Public Only level permissions. Limited Access is required for stock 
       portfolio features.
@@ -499,72 +498,49 @@
     </p>
   </section>
 
+
   <section class="content-section">
-    <h2 id="pp-browser-userscript">Browser Userscript</h2>
+    <h2 id="pp-chats">TornManager Chats (Browser Userscript)</h2>
     <p>
-      The TornManager browser userscript (installed via Tampermonkey or Greasemonkey) runs directly on Torn.com 
-      and enhances the game interface with additional information. The userscript communicates with the TornManager 
-      backend at tornmanager.com and stores a small amount of data locally in your browser.
+      TornManager Chats is an upcoming companion userscript that runs on Torn.com and lets you create and join
+      chat rooms with other TornManager users. This section describes what data the chat feature stores and for
+      how long.
+    </p>
+
+    <h3>Data Stored on the Server</h3>
+    <ul>
+      <li><strong>Rooms</strong> &mdash; the room name, when it was created, and who created it.</li>
+      <li><strong>Memberships</strong> &mdash; which rooms your Torn ID belongs to.</li>
+      <li><strong>Messages</strong> &mdash; the message text (up to 300 characters), your Torn ID and player name, and a timestamp. Joining or leaving a room also posts a small system message.</li>
+      <li><strong>Invite tokens</strong> &mdash; the secret token that a room's invite link contains.</li>
+    </ul>
+    <p>
+      Chat messages are stored in my database so they can be delivered to the other members of the room. They are
+      not end-to-end encrypted: anyone in the room can read them, and I am technically able to access them, which
+      I only do to investigate abuse or technical problems. Do not share API keys, passwords, or other secrets in chat.
+    </p>
+
+    <h3>Retention</h3>
+    <p>
+      Chat data is short-lived by design. A room &mdash; including all of its messages &mdash; is permanently
+      deleted from the database when the last member leaves, and rooms with no new messages for 7 days are
+      automatically deleted by a daily cleanup job.
     </p>
 
     <h3>Local Storage (Browser)</h3>
-    <p>The userscript stores the following data in your browser's localStorage on the torn.com domain:</p>
+    <p>The chats userscript stores the following data in your browser's localStorage on the torn.com domain:</p>
     <ul>
-      <li><strong>User profile and API key</strong> (<code>tm_user</code>) — Your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript settings.</li>
-      <li><strong>Error log</strong> (<code>tm_errors</code>) — Up to 50 error entries for debugging purposes, including timestamps and error messages. You can copy or clear these from the userscript settings panel.</li>
-      <li><strong>UI state</strong> (<code>tm_open_popover</code>) — The ID of any currently open player detail popover, so it persists across data refreshes. Removed when the popover is closed.</li>
+      <li><strong>User profile and API key</strong> (<code>tm_user</code>) &mdash; your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript.</li>
+      <li><strong>Error log</strong> (<code>tm_errors</code>) &mdash; up to 50 error entries for debugging, which you can copy or clear from the userscript panel.</li>
+      <li><strong>Chat interface state</strong> (<code>tm_chat_open</code>, <code>tm_chat_seen</code>) &mdash; which chat windows are open and the last message you have seen per room, used for unread indicators.</li>
     </ul>
 
     <h3>Backend Communication</h3>
-    <p>The userscript makes the following requests to tornmanager.com using <code>GM.xmlHttpRequest</code> (which bypasses standard browser CORS restrictions):</p>
-    <div class="tos-table">
-      <table>
-        <thead>
-          <tr>
-            <th>Endpoint</th>
-            <th>Purpose</th>
-            <th>Frequency</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><code>POST /api/session</code></td>
-            <td>Authenticate your Torn API key and retrieve your user profile</td>
-            <td>Once when you sign in</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/subscription</code></td>
-            <td>Check your subscription status and expiration date</td>
-            <td>When opening the settings panel; on manual refresh</td>
-          </tr>
-          <tr>
-            <td><code>POST /api/current_war</code></td>
-            <td>Fetch live war data including enemy member status, battle stats, hospital timers, and online indicators</td>
-            <td>Every 6 seconds while viewing the ranked war page; once when opening the settings panel</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
     <p>
-      All requests include your API key for authentication. The userscript does not send any other data to the backend.
-      No data is sent to any third party — all communication is exclusively between your browser and tornmanager.com.
-    </p>
-
-    <h3>War Page Enhancement</h3>
-    <p>
-      When you visit Torn's ranked war page, the userscript modifies the page to display additional information 
-      about enemy faction members. This includes:
-    </p>
-    <ul>
-      <li>Estimated battle stats from spy reports (sourced from the TornManager backend)</li>
-      <li>Hospital countdown timers and status indicators</li>
-      <li>Travel destinations and abroad locations</li>
-      <li>Online/Idle/Offline activity indicators with relative timestamps</li>
-      <li>A settings panel overlay showing war overview (score, enemy status breakdown, online activity)</li>
-    </ul>
-    <p>
-      This data is fetched from the TornManager backend (which aggregates it from the Torn API and spy report sources) 
-      and is displayed only to you in your browser. The userscript does not share this information with anyone else.
+      The userscript talks exclusively to tornmanager.com using <code>GM.xmlHttpRequest</code>: signing in
+      (<code>/api/session</code>) and the chat endpoints (<code>/api/chat/&hellip;</code>) for listing your rooms,
+      joining via invite token, sending messages, and fetching new messages (polled every few seconds while a chat
+      window is open). Every request includes your API key for authentication. No data is sent to any third party.
     </p>
   </section>
 
@@ -598,9 +574,9 @@
       <li>Travel destinations and abroad locations</li>
     </ul>
     <p>
-      This information is sourced from the TornStats API and the Torn API, and represents publicly available spy data. 
-      It is used solely to assist faction members during ranked wars and is displayed both on the TornManager web 
-      application and through the browser userscript's war page overlay. The data is cached temporarily on the server 
+      This information is sourced from the TornStats API and the Torn API, and represents publicly available spy data.
+      It is used solely to assist faction members during ranked wars and is displayed on the TornManager web
+      application. The data is cached temporarily on the server
       (refreshed every 6 seconds during active wars) and is not permanently stored.
     </p>
     <p>

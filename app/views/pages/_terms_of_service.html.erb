@@ -12,8 +12,8 @@
   <section class="content-section">
     <h2 id="tos-description">Description of Service</h2>
     <p>
-      TornManager is a tool I created for players of Torn.com, available as a web application at tornmanager.com
-      and as a browser userscript that runs directly on Torn.com. My service uses the official Torn API to help you:
+      TornManager is a tool I created for players of Torn.com, available as a web application at tornmanager.com.
+      My service uses the official Torn API to help you:
     </p>
     <ul>
       <li>Track your personal statistics and progress over time</li>
@@ -23,8 +23,6 @@
       <li>Monitor faction member training compliance (for tracked factions)</li>
       <li>View faction ranked war history and member performance</li>
       <li>View live war dashboards with enemy status and spy data during ranked wars</li>
-      <li>Enhance Torn's ranked war page with real-time enemy stats, hospital timers, travel info, and online indicators (via the browser userscript)</li>
-      <li>View war overview status (score, enemy breakdown) from anywhere on Torn.com (via the browser userscript)</li>
       <li>Share live war dashboards publicly with allies via password-protected lobbies</li>
       <li>Configure faction whitelists for controlled data sharing between factions</li>
       <li>Share subscription time with faction members (faction leaders only)</li>
@@ -168,27 +166,36 @@
     </p>
   </section>
 
+
   <section class="content-section">
-    <h2 id="tos-browser-userscript">Browser Userscript</h2>
+    <h2 id="tos-chats">TornManager Chats (Browser Userscript)</h2>
     <p>
-      The TornManager browser userscript is an optional companion that runs on Torn.com via a userscript 
-      manager (such as Tampermonkey or Greasemonkey). By installing and using the userscript, you agree to:
+      TornManager Chats is an upcoming companion userscript that runs on Torn.com via a userscript manager
+      (such as Tampermonkey) and lets you create chat rooms with other players — beyond the faction, company,
+      and private chats Torn provides. Chat rooms are free for every TornManager account and do not require
+      a subscription. A Torn API key with Public access level is sufficient to sign in.
     </p>
+    <p>By installing and using the chats userscript, you agree to:</p>
     <ul>
-      <li>Allow the userscript to modify the visual appearance of Torn.com pages in your browser</li>
-      <li>Allow the userscript to communicate with tornmanager.com to fetch your war data and subscription status</li>
-      <li>Allow the userscript to store authentication data and preferences in your browser's localStorage</li>
+      <li>Allow the userscript to display chat windows on Torn.com pages in your browser</li>
+      <li>Allow the userscript to communicate with tornmanager.com to send and receive chat messages</li>
+      <li>Allow the userscript to store authentication data and interface preferences in your browser's localStorage</li>
     </ul>
     <p>
-      The userscript requires an active TornManager subscription to access war features. It authenticates using 
-      the same Torn API key you provide when signing in. The userscript's behavior can be 
-      inspected at any time via the distributed script.
+      Rooms are joined through invite links. Anyone who has a room's invite link can join that room —
+      treat invite links as private and only share them with people you want in the room. The invite link
+      is only shown to the room's creator.
     </p>
     <p>
-      The userscript uses <code>GM.xmlHttpRequest</code> to communicate with tornmanager.com, which bypasses 
-      standard browser cross-origin restrictions. This is a standard capability of userscript managers and is 
-      required for the userscript to function. The userscript only communicates with tornmanager.com and 
-      torn.com — no other domains.
+      You are responsible for what you write. Do not use chat rooms for harassment, scams, or any content
+      that violates Torn's rules or applicable law. I may remove messages or rooms and suspend chat access
+      to deal with abuse. Message sending is rate limited and rooms have a member cap to keep the service healthy.
+    </p>
+    <p>
+      The userscript uses <code>GM.xmlHttpRequest</code> to communicate with tornmanager.com, which bypasses
+      standard browser cross-origin restrictions. This is a standard capability of userscript managers and is
+      required for the userscript to function. The userscript only communicates with tornmanager.com and
+      torn.com &mdash; no other domains.
     </p>
   </section>
 
@@ -227,23 +234,6 @@
       assist with tactical decision-making during wars. The accuracy of spy data depends on third-party sources 
       and may not reflect current battle stats.
     </p>
-    <p>
-      The browser userscript enhances Torn's ranked war page with a real-time overlay that displays:
-    </p>
-    <ul>
-      <li>Enemy member battle stats from spy reports (where available)</li>
-      <li>Hospital countdown timers with live updates</li>
-      <li>Travel destinations and abroad locations</li>
-      <li>Online, idle, and offline activity indicators</li>
-      <li>Sortable columns for tactical prioritization</li>
-      <li>Detail popovers with full stat breakdowns and attack links</li>
-    </ul>
-    <p>
-      The userscript also adds a settings panel accessible from Torn's sidebar, which displays a war overview 
-      including the current score, enemy status breakdown (okay, hospital, traveling, jail), and online activity 
-      counts. War data is refreshed every 6 seconds to match the backend polling interval.
-    </p>
-
     <h3>Faction Data Deletion</h3>
     <p>
       Faction leaders can permanently delete all collected faction data through the Leadership dashboard. This 
