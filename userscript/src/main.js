@@ -8,9 +8,13 @@ import { Sidebar } from "./ui/Sidebar.js";
 import { SettingsMenuEntry } from "./ui/SettingsMenuEntry.js";
 import { ChatDock } from "./ui/ChatDock.js";
 
+import { Preferences } from "./core/Preferences.js";
+
 const logger = new Logger();
 const auth = new Auth();
 const api = new ApiClient(auth);
+
+Preferences.applyChatFontSize();
 
 // Swap for MockChatClient (localStorage + fake teammates) to work on chat UI offline.
 const chatClient = new ChatClient(auth);

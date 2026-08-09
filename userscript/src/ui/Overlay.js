@@ -4,6 +4,7 @@ import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
 import { copyText } from "../core/Clipboard.js";
 import { UpdateCheck, DOWNLOAD_URL } from "../core/UpdateCheck.js";
+import { Preferences, FONT_SIZES } from "../core/Preferences.js";
 
 const LOCK_ICON =
   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -262,6 +263,8 @@ export class Overlay {
   }
 
   renderSettingsTab() {
+    this.tabContent.appendChild(this.renderPreferences());
+
     this.subscriptionSection = new SubscriptionSection(this.auth, (sub) => this.setSubscription(sub));
     this.tabContent.appendChild(this.subscriptionSection.render());
 
@@ -275,6 +278,37 @@ export class Overlay {
       this.renderPanel();
     };
     this.tabContent.appendChild(removeBtn);
+  }
+
+  renderPreferences() {
+    const section = document.createElement("div");
+    section.className = "tm-prefs";
+
+    const label = document.createElement("span");
+    label.className = "tm-prefs-label";
+    label.textContent = "Chat text size";
+
+    const options = document.createElement("div");
+    options.className = "tm-prefs-fonts";
+
+    const current = Preferences.chatFontSize();
+    for (const size of FONT_SIZES) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tm-prefs-font";
+      button.textContent = size.label;
+      button.classList.toggle("tm-prefs-font--active", size.px === current);
+      button.onclick = () => {
+        Preferences.setChatFontSize(size.px);
+        options.querySelectorAll(".tm-prefs-font").forEach((b) => b.classList.remove("tm-prefs-font--active"));
+        button.classList.add("tm-prefs-font--active");
+      };
+      options.appendChild(button);
+    }
+
+    section.appendChild(label);
+    section.appendChild(options);
+    return section;
   }
 
   renderWarTab() {
