@@ -24,8 +24,8 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
-  test "a user cannot host more rooms than the limit" do
-    ChatRoom::HOSTED_LIMIT.times do |i|
+  test "a user cannot create more rooms than the per-user limit" do
+    ChatRoom::PER_USER_LIMIT.times do |i|
       post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Room #{i}" }, as: :json
       assert_response :created
     end
@@ -33,6 +33,26 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "One too many" }, as: :json
 
     assert_response :unprocessable_entity
+    assert_equal "You're already in #{ChatRoom::PER_USER_LIMIT} rooms. Leave one first.", JSON.parse(response.body)["error"]
+  end
+
+  test "a user cannot join more rooms than the per-user limit" do
+    ChatRoom::PER_USER_LIMIT.times { |i| create_room(@bert, "Bert #{i}") }
+
+    room = create_room(@bram, "Hawaii squad")
+
+    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+
+    assert_response :unprocessable_entity
+    assert_equal 1, room.chat_memberships.count
+  end
+
+  test "rejoining an existing room works even at the per-user limit" do
+    rooms = ChatRoom::PER_USER_LIMIT.times.map { |i| create_room(@bert, "Bert #{i}") }
+
+    post api_chat_join_path, params: { api_key: @bert.api_key, token: rooms.first.invite_token }, as: :json
+
+    assert_response :ok
   end
 
   test "joining via invite token adds a membership and announces it" do

@@ -1,6 +1,6 @@
 class ChatRoom < ApplicationRecord
   MEMBER_LIMIT = 20
-  HOSTED_LIMIT = 5
+  PER_USER_LIMIT = 10
   IDLE_RETENTION_DAYS = 7
 
   has_secure_token :invite_token, length: 24

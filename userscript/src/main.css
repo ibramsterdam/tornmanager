@@ -115,7 +115,7 @@
   transition: color 0.15s ease;
 }
 
-.tm-tab:not(:disabled):hover {
+.tm-tab:hover {
   color: #d6d6db;
 }
 
@@ -124,14 +124,26 @@
   border-bottom-color: #0070f3;
 }
 
-.tm-tab:disabled {
-  color: #5b5b61;
-  cursor: not-allowed;
+.tm-tab--locked {
+  color: #6a6a70;
+}
+
+.tm-tab--locked:hover {
+  color: #9a9aa2;
 }
 
 .tm-tab-lock {
   display: inline-flex;
   opacity: 0.85;
+}
+
+.tm-tab--icon {
+  margin-left: auto;
+  padding: 9px 10px 10px;
+}
+
+.tm-tab--icon svg {
+  display: block;
 }
 
 .tm-tab-content .tm-sub,
@@ -211,6 +223,27 @@
   min-height: 18px;
 }
 
+.tm-auth-hint {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #777;
+  text-align: center;
+}
+
+.tm-auth-hint strong {
+  color: #aaa;
+}
+
+.tm-auth-hint a {
+  color: #0070f3;
+  text-decoration: none;
+}
+
+.tm-auth-hint a:hover {
+  text-decoration: underline;
+}
+
 .tm-sub {
   margin-top: 24px;
   padding: 20px;
@@ -225,6 +258,18 @@
   font-weight: 600;
   color: #fff;
   text-align: center;
+}
+
+.tm-sub-note {
+  margin: 0 0 14px;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #9ab8dd;
+  text-align: center;
+  background: rgba(0, 112, 243, 0.08);
+  border: 1px solid rgba(0, 112, 243, 0.3);
+  border-radius: 7px;
 }
 
 .tm-sub-status {
@@ -718,6 +763,29 @@
   transform: translate(-50%, 0);
 }
 
+@media (max-width: 600px) {
+  .tm-overlay-panel {
+    max-width: 96vw;
+    max-height: 88vh;
+    padding: 26px 16px 18px;
+  }
+
+  .tm-tab {
+    padding: 9px 10px 10px;
+    font-size: 13px;
+  }
+
+  .tm-chats-room {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .tm-chats-room-actions {
+    justify-content: flex-end;
+  }
+}
+
 @keyframes tm-pulse {
   50% {
     opacity: 0.4;
@@ -790,10 +858,32 @@
 }
 
 .tm-chats-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
   margin: 8px 0;
-  font-size: 13px;
-  color: #666;
+  padding: 26px 20px;
+  background: #161618;
+  border: 1px solid #303032;
+  border-radius: 10px;
   text-align: center;
+  color: #4a9df8;
+}
+
+.tm-chats-empty-title {
+  margin: 6px 0 0;
+  font-size: 14.5px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-chats-empty-text {
+  margin: 0;
+  max-width: 44ch;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #9a9aa2;
 }
 
 .tm-chats-room {

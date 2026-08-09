@@ -6,9 +6,8 @@ module Api
     end
 
     def create
-      if @user.hosted_chat_rooms.count >= ChatRoom::HOSTED_LIMIT
-        return render json: { error: "You already host #{ChatRoom::HOSTED_LIMIT} rooms. Leave one first." },
-          status: :unprocessable_entity
+      if room_limit_reached?
+        return render json: { error: room_limit_error }, status: :unprocessable_entity
       end
 
       room = ChatRoom.new(name: params[:name].to_s.strip, host_user: @user, last_message_at: Time.current)
@@ -29,6 +28,10 @@ module Api
       end
 
       unless room.chat_memberships.exists?(user: @user)
+        if room_limit_reached?
+          return render json: { error: room_limit_error }, status: :unprocessable_entity
+        end
+
         if room.chat_memberships.count >= ChatRoom::MEMBER_LIMIT
           return render json: { error: "This room is full." }, status: :unprocessable_entity
         end
@@ -56,6 +59,16 @@ module Api
       end
 
       render json: { ok: true }
+    end
+
+    private
+
+    def room_limit_reached?
+      @user.chat_memberships.count >= ChatRoom::PER_USER_LIMIT
+    end
+
+    def room_limit_error
+      "You're already in #{ChatRoom::PER_USER_LIMIT} rooms. Leave one first."
     end
   end
 end

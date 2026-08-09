@@ -14,6 +14,13 @@ export class SubscriptionSection {
     title.textContent = "Subscription";
     section.appendChild(title);
 
+    const note = document.createElement("p");
+    note.className = "tm-sub-note";
+    note.textContent =
+      "A subscription is an optional extra — it only unlocks additional features like the Ranked War tab. " +
+      "Chats and the rest of the extension are free for everyone.";
+    section.appendChild(note);
+
     this.statusEl = document.createElement("div");
     this.statusEl.className = "tm-sub-status";
     section.appendChild(this.statusEl);

@@ -73,7 +73,7 @@ export class ChatDock {
       this.openRoom(room);
     } catch (err) {
       this.logger.log(err, "chat invite join");
-      showToast("Could not join the chat room");
+      showToast(err.message || "Could not join the chat room");
     }
   }
 

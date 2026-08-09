@@ -13,7 +13,7 @@ export class AuthScreen {
 
     const subtitle = document.createElement("p");
     subtitle.className = "tm-auth-subtitle";
-    subtitle.textContent = "Enter your Torn API key to get started.";
+    subtitle.textContent = "Sign in with your Torn API key to get started.";
 
     const form = document.createElement("form");
     form.className = "tm-auth-form";
@@ -60,9 +60,16 @@ export class AuthScreen {
       }
     });
 
+    const hint = document.createElement("p");
+    hint.className = "tm-auth-hint";
+    hint.innerHTML =
+      'A key with <strong>Public</strong> access is all this extension needs — ' +
+      '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">create one here</a>.';
+
     container.appendChild(title);
     container.appendChild(subtitle);
     container.appendChild(form);
+    container.appendChild(hint);
 
     return container;
   }

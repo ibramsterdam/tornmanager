@@ -104,9 +104,13 @@ export class ChatsSection {
     this.listEl.innerHTML = "";
 
     if (!rooms.length) {
-      const empty = document.createElement("p");
+      const empty = document.createElement("div");
       empty.className = "tm-chats-empty";
-      empty.textContent = "No rooms yet. Create one, or join via an invite link.";
+      empty.innerHTML =
+        '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>' +
+        '<p class="tm-chats-empty-title">Chat rooms beyond faction chat</p>' +
+        '<p class="tm-chats-empty-text">Create a room with anyone in Torn — war squads, trade partners, friends. ' +
+        "Share its invite link in any chat and clicking it joins instantly. Free for everyone.</p>";
       this.listEl.appendChild(empty);
       return;
     }
