@@ -2,6 +2,7 @@ import { AuthScreen } from "./AuthScreen.js";
 import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
+import { copyText } from "../core/Clipboard.js";
 
 const LOCK_ICON =
   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -271,6 +272,14 @@ export class Overlay {
     links.appendChild(privacy);
     links.appendChild(divider.cloneNode(true));
     links.appendChild(tos);
+    links.appendChild(divider.cloneNode(true));
+
+    const debug = document.createElement("button");
+    debug.type = "button";
+    debug.className = "tm-footer-link tm-footer-link--button";
+    debug.textContent = "Copy debug info";
+    debug.onclick = () => copyText(this.debugInfo(), "Debug info copied");
+    links.appendChild(debug);
 
     footer.appendChild(links);
 
@@ -319,5 +328,26 @@ export class Overlay {
     }
 
     return footer;
+  }
+
+  // Environment snapshot for support reports — everything the icon/chat
+  // mounting and API transport depend on, small enough to paste anywhere.
+  debugInfo() {
+    return [
+      `TornManager v${__TM_VERSION__}`,
+      `URL: ${window.location.href}`,
+      `Viewport: ${window.innerWidth}x${window.innerHeight}`,
+      `UA: ${navigator.userAgent}`,
+      `Body classes: ${document.body?.className || "-"}`,
+      `#sidebar present: ${!!document.getElementById("sidebar")}`,
+      `Status-icons list present: ${!!document.querySelector("#sidebar ul[class^='status-icon']")}`,
+      `TM sidebar icon mounted: ${!!document.getElementById("tornmanager-icon")}`,
+      `TM fallback launcher mounted: ${!!document.getElementById("tornmanager-launcher")}`,
+      `Torn #chatRoot present: ${!!document.getElementById("chatRoot")}`,
+      `GM.xmlHttpRequest available: ${typeof GM !== "undefined" && typeof GM.xmlHttpRequest === "function"}`,
+      `PDA bridge available: ${typeof window.PDA_httpPost === "function"}`,
+      `Signed in: ${this.auth.isAuthenticated()}`,
+      `Errors logged: ${this.logger.getAll().length}`,
+    ].join("\n");
   }
 }

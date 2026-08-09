@@ -13,6 +13,7 @@ const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/usersc
 export default defineConfig({
   define: {
     __API_BASE__: JSON.stringify(API_BASE),
+    __TM_VERSION__: JSON.stringify(pkg.version),
   },
   build: {
     minify: false,
