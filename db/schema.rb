@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_140000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -87,13 +87,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_120000) do
 
   create_table "chat_rooms", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.integer "host_user_id", null: false
+    t.integer "host_user_id"
     t.string "invite_token", null: false
+    t.string "kind", default: "private", null: false
     t.datetime "last_message_at", null: false
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["host_user_id"], name: "index_chat_rooms_on_host_user_id"
     t.index ["invite_token"], name: "index_chat_rooms_on_invite_token", unique: true
+    t.index ["kind"], name: "index_chat_rooms_on_kind"
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -363,6 +365,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_120000) do
 
   create_table "users", force: :cascade do |t|
     t.datetime "backfill_ends_at"
+    t.string "chat_anon_name"
     t.datetime "created_at", null: false
     t.integer "faction_id"
     t.boolean "fallen", default: false, null: false
@@ -377,6 +380,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_120000) do
     t.integer "torn_id", null: false
     t.datetime "trial_granted_at"
     t.datetime "updated_at", null: false
+    t.index ["chat_anon_name"], name: "index_users_on_chat_anon_name", unique: true
     t.index ["faction_id"], name: "index_users_on_faction_id"
     t.index ["hof_stats_user"], name: "index_users_on_hof_stats_user"
     t.index ["subscription_expires_at"], name: "index_users_on_subscription_expires_at"

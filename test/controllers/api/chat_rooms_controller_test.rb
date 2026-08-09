@@ -151,11 +151,87 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "index returns public rooms to everyone without membership" do
+    lounge = public_room("The Lounge")
+
+    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+
+    assert_response :ok
+    body = JSON.parse(response.body)
+    assert_empty body["rooms"]
+    assert_equal [ lounge.id ], body["public_rooms"].map { |r| r["id"] }
+    assert_equal "public", body["public_rooms"].first["kind"]
+    assert_not body["public_rooms"].first["host"]
+  end
+
+  test "joining a public room assigns the user a forever anonymous name" do
+    lounge = public_room("The Lounge")
+
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_response :ok
+    assert @bram.reload.chat_anon_name.present?
+  end
+
+  test "leaving and rejoining a public room keeps the same anonymous name" do
+    lounge = public_room("The Lounge")
+
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    first_name = @bram.reload.chat_anon_name
+
+    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_equal first_name, @bram.reload.chat_anon_name
+  end
+
+  test "joining a public room does not post a join system message" do
+    lounge = public_room("The Lounge")
+
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_response :ok
+    assert_equal 0, lounge.chat_messages.count
+  end
+
+  test "join_public rejects a private room id" do
+    room = create_room(@bram, "Private")
+
+    post api_chat_join_public_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+
+    assert_response :not_found
+    assert_not room.chat_memberships.exists?(user: @bert)
+  end
+
+  test "leaving a public room never destroys it" do
+    lounge = public_room("The Lounge")
+    lounge.chat_memberships.create!(user: @bram)
+
+    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_response :ok
+    assert ChatRoom.exists?(lounge.id)
+  end
+
+  test "public room memberships do not count toward the per-user room limit" do
+    lounge = public_room("The Lounge")
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    ChatRoom::PER_USER_LIMIT.times do |i|
+      post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Room #{i}" }, as: :json
+      assert_response :created
+    end
+  end
+
   private
 
   def create_room(user, name)
     room = ChatRoom.create!(name: name, host_user: user, last_message_at: Time.current)
     room.chat_memberships.create!(user: user, host: true)
     room
+  end
+
+  def public_room(name)
+    ChatRoom.create!(name: name, kind: "public", host_user: nil, last_message_at: Time.current)
   end
 end

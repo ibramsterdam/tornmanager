@@ -195,7 +195,7 @@ export class ChatDock {
   refresh() {
     return this.client
       .listRooms()
-      .then((rooms) => {
+      .then(({ rooms }) => {
         this.rooms = rooms;
         this.renderMenu();
         this.syncBoxes();

@@ -11,6 +11,7 @@ module Daily
       cleanup_old_api_calls
       cleanup_old_armory_news
       cleanup_idle_chat_rooms
+      cleanup_public_chat_messages
       cleanup_stale_factions
     end
 
@@ -41,6 +42,15 @@ module Daily
       deleted_count = ChatRoom.idle.destroy_all.size
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} chat rooms idle for #{ChatRoom::IDLE_RETENTION_DAYS}+ days"
+    end
+
+    # Public rooms are permanent, but their messages are short-lived to keep the
+    # anonymous history ephemeral and the table small.
+    def cleanup_public_chat_messages
+      cutoff = ChatRoom::PUBLIC_MESSAGE_RETENTION.ago
+      deleted_count = ChatMessage.where(chat_room: ChatRoom.public_rooms).where("created_at < ?", cutoff).delete_all
+
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} public chat messages older than #{ChatRoom::PUBLIC_MESSAGE_RETENTION.inspect}"
     end
 
     # destroy (not delete_all) so dependent data goes with the faction and

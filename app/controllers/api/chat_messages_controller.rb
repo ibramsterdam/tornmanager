@@ -11,7 +11,7 @@ module Api
         .order(:id)
         .limit(PAGE_LIMIT)
 
-      render json: { messages: messages.map(&:as_api_json) }
+      render json: { messages: messages.map { |m| present(m) } }
     end
 
     def create
@@ -19,16 +19,23 @@ module Api
         return render json: { error: "You're sending messages too fast." }, status: :too_many_requests
       end
 
-      message = @room.chat_messages.new(
-        user: @user,
-        body: params[:body].to_s.strip,
-        sender_name: @user.name,
-        sender_torn_id: @user.torn_id
-      )
+      # In public rooms the sender's Torn identity is never stored — only their
+      # stable per-room pseudonym is persisted, so a message can't be traced
+      # back to a player through the data.
+      attrs = { user: @user, body: params[:body].to_s.strip }
+      if @room.public?
+        attrs[:sender_name] = @user.chat_anon_name!
+        attrs[:sender_torn_id] = nil
+      else
+        attrs[:sender_name] = @user.name
+        attrs[:sender_torn_id] = @user.torn_id
+      end
+
+      message = @room.chat_messages.new(attrs)
 
       if message.save
         Rails.cache.write(cooldown_key, true, expires_in: SEND_COOLDOWN)
-        render json: { message: message.as_api_json }, status: :created
+        render json: { message: present(message) }, status: :created
       else
         render json: { error: message.errors.full_messages.first }, status: :unprocessable_entity
       end
@@ -39,6 +46,12 @@ module Api
     def set_room
       @room = @user.chat_rooms.find_by(id: params[:room_id])
       render json: { error: "Room not found." }, status: :not_found unless @room
+    end
+
+    # `own` lets the client highlight your own messages without exposing a Torn
+    # id in public rooms; anonymous messages carry no torn_id at all.
+    def present(message)
+      message.as_api_json.merge(own: message.user_id == @user.id)
     end
 
     def rate_limited?

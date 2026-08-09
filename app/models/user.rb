@@ -37,6 +37,28 @@ class User < ApplicationRecord
     joins(:torn_api_key).find_by(api_keys: { key: key })
   end
 
+  # A single anonymous name per user, assigned once and kept forever, so a
+  # player can't shed a reputation by rejoining. Uniqueness is guarded by a DB
+  # index; on the rare collision we retry, then fall back to an id suffix.
+  def chat_anon_name!
+    return chat_anon_name if chat_anon_name.present?
+
+    20.times do
+      candidate = ChatRoom.random_anon_name
+      next if User.exists?(chat_anon_name: candidate)
+
+      begin
+        update!(chat_anon_name: candidate)
+        return chat_anon_name
+      rescue ActiveRecord::RecordNotUnique
+        next
+      end
+    end
+
+    update!(chat_anon_name: "#{ChatRoom.random_anon_name} ##{id}")
+    chat_anon_name
+  end
+
   def subscribed?
     (subscription&.expires_at.present? && subscription.expires_at > Time.current) ||
       (faction&.subscription&.expires_at.present? && faction.subscription.expires_at > Time.current)

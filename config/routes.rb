@@ -12,6 +12,7 @@ Rails.application.routes.draw do
       post :rooms, to: "chat_rooms#index", as: :chat_rooms
       post :create_room, to: "chat_rooms#create", as: :chat_create_room
       post :join, to: "chat_rooms#join", as: :chat_join
+      post :join_public, to: "chat_rooms#join_public", as: :chat_join_public
       post :leave, to: "chat_rooms#leave", as: :chat_leave
       post :messages, to: "chat_messages#index", as: :chat_messages
       post :send_message, to: "chat_messages#create", as: :chat_send_message

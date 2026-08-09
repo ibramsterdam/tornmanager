@@ -520,11 +520,22 @@
       I only do to investigate abuse or technical problems. Do not share API keys, passwords, or other secrets in chat.
     </p>
 
+    <h3>Public Rooms &amp; Anonymity</h3>
+    <p>
+      Some rooms are public and anonymous: anyone using TornManager can join them and talk under a pseudonym
+      (for example "Silent Bandit 42") rather than their Torn name. Each account is assigned one pseudonym that
+      stays the same forever and across every public room, so leaving and rejoining does not change it. Messages
+      you send in public rooms are stored with your pseudonym and <strong>without your Torn ID</strong>, so other
+      members cannot identify you from the chat. As the operator I can still link a pseudonym to an account when
+      required to investigate abuse. Anonymity applies to other players, not to me.
+    </p>
+
     <h3>Retention</h3>
     <p>
-      Chat data is short-lived by design. A room &mdash; including all of its messages &mdash; is permanently
-      deleted from the database when the last member leaves, and rooms with no new messages for 7 days are
-      automatically deleted by a daily cleanup job.
+      Chat data is short-lived by design. A private room &mdash; including all of its messages &mdash; is
+      permanently deleted from the database when the last member leaves, and private rooms with no new messages
+      for 7 days are automatically deleted by a daily cleanup job. Public rooms are permanent, but their messages
+      are automatically deleted after 48 hours.
     </p>
 
     <h3>Local Storage (Browser)</h3>

@@ -288,12 +288,22 @@ export class ChatBox {
       const row = document.createElement("div");
       row.className = "tm-cb-row";
 
-      const sender = document.createElement("a");
+      // Anonymous senders (public rooms) carry no torn_id, so they render as
+      // plain text with no profile link; "own" comes from the server flag.
+      const own = message.own ?? message.torn_id === this.client.me().torn_id;
+      if (own) row.classList.add("tm-cb-row--own");
+
+      let sender;
+      if (message.torn_id) {
+        sender = document.createElement("a");
+        sender.href = `https://www.torn.com/profiles.php?XID=${message.torn_id}`;
+        sender.target = "_blank";
+        sender.rel = "noopener";
+      } else {
+        sender = document.createElement("span");
+      }
       sender.className = "tm-cb-sender";
-      if (message.torn_id === this.client.me().torn_id) sender.classList.add("tm-cb-sender--own");
-      sender.href = `https://www.torn.com/profiles.php?XID=${message.torn_id}`;
-      sender.target = "_blank";
-      sender.rel = "noopener";
+      sender.style.color = this.colorForName(message.name);
       sender.textContent = `${message.name}:`;
 
       const body = document.createElement("span");
@@ -330,5 +340,16 @@ export class ChatBox {
     row.textContent = text;
     this.list.appendChild(row);
     this.list.scrollTop = this.list.scrollHeight;
+  }
+
+  // Deterministic per-name color: hash the name to a hue, with fixed
+  // saturation/lightness tuned to stay readable on the dark chat background.
+  colorForName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash * 31 + name.charCodeAt(i)) | 0;
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 60%, 68%)`;
   }
 }

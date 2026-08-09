@@ -11,7 +11,10 @@ export class ChatClient {
   }
 
   listRooms() {
-    return this.post("/api/chat/rooms").then((data) => data.rooms);
+    return this.post("/api/chat/rooms").then((data) => ({
+      rooms: data.rooms || [],
+      publicRooms: data.public_rooms || [],
+    }));
   }
 
   createRoom(name) {
@@ -20,6 +23,10 @@ export class ChatClient {
 
   joinByToken(token) {
     return this.post("/api/chat/join", { token }).then((data) => data.room);
+  }
+
+  joinPublic(roomId) {
+    return this.post("/api/chat/join_public", { room_id: roomId }).then((data) => data.room);
   }
 
   leaveRoom(roomId) {

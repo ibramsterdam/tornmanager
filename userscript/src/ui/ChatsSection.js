@@ -105,7 +105,7 @@ export class ChatsSection {
   refresh() {
     this.client
       .listRooms()
-      .then((rooms) => this.renderList(rooms))
+      .then(({ rooms, publicRooms }) => this.renderList(rooms, publicRooms))
       .catch(() => {
         this.listEl.innerHTML = "";
         const error = document.createElement("p");
@@ -115,10 +115,13 @@ export class ChatsSection {
       });
   }
 
-  renderList(rooms) {
+  renderList(rooms, publicRooms) {
     this.listEl.innerHTML = "";
 
-    if (!rooms.length) {
+    const joinedIds = new Set(rooms.map((room) => room.id));
+    const privateRooms = rooms.filter((room) => room.kind !== "public");
+
+    if (!privateRooms.length) {
       const empty = document.createElement("div");
       empty.className = "tm-chats-empty";
       empty.innerHTML =
@@ -127,12 +130,71 @@ export class ChatsSection {
         '<p class="tm-chats-empty-text">Create a room with anyone in Torn — war squads, trade partners, friends. ' +
         "Share its invite link in any chat and clicking it joins instantly. Free for everyone.</p>";
       this.listEl.appendChild(empty);
-      return;
+    } else {
+      this.listEl.appendChild(this.sectionLabel("Your rooms"));
+      for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
     }
 
-    for (const room of rooms) {
-      this.listEl.appendChild(this.renderRoom(room));
+    if (publicRooms.length) {
+      this.listEl.appendChild(this.sectionLabel("Public rooms · anonymous"));
+      for (const room of publicRooms) {
+        this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
+      }
     }
+  }
+
+  sectionLabel(text) {
+    const label = document.createElement("p");
+    label.className = "tm-chats-section-label";
+    label.textContent = text;
+    return label;
+  }
+
+  renderPublicRoom(room, joined) {
+    const row = document.createElement("div");
+    row.className = "tm-chats-room";
+
+    const info = document.createElement("div");
+    info.className = "tm-chats-room-info";
+
+    const name = document.createElement("span");
+    name.className = "tm-chats-room-name";
+    name.textContent = room.name;
+
+    const meta = document.createElement("span");
+    meta.className = "tm-chats-room-meta";
+    meta.textContent = `${room.member_count} member${room.member_count === 1 ? "" : "s"} · you appear anonymously`;
+
+    info.appendChild(name);
+    info.appendChild(meta);
+
+    const actions = document.createElement("div");
+    actions.className = "tm-chats-room-actions";
+
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "tm-chats-btn tm-chats-btn--primary";
+    open.textContent = joined ? "Open" : "Join";
+    open.onclick = () => this.openPublic(room, open);
+    actions.appendChild(open);
+
+    row.appendChild(info);
+    row.appendChild(actions);
+    return row;
+  }
+
+  openPublic(room, button) {
+    button.disabled = true;
+    this.client
+      .joinPublic(room.id)
+      .then((joined) => {
+        this.chatDock.openRoom(joined);
+        this.refresh();
+      })
+      .catch((err) => {
+        this.error.textContent = err.message || "Could not open the room.";
+        button.disabled = false;
+      });
   }
 
   renderRoom(room) {

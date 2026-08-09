@@ -28,7 +28,22 @@ export class MockChatClient {
   }
 
   listRooms() {
-    return this.respond(() => Object.values(this.load().rooms).map((room) => this.roomInfo(room)));
+    return this.respond(() => {
+      const all = Object.values(this.load().rooms);
+      return {
+        rooms: all.map((room) => this.roomInfo(room)),
+        publicRooms: all.filter((room) => room.kind === "public").map((room) => this.roomInfo(room)),
+      };
+    });
+  }
+
+  joinPublic(roomId) {
+    return this.respond(() => {
+      const store = this.load();
+      const room = store.rooms[roomId];
+      if (!room) throw new Error("Room not found.");
+      return this.roomInfo(room);
+    });
   }
 
   createRoom(name) {

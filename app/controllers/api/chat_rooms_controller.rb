@@ -1,8 +1,10 @@
 module Api
   class ChatRoomsController < BaseController
     def index
-      rooms = @user.chat_rooms.order(last_message_at: :desc).map { |room| room.info_for(@user) }
-      render json: { rooms: rooms }
+      mine = @user.chat_rooms.order(last_message_at: :desc).map { |room| room.info_for(@user) }
+      public_rooms = ChatRoom.public_rooms.order(:name).map { |room| room.info_for(@user) }
+
+      render json: { rooms: mine, public_rooms: public_rooms }
     end
 
     def create
@@ -10,7 +12,7 @@ module Api
         return render json: { error: room_limit_error }, status: :unprocessable_entity
       end
 
-      room = ChatRoom.new(name: params[:name].to_s.strip, host_user: @user, last_message_at: Time.current)
+      room = ChatRoom.new(name: params[:name].to_s.strip, host_user: @user, kind: "private", last_message_at: Time.current)
 
       if room.save
         room.chat_memberships.create!(user: @user, host: true)
@@ -27,20 +29,17 @@ module Api
         return render json: { error: "This invite link is no longer valid." }, status: :not_found
       end
 
-      unless room.chat_memberships.exists?(user: @user)
-        if room_limit_reached?
-          return render json: { error: room_limit_error }, status: :unprocessable_entity
-        end
+      join_room(room)
+    end
 
-        if room.chat_memberships.count >= ChatRoom::MEMBER_LIMIT
-          return render json: { error: "This room is full." }, status: :unprocessable_entity
-        end
-
-        room.chat_memberships.create!(user: @user)
-        room.post_system_message("#{@user.name} joined.")
+    # Public rooms have no invite token — anyone may join them by id.
+    def join_public
+      room = ChatRoom.public_rooms.find_by(id: params[:room_id])
+      unless room
+        return render json: { error: "Room not found." }, status: :not_found
       end
 
-      render json: { room: room.info_for(@user) }
+      join_room(room)
     end
 
     def leave
@@ -52,9 +51,10 @@ module Api
       room = membership.chat_room
       membership.destroy!
 
-      if room.chat_memberships.none?
+      # Public rooms are permanent; private rooms disappear with their last member.
+      if !room.public? && room.chat_memberships.none?
         room.destroy!
-      else
+      elsif !room.public?
         room.post_system_message("#{@user.name} left.")
       end
 
@@ -63,8 +63,31 @@ module Api
 
     private
 
+    def join_room(room)
+      unless room.chat_memberships.exists?(user: @user)
+        if !room.public? && room_limit_reached?
+          return render json: { error: room_limit_error }, status: :unprocessable_entity
+        end
+
+        if !room.public? && room.chat_memberships.count >= ChatRoom::MEMBER_LIMIT
+          return render json: { error: "This room is full." }, status: :unprocessable_entity
+        end
+
+        room.chat_memberships.create!(user: @user)
+
+        if room.public?
+          @user.chat_anon_name!
+        else
+          room.post_system_message("#{@user.name} joined.")
+        end
+      end
+
+      render json: { room: room.info_for(@user) }
+    end
+
+    # Public-room memberships don't count toward the per-user cap.
     def room_limit_reached?
-      @user.chat_memberships.count >= ChatRoom::PER_USER_LIMIT
+      @user.chat_memberships.joins(:chat_room).where(chat_rooms: { kind: "private" }).count >= ChatRoom::PER_USER_LIMIT
     end
 
     def room_limit_error

@@ -80,6 +80,40 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "messages in a public room hide the sender's torn id and use their alias" do
+    lounge = ChatRoom.create!(name: "The Lounge", kind: "public", host_user: nil, last_message_at: Time.current)
+    lounge.chat_memberships.create!(user: @bram)
+
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "anyone selling xanax?" }, as: :json
+
+    assert_response :created
+    sent = JSON.parse(response.body)["message"]
+    assert_equal @bram.reload.chat_anon_name, sent["name"]
+    assert_not_equal @bram.name, sent["name"]
+    assert_nil sent["torn_id"]
+    assert sent["own"]
+
+    stored = lounge.chat_messages.last
+    assert_nil stored.sender_torn_id
+    assert_equal @bram.id, stored.user_id
+  end
+
+  test "public room messages appear anonymous to other members" do
+    lounge = ChatRoom.create!(name: "The Lounge", kind: "public", host_user: nil, last_message_at: Time.current)
+    lounge.chat_memberships.create!(user: @bram)
+    lounge.chat_memberships.create!(user: @bert)
+
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "hey" }, as: :json
+
+    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: lounge.id, since_id: 0 }, as: :json
+
+    assert_response :ok
+    message = JSON.parse(response.body)["messages"].first
+    assert_equal @bram.reload.chat_anon_name, message["name"]
+    assert_nil message["torn_id"]
+    assert_not message["own"]
+  end
+
   private
 
   def with_memory_cache
