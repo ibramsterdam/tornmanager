@@ -30,21 +30,7 @@ export class ChatsSection {
     hint.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
     this.section.appendChild(hint);
 
-    const toggle = document.createElement("label");
-    toggle.className = "tm-chats-toggle";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = !this.chatDock.isFabHidden();
-    checkbox.onchange = () => this.chatDock.setFabVisible(checkbox.checked);
-
-    const caption = document.createElement("span");
-    caption.textContent = "Show floating chat button (drag it anywhere)";
-
-    toggle.appendChild(checkbox);
-    toggle.appendChild(caption);
-    this.section.appendChild(toggle);
-
+    this.section.appendChild(this.createButtonControl());
     this.section.appendChild(this.createFontControl());
 
     this.refresh();
@@ -166,9 +152,47 @@ export class ChatsSection {
     return label;
   }
 
+  createButtonControl() {
+    const row = document.createElement("div");
+    row.className = "tm-chats-setting";
+
+    const label = document.createElement("span");
+    label.textContent = "Chat button";
+
+    const options = document.createElement("div");
+    options.className = "tm-chats-modes";
+
+    const modes = [
+      { value: "none", label: "None" },
+      { value: "floating", label: "Floating" },
+      { value: "integrated", label: "Integrated", beta: true },
+    ];
+
+    const current = this.chatDock.buttonMode();
+    for (const mode of modes) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "tm-chats-mode";
+      button.classList.toggle("tm-chats-mode--active", mode.value === current);
+      button.innerHTML = mode.beta
+        ? `${mode.label}<span class="tm-chats-beta">beta</span>`
+        : mode.label;
+      button.onclick = () => {
+        this.chatDock.setButtonMode(mode.value);
+        options.querySelectorAll(".tm-chats-mode").forEach((b) => b.classList.remove("tm-chats-mode--active"));
+        button.classList.add("tm-chats-mode--active");
+      };
+      options.appendChild(button);
+    }
+
+    row.appendChild(label);
+    row.appendChild(options);
+    return row;
+  }
+
   createFontControl() {
     const row = document.createElement("div");
-    row.className = "tm-chats-fontrow";
+    row.className = "tm-chats-setting";
 
     const label = document.createElement("span");
     label.textContent = "Chat text size";

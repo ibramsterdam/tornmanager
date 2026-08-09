@@ -6,7 +6,9 @@ import { ChatCrypto } from "../core/ChatCrypto.js";
 const OPEN_KEY = "tm_chat_open";
 const SEEN_KEY = "tm_chat_seen";
 const FAB_POS_KEY = "tm_chat_fab_pos";
-const FAB_HIDDEN_KEY = "tm_chat_fab_hidden";
+const BUTTON_MODE_KEY = "tm_chat_button_mode";
+const LEGACY_HIDDEN_KEY = "tm_chat_fab_hidden";
+const BUTTON_MODES = ["none", "floating", "integrated"];
 const UNREAD_POLL_MS = 8000;
 const DRAG_THRESHOLD_PX = 6;
 
@@ -158,23 +160,29 @@ export class ChatDock {
     }
   }
 
-  isFabHidden() {
-    return localStorage.getItem(FAB_HIDDEN_KEY) === "1";
+  buttonMode() {
+    const stored = localStorage.getItem(BUTTON_MODE_KEY);
+    if (BUTTON_MODES.includes(stored)) return stored;
+    // Migrate the old hide checkbox: hidden -> none, otherwise floating.
+    return localStorage.getItem(LEGACY_HIDDEN_KEY) === "1" ? "none" : "floating";
   }
 
-  setFabVisible(visible) {
+  setButtonMode(mode) {
     try {
-      localStorage.setItem(FAB_HIDDEN_KEY, visible ? "0" : "1");
+      localStorage.setItem(BUTTON_MODE_KEY, mode);
     } catch {
       // localStorage full or unavailable
     }
-    if (!visible) this.toggleMenu(false);
+    if (mode !== "floating") this.toggleMenu(false);
     this.updateFabDisplay();
   }
 
   updateFabDisplay() {
     if (!this.fab) return;
-    this.fab.style.display = this.rooms.length && !this.isFabHidden() ? "" : "none";
+    // "integrated" is a placeholder (no Torn-chat docking yet) and behaves as
+    // "none" until that lands, so the floating button only shows in "floating".
+    const show = this.rooms.length && this.buttonMode() === "floating";
+    this.fab.style.display = show ? "" : "none";
   }
 
   async handleInviteHash() {
