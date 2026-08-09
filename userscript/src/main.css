@@ -1110,24 +1110,17 @@
   display: block;
 }
 
-.tm-chat-boxes {
-  position: fixed;
-  right: 72px;
-  bottom: 96px;
-  z-index: 99990;
-  display: flex;
-  flex-direction: row-reverse;
-  align-items: flex-end;
-  gap: 10px;
-}
-
 .tm-cb {
+  position: fixed;
+  right: 12px;
+  bottom: 100px;
+  z-index: 99990;
   display: flex;
   flex-direction: column;
   width: 330px;
-  max-width: calc(100vw - 88px);
+  max-width: calc(100vw - 24px);
   height: 440px;
-  max-height: calc(100vh - 140px);
+  max-height: calc(100vh - 120px);
   background: #1c1c1e;
   border: 1px solid #333;
   border-radius: 10px;
@@ -1179,6 +1172,18 @@
   background: #161618;
   border-bottom: 1px solid #2a2a2c;
   flex: none;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.tm-cb-header:active {
+  cursor: grabbing;
+}
+
+.tm-cb-action {
+  cursor: pointer;
+  touch-action: auto;
 }
 
 .tm-cb-title {

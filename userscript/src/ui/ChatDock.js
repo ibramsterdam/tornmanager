@@ -48,7 +48,10 @@ export class ChatDock {
 
       this.makeFabDraggable();
       this.applyFabPos();
-      window.addEventListener("resize", () => this.applyFabPos());
+      window.addEventListener("resize", () => {
+        this.applyFabPos();
+        this.boxes.forEach((box) => box.clampPosition());
+      });
 
       document.addEventListener("click", (e) => {
         if (this.menuOpen && !this.menu.contains(e.target) && !this.fab.contains(e.target)) {
