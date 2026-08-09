@@ -16,14 +16,25 @@ const chatClient = new ChatClient(auth);
 const chatDock = new ChatDock(auth, chatClient, logger);
 chatDock.init();
 
+// Only skip errors that identifiably belong to a different userscript —
+// anything ambiguous still gets logged so we don't miss our own failures
+// on managers with other stack formats (PDA, iOS Userscripts, ...).
+function fromAnotherUserscript(source) {
+  if (!source) return false;
+  const match = source.match(/userscript\.html\?name=([^&]+)/i);
+  return !!match && !decodeURIComponent(match[1]).toLowerCase().includes("torn-manager");
+}
+
 window.addEventListener("error", (e) => {
   const msg = e.error?.message || e.message || "";
   if (msg.includes("ResizeObserver")) return;
+  if (fromAnotherUserscript(e.filename) || fromAnotherUserscript(e.error?.stack)) return;
   const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
   logger.log(e.error || msg, `uncaught (${source})`);
 });
 
 window.addEventListener("unhandledrejection", (e) => {
+  if (fromAnotherUserscript(e.reason?.stack)) return;
   logger.log(e.reason, "unhandled promise");
 });
 

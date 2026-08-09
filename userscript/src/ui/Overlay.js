@@ -342,7 +342,6 @@ export class Overlay {
       `#sidebar present: ${!!document.getElementById("sidebar")}`,
       `Status-icons list present: ${!!document.querySelector("#sidebar ul[class^='status-icon']")}`,
       `TM sidebar icon mounted: ${!!document.getElementById("tornmanager-icon")}`,
-      `TM fallback launcher mounted: ${!!document.getElementById("tornmanager-launcher")}`,
       `Torn #chatRoot present: ${!!document.getElementById("chatRoot")}`,
       `GM.xmlHttpRequest available: ${typeof GM !== "undefined" && typeof GM.xmlHttpRequest === "function"}`,
       `PDA bridge available: ${typeof window.PDA_httpPost === "function"}`,

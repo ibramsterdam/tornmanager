@@ -12,33 +12,6 @@
   display: none !important;
 }
 
-.tm-launcher {
-  position: fixed;
-  left: 12px;
-  bottom: 96px;
-  z-index: 99990;
-  width: 42px;
-  height: 42px;
-  padding: 0;
-  border: none;
-  border-radius: 50%;
-  color: #fff;
-  background: #0070f3;
-  font-family: Arial, sans-serif;
-  font-size: 14px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
-  transition: background 0.15s ease, transform 0.15s ease;
-}
-
-.tm-launcher:hover {
-  background: #0061d5;
-  transform: scale(1.05);
-}
-
 .tm-overlay-backdrop {
   position: fixed;
   inset: 0;
