@@ -24,6 +24,21 @@ const PLANE_TYPE_MAP = {
 const STATUS_ORDER = { Okay: 0, Traveling: 1, Jail: 2, Hospital: 3, Fallen: 4 };
 const ACTION_ORDER = { Online: 0, Idle: 1, Offline: 2 };
 
+// Torn describes foreign hospitals by nationality: "In a Japanese hospital for ...".
+const HOSPITAL_ADJECTIVES = {
+  "Mexican": "Mexico",
+  "Caymanian": "Cayman Islands",
+  "Canadian": "Canada",
+  "Hawaiian": "Hawaii",
+  "British": "United Kingdom",
+  "Argentinian": "Argentina",
+  "Swiss": "Switzerland",
+  "Japanese": "Japan",
+  "Chinese": "China",
+  "Emirati": "UAE",
+  "South African": "South Africa",
+};
+
 const STATUS_CLASSES = {
   Okay: "tm-status--okay",
   Hospital: "tm-status--hospital",
@@ -41,6 +56,7 @@ const ACTION_CLASSES = {
 const COLUMNS = [
   { key: "name", label: "Name" },
   { key: "status", label: "Status" },
+  { key: "location", label: "Location" },
   { key: "activity", label: "Activity" },
   {
     key: "timer",
@@ -175,6 +191,11 @@ export class TargetTable {
         const bVal = b.member ? STATUS_ORDER[b.member.status?.state] ?? 5 : 6;
         return (aVal - bVal) * dir;
       }
+      case "location": {
+        const aVal = a.member ? this.locationFor(a.member.status) : "~";
+        const bVal = b.member ? this.locationFor(b.member.status) : "~";
+        return aVal < bVal ? -1 * dir : aVal > bVal ? 1 * dir : 0;
+      }
       case "activity": {
         const aVal = a.member ? ACTION_ORDER[a.member.last_action?.status] ?? 3 : 4;
         const bVal = b.member ? ACTION_ORDER[b.member.last_action?.status] ?? 3 : 4;
@@ -226,6 +247,7 @@ export class TargetTable {
           <td><span class="tm-tt-nodata">-</span></td>
           <td><span class="tm-tt-nodata">-</span></td>
           <td><span class="tm-tt-nodata">-</span></td>
+          <td><span class="tm-tt-nodata">-</span></td>
           ${removeCell}
         </tr>`;
     }
@@ -238,10 +260,32 @@ export class TargetTable {
       <tr data-id="${id}" data-attack-url="${attackUrl}">
         <td><a href="${attackUrl}" class="tm-tt-name" title="Attack ${name}">${name}</a></td>
         <td><span class="tm-status ${statusClass}">${this.escapeHtml(status.state || "Unknown")}</span></td>
+        <td>${this.renderLocation(status)}</td>
         <td>${this.renderActivity(member)}</td>
         <td>${this.renderTimer(member)}</td>
         ${removeCell}
       </tr>`;
+  }
+
+  // "Plane" while flying, otherwise the country the player is actually in —
+  // including foreign hospitals ("In a Japanese hospital ..." → Japan).
+  locationFor(status) {
+    if (!status) return "Torn";
+    if (status.state === "Traveling") return "Plane";
+
+    const description = status.description || "";
+    if (status.state === "Abroad") return description.replace(/^In\s+/i, "") || "Abroad";
+
+    const match = description.match(/^In an? ([A-Z][\w ]*?) hospital/i);
+    if (match) return HOSPITAL_ADJECTIVES[match[1]] || match[1];
+
+    return "Torn";
+  }
+
+  renderLocation(status) {
+    const location = this.locationFor(status);
+    const cls = location === "Torn" ? "tm-loc tm-loc--torn" : location === "Plane" ? "tm-loc tm-loc--plane" : "tm-loc";
+    return `<span class="${cls}">${this.escapeHtml(location)}</span>`;
   }
 
   renderActivity(member) {
@@ -257,12 +301,6 @@ export class TargetTable {
     if (!status) return '<span class="tm-tt-nodata">-</span>';
 
     if (status.state === "Traveling") return this.renderTravelTimer(status);
-
-    if (status.state === "Abroad") {
-      const description = status.description || "";
-      const location = description.replace(/^In\s+/i, "") || "Abroad";
-      return `<span class="tm-timer tm-timer--abroad" title="${this.escapeHtml(description)}">${this.escapeHtml(location)}</span>`;
-    }
 
     if (!status.until) return '<span class="tm-tt-nodata">-</span>';
 

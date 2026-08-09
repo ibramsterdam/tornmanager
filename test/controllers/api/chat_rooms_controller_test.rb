@@ -120,6 +120,16 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert room.chat_messages.exists?(system: true, body: "#{@bert.name} left.")
   end
 
+  test "a non-member cannot leave or probe a room by guessing its id" do
+    room = create_room(@bram, "Private room")
+
+    post api_chat_leave_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+
+    assert_response :not_found
+    assert ChatRoom.exists?(room.id)
+    assert_equal 1, room.chat_memberships.count
+  end
+
   test "the last member leaving destroys the room" do
     room = create_room(@bram, "Hawaii squad")
 

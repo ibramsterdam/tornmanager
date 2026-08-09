@@ -522,7 +522,7 @@
   position: sticky;
   top: 0;
   z-index: 1;
-  padding: 8px 10px;
+  padding: 10px 12px;
   background: #1a1a1c;
   border-bottom: 1px solid #2a2a2c;
   font-size: 10px;
@@ -558,10 +558,17 @@
 }
 
 .tm-tt td {
-  padding: 7px 10px;
+  padding: 11px 12px;
   border-bottom: 1px solid #222;
   color: #ccc;
   white-space: nowrap;
+}
+
+/* The name column absorbs all spare width; the data columns shrink to fit. */
+.tm-tt th:first-child,
+.tm-tt td:first-child {
+  width: 100%;
+  padding-left: 14px;
 }
 
 .tm-tt tbody tr:last-child td {
@@ -598,6 +605,15 @@
 
 .tm-tt-nodata {
   color: #444;
+}
+
+.tm-loc--torn {
+  color: #666;
+}
+
+.tm-loc--plane {
+  color: #42a5f5;
+  font-weight: 500;
 }
 
 .tm-tt-empty {
@@ -712,11 +728,6 @@
 
 .tm-timer--travel {
   color: #42a5f5;
-}
-
-.tm-timer--abroad {
-  color: #ab47bc;
-  font-weight: 500;
 }
 
 .tm-timer--landing {
