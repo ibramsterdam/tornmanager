@@ -12,6 +12,19 @@
   display: none !important;
 }
 
+/* TornManager entry injected into Torn's account dropdown menu. */
+.tornmanager-menu-item a {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  background-image: none !important;
+}
+
+.tornmanager-menu-item svg {
+  flex: none;
+  border-radius: 4px;
+}
+
 .tm-overlay-backdrop {
   position: fixed;
   inset: 0;
@@ -879,6 +892,13 @@
 
 .tm-chats-section-label:first-child {
   margin-top: 0;
+}
+
+.tm-chats-section-note {
+  margin: 0 0 6px;
+  font-size: 11px;
+  line-height: 1.4;
+  color: #6a6a70;
 }
 
 .tm-chats-empty {

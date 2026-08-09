@@ -5,6 +5,7 @@ import { ApiClient } from "./core/ApiClient.js";
 import { ChatClient } from "./core/ChatClient.js";
 import { Overlay } from "./ui/Overlay.js";
 import { Sidebar } from "./ui/Sidebar.js";
+import { SettingsMenuEntry } from "./ui/SettingsMenuEntry.js";
 import { ChatDock } from "./ui/ChatDock.js";
 
 const logger = new Logger();
@@ -48,3 +49,6 @@ console.log(
 const overlay = new Overlay(auth, api, logger, chatDock);
 const sidebar = new Sidebar(overlay);
 sidebar.init();
+
+const settingsMenuEntry = new SettingsMenuEntry(overlay);
+settingsMenuEntry.init();

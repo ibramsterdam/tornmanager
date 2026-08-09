@@ -132,11 +132,13 @@ export class ChatsSection {
       this.listEl.appendChild(empty);
     } else {
       this.listEl.appendChild(this.sectionLabel("Your rooms"));
+      this.listEl.appendChild(this.sectionNote("Deleted 7 days after the last message, or when everyone leaves."));
       for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
     }
 
     if (publicRooms.length) {
       this.listEl.appendChild(this.sectionLabel("Public rooms · anonymous"));
+      this.listEl.appendChild(this.sectionNote("Messages are cleared every 48 hours."));
       for (const room of publicRooms) {
         this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
       }
@@ -148,6 +150,13 @@ export class ChatsSection {
     label.className = "tm-chats-section-label";
     label.textContent = text;
     return label;
+  }
+
+  sectionNote(text) {
+    const note = document.createElement("p");
+    note.className = "tm-chats-section-note";
+    note.textContent = text;
+    return note;
   }
 
   renderPublicRoom(room, joined) {
