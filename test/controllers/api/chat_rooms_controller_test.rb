@@ -189,10 +189,12 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
     assert_response :ok
     assert room.chat_suspensions.exists?(user: @bert)
+    assert room.chat_messages.exists?(system: true, body: "#{@bram.name} has suspended #{@bert.name}.")
 
     post api_chat_unsuspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
     assert_response :ok
     assert_not room.chat_suspensions.exists?(user: @bert)
+    assert room.chat_messages.exists?(system: true, body: "#{@bram.name} has unsuspended #{@bert.name}.")
   end
 
   test "a non-host cannot suspend" do

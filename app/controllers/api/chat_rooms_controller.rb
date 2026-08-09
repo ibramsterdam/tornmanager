@@ -97,7 +97,11 @@ module Api
         return render json: { error: "You can't suspend yourself." }, status: :unprocessable_entity
       end
 
-      room.chat_suspensions.find_or_create_by!(user: target)
+      unless room.chat_suspensions.exists?(user: target)
+        room.chat_suspensions.create!(user: target)
+        room.post_system_message("#{@user.name} has suspended #{target.name}.")
+      end
+
       render json: { ok: true }
     end
 
@@ -108,7 +112,10 @@ module Api
       target = target_user(room)
       return unless target
 
-      room.chat_suspensions.where(user: target).delete_all
+      if room.chat_suspensions.where(user: target).delete_all.positive?
+        room.post_system_message("#{@user.name} has unsuspended #{target.name}.")
+      end
+
       render json: { ok: true }
     end
 
