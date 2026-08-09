@@ -5,7 +5,10 @@ const POLL_INTERVAL_MS = 3000;
 const MAX_LENGTH = 300;
 const DIVIDER_GAP_MS = 15 * 60 * 1000;
 const POS_KEY = "tm_chat_box_pos";
+const SIZE_KEY = "tm_chat_box_size";
 const DRAG_THRESHOLD_PX = 6;
+const MIN_WIDTH = 280;
+const MIN_HEIGHT = 300;
 
 let zCounter = 99991;
 
@@ -40,7 +43,9 @@ export class ChatBox {
       this.element.style.zIndex = ++zCounter;
     });
     this.makeDraggable(header);
+    this.applySize();
     this.applyPosition();
+    this.addResizeHandle();
 
     this.poll();
     this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
@@ -132,6 +137,73 @@ export class ChatBox {
       const raw = localStorage.getItem(POS_KEY);
       const positions = raw ? JSON.parse(raw) : {};
       return typeof positions === "object" && positions !== null ? positions : {};
+    } catch {
+      return {};
+    }
+  }
+
+  applySize() {
+    const saved = this.savedSizes()[this.room.id];
+    if (saved && saved.w && saved.h) {
+      this.element.style.width = `${saved.w}px`;
+      this.element.style.height = `${saved.h}px`;
+    }
+  }
+
+  // A pointer-driven resize grip (works with mouse and touch alike, unlike the
+  // CSS resize corner which ignores touch). Resizing pins the box to its
+  // top-left so it grows down-right regardless of how it was anchored.
+  addResizeHandle() {
+    const handle = document.createElement("div");
+    handle.className = "tm-cb-resize";
+    this.element.appendChild(handle);
+
+    let start = null;
+
+    handle.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      const rect = this.element.getBoundingClientRect();
+      this.moveTo(rect.left, rect.top);
+      start = { x: e.clientX, y: e.clientY, w: rect.width, h: rect.height, left: rect.left, top: rect.top };
+      handle.setPointerCapture(e.pointerId);
+      this.element.style.zIndex = ++zCounter;
+    });
+
+    handle.addEventListener("pointermove", (e) => {
+      if (!start) return;
+      const maxW = window.innerWidth - start.left - 8;
+      const maxH = window.innerHeight - start.top - 8;
+      const width = Math.min(Math.max(start.w + (e.clientX - start.x), MIN_WIDTH), maxW);
+      const height = Math.min(Math.max(start.h + (e.clientY - start.y), MIN_HEIGHT), maxH);
+      this.element.style.width = `${width}px`;
+      this.element.style.height = `${height}px`;
+    });
+
+    const finish = () => {
+      if (!start) return;
+      start = null;
+      this.saveSize();
+    };
+
+    handle.addEventListener("pointerup", finish);
+    handle.addEventListener("pointercancel", finish);
+  }
+
+  saveSize() {
+    const sizes = this.savedSizes();
+    sizes[this.room.id] = { w: Math.round(this.element.offsetWidth), h: Math.round(this.element.offsetHeight) };
+    try {
+      localStorage.setItem(SIZE_KEY, JSON.stringify(sizes));
+    } catch {
+      // localStorage full or unavailable
+    }
+  }
+
+  savedSizes() {
+    try {
+      const raw = localStorage.getItem(SIZE_KEY);
+      const sizes = raw ? JSON.parse(raw) : {};
+      return typeof sizes === "object" && sizes !== null ? sizes : {};
     } catch {
       return {};
     }
