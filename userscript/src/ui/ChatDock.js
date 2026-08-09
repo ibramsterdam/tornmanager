@@ -15,6 +15,14 @@ const DRAG_THRESHOLD_PX = 6;
 const TM_LOGO =
   '<svg width="34" height="34" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#0070f3"/><text x="16" y="22" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="15" fill="#fff">TM</text></svg>';
 
+// An <img> (not inline <svg>): Torn's chat code calls e.className.includes()
+// while walking the bar, which throws on SVG elements. An <img> is safe.
+const TM_LOGO_URI =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230070f3'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='15' fill='white'%3ETM%3C/text%3E%3C/svg%3E";
+
+const INTEGRATED_ID_PREFIX = "tm_channel_button:";
+const REINJECT_DEBOUNCE_MS = 200;
+
 export class ChatDock {
   constructor(auth, client, logger) {
     this.auth = auth;
@@ -54,6 +62,7 @@ export class ChatDock {
       window.addEventListener("resize", () => {
         this.applyFabPos();
         this.boxes.forEach((box) => box.clampPosition());
+        this.layoutIntegratedBoxes();
       });
 
       document.addEventListener("click", (e) => {
@@ -62,9 +71,104 @@ export class ChatDock {
         }
       });
 
+      this.observeChatBar();
       this.handleInviteHash().then(() => this.refresh());
       this.unreadInterval = setInterval(() => this.pollUnread(), UNREAD_POLL_MS);
     });
+  }
+
+  // Torn rebuilds its chat bar constantly (open/close, new messages), wiping
+  // our injected buttons — so re-inject on mutation, but only while integrated
+  // mode is active and debounced to stay cheap.
+  observeChatBar() {
+    Dom.ready("#chatRoot", (root) => {
+      let timer = null;
+      new MutationObserver(() => {
+        if (this.buttonMode() !== "integrated") return;
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          this.updateIntegratedButtons();
+          this.layoutIntegratedBoxes();
+        }, REINJECT_DEBOUNCE_MS);
+      }).observe(root, { childList: true, subtree: true });
+    });
+  }
+
+  // BETA: render each room as a native-looking button inside Torn's own chat
+  // bar. We clone the live button's (hashed, per-deploy) class for visual match
+  // and anchor on the stable channel_panel_button ids — never hardcoded classes.
+  updateIntegratedButtons() {
+    const mine = new Map(
+      [...document.querySelectorAll(`[id^="${INTEGRATED_ID_PREFIX}"]`)].map((el) => [
+        el.id.slice(INTEGRATED_ID_PREFIX.length),
+        el.closest(".tm-native-channel") || el,
+      ])
+    );
+
+    if (this.buttonMode() !== "integrated") {
+      mine.forEach((el) => el.remove());
+      return;
+    }
+
+    const anchor = document.querySelector('[id^="channel_panel_button:"]');
+    if (!anchor) return; // No Torn chat bar here (e.g. mobile) — nothing to dock into.
+
+    const bar = anchor.parentElement?.parentElement;
+    if (!bar) return;
+    const buttonClass = anchor.className;
+
+    const roomIds = new Set(this.rooms.map((room) => String(room.id)));
+    mine.forEach((el, id) => {
+      if (!roomIds.has(id)) el.remove();
+    });
+
+    for (const room of this.rooms) {
+      if (document.getElementById(`${INTEGRATED_ID_PREFIX}${room.id}`)) continue;
+
+      const wrap = document.createElement("div");
+      wrap.className = "tm-native-channel";
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.id = `${INTEGRATED_ID_PREFIX}${room.id}`;
+      button.className = buttonClass;
+      button.title = room.name;
+
+      const avatar = document.createElement("img");
+      avatar.className = "tm-native-avatar";
+      avatar.src = TM_LOGO_URI;
+      avatar.alt = "";
+
+      const name = document.createElement("span");
+      name.className = "tm-native-name";
+      name.textContent = room.name;
+
+      button.appendChild(avatar);
+      button.appendChild(name);
+      button.addEventListener("click", (e) => {
+        e.stopPropagation();
+        // Toggle: clicking an open room's button minimizes it, like a native
+        // channel button. The room is already in this.rooms (it rendered here).
+        this.toggleRoom(room.id);
+      });
+
+      wrap.appendChild(button);
+      bar.insertBefore(wrap, bar.firstChild);
+    }
+
+    // Light up the buttons whose panels are currently open, matching Torn's
+    // "opened" channel styling.
+    const openIds = this.getOpenIds();
+    for (const [id, wrap] of this.roomWraps()) {
+      wrap.classList.toggle("tm-native-channel--open", openIds.includes(id));
+    }
+  }
+
+  roomWraps() {
+    return [...document.querySelectorAll(`[id^="${INTEGRATED_ID_PREFIX}"]`)].map((el) => [
+      el.id.slice(INTEGRATED_ID_PREFIX.length),
+      el.closest(".tm-native-channel") || el,
+    ]);
   }
 
   toggleMenu(open) {
@@ -179,10 +283,9 @@ export class ChatDock {
 
   updateFabDisplay() {
     if (!this.fab) return;
-    // "integrated" is a placeholder (no Torn-chat docking yet) and behaves as
-    // "none" until that lands, so the floating button only shows in "floating".
-    const show = this.rooms.length && this.buttonMode() === "floating";
-    this.fab.style.display = show ? "" : "none";
+    const mode = this.buttonMode();
+    this.fab.style.display = this.rooms.length && mode === "floating" ? "" : "none";
+    this.updateIntegratedButtons();
   }
 
   async handleInviteHash() {
@@ -266,6 +369,22 @@ export class ChatDock {
     }
 
     this.updateUnreadUI();
+    if (this.buttonMode() === "integrated") {
+      this.updateIntegratedButtons();
+      this.layoutIntegratedBoxes();
+    }
+  }
+
+  // Re-dock every open integrated panel in order, so closing one shifts the
+  // rest right into the freed slot and Torn's window changes are tracked.
+  layoutIntegratedBoxes() {
+    if (this.buttonMode() !== "integrated") return;
+
+    let index = 0;
+    for (const id of this.getOpenIds()) {
+      const box = this.boxes.get(id);
+      if (box) box.dockAt(index++);
+    }
   }
 
   mountBox(roomId) {
@@ -274,6 +393,7 @@ export class ChatDock {
 
     const box = new ChatBox(room, this.client, {
       onMinimize: (id) => this.markOpen(id, false),
+      integrated: this.buttonMode() === "integrated",
     });
     this.boxes.set(roomId, box);
     this.boxesEl.appendChild(box.render());

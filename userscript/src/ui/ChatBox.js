@@ -12,11 +12,34 @@ const MIN_HEIGHT = 300;
 
 let zCounter = 99991;
 
+const NATIVE_WINDOW_STEP = 333;
+// Torn's open chat windows carry stable ids; we measure their leftmost edge so
+// our integrated panels can dock just to the left of them in one continuous row.
+const TORN_WINDOW_SELECTOR = [
+  '#chatRoot [id^="faction-"]',
+  '#chatRoot [id^="private-"]',
+  '#chatRoot [id^="company-"]',
+  '#chatRoot [id^="public_"]',
+  '#chatRoot [id="people_panel"]',
+  '#chatRoot [id="notes_panel"]',
+].join(", ");
+
+function tornRowRightOffset() {
+  let minLeft = Infinity;
+  for (const el of document.querySelectorAll(TORN_WINDOW_SELECTOR)) {
+    const rect = el.getBoundingClientRect();
+    if (rect.width > 0 && rect.height > 0) minLeft = Math.min(minLeft, rect.left);
+  }
+  if (minLeft === Infinity) return 12;
+  return Math.max(12, window.innerWidth - minLeft + 8);
+}
+
 export class ChatBox {
-  constructor(room, client, { onMinimize }) {
+  constructor(room, client, { onMinimize, integrated = false }) {
     this.room = room;
     this.client = client;
     this.onMinimize = onMinimize;
+    this.integrated = integrated;
     this.lastMessageId = 0;
     this.lastMessageAt = null;
     this.pollInterval = null;
@@ -26,7 +49,7 @@ export class ChatBox {
 
   render() {
     this.element = document.createElement("div");
-    this.element.className = "tm-cb";
+    this.element.className = this.integrated ? "tm-cb tm-cb--native" : "tm-cb";
 
     const header = this.createHeader();
     this.element.appendChild(header);
@@ -43,10 +66,20 @@ export class ChatBox {
     this.element.addEventListener("pointerdown", () => {
       this.element.style.zIndex = ++zCounter;
     });
-    this.makeDraggable(header);
-    this.applySize();
+
+    if (this.integrated) {
+      // Native windows don't free-drag; tapping the header minimizes, like
+      // toggling a Torn channel. Action buttons keep their own behavior.
+      header.addEventListener("click", (e) => {
+        if (e.target.closest(".tm-cb-action")) return;
+        this.onMinimize(this.room.id);
+      });
+    } else {
+      this.makeDraggable(header);
+      this.applySize();
+      this.addResizeHandle();
+    }
     this.applyPosition();
-    this.addResizeHandle();
 
     if (this.room.suspended) {
       this.showSuspended();
@@ -77,7 +110,21 @@ export class ChatBox {
     this.composer?.remove();
   }
 
+  // Dock an integrated panel at slot `index` (0 = nearest Torn's windows),
+  // continuing the native row leftward. ChatDock drives the index/order.
+  dockAt(index) {
+    this.element.style.right = `${tornRowRightOffset() + index * NATIVE_WINDOW_STEP}px`;
+    this.element.style.bottom = "40px";
+    this.element.style.left = "auto";
+    this.element.style.top = "auto";
+  }
+
   applyPosition() {
+    // Integrated panels are positioned by ChatDock (dockAt) once mounted, so it
+    // can lay them all out left of Torn's windows in order.
+    if (this.integrated) return;
+
+    const stagger = document.querySelectorAll(".tm-cb").length;
     const saved = this.savedPositions()[this.room.id];
     if (saved && typeof saved.left === "number" && typeof saved.top === "number") {
       this.moveTo(saved.left, saved.top);
@@ -85,7 +132,6 @@ export class ChatBox {
     }
 
     // New boxes cascade from the bottom-right so they never fully overlap.
-    const stagger = document.querySelectorAll(".tm-cb").length;
     this.element.style.right = `${12 + stagger * 28}px`;
     this.element.style.bottom = `${100 + stagger * 24}px`;
   }
@@ -139,6 +185,7 @@ export class ChatBox {
   }
 
   clampPosition() {
+    if (this.integrated) return; // integrated panels are re-docked by ChatDock
     const rect = this.element.getBoundingClientRect();
     if (rect.left < 0 || rect.top < 0 || rect.right > window.innerWidth || rect.bottom > window.innerHeight) {
       this.moveTo(rect.left, rect.top);
@@ -146,6 +193,10 @@ export class ChatBox {
   }
 
   savePosition() {
+    // Integrated panels re-dock on each open, so their drags must not persist
+    // into (and pollute) the floating-mode position store.
+    if (this.integrated) return;
+
     const positions = this.savedPositions();
     const rect = this.element.getBoundingClientRect();
     positions[this.room.id] = { left: Math.round(rect.left), top: Math.round(rect.top) };
