@@ -515,9 +515,18 @@
       <li><strong>Invite tokens</strong> &mdash; the secret token that a room's invite link contains.</li>
     </ul>
     <p>
-      Chat messages are stored in my database so they can be delivered to the other members of the room. They are
-      not end-to-end encrypted: anyone in the room can read them, and I am technically able to access them, which
-      I only do to investigate abuse or technical problems. Do not share API keys, passwords, or other secrets in chat.
+      <strong>Private rooms are end-to-end encrypted.</strong> Message text is encrypted in your browser before it
+      is sent, and the encryption key is contained in the room's invite link and stored only on the devices of
+      people who have that link. The key is never sent to my server, so the messages I store for private rooms are
+      ciphertext that I cannot read. If you lose the key (for example by clearing browser data), rejoin the room
+      through its invite link to restore it. I do still store, and can see, which accounts belong to a private room
+      and each message's sender and timestamp — encryption protects the message content, not the fact that a
+      conversation took place.
+    </p>
+    <p>
+      Public rooms are <em>not</em> end-to-end encrypted (anyone can join them, so there is no shared secret): their
+      messages are stored so they can be delivered, are anonymised as described above, and I am technically able to
+      read them to investigate abuse. Do not share API keys, passwords, or other secrets in any chat.
     </p>
 
     <h3>Public Rooms &amp; Anonymity</h3>

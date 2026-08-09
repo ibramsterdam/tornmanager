@@ -41,6 +41,7 @@ class ChatRoom < ApplicationRecord
       id: id,
       name: name,
       kind: kind,
+      encrypted: encrypted,
       host: host,
       member_count: chat_memberships.count,
       invite_url: host ? invite_url : nil

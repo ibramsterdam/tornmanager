@@ -299,6 +299,11 @@ export class Overlay {
 
     footer.appendChild(links);
 
+    const version = document.createElement("div");
+    version.className = "tm-footer-version";
+    version.textContent = `v${__TM_VERSION__}`;
+    footer.appendChild(version);
+
     const errors = this.logger.getAll();
     if (errors.length > 0) {
       const errorRow = document.createElement("div");

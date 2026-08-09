@@ -1,4 +1,5 @@
-import { copyText } from "../core/Clipboard.js";
+import { copyText, showToast } from "../core/Clipboard.js";
+import { ChatCrypto } from "../core/ChatCrypto.js";
 
 export class ChatsSection {
   constructor(chatDock) {
@@ -89,6 +90,9 @@ export class ChatsSection {
     this.client
       .createRoom(name)
       .then((room) => {
+        // Mint the room's encryption key locally the moment it exists; it
+        // never touches the server, only the invite link and localStorage.
+        if (room.encrypted) ChatCrypto.setKey(room.id, ChatCrypto.generateKey());
         this.input.value = "";
         this.chatDock.openRoom(room);
         this.refresh();
@@ -132,7 +136,7 @@ export class ChatsSection {
       this.listEl.appendChild(empty);
     } else {
       this.listEl.appendChild(this.sectionLabel("Your rooms"));
-      this.listEl.appendChild(this.sectionNote("Deleted 7 days after the last message, or when everyone leaves."));
+      this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. Deleted 7 days after the last message."));
       for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
     }
 
@@ -192,6 +196,21 @@ export class ChatsSection {
     return row;
   }
 
+  // The shared key rides in the link but never leaves the browser otherwise.
+  copyInvite(room) {
+    if (!room.encrypted) {
+      copyText(room.invite_url, "Invite link copied");
+      return;
+    }
+
+    const key = ChatCrypto.getKey(room.id);
+    if (!key) {
+      showToast("Encryption key missing — rejoin via an invite link first");
+      return;
+    }
+    copyText(`${room.invite_url}~${key}`, "Invite link copied");
+  }
+
   openPublic(room, button) {
     button.disabled = true;
     this.client
@@ -239,7 +258,7 @@ export class ChatsSection {
       invite.type = "button";
       invite.className = "tm-chats-btn";
       invite.textContent = "Invite";
-      invite.onclick = () => copyText(room.invite_url, "Invite link copied");
+      invite.onclick = () => this.copyInvite(room);
       actions.appendChild(invite);
     }
 

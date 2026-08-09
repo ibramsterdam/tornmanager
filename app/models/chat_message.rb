@@ -1,5 +1,8 @@
 class ChatMessage < ApplicationRecord
-  MAX_LENGTH = 300
+  # Plaintext is capped at ~300 chars client-side; end-to-end encrypted bodies
+  # arrive as base64 ciphertext, which inflates length, so the stored limit is
+  # larger and serves only as an abuse ceiling.
+  MAX_LENGTH = 2000
 
   belongs_to :chat_room
   belongs_to :user, optional: true

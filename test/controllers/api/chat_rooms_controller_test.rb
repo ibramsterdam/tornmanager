@@ -18,6 +18,22 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_match %r{https://www\.torn\.com/index\.php#tmchat=\w+}, room["invite_url"]
   end
 
+  test "creating a room with encrypted flag marks it end-to-end encrypted" do
+    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Secret", encrypted: true }, as: :json
+
+    assert_response :created
+    room = JSON.parse(response.body)["room"]
+    assert room["encrypted"]
+    assert ChatRoom.find(room["id"]).encrypted?
+  end
+
+  test "creating a room without the encrypted flag is not encrypted" do
+    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Plain" }, as: :json
+
+    assert_response :created
+    assert_not JSON.parse(response.body)["room"]["encrypted"]
+  end
+
   test "creating a room requires a name" do
     post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "  " }, as: :json
 

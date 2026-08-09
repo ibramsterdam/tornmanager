@@ -18,7 +18,7 @@ export class ChatClient {
   }
 
   createRoom(name) {
-    return this.post("/api/chat/create_room", { name }).then((data) => data.room);
+    return this.post("/api/chat/create_room", { name, encrypted: true }).then((data) => data.room);
   }
 
   joinByToken(token) {

@@ -12,7 +12,13 @@ module Api
         return render json: { error: room_limit_error }, status: :unprocessable_entity
       end
 
-      room = ChatRoom.new(name: params[:name].to_s.strip, host_user: @user, kind: "private", last_message_at: Time.current)
+      room = ChatRoom.new(
+        name: params[:name].to_s.strip,
+        host_user: @user,
+        kind: "private",
+        encrypted: params[:encrypted] ? true : false,
+        last_message_at: Time.current
+      )
 
       if room.save
         room.chat_memberships.create!(user: @user, host: true)

@@ -1,4 +1,5 @@
 import { copyText } from "../core/Clipboard.js";
+import { ChatCrypto } from "../core/ChatCrypto.js";
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_LENGTH = 300;
@@ -17,6 +18,7 @@ export class ChatBox {
     this.lastMessageAt = null;
     this.pollInterval = null;
     this.loaded = false;
+    this.encKey = room.encrypted ? ChatCrypto.getKey(room.id) : null;
   }
 
   render() {
@@ -160,6 +162,16 @@ export class ChatBox {
 
     title.appendChild(name);
     title.appendChild(count);
+
+    if (this.room.encrypted) {
+      const lock = document.createElement("span");
+      lock.className = "tm-cb-lock";
+      lock.title = "End-to-end encrypted";
+      lock.innerHTML =
+        '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+      title.appendChild(lock);
+    }
+
     header.appendChild(title);
 
     const actions = document.createElement("div");
@@ -172,7 +184,7 @@ export class ChatBox {
       invite.title = "Copy invite link";
       invite.innerHTML =
         '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
-      invite.onclick = () => copyText(this.room.invite_url, "Invite link copied");
+      invite.onclick = () => this.copyInvite();
       actions.appendChild(invite);
     }
 
@@ -186,6 +198,18 @@ export class ChatBox {
 
     header.appendChild(actions);
     return header;
+  }
+
+  copyInvite() {
+    if (this.room.encrypted) {
+      if (!this.encKey) {
+        this.appendSystem("Encryption key missing — rejoin via an invite link first.");
+        return;
+      }
+      copyText(`${this.room.invite_url}~${this.encKey}`, "Invite link copied");
+    } else {
+      copyText(this.room.invite_url, "Invite link copied");
+    }
   }
 
   createComposer() {
@@ -227,17 +251,25 @@ export class ChatBox {
     return composer;
   }
 
-  send() {
+  async send() {
     const body = this.input.value.trim();
     if (!body) return;
+
+    if (this.room.encrypted && !this.encKey) {
+      this.appendSystem("Can't send — rejoin via the invite link to restore this room's key.");
+      return;
+    }
 
     this.input.value = "";
     this.counter.textContent = "";
 
-    this.client
-      .sendMessage(this.room.id, body)
-      .then(() => this.poll())
-      .catch((err) => this.appendSystem(err.message || "Could not send message."));
+    try {
+      const payload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, body) : body;
+      await this.client.sendMessage(this.room.id, payload);
+      this.poll();
+    } catch (err) {
+      this.appendSystem(err.message || "Could not send message.");
+    }
   }
 
   createSkeleton() {
@@ -271,13 +303,23 @@ export class ChatBox {
       .catch(() => {});
   }
 
-  appendMessages(messages) {
+  async appendMessages(messages) {
     if (!messages.length) return;
+
+    // Reserve ids up front so an overlapping poll won't refetch the same
+    // messages while decryption is still awaiting.
+    for (const message of messages) {
+      this.lastMessageId = Math.max(this.lastMessageId, message.id);
+    }
+
+    const prepared = [];
+    for (const message of messages) {
+      prepared.push({ message, ...(await this.resolveBody(message)) });
+    }
 
     const nearBottom = this.list.scrollHeight - this.list.scrollTop - this.list.clientHeight < 60;
 
-    for (const message of messages) {
-      this.lastMessageId = Math.max(this.lastMessageId, message.id);
+    for (const { message, body, locked } of prepared) {
       this.appendDividerIfNeeded(message.at);
 
       if (message.system) {
@@ -306,16 +348,30 @@ export class ChatBox {
       sender.style.color = this.colorForName(message.name);
       sender.textContent = `${message.name}:`;
 
-      const body = document.createElement("span");
-      body.className = "tm-cb-body";
-      body.textContent = message.body;
+      const bodyEl = document.createElement("span");
+      bodyEl.className = locked ? "tm-cb-body tm-cb-body--locked" : "tm-cb-body";
+      bodyEl.textContent = body;
 
       row.appendChild(sender);
-      row.appendChild(body);
+      row.appendChild(bodyEl);
       this.list.appendChild(row);
     }
 
     if (nearBottom) this.list.scrollTop = this.list.scrollHeight;
+  }
+
+  async resolveBody(message) {
+    if (message.system || !this.room.encrypted) {
+      return { body: message.body, locked: false };
+    }
+    if (!this.encKey) {
+      return { body: "🔒 Encrypted — rejoin via the invite link to read.", locked: true };
+    }
+    try {
+      return { body: await ChatCrypto.decrypt(this.encKey, message.body), locked: false };
+    } catch {
+      return { body: "🔒 Can't decrypt this message.", locked: true };
+    }
   }
 
   appendDividerIfNeeded(at) {

@@ -1,6 +1,7 @@
 import { Dom } from "../core/Dom.js";
 import { ChatBox } from "./ChatBox.js";
 import { showToast } from "../core/Clipboard.js";
+import { ChatCrypto } from "../core/ChatCrypto.js";
 
 const OPEN_KEY = "tm_chat_open";
 const SEEN_KEY = "tm_chat_seen";
@@ -177,13 +178,18 @@ export class ChatDock {
   }
 
   async handleInviteHash() {
-    const match = window.location.hash.match(/tmchat=([A-Za-z0-9_-]+)/);
+    // #tmchat=<serverToken>~<encKey> — only the server token is sent to the
+    // server; the encryption key (second half) stays in this browser.
+    const match = window.location.hash.match(/tmchat=([A-Za-z0-9_-]+)(?:~([A-Za-z0-9_-]+))?/);
     if (!match) return;
 
     history.replaceState(null, "", window.location.pathname + window.location.search);
 
+    const [, token, encKey] = match;
+
     try {
-      const room = await this.client.joinByToken(match[1]);
+      const room = await this.client.joinByToken(token);
+      if (encKey) ChatCrypto.setKey(room.id, encKey);
       showToast(`Joined "${room.name}"`);
       this.openRoom(room);
     } catch (err) {
