@@ -6,6 +6,8 @@ const INVITE_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 const LEAVE_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
+const MANAGE_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
 
 export class ChatsSection {
   constructor(chatDock) {
@@ -216,6 +218,92 @@ export class ChatsSection {
     return row;
   }
 
+  // A host-only sub-view: the room's roster with suspend/unsuspend per member,
+  // rendered over the room list with a back button.
+  openManage(room) {
+    this.listEl.innerHTML = "";
+
+    const header = document.createElement("div");
+    header.className = "tm-manage-head";
+
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "tm-manage-back";
+    back.textContent = "← Back";
+    back.onclick = () => this.refresh();
+
+    const title = document.createElement("span");
+    title.className = "tm-manage-title";
+    title.textContent = room.name;
+
+    header.appendChild(back);
+    header.appendChild(title);
+    this.listEl.appendChild(header);
+
+    const list = document.createElement("div");
+    list.className = "tm-manage-members";
+    list.textContent = "Loading members...";
+    this.listEl.appendChild(list);
+
+    this.client
+      .roomMembers(room.id)
+      .then((members) => this.renderManageMembers(room, list, members))
+      .catch((err) => {
+        list.textContent = err.message || "Could not load members.";
+      });
+  }
+
+  renderManageMembers(room, list, members) {
+    list.innerHTML = "";
+    if (!members.length) {
+      list.textContent = "No members.";
+      return;
+    }
+
+    for (const member of members) {
+      const row = document.createElement("div");
+      row.className = "tm-manage-member";
+
+      const info = document.createElement("div");
+      info.className = "tm-manage-member-info";
+      const name = document.createElement("span");
+      name.className = "tm-manage-member-name";
+      name.textContent = member.name;
+      info.appendChild(name);
+
+      if (member.host || member.suspended) {
+        const tag = document.createElement("span");
+        tag.className = member.host ? "tm-manage-tag" : "tm-manage-tag tm-manage-tag--suspended";
+        tag.textContent = member.host ? "host" : "suspended";
+        info.appendChild(tag);
+      }
+
+      row.appendChild(info);
+
+      if (!member.host) {
+        const action = document.createElement("button");
+        action.type = "button";
+        action.className = member.suspended ? "tm-chats-btn" : "tm-chats-btn tm-chats-btn--danger";
+        action.textContent = member.suspended ? "Unsuspend" : "Suspend";
+        action.onclick = () => {
+          action.disabled = true;
+          const call = member.suspended
+            ? this.client.unsuspend(room.id, member.torn_id)
+            : this.client.suspend(room.id, member.torn_id);
+          call
+            .then(() => this.openManage(room))
+            .catch((err) => {
+              action.disabled = false;
+              showToast(err.message || "Action failed");
+            });
+        };
+        row.appendChild(action);
+      }
+
+      list.appendChild(row);
+    }
+  }
+
   // The shared key rides in the link but never leaves the browser otherwise.
   copyInvite(room) {
     if (!room.encrypted) {
@@ -249,6 +337,12 @@ export class ChatsSection {
     row.onclick = () => this.chatDock.openRoomById(room.id);
 
     const actions = row.querySelector(".tm-chats-room-actions");
+
+    if (room.host) {
+      actions.appendChild(
+        this.iconButton(MANAGE_ICON, "Manage members", () => this.openManage(room))
+      );
+    }
 
     if (room.host && room.invite_url) {
       actions.appendChild(

@@ -69,7 +69,67 @@ module Api
       render json: { ok: true }
     end
 
+    # Host-only: the roster with each member's suspended state, for the manage panel.
+    def members
+      room = host_room
+      return unless room
+
+      members = room.chat_memberships.includes(:user).map do |m|
+        {
+          torn_id: m.user.torn_id,
+          name: m.user.name,
+          host: room.host_user_id == m.user_id,
+          suspended: room.chat_suspensions.exists?(user_id: m.user_id)
+        }
+      end
+
+      render json: { members: members }
+    end
+
+    def suspend
+      room = host_room
+      return unless room
+
+      target = target_user(room)
+      return unless target
+
+      if target.id == @user.id
+        return render json: { error: "You can't suspend yourself." }, status: :unprocessable_entity
+      end
+
+      room.chat_suspensions.find_or_create_by!(user: target)
+      render json: { ok: true }
+    end
+
+    def unsuspend
+      room = host_room
+      return unless room
+
+      target = target_user(room)
+      return unless target
+
+      room.chat_suspensions.where(user: target).delete_all
+      render json: { ok: true }
+    end
+
     private
+
+    # Resolves the room only when the current user hosts it; renders an error
+    # and returns nil otherwise, so kick controls can't be driven by non-hosts.
+    def host_room
+      room = ChatRoom.private_rooms.find_by(id: params[:room_id])
+      unless room&.host?(@user)
+        render json: { error: "Only the room host can do that." }, status: :forbidden
+        return nil
+      end
+      room
+    end
+
+    def target_user(room)
+      user = room.users.find_by(torn_id: params[:torn_id].to_i)
+      render json: { error: "That player isn't in this room." }, status: :not_found unless user
+      user
+    end
 
     def join_room(room)
       unless room.chat_memberships.exists?(user: @user)

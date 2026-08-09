@@ -14,6 +14,9 @@ Rails.application.routes.draw do
       post :join, to: "chat_rooms#join", as: :chat_join
       post :join_public, to: "chat_rooms#join_public", as: :chat_join_public
       post :leave, to: "chat_rooms#leave", as: :chat_leave
+      post :room_members, to: "chat_rooms#members", as: :chat_room_members
+      post :suspend, to: "chat_rooms#suspend", as: :chat_suspend
+      post :unsuspend, to: "chat_rooms#unsuspend", as: :chat_unsuspend
       post :messages, to: "chat_messages#index", as: :chat_messages
       post :send_message, to: "chat_messages#create", as: :chat_send_message
     end

@@ -37,7 +37,8 @@ export class ChatBox {
     this.list.appendChild(this.skeleton);
     this.element.appendChild(this.list);
 
-    this.element.appendChild(this.createComposer());
+    this.composer = this.createComposer();
+    this.element.appendChild(this.composer);
 
     this.element.addEventListener("pointerdown", () => {
       this.element.style.zIndex = ++zCounter;
@@ -47,10 +48,33 @@ export class ChatBox {
     this.applyPosition();
     this.addResizeHandle();
 
-    this.poll();
-    this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    if (this.room.suspended) {
+      this.showSuspended();
+    } else {
+      this.poll();
+      this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+    }
 
     return this.element;
+  }
+
+  // Replace the conversation with a removed-notice and stop polling. Triggered
+  // when the room arrives already suspended, or when a poll returns 403.
+  showSuspended() {
+    if (this.pollInterval) {
+      clearInterval(this.pollInterval);
+      this.pollInterval = null;
+    }
+
+    this.list.innerHTML = "";
+    const notice = document.createElement("div");
+    notice.className = "tm-cb-suspended";
+    notice.innerHTML =
+      '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>' +
+      "<p>You've been suspended from this chat by the host.</p>";
+    this.list.appendChild(notice);
+
+    this.composer?.remove();
   }
 
   applyPosition() {
@@ -372,7 +396,12 @@ export class ChatBox {
         }
         this.appendMessages(messages);
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (err?.status === 403) {
+          this.room.suspended = true;
+          this.showSuspended();
+        }
+      });
   }
 
   async appendMessages(messages) {

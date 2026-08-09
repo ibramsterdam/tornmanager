@@ -45,7 +45,14 @@ module Api
 
     def set_room
       @room = @user.chat_rooms.find_by(id: params[:room_id])
-      render json: { error: "Room not found." }, status: :not_found unless @room
+      return render json: { error: "Room not found." }, status: :not_found unless @room
+
+      # A suspended member keeps their membership (and the room in their list)
+      # but the server serves them no messages and accepts none — a hard block
+      # that holding the encryption key can't bypass.
+      if @room.suspended?(@user)
+        render json: { error: "You have been suspended from this chat." }, status: :forbidden
+      end
     end
 
     # `own` lets the client highlight your own messages without exposing a Torn

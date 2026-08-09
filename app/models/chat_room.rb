@@ -19,6 +19,7 @@ class ChatRoom < ApplicationRecord
   has_many :chat_memberships, dependent: :delete_all
   has_many :users, through: :chat_memberships
   has_many :chat_messages, dependent: :delete_all
+  has_many :chat_suspensions, dependent: :delete_all
 
   validates :name, presence: true, length: { maximum: 40 }
   validates :kind, inclusion: { in: %w[private public] }
@@ -33,18 +34,27 @@ class ChatRoom < ApplicationRecord
     kind == "public"
   end
 
+  def host?(user)
+    !public? && host_user_id == user&.id
+  end
+
+  def suspended?(user)
+    chat_suspensions.exists?(user_id: user&.id)
+  end
+
   def invite_url
     "https://www.torn.com/index.php#tmchat=#{invite_token}"
   end
 
   def info_for(user)
-    host = !public? && host_user_id == user.id
+    host = host?(user)
     {
       id: id,
       name: name,
       kind: kind,
       encrypted: encrypted,
       host: host,
+      suspended: suspended?(user),
       member_count: chat_memberships.count,
       invite_url: host ? invite_url : nil
     }

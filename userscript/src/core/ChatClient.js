@@ -33,6 +33,18 @@ export class ChatClient {
     return this.post("/api/chat/leave", { room_id: roomId }).then(() => true);
   }
 
+  roomMembers(roomId) {
+    return this.post("/api/chat/room_members", { room_id: roomId }).then((data) => data.members);
+  }
+
+  suspend(roomId, tornId) {
+    return this.post("/api/chat/suspend", { room_id: roomId, torn_id: tornId }).then(() => true);
+  }
+
+  unsuspend(roomId, tornId) {
+    return this.post("/api/chat/unsuspend", { room_id: roomId, torn_id: tornId }).then(() => true);
+  }
+
   fetchMessages(roomId, sinceId = 0) {
     return this.post("/api/chat/messages", { room_id: roomId, since_id: sinceId }).then((data) => data.messages);
   }
@@ -66,7 +78,9 @@ export class ChatClient {
           if (response.status >= 200 && response.status < 300) {
             resolve(data);
           } else {
-            reject(new Error(data.error || "Chat request failed"));
+            const error = new Error(data.error || "Chat request failed");
+            error.status = response.status;
+            reject(error);
           }
         },
         onerror() {

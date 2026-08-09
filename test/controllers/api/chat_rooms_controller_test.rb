@@ -182,6 +182,64 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes abandoned, active
   end
 
+  test "the host can suspend and unsuspend a member" do
+    room = create_room(@bram, "Squad")
+    room.chat_memberships.create!(user: @bert)
+
+    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+    assert_response :ok
+    assert room.chat_suspensions.exists?(user: @bert)
+
+    post api_chat_unsuspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+    assert_response :ok
+    assert_not room.chat_suspensions.exists?(user: @bert)
+  end
+
+  test "a non-host cannot suspend" do
+    room = create_room(@bram, "Squad")
+    room.chat_memberships.create!(user: @bert)
+
+    post api_chat_suspend_path, params: { api_key: @bert.api_key, room_id: room.id, torn_id: @bram.torn_id }, as: :json
+
+    assert_response :forbidden
+    assert_empty room.chat_suspensions
+  end
+
+  test "the host cannot suspend themselves" do
+    room = create_room(@bram, "Squad")
+
+    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bram.torn_id }, as: :json
+
+    assert_response :unprocessable_entity
+  end
+
+  test "a suspension survives the member leaving and rejoining" do
+    room = create_room(@bram, "Squad")
+    room.chat_memberships.create!(user: @bert)
+    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+
+    post api_chat_leave_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+
+    assert room.chat_suspensions.exists?(user: @bert)
+    assert JSON.parse(response.body)["room"]["suspended"]
+  end
+
+  test "members list is host-only and reports suspended state" do
+    room = create_room(@bram, "Squad")
+    room.chat_memberships.create!(user: @bert)
+    room.chat_suspensions.create!(user: @bert)
+
+    post api_chat_room_members_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    assert_response :forbidden
+
+    post api_chat_room_members_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
+    assert_response :ok
+    members = JSON.parse(response.body)["members"].index_by { |m| m["torn_id"] }
+    assert members[@bram.torn_id]["host"]
+    assert members[@bert.torn_id]["suspended"]
+  end
+
   test "requires an api key" do
     post api_chat_rooms_path, params: {}, as: :json
 

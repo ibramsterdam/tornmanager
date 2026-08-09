@@ -103,6 +103,44 @@ export class MockChatClient {
     });
   }
 
+  roomMembers(roomId) {
+    return this.respond(() => {
+      const room = this.load().rooms[roomId];
+      if (!room) return [];
+      const me = this.me();
+      return room.members.map((m) => ({
+        torn_id: m.torn_id,
+        name: m.name,
+        host: room.host_torn_id === m.torn_id,
+        suspended: (room.suspended || []).includes(m.torn_id),
+      }));
+    });
+  }
+
+  suspend(roomId, tornId) {
+    return this.respond(() => {
+      const store = this.load();
+      const room = store.rooms[roomId];
+      if (room) {
+        room.suspended = [...new Set([...(room.suspended || []), tornId])];
+        this.save(store);
+      }
+      return true;
+    });
+  }
+
+  unsuspend(roomId, tornId) {
+    return this.respond(() => {
+      const store = this.load();
+      const room = store.rooms[roomId];
+      if (room) {
+        room.suspended = (room.suspended || []).filter((id) => id !== tornId);
+        this.save(store);
+      }
+      return true;
+    });
+  }
+
   leaveRoom(roomId) {
     return this.respond(() => {
       const store = this.load();
@@ -158,7 +196,10 @@ export class MockChatClient {
     return {
       id: room.id,
       name: room.name,
+      kind: room.kind || "private",
+      encrypted: !!room.encrypted,
       host,
+      suspended: false,
       member_count: room.members.length,
       invite_url: host ? `https://www.torn.com/index.php#tmchat=${room.invite_token}` : null,
     };

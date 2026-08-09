@@ -190,7 +190,7 @@ export class ChatDock {
     try {
       const room = await this.client.joinByToken(token);
       if (encKey) ChatCrypto.setKey(room.id, encKey);
-      showToast(`Joined "${room.name}"`);
+      showToast(room.suspended ? `You're suspended from "${room.name}"` : `Joined "${room.name}"`);
       this.openRoom(room);
     } catch (err) {
       this.logger.log(err, "chat invite join");

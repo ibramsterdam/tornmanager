@@ -64,6 +64,16 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "a suspended member is blocked from reading and sending" do
+    @room.chat_suspensions.create!(user: @bert)
+
+    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: 0 }, as: :json
+    assert_response :forbidden
+
+    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: @room.id, body: "let me back" }, as: :json
+    assert_response :forbidden
+  end
+
   test "non-members cannot read messages" do
     outsider = users(:kaneki)
 

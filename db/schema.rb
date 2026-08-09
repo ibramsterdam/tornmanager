@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_09_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_09_180000) do
   create_table "api_calls", force: :cascade do |t|
     t.string "api_key", null: false
     t.datetime "created_at", null: false
@@ -99,6 +99,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_170000) do
     t.index ["host_user_id"], name: "index_chat_rooms_on_host_user_id"
     t.index ["invite_token"], name: "index_chat_rooms_on_invite_token", unique: true
     t.index ["kind"], name: "index_chat_rooms_on_kind"
+  end
+
+  create_table "chat_suspensions", force: :cascade do |t|
+    t.integer "chat_room_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "user_id", null: false
+    t.index ["chat_room_id", "user_id"], name: "index_chat_suspensions_on_chat_room_id_and_user_id", unique: true
+    t.index ["chat_room_id"], name: "index_chat_suspensions_on_chat_room_id"
+    t.index ["user_id"], name: "index_chat_suspensions_on_user_id"
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -412,6 +422,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_09_170000) do
   add_foreign_key "chat_messages", "chat_rooms"
   add_foreign_key "chat_messages", "users"
   add_foreign_key "chat_rooms", "users", column: "host_user_id"
+  add_foreign_key "chat_suspensions", "chat_rooms"
+  add_foreign_key "chat_suspensions", "users"
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "member_activity_snapshots", "factions"
