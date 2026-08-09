@@ -1,8 +1,5 @@
 import { Dom } from "../core/Dom.js";
 
-const TM_LOGO =
-  '<svg viewBox="0 0 32 32" width="16" height="16"><rect width="32" height="32" rx="7" fill="#0070f3"/><text x="16" y="22" text-anchor="middle" font-family="Arial,sans-serif" font-weight="700" font-size="15" fill="#fff">TM</text></svg>';
-
 // Adds a "TornManager" item to Torn's account dropdown (the avatar menu).
 // Torn keeps this menu in the DOM and toggles it with a class, so a one-shot
 // injection persists — but we re-check on click in case Torn rebuilds it.
@@ -29,9 +26,12 @@ export class SettingsMenuEntry {
     const item = document.createElement("li");
     item.className = "link tornmanager-menu-item";
 
+    // A background-image span, not an inline <svg>: Torn's own sidebar code
+    // walks this menu calling e.className.includes(), which throws on SVG
+    // elements (their className isn't a string). Keep our DOM svg-free here.
     const link = document.createElement("a");
     link.href = "#";
-    link.innerHTML = `${TM_LOGO}<span>TornManager</span>`;
+    link.innerHTML = '<span class="tornmanager-menu-icon"></span><span>TornManager</span>';
     link.addEventListener("click", (e) => {
       e.preventDefault();
       this.overlay.open();
