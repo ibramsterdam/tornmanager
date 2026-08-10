@@ -335,6 +335,7 @@ export class ChatDock {
 
     const box = new ChatBox(room, this.client, {
       onMinimize: (id) => this.markOpen(id, false),
+      onOpenMembers: (r) => this.overlay?.openChatMembers(r),
     });
     this.boxes.set(roomId, box);
     this.boxesEl.appendChild(box.render());

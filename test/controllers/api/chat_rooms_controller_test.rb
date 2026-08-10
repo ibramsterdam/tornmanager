@@ -227,19 +227,33 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert JSON.parse(response.body)["room"]["suspended"]
   end
 
-  test "members list is host-only and reports suspended state" do
+  test "any member can view the roster with host and suspended flags" do
     room = create_room(@bram, "Squad")
     room.chat_memberships.create!(user: @bert)
     room.chat_suspensions.create!(user: @bert)
 
     post api_chat_room_members_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
-    assert_response :forbidden
-
-    post api_chat_room_members_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
     assert_response :ok
     members = JSON.parse(response.body)["members"].index_by { |m| m["torn_id"] }
     assert members[@bram.torn_id]["host"]
     assert members[@bert.torn_id]["suspended"]
+  end
+
+  test "non-members cannot view the roster" do
+    room = create_room(@bram, "Squad")
+
+    post api_chat_room_members_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+
+    assert_response :not_found
+  end
+
+  test "public rooms expose no roster so members stay anonymous" do
+    lounge = public_room("The Lounge")
+    lounge.chat_memberships.create!(user: @bram)
+
+    post api_chat_room_members_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_response :not_found
   end
 
   test "requires an api key" do

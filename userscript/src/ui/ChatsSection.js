@@ -6,8 +6,8 @@ const INVITE_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
 const LEAVE_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
-const MANAGE_ICON =
-  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+const MEMBERS_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
 export class ChatsSection {
   constructor(chatDock) {
@@ -121,6 +121,14 @@ export class ChatsSection {
     const joinedIds = new Set(rooms.map((room) => room.id));
     const privateRooms = rooms.filter((room) => room.kind !== "public");
 
+    if (publicRooms.length) {
+      this.listEl.appendChild(this.sectionLabel("Public rooms"));
+      this.listEl.appendChild(this.sectionNote("Anyone can join. Messages older than 24 hours are deleted."));
+      for (const room of publicRooms) {
+        this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
+      }
+    }
+
     if (!privateRooms.length) {
       const empty = document.createElement("div");
       empty.className = "tm-chats-empty";
@@ -134,14 +142,6 @@ export class ChatsSection {
       this.listEl.appendChild(this.sectionLabel("Your rooms"));
       this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. A room self-destructs 7 days after everyone leaves."));
       for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
-    }
-
-    if (publicRooms.length) {
-      this.listEl.appendChild(this.sectionLabel("Public rooms · anonymous"));
-      this.listEl.appendChild(this.sectionNote("Messages older than 24 hours are deleted."));
-      for (const room of publicRooms) {
-        this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
-      }
     }
   }
 
@@ -229,7 +229,7 @@ export class ChatsSection {
 
   renderPublicRoom(room, joined) {
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
-    const row = this.roomRow(room.name, `${members} · anonymous`);
+    const row = this.roomRow(room.name, members, { chip: "anonymous" });
     row.onclick = () => this.openPublic(room);
 
     if (!joined) {
@@ -242,42 +242,51 @@ export class ChatsSection {
     return row;
   }
 
-  // A host-only sub-view: the room's roster with suspend/unsuspend per member,
-  // rendered over the room list with a back button.
-  openManage(room) {
+  // The room's roster, shown over the list with a back button. Any member can
+  // view it; only the host sees suspend/unsuspend controls.
+  openMembers(room) {
     this.listEl.innerHTML = "";
 
     const header = document.createElement("div");
-    header.className = "tm-manage-head";
+    header.className = "tm-members-head";
 
     const back = document.createElement("button");
     back.type = "button";
-    back.className = "tm-manage-back";
-    back.textContent = "← Back";
+    back.className = "tm-members-back";
+    back.innerHTML =
+      '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>';
+    back.setAttribute("aria-label", "Back");
     back.onclick = () => this.refresh();
 
-    const title = document.createElement("span");
-    title.className = "tm-manage-title";
-    title.textContent = room.name;
+    const title = document.createElement("div");
+    title.className = "tm-members-title";
+    const name = document.createElement("span");
+    name.className = "tm-members-title-name";
+    name.textContent = room.name;
+    const sub = document.createElement("span");
+    sub.className = "tm-members-title-sub";
+    sub.textContent = "Members";
+    title.appendChild(name);
+    title.appendChild(sub);
 
     header.appendChild(back);
     header.appendChild(title);
     this.listEl.appendChild(header);
 
     const list = document.createElement("div");
-    list.className = "tm-manage-members";
-    list.textContent = "Loading members...";
+    list.className = "tm-members-list";
+    list.textContent = "Loading members…";
     this.listEl.appendChild(list);
 
     this.client
       .roomMembers(room.id)
-      .then((members) => this.renderManageMembers(room, list, members))
+      .then((members) => this.renderMembers(room, list, members))
       .catch((err) => {
         list.textContent = err.message || "Could not load members.";
       });
   }
 
-  renderManageMembers(room, list, members) {
+  renderMembers(room, list, members) {
     list.innerHTML = "";
     if (!members.length) {
       list.textContent = "No members.";
@@ -286,25 +295,48 @@ export class ChatsSection {
 
     for (const member of members) {
       const row = document.createElement("div");
-      row.className = "tm-manage-member";
+      row.className = "tm-members-row";
+
+      const avatar = document.createElement("span");
+      avatar.className = "tm-members-avatar";
+      avatar.style.background = this.colorForName(member.name);
+      avatar.textContent = member.name.charAt(0).toUpperCase();
+      row.appendChild(avatar);
 
       const info = document.createElement("div");
-      info.className = "tm-manage-member-info";
-      const name = document.createElement("span");
-      name.className = "tm-manage-member-name";
-      name.textContent = member.name;
-      info.appendChild(name);
+      info.className = "tm-members-info";
 
-      if (member.host || member.suspended) {
-        const tag = document.createElement("span");
-        tag.className = member.host ? "tm-manage-tag" : "tm-manage-tag tm-manage-tag--suspended";
-        tag.textContent = member.host ? "host" : "suspended";
-        info.appendChild(tag);
+      const nameLine = document.createElement("div");
+      nameLine.className = "tm-members-nameline";
+
+      let nameEl;
+      if (member.torn_id) {
+        nameEl = document.createElement("a");
+        nameEl.href = `https://www.torn.com/profiles.php?XID=${member.torn_id}`;
+        nameEl.target = "_blank";
+        nameEl.rel = "noopener";
+      } else {
+        nameEl = document.createElement("span");
+      }
+      nameEl.className = "tm-members-name";
+      nameEl.textContent = member.name;
+      nameLine.appendChild(nameEl);
+
+      if (member.host) nameLine.appendChild(this.memberTag("host", "tm-members-tag--host"));
+      if (member.suspended) nameLine.appendChild(this.memberTag("suspended", "tm-members-tag--suspended"));
+
+      info.appendChild(nameLine);
+
+      if (member.torn_id) {
+        const idEl = document.createElement("span");
+        idEl.className = "tm-members-id";
+        idEl.textContent = `ID ${member.torn_id}`;
+        info.appendChild(idEl);
       }
 
       row.appendChild(info);
 
-      if (!member.host) {
+      if (room.host && !member.host) {
         const action = document.createElement("button");
         action.type = "button";
         action.className = member.suspended ? "tm-chats-btn" : "tm-chats-btn tm-chats-btn--danger";
@@ -315,7 +347,7 @@ export class ChatsSection {
             ? this.client.unsuspend(room.id, member.torn_id)
             : this.client.suspend(room.id, member.torn_id);
           call
-            .then(() => this.openManage(room))
+            .then(() => this.openMembers(room))
             .catch((err) => {
               action.disabled = false;
               showToast(err.message || "Action failed");
@@ -326,6 +358,21 @@ export class ChatsSection {
 
       list.appendChild(row);
     }
+  }
+
+  memberTag(text, cls) {
+    const tag = document.createElement("span");
+    tag.className = `tm-members-tag ${cls}`;
+    tag.textContent = text;
+    return tag;
+  }
+
+  colorForName(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) {
+      hash = (hash * 31 + name.charCodeAt(i)) | 0;
+    }
+    return `hsl(${Math.abs(hash) % 360}, 55%, 45%)`;
   }
 
   // The shared key rides in the link but never leaves the browser otherwise.
@@ -362,11 +409,9 @@ export class ChatsSection {
 
     const actions = row.querySelector(".tm-chats-room-actions");
 
-    if (room.host) {
-      actions.appendChild(
-        this.iconButton(MANAGE_ICON, "Manage members", () => this.openManage(room))
-      );
-    }
+    actions.appendChild(
+      this.iconButton(MEMBERS_ICON, "Members", () => this.openMembers(room))
+    );
 
     if (room.host && room.invite_url) {
       actions.appendChild(
@@ -388,7 +433,7 @@ export class ChatsSection {
 
   // A compact one-line room row: click anywhere to open; small icon buttons on
   // the right handle secondary actions without stealing the row's click.
-  roomRow(name, meta) {
+  roomRow(name, meta, { chip } = {}) {
     const row = document.createElement("div");
     row.className = "tm-chats-room";
     row.setAttribute("role", "button");
@@ -397,15 +442,26 @@ export class ChatsSection {
     const info = document.createElement("div");
     info.className = "tm-chats-room-info";
 
+    const nameLine = document.createElement("div");
+    nameLine.className = "tm-chats-room-nameline";
+
     const nameEl = document.createElement("span");
     nameEl.className = "tm-chats-room-name";
     nameEl.textContent = name;
+    nameLine.appendChild(nameEl);
+
+    if (chip) {
+      const chipEl = document.createElement("span");
+      chipEl.className = "tm-chats-room-chip";
+      chipEl.textContent = chip;
+      nameLine.appendChild(chipEl);
+    }
 
     const metaEl = document.createElement("span");
     metaEl.className = "tm-chats-room-meta";
     metaEl.textContent = meta;
 
-    info.appendChild(nameEl);
+    info.appendChild(nameLine);
     info.appendChild(metaEl);
 
     const actions = document.createElement("div");

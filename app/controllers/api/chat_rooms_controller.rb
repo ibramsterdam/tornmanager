@@ -71,7 +71,7 @@ module Api
 
     # Host-only: the roster with each member's suspended state, for the manage panel.
     def members
-      room = host_room
+      room = member_private_room
       return unless room
 
       members = room.chat_memberships.includes(:user).map do |m|
@@ -136,6 +136,14 @@ module Api
       user = room.users.find_by(torn_id: params[:torn_id].to_i)
       render json: { error: "That player isn't in this room." }, status: :not_found unless user
       user
+    end
+
+    # A private room the current user belongs to. Public rooms are excluded so
+    # their roster can never deanonymize members.
+    def member_private_room
+      room = @user.chat_rooms.private_rooms.find_by(id: params[:room_id])
+      render json: { error: "Room not found." }, status: :not_found unless room
+      room
     end
 
     def join_room(room)

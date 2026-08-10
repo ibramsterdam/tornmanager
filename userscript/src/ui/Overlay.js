@@ -287,6 +287,16 @@ export class Overlay {
     this.tabContent.appendChild(this.chatsSection.render());
   }
 
+  openChatMembers(room) {
+    this.activeTab = "chats";
+    if (this.isOpen) {
+      this.renderActiveTab();
+    } else {
+      this.open();
+    }
+    this.chatsSection?.openMembers(room);
+  }
+
   renderUnauthenticatedPanel() {
     const authScreen = new AuthScreen(this.auth);
     this.panel.appendChild(authScreen.render(() => this.renderPanel()));

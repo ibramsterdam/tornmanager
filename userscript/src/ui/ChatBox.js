@@ -22,10 +22,11 @@ const IMAGE_ICON_SVG =
 let zCounter = 99991;
 
 export class ChatBox {
-  constructor(room, client, { onMinimize }) {
+  constructor(room, client, { onMinimize, onOpenMembers }) {
     this.room = room;
     this.client = client;
     this.onMinimize = onMinimize;
+    this.onOpenMembers = onOpenMembers;
     this.lastMessageId = 0;
     this.lastMessageAt = null;
     this.pollInterval = null;
@@ -106,7 +107,7 @@ export class ChatBox {
     let dragging = false;
 
     header.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".tm-cb-action")) return;
+      if (e.target.closest(".tm-cb-action, .tm-cb-count--link")) return;
 
       const rect = this.element.getBoundingClientRect();
       start = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
@@ -270,6 +271,12 @@ export class ChatBox {
     const count = document.createElement("span");
     count.className = "tm-cb-count";
     count.textContent = `· ${this.room.member_count}`;
+
+    if (this.room.kind !== "public") {
+      count.classList.add("tm-cb-count--link");
+      count.title = "View members";
+      count.onclick = () => this.onOpenMembers?.(this.room);
+    }
 
     title.appendChild(name);
     title.appendChild(count);

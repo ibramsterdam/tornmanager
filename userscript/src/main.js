@@ -58,6 +58,7 @@ console.log(
 );
 
 const overlay = new Overlay(auth, api, logger, chatDock);
+chatDock.overlay = overlay;
 const sidebar = new Sidebar(overlay);
 sidebar.init();
 
