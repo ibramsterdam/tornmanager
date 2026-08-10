@@ -335,7 +335,11 @@ export class ChatsSection {
       return;
     }
 
-    for (const member of members) {
+    const sorted = [...members].sort((a, b) =>
+      a.name.localeCompare(b.name, undefined, { sensitivity: "base" })
+    );
+
+    for (const member of sorted) {
       const row = document.createElement("div");
       row.className = "tm-members-row";
 
