@@ -11,7 +11,6 @@ const DRAG_THRESHOLD_PX = 6;
 const MIN_WIDTH = 280;
 const MIN_HEIGHT = 300;
 
-const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg"];
 const MAX_IMAGE_DIMENSION = 1600;
 const JPEG_QUALITY = 0.85;
 const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
@@ -253,6 +252,7 @@ export class ChatBox {
       for (const url of Object.values(this.imageUrls)) URL.revokeObjectURL(url);
       this.imageUrls = null;
     }
+    if (this.pendingImage?.previewUrl) URL.revokeObjectURL(this.pendingImage.previewUrl);
     this.element?.remove();
   }
 
@@ -327,6 +327,13 @@ export class ChatBox {
     const composer = document.createElement("div");
     composer.className = "tm-cb-composer";
 
+    this.pending = document.createElement("div");
+    this.pending.className = "tm-cb-pending";
+    this.pending.hidden = true;
+
+    const row = document.createElement("div");
+    row.className = "tm-cb-composer-row";
+
     this.input = document.createElement("textarea");
     this.input.className = "tm-cb-input";
     this.input.placeholder = "Type your message...";
@@ -338,14 +345,14 @@ export class ChatBox {
 
     this.fileInput = document.createElement("input");
     this.fileInput.type = "file";
-    this.fileInput.accept = ACCEPTED_IMAGE_TYPES.join(",");
+    this.fileInput.accept = "image/*";
     this.fileInput.style.display = "none";
     this.fileInput.addEventListener("change", () => this.handleFilePick());
 
     this.attachBtn = document.createElement("button");
     this.attachBtn.type = "button";
     this.attachBtn.className = "tm-cb-attach";
-    this.attachBtn.title = "Send an image";
+    this.attachBtn.title = "Attach an image";
     this.attachBtn.innerHTML = IMAGE_ICON_SVG;
     this.attachBtn.onclick = () => this.fileInput.click();
 
@@ -369,10 +376,13 @@ export class ChatBox {
       this.counter.textContent = remaining <= 60 ? remaining : "";
     });
 
-    composer.appendChild(this.input);
-    composer.appendChild(this.counter);
-    composer.appendChild(this.attachBtn);
-    composer.appendChild(send);
+    row.appendChild(this.input);
+    row.appendChild(this.counter);
+    row.appendChild(this.attachBtn);
+    row.appendChild(send);
+
+    composer.appendChild(this.pending);
+    composer.appendChild(row);
     composer.appendChild(this.fileInput);
     return composer;
   }
@@ -382,51 +392,70 @@ export class ChatBox {
     this.fileInput.value = "";
     if (!file) return;
 
-    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-      this.appendSystem("Only PNG and JPG images can be sent.");
+    if (file.type && !file.type.startsWith("image/")) {
+      this.appendTransientNotice("That's not an image — attach a JPG or PNG.");
       return;
     }
     if (this.room.encrypted && !this.encKey) {
-      this.appendSystem("Can't send — rejoin via the invite link to restore this room's key.");
+      this.appendTransientNotice("Rejoin via the invite link first to restore this room's key.");
       return;
     }
 
-    const caption = this.input.value.trim();
-    this.setUploading(true);
-
+    this.setBusy(true);
     try {
-      let bytes = await this.processImage(file);
-      if (!bytes) throw new Error("Could not read that image.");
-
-      if (this.room.encrypted) {
-        bytes = await ChatCrypto.encryptBytes(this.encKey, bytes);
-      }
+      const bytes = await this.processImage(file);
+      if (!bytes) throw new Error("read-failed");
       if (bytes.length > MAX_UPLOAD_BYTES) {
-        throw new Error("That image is too large to send.");
+        this.appendTransientNotice("That image is too large — try a smaller one.");
+        return;
       }
-
-      let bodyPayload = "";
-      if (caption) {
-        bodyPayload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
-      }
-
-      await this.client.sendImage(this.room.id, bytesToBase64(bytes), { body: bodyPayload });
-
-      this.input.value = "";
-      this.counter.textContent = "";
-      this.poll();
-    } catch (err) {
-      this.appendSystem(err.message || "Could not send image.");
+      this.stagePendingImage(bytes);
+    } catch {
+      this.appendTransientNotice("Couldn't read that image. Try a JPG or PNG — iPhone HEIC photos aren't supported.");
     } finally {
-      this.setUploading(false);
+      this.setBusy(false);
     }
   }
 
-  setUploading(on) {
+  stagePendingImage(bytes) {
+    this.clearPendingImage();
+    const previewUrl = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
+    this.pendingImage = { bytes, previewUrl };
+
+    const thumb = document.createElement("img");
+    thumb.className = "tm-cb-pending-thumb";
+    thumb.src = previewUrl;
+    thumb.alt = "";
+
+    const label = document.createElement("span");
+    label.className = "tm-cb-pending-label";
+    label.textContent = "Image attached — add a message or send";
+
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "tm-cb-pending-remove";
+    remove.title = "Remove image";
+    remove.textContent = "×";
+    remove.onclick = () => this.clearPendingImage();
+
+    this.pending.replaceChildren(thumb, label, remove);
+    this.pending.hidden = false;
+    this.input.focus();
+  }
+
+  clearPendingImage() {
+    if (this.pendingImage?.previewUrl) URL.revokeObjectURL(this.pendingImage.previewUrl);
+    this.pendingImage = null;
+    if (this.pending) {
+      this.pending.replaceChildren();
+      this.pending.hidden = true;
+    }
+  }
+
+  setBusy(on) {
     if (!this.attachBtn) return;
     this.attachBtn.disabled = on;
     this.attachBtn.classList.toggle("tm-cb-attach--busy", on);
-    this.attachBtn.title = on ? "Uploading…" : "Send an image";
   }
 
   processImage(file) {
@@ -467,11 +496,16 @@ export class ChatBox {
   }
 
   async send() {
-    const body = this.input.value.trim();
-    if (!body) return;
+    const caption = this.input.value.trim();
+    if (!this.pendingImage && !caption) return;
 
     if (this.room.encrypted && !this.encKey) {
       this.appendSystem("Can't send — rejoin via the invite link to restore this room's key.");
+      return;
+    }
+
+    if (this.pendingImage) {
+      await this.sendPendingImage(caption);
       return;
     }
 
@@ -479,12 +513,50 @@ export class ChatBox {
     this.counter.textContent = "";
 
     try {
-      const payload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, body) : body;
+      const payload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
       await this.client.sendMessage(this.room.id, payload);
       this.poll();
     } catch (err) {
       this.appendSystem(err.message || "Could not send message.");
     }
+  }
+
+  async sendPendingImage(caption) {
+    this.setBusy(true);
+    try {
+      let bytes = this.pendingImage.bytes;
+      if (this.room.encrypted) {
+        bytes = await ChatCrypto.encryptBytes(this.encKey, bytes);
+      }
+      if (bytes.length > MAX_UPLOAD_BYTES) {
+        throw new Error("That image is too large to send.");
+      }
+
+      let bodyPayload = "";
+      if (caption) {
+        bodyPayload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
+      }
+
+      await this.client.sendImage(this.room.id, bytesToBase64(bytes), { body: bodyPayload });
+
+      this.clearPendingImage();
+      this.input.value = "";
+      this.counter.textContent = "";
+      this.poll();
+    } catch (err) {
+      this.appendTransientNotice(err.message || "Could not send image.");
+    } finally {
+      this.setBusy(false);
+    }
+  }
+
+  appendTransientNotice(text) {
+    const row = document.createElement("div");
+    row.className = "tm-cb-notice";
+    row.textContent = text;
+    this.list.appendChild(row);
+    this.list.scrollTop = this.list.scrollHeight;
+    setTimeout(() => row.remove(), 5000);
   }
 
   createSkeleton() {
