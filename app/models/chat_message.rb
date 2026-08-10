@@ -21,11 +21,18 @@ class ChatMessage < ApplicationRecord
       system: system,
       at: created_at.iso8601
     }
-    json[:has_image] = true if image.attached?
+    if image.attached?
+      json[:has_image] = true
+      json[:image_path] = signed_image_path
+    end
     json
   end
 
   private
+
+  def signed_image_path
+    Rails.application.routes.url_helpers.rails_blob_path(image, only_path: true)
+  end
 
   def body_or_image_present
     errors.add(:body, "can't be blank") if body.blank? && !image.attached?

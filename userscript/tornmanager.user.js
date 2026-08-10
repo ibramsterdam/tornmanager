@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.21
+// @version      0.3.22
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -1521,7 +1521,7 @@ Stack: ${e.stack}` : ""}`
       return button;
     }
   }
-  const CURRENT = "0.3.21";
+  const CURRENT = "0.3.22";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY = "tm_version_check";
@@ -1844,7 +1844,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.21"}`;
+      version.textContent = `v${"0.3.22"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -1893,7 +1893,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.21"}`,
+        `TornManager v${"0.3.22"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -1957,7 +1957,7 @@ Stack: ${e.stack}` : ""}`
       const item = document.createElement("li");
       item.className = "link tornmanager-menu-item";
       const link = document.createElement("a");
-      link.href = "#";
+      link.href = window.location.href;
       link.innerHTML = '<span class="tornmanager-menu-icon"></span><span>TornManager</span>';
       link.addEventListener("click", (e) => {
         e.preventDefault();

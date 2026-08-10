@@ -30,7 +30,7 @@ export class SettingsMenuEntry {
     // walks this menu calling e.className.includes(), which throws on SVG
     // elements (their className isn't a string). Keep our DOM svg-free here.
     const link = document.createElement("a");
-    link.href = "#";
+    link.href = window.location.href;
     link.innerHTML = '<span class="tornmanager-menu-icon"></span><span>TornManager</span>';
     link.addEventListener("click", (e) => {
       e.preventDefault();
