@@ -502,16 +502,14 @@ export class ChatsSection {
     return row;
   }
 
-  // A compact one-line room row: click anywhere to open; small icon buttons on
-  // the right handle secondary actions without stealing the row's click.
+  // Click anywhere to open; small icon buttons handle secondary actions without
+  // stealing the row's click. A grid lays name / meta / actions out so desktop
+  // keeps a single row and mobile reflows to name-on-top, meta + icons below.
   roomRow(name, meta, { chip, chipClass = "" } = {}) {
     const row = document.createElement("div");
     row.className = "tm-chats-room";
     row.setAttribute("role", "button");
     row.tabIndex = 0;
-
-    const info = document.createElement("div");
-    info.className = "tm-chats-room-info";
 
     const nameLine = document.createElement("div");
     nameLine.className = "tm-chats-room-nameline";
@@ -532,13 +530,11 @@ export class ChatsSection {
     metaEl.className = "tm-chats-room-meta";
     metaEl.textContent = meta;
 
-    info.appendChild(nameLine);
-    info.appendChild(metaEl);
-
     const actions = document.createElement("div");
     actions.className = "tm-chats-room-actions";
 
-    row.appendChild(info);
+    row.appendChild(nameLine);
+    row.appendChild(metaEl);
     row.appendChild(actions);
 
     row.addEventListener("keydown", (e) => {
