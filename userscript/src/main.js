@@ -31,9 +31,15 @@ function fromAnotherUserscript(source) {
   return !!match && !decodeURIComponent(match[1]).toLowerCase().includes("torn-manager");
 }
 
+function opaqueCrossOriginError(e) {
+  const msg = e.error?.message || e.message || "";
+  return !e.error && !e.filename && (msg === "" || msg === "Script error.");
+}
+
 window.addEventListener("error", (e) => {
   const msg = e.error?.message || e.message || "";
   if (msg.includes("ResizeObserver")) return;
+  if (opaqueCrossOriginError(e)) return;
   if (fromAnotherUserscript(e.filename) || fromAnotherUserscript(e.error?.stack)) return;
   const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
   logger.log(e.error || msg, `uncaught (${source})`);

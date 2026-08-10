@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.23
+// @version      0.3.24
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -1521,7 +1521,7 @@ Stack: ${e.stack}` : ""}`
       return button;
     }
   }
-  const CURRENT = "0.3.23";
+  const CURRENT = "0.3.24";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY = "tm_version_check";
@@ -1853,7 +1853,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.23"}`;
+      version.textContent = `v${"0.3.24"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -1902,7 +1902,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.23"}`,
+        `TornManager v${"0.3.24"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -2990,10 +2990,16 @@ Stack: ${e.stack}` : ""}`
     const match = source.match(/userscript\.html\?name=([^&]+)/i);
     return !!match && !decodeURIComponent(match[1]).toLowerCase().includes("torn-manager");
   }
+  function opaqueCrossOriginError(e) {
+    var _a;
+    const msg = ((_a = e.error) == null ? void 0 : _a.message) || e.message || "";
+    return !e.error && !e.filename && (msg === "" || msg === "Script error.");
+  }
   window.addEventListener("error", (e) => {
     var _a, _b;
     const msg = ((_a = e.error) == null ? void 0 : _a.message) || e.message || "";
     if (msg.includes("ResizeObserver")) return;
+    if (opaqueCrossOriginError(e)) return;
     if (fromAnotherUserscript(e.filename) || fromAnotherUserscript((_b = e.error) == null ? void 0 : _b.stack)) return;
     const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
     logger.log(e.error || msg, `uncaught (${source})`);
