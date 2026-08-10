@@ -1,0 +1,173 @@
+<svg width="1000" height="400" viewBox="0 0 1000 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">TornManager Chat</title>
+  <desc id="d">End-to-end encrypted chat rooms inside Torn City, now with image sharing.</desc>
+
+  <defs>
+    <linearGradient id="bgg" x1="0" y1="0" x2="1000" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0e1116"/>
+      <stop offset="1" stop-color="#161c29"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0070f3"/>
+      <stop offset="1" stop-color="#4da3ff"/>
+    </linearGradient>
+    <radialGradient id="lockGlow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0070f3" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#0070f3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="photo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b4a7a"/>
+      <stop offset="0.55" stop-color="#3d6fb0"/>
+      <stop offset="1" stop-color="#7fb3e0"/>
+    </linearGradient>
+    <clipPath id="thumbclip"><rect x="0" y="0" width="130" height="94" rx="9"/></clipPath>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="399" rx="20" fill="url(#bgg)" stroke="#232838"/>
+
+  <!-- wordmark -->
+  <text x="500" y="68" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="40" fill="url(#accent)">TornManager Chat</text>
+  <text x="500" y="95" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13.5" fill="#5b6580">end-to-end encrypted chat rooms, right inside Torn City</text>
+
+  <!-- zone A: you, typing -->
+  <circle cx="112" cy="170" r="16" fill="#4b5470"/>
+  <path d="M 88 232 C 88 200 96 186 112 184 C 128 186 136 200 136 232 Z" fill="#4b5470"/>
+
+  <rect x="60" y="250" width="214" height="44" rx="12" fill="#101216" stroke="#2b3040" stroke-width="1.5"/>
+  <text x="78" y="277" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13" fill="#8a93b2">gg on that chain</text>
+  <rect x="193" y="264" width="2.5" height="17" fill="#4da3ff">
+    <animate attributeName="opacity" values="1;0;1" dur="1.2s" repeatCount="indefinite"/>
+  </rect>
+  <rect x="216" y="264" width="16" height="14" rx="2.5" fill="none" stroke="#8a93b2" stroke-width="1.5"/>
+  <circle cx="220.5" cy="268.5" r="1.5" fill="#8a93b2"/>
+  <path d="M 217 277 L 222 272 L 225 275 L 229 270 L 232 273" fill="none" stroke="#8a93b2" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="256" cy="272" r="13" fill="url(#accent)"/>
+  <path d="M 250 267 L 263 272 L 250 277 L 253.5 272 Z" fill="#ffffff" opacity="0.95"/>
+
+  <!-- zone B: encrypted flow -->
+  <path id="flowPath" d="M 276 268 C 330 252 356 232 392 214 C 440 190 496 204 540 210" fill="none" stroke="#2c3f5f" stroke-width="2" stroke-linecap="round" stroke-dasharray="1 9"/>
+  <path d="M 276 268 C 330 252 356 232 392 214 C 440 190 496 204 540 210" fill="none" stroke="url(#accent)" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="1 10">
+    <animate attributeName="stroke-dashoffset" values="0;-22" dur="0.9s" repeatCount="indefinite"/>
+  </path>
+
+  <circle cx="392" cy="206" r="24" fill="url(#lockGlow)">
+    <animate attributeName="opacity" values="0.55;0.15;0.55" dur="3.6s" repeatCount="indefinite"/>
+  </circle>
+  <path d="M 385 204 v-6 a7 7 0 0 1 14 0 v6" fill="none" stroke="#4da3ff" stroke-width="2.5"/>
+  <rect x="379" y="204" width="26" height="20" rx="5" fill="#12233f" stroke="#4da3ff" stroke-width="2"/>
+  <circle cx="392" cy="211" r="2" fill="#4da3ff"/>
+  <rect x="391" y="212" width="2" height="5" fill="#4da3ff"/>
+  <text x="392" y="242" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="10.5" fill="#565f89">AES-256-GCM</text>
+
+  <!-- encrypted packets travelling into the room -->
+  <g>
+    <rect x="-8" y="-8" width="16" height="16" rx="4" fill="#152744" stroke="#4da3ff" stroke-width="1.3"/>
+    <rect x="-4.5" y="-1.5" width="9" height="6" rx="1.5" fill="none" stroke="#7dbaff" stroke-width="1.1"/>
+    <path d="M -2.5 -1.5 v-2 a2.5 2.5 0 0 1 5 0 v2" fill="none" stroke="#7dbaff" stroke-width="1.1"/>
+    <animateMotion dur="3.6s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion>
+    <animate attributeName="opacity" values="0;1;1;1;0" keyTimes="0;0.12;0.5;0.88;1" dur="3.6s" repeatCount="indefinite"/>
+  </g>
+  <g>
+    <rect x="-6" y="-6" width="12" height="12" rx="3" fill="#152744" stroke="#4da3ff" stroke-width="1.2" opacity="0.85"/>
+    <animateMotion dur="3.6s" begin="1.8s" repeatCount="indefinite"><mpath href="#flowPath"/></animateMotion>
+    <animate attributeName="opacity" values="0;0.85;0.85;0.85;0" keyTimes="0;0.12;0.5;0.88;1" dur="3.6s" begin="1.8s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- zone C: the room -->
+  <rect x="548" y="124" width="396" height="214" rx="14" fill="#17181c" stroke="#2b2f3a" stroke-width="1.5"/>
+
+  <text x="570" y="154" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#e8eaf0">Hawaii squad</text>
+  <path d="M 678 148 v-2.5 a3.5 3.5 0 0 1 7 0 v2.5" fill="none" stroke="#7aa2f7" stroke-width="1.5"/>
+  <rect x="676" y="148" width="11" height="8" rx="2" fill="none" stroke="#7aa2f7" stroke-width="1.5"/>
+  <text x="696" y="154" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="12" fill="#6b7280">&#183; 6</text>
+  <circle cx="924" cy="149" r="4" fill="#34d399">
+    <animate attributeName="opacity" values="1;0.35;1" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <line x1="560" y1="166" x2="932" y2="166" stroke="#24262e" stroke-width="1"/>
+
+  <text x="570" y="188" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#4da3ff">Bram:</text>
+  <text x="612" y="188" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" fill="#ccd1dd">Landing in 2 minutes</text>
+
+  <text x="570" y="212" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#7ee787">Sato:</text>
+  <text x="606" y="212" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" fill="#ccd1dd">Landing in 1 min, I'll</text>
+  <text x="606" y="228" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" fill="#ccd1dd">hit Rook, grab Cade &amp; Nyx?</text>
+
+  <text x="570" y="252" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#c792ea">Ren:</text>
+  <text x="600" y="252" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" fill="#ccd1dd">Sure! also landing in 1 min</text>
+
+  <text x="570" y="278" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#4da3ff">Bram:</text>
+  <text x="612" y="278" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" fill="#ccd1dd">Let's do this!</text>
+  <g>
+    <rect x="702" y="266" width="92" height="22" rx="6" fill="#0070f3" fill-opacity="0.16" stroke="#0070f3" stroke-opacity="0.5"/>
+    <rect x="710" y="272" width="13" height="11" rx="2" fill="none" stroke="#9fd0ff" stroke-width="1.3"/>
+    <circle cx="713.5" cy="275.5" r="1.2" fill="#9fd0ff"/>
+    <path d="M 711 283 L 715 279 L 718 281.5 L 723 277" fill="none" stroke="#9fd0ff" stroke-width="1.3" stroke-linejoin="round"/>
+    <text x="730" y="281" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="12" fill="#9fd0ff">image</text>
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="1.8s" repeatCount="indefinite"/>
+  </g>
+
+  <rect x="562" y="306" width="372" height="26" rx="8" fill="#101216" stroke="#262b36"/>
+  <text x="574" y="323" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#565f89">Type a message&#8230;</text>
+  <rect x="898" y="313" width="13" height="11" rx="2" fill="none" stroke="#6b7280" stroke-width="1.3"/>
+  <path d="M 899 324 L 903 320 L 906 322.5 L 911 318" fill="none" stroke="#6b7280" stroke-width="1.3" stroke-linejoin="round"/>
+  <circle cx="924" cy="319" r="9" fill="url(#accent)"/>
+  <path d="M 920 315.5 L 929 319 L 920 322.5 L 922.5 319 Z" fill="#ffffff" opacity="0.95"/>
+
+  <!-- the image, opened -->
+  <path d="M 748 265 C 765 258 782 251 798 245" fill="none" stroke="#4da3ff" stroke-width="1.5" stroke-dasharray="1 6" opacity="0.7">
+    <animate attributeName="stroke-dashoffset" values="0;-14" dur="0.9s" repeatCount="indefinite"/>
+  </path>
+  <g transform="translate(788,152)">
+    <g>
+      <animateTransform attributeName="transform" type="scale" values="1;1.03;1" dur="3.6s" repeatCount="indefinite"/>
+      <rect x="4" y="6" width="130" height="94" rx="9" fill="#000000" opacity="0.35"/>
+      <rect x="0" y="0" width="130" height="94" rx="9" fill="#f6f5f1" stroke="#3b4a66" stroke-width="1.5"/>
+      <g clip-path="url(#thumbclip)">
+        <!-- shiba, swinging -->
+        <path d="M 12 41 L 19 21 L 30 42 Z" fill="#c48f50"/>
+        <path d="M 33 42 L 45 23 L 51 42 Z" fill="#c48f50"/>
+        <ellipse cx="31" cy="54" rx="21" ry="19" fill="#d29c5d"/>
+        <ellipse cx="31" cy="61" rx="15" ry="12" fill="#eccb99"/>
+        <ellipse cx="24" cy="51" rx="2.1" ry="2.7" fill="#3a2a1a"/>
+        <ellipse cx="38" cy="51" rx="2.1" ry="2.7" fill="#3a2a1a"/>
+        <ellipse cx="31" cy="59" rx="2.7" ry="2" fill="#2a1e12"/>
+        <ellipse cx="46" cy="78" rx="6" ry="5" fill="#eccb99"/>
+        <!-- bat -->
+        <line x1="47" y1="78" x2="88" y2="46" stroke="#9a6a34" stroke-width="7" stroke-linecap="round"/>
+        <line x1="47" y1="78" x2="86" y2="48" stroke="#bd8f57" stroke-width="2.4" stroke-linecap="round"/>
+        <circle cx="88" cy="46" r="4.6" fill="#9a6a34"/>
+        <!-- cheems, bonked -->
+        <g transform="rotate(9 106 60)">
+          <path d="M 90 51 L 95 38 L 101 52 Z" fill="#d3b44a"/>
+          <path d="M 112 52 L 118 40 L 122 53 Z" fill="#d3b44a"/>
+          <ellipse cx="106" cy="60" rx="19" ry="17" fill="#e7ca5f"/>
+          <ellipse cx="102" cy="67" rx="13" ry="10" fill="#f3e7ae"/>
+          <ellipse cx="100" cy="56" rx="1.9" ry="2.3" fill="#2a230f"/>
+          <ellipse cx="112" cy="56" rx="1.9" ry="2.3" fill="#2a230f"/>
+          <ellipse cx="100" cy="65" rx="3" ry="2.3" fill="#2a230f"/>
+        </g>
+        <!-- BONK -->
+        <g fill="#3a3a3a" font-family="'Comic Sans MS', 'Chalkboard SE', system-ui, sans-serif" font-weight="800" font-size="14">
+          <text x="55" y="64" transform="rotate(-30 55 64)">B</text>
+          <text x="67" y="56" transform="rotate(-30 67 56)">O</text>
+          <text x="79" y="48" transform="rotate(-30 79 48)">N</text>
+          <text x="91" y="40" transform="rotate(-30 91 40)">K</text>
+        </g>
+      </g>
+    </g>
+  </g>
+
+  <!-- sparkles on the new feature -->
+  <path d="M 776 143 L 778 149 L 784 151 L 778 153 L 776 159 L 774 153 L 768 151 L 774 149 Z" fill="#4da3ff">
+    <animate attributeName="opacity" values="0.2;1;0.2" dur="1.8s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 912 146 L 913.4 150 L 917.4 151.4 L 913.4 152.8 L 912 156.8 L 910.6 152.8 L 906.6 151.4 L 910.6 150 Z" fill="#c792ea">
+    <animate attributeName="opacity" values="1;0.2;1" dur="1.2s" repeatCount="indefinite"/>
+  </path>
+  <path d="M 902 240 L 903.4 244 L 907.4 245.4 L 903.4 246.8 L 902 250.8 L 900.6 246.8 L 896.6 245.4 L 900.6 244 Z" fill="#e0af68">
+    <animate attributeName="opacity" values="0.3;1;0.3" dur="1.8s" begin="0.6s" repeatCount="indefinite"/>
+  </path>
+
+  <!-- caption -->
+  <text x="500" y="384" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="12" fill="#565f89" opacity="0.85">create a room &#183; share the invite link &#183; chat &amp; send images &#183; all end-to-end encrypted</text>
+</svg>
