@@ -503,8 +503,8 @@ export class ChatsSection {
   }
 
   // Click anywhere to open; small icon buttons handle secondary actions without
-  // stealing the row's click. A grid lays name / meta / actions out so desktop
-  // keeps a single row and mobile reflows to name-on-top, meta + icons below.
+  // stealing the row's click. The name gets its own full-width row with meta +
+  // icons below — viewport breakpoints are unreliable in Torn PDA's WebView.
   roomRow(name, meta, { chip, chipClass = "" } = {}) {
     const row = document.createElement("div");
     row.className = "tm-chats-room";

@@ -989,24 +989,6 @@
   .tm-chats-grid {
     grid-template-columns: 1fr;
   }
-
-  .tm-chats-room {
-    grid-template-areas:
-      "name name"
-      "meta actions";
-    align-items: end;
-    row-gap: 8px;
-  }
-
-  .tm-chats-room-actions {
-    justify-content: flex-end;
-    gap: 0;
-  }
-
-  .tm-chats-icon-btn {
-    width: 28px;
-    height: 28px;
-  }
 }
 
 @keyframes tm-pulse {
@@ -1155,11 +1137,11 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
-    "name actions"
+    "name name"
     "meta actions";
-  align-items: center;
+  align-items: end;
   column-gap: 10px;
-  row-gap: 1px;
+  row-gap: 4px;
   padding: 8px 12px;
   background: #161618;
   border: 1px solid #2a2a2c;
@@ -1229,13 +1211,15 @@
   grid-area: meta;
   font-size: 11px;
   color: #777;
+  white-space: nowrap;
 }
 
 .tm-chats-room-actions {
   grid-area: actions;
   display: flex;
   align-items: center;
-  gap: 4px;
+  justify-content: flex-end;
+  gap: 2px;
 }
 
 .tm-chats-room-tag {
@@ -1251,8 +1235,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   padding: 0;
   color: #888;
   background: none;
