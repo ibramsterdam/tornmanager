@@ -448,8 +448,8 @@ export class ChatsSection {
     const locked = room.encrypted && !ChatCrypto.getKey(room.id);
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
     const row = room.host
-      ? this.roomRow(room.name, members, { chip: "Host", chipClass: "tm-chats-room-chip--host" })
-      : this.roomRow(room.name, members);
+      ? this.roomRow(room.name, "", { chip: "Host", chipClass: "tm-chats-room-chip--host" })
+      : this.roomRow(room.name, "");
     row.onclick = () => this.chatDock.openRoomById(room.id);
 
     if (locked) {
@@ -462,9 +462,13 @@ export class ChatsSection {
 
     const actions = row.querySelector(".tm-chats-room-actions");
 
-    actions.appendChild(
-      this.iconButton(MEMBERS_ICON, "Members", () => this.openMembers(room))
-    );
+    // The member count lives inside the members button — a separate text node
+    // overflows the card when Torn PDA scales fonts up.
+    const membersBtn = this.iconButton(MEMBERS_ICON, members, () => this.openMembers(room), "tm-chats-icon-btn--members");
+    const countEl = document.createElement("span");
+    countEl.textContent = room.member_count;
+    membersBtn.appendChild(countEl);
+    actions.appendChild(membersBtn);
 
     if (room.host && room.invite_url && !locked) {
       actions.appendChild(
@@ -526,15 +530,16 @@ export class ChatsSection {
       nameLine.appendChild(chipEl);
     }
 
-    const metaEl = document.createElement("span");
-    metaEl.className = "tm-chats-room-meta";
-    metaEl.textContent = meta;
-
     const actions = document.createElement("div");
     actions.className = "tm-chats-room-actions";
 
     row.appendChild(nameLine);
-    row.appendChild(metaEl);
+    if (meta) {
+      const metaEl = document.createElement("span");
+      metaEl.className = "tm-chats-room-meta";
+      metaEl.textContent = meta;
+      row.appendChild(metaEl);
+    }
     row.appendChild(actions);
 
     row.addEventListener("keydown", (e) => {

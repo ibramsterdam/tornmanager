@@ -53,6 +53,8 @@
   width: 520px;
   max-width: 90vw;
   max-height: 80vh;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overflow-y: auto;
   background: #1c1c1e;
   border: 1px solid #333;
@@ -1254,6 +1256,14 @@
 .tm-chats-icon-btn--danger:hover {
   color: #ff6659;
   background: rgba(229, 57, 53, 0.12);
+}
+
+.tm-chats-icon-btn--members {
+  width: auto;
+  gap: 4px;
+  padding: 0 8px 0 7px;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .tm-chats-icon-btn--muted {
