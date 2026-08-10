@@ -19,6 +19,7 @@ Rails.application.routes.draw do
       post :unsuspend, to: "chat_rooms#unsuspend", as: :chat_unsuspend
       post :messages, to: "chat_messages#index", as: :chat_messages
       post :send_message, to: "chat_messages#create", as: :chat_send_message
+      post :send_image, to: "chat_messages#create_image", as: :chat_send_image
     end
   end
 

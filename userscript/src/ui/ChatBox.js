@@ -10,6 +10,15 @@ const DRAG_THRESHOLD_PX = 6;
 const MIN_WIDTH = 280;
 const MIN_HEIGHT = 300;
 
+const ACCEPTED_IMAGE_TYPES = ["image/png", "image/jpeg"];
+const MAX_IMAGE_DIMENSION = 1600;
+const JPEG_QUALITY = 0.85;
+const MAX_UPLOAD_BYTES = 6 * 1024 * 1024;
+const LIGHTBOX_ANIM_MS = 200;
+
+const IMAGE_ICON_SVG =
+  '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+
 let zCounter = 99991;
 
 export class ChatBox {
@@ -239,6 +248,10 @@ export class ChatBox {
       clearInterval(this.pollInterval);
       this.pollInterval = null;
     }
+    if (this.imageUrls) {
+      for (const url of Object.values(this.imageUrls)) URL.revokeObjectURL(url);
+      this.imageUrls = null;
+    }
     this.element?.remove();
   }
 
@@ -322,6 +335,19 @@ export class ChatBox {
     this.counter = document.createElement("span");
     this.counter.className = "tm-cb-counter";
 
+    this.fileInput = document.createElement("input");
+    this.fileInput.type = "file";
+    this.fileInput.accept = ACCEPTED_IMAGE_TYPES.join(",");
+    this.fileInput.style.display = "none";
+    this.fileInput.addEventListener("change", () => this.handleFilePick());
+
+    this.attachBtn = document.createElement("button");
+    this.attachBtn.type = "button";
+    this.attachBtn.className = "tm-cb-attach";
+    this.attachBtn.title = "Send an image";
+    this.attachBtn.innerHTML = IMAGE_ICON_SVG;
+    this.attachBtn.onclick = () => this.fileInput.click();
+
     const send = document.createElement("button");
     send.type = "button";
     send.className = "tm-cb-send";
@@ -344,8 +370,92 @@ export class ChatBox {
 
     composer.appendChild(this.input);
     composer.appendChild(this.counter);
+    composer.appendChild(this.attachBtn);
     composer.appendChild(send);
+    composer.appendChild(this.fileInput);
     return composer;
+  }
+
+  async handleFilePick() {
+    const file = this.fileInput.files?.[0];
+    this.fileInput.value = "";
+    if (!file) return;
+
+    if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+      this.appendSystem("Only PNG and JPG images can be sent.");
+      return;
+    }
+    if (this.room.encrypted && !this.encKey) {
+      this.appendSystem("Can't send — rejoin via the invite link to restore this room's key.");
+      return;
+    }
+
+    const caption = this.input.value.trim();
+    this.setUploading(true);
+
+    try {
+      const blob = await this.processImage(file);
+      if (!blob) throw new Error("Could not read that image.");
+
+      let uploadBlob = blob;
+      if (this.room.encrypted) {
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const packed = await ChatCrypto.encryptBytes(this.encKey, bytes);
+        uploadBlob = new Blob([packed], { type: "application/octet-stream" });
+      }
+      if (uploadBlob.size > MAX_UPLOAD_BYTES) {
+        throw new Error("That image is too large to send.");
+      }
+
+      let bodyPayload = "";
+      if (caption) {
+        bodyPayload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
+      }
+
+      await this.client.sendImage(this.room.id, uploadBlob, {
+        body: bodyPayload,
+        filename: this.room.encrypted ? "image.enc" : "image.jpg",
+      });
+
+      this.input.value = "";
+      this.counter.textContent = "";
+      this.poll();
+    } catch (err) {
+      this.appendSystem(err.message || "Could not send image.");
+    } finally {
+      this.setUploading(false);
+    }
+  }
+
+  setUploading(on) {
+    if (!this.attachBtn) return;
+    this.attachBtn.disabled = on;
+    this.attachBtn.classList.toggle("tm-cb-attach--busy", on);
+    this.attachBtn.title = on ? "Uploading…" : "Send an image";
+  }
+
+  async processImage(file) {
+    let bitmap;
+    try {
+      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    } catch {
+      bitmap = await createImageBitmap(file);
+    }
+
+    const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, width, height);
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
   }
 
   async send() {
@@ -449,13 +559,29 @@ export class ChatBox {
       sender.className = "tm-cb-sender";
       sender.style.color = this.colorForName(message.name);
       sender.textContent = `${message.name}:`;
-
-      const bodyEl = document.createElement("span");
-      bodyEl.className = locked ? "tm-cb-body tm-cb-body--locked" : "tm-cb-body";
-      bodyEl.textContent = body;
-
       row.appendChild(sender);
-      row.appendChild(bodyEl);
+
+      if (message.image_path) {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "tm-cb-image-chip";
+        chip.innerHTML = `${IMAGE_ICON_SVG}<span>image</span>`;
+        chip.onclick = () => this.openImage(message);
+        row.appendChild(chip);
+
+        if (body && !locked) {
+          const caption = document.createElement("span");
+          caption.className = "tm-cb-body tm-cb-caption";
+          caption.textContent = body;
+          row.appendChild(caption);
+        }
+      } else {
+        const bodyEl = document.createElement("span");
+        bodyEl.className = locked ? "tm-cb-body tm-cb-body--locked" : "tm-cb-body";
+        bodyEl.textContent = body;
+        row.appendChild(bodyEl);
+      }
+
       this.list.appendChild(row);
     }
 
@@ -466,6 +592,9 @@ export class ChatBox {
     if (message.system || !this.room.encrypted) {
       return { body: message.body, locked: false };
     }
+    if (!message.body) {
+      return { body: "", locked: false };
+    }
     if (!this.encKey) {
       return { body: "🔒 Encrypted — rejoin via the invite link to read.", locked: true };
     }
@@ -474,6 +603,69 @@ export class ChatBox {
     } catch {
       return { body: "🔒 Can't decrypt this message.", locked: true };
     }
+  }
+
+  async openImage(message) {
+    const overlay = document.createElement("div");
+    overlay.className = "tm-lightbox";
+    overlay.style.zIndex = 2147483647;
+
+    const spinner = document.createElement("div");
+    spinner.className = "tm-lightbox-spinner";
+    overlay.appendChild(spinner);
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add("tm-lightbox--open"));
+
+    let closed = false;
+    const close = () => {
+      if (closed) return;
+      closed = true;
+      overlay.classList.remove("tm-lightbox--open");
+      document.removeEventListener("keydown", onKey);
+      setTimeout(() => overlay.remove(), LIGHTBOX_ANIM_MS);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") close();
+    };
+
+    overlay.addEventListener("click", (e) => {
+      if (e.target === overlay || e.target === spinner) close();
+    });
+    document.addEventListener("keydown", onKey);
+
+    try {
+      const url = await this.imageUrl(message);
+      if (closed) return;
+
+      const img = document.createElement("img");
+      img.className = "tm-lightbox-img";
+      img.alt = "";
+      img.onload = () => spinner.remove();
+      img.src = url;
+      overlay.appendChild(img);
+    } catch (err) {
+      spinner.remove();
+      const notice = document.createElement("div");
+      notice.className = "tm-lightbox-error";
+      notice.textContent = err.message || "Could not load image.";
+      overlay.appendChild(notice);
+    }
+  }
+
+  async imageUrl(message) {
+    this.imageUrls ||= {};
+    if (this.imageUrls[message.id]) return this.imageUrls[message.id];
+
+    if (this.room.encrypted && !this.encKey) {
+      throw new Error("Encrypted — rejoin via the invite link to view.");
+    }
+
+    const raw = await this.client.fetchImageBytes(message.image_path);
+    const bytes = this.room.encrypted ? await ChatCrypto.decryptBytes(this.encKey, raw) : raw;
+    const url = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
+    this.imageUrls[message.id] = url;
+    return url;
   }
 
   appendDividerIfNeeded(at) {

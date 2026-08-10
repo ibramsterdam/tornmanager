@@ -7,6 +7,7 @@ module Api
 
     def index
       messages = @room.chat_messages
+        .with_attached_image
         .where("id > ?", params[:since_id].to_i)
         .order(:id)
         .limit(PAGE_LIMIT)
@@ -15,24 +16,27 @@ module Api
     end
 
     def create
-      if rate_limited?
-        return render json: { error: "You're sending messages too fast." }, status: :too_many_requests
+      return if rate_limited!
+
+      message = @room.chat_messages.new(sender_attrs.merge(body: params[:body].to_s.strip))
+      save_message(message)
+    end
+
+    def create_image
+      return if rate_limited!
+
+      unless params[:image].respond_to?(:read)
+        return render json: { error: "No image provided." }, status: :bad_request
       end
 
-      # In public rooms the sender's Torn identity is never stored — only their
-      # stable per-room pseudonym is persisted, so a message can't be traced
-      # back to a player through the data.
-      attrs = { user: @user, body: params[:body].to_s.strip }
-      if @room.public?
-        attrs[:sender_name] = @user.chat_anon_name!
-        attrs[:sender_torn_id] = nil
-      else
-        attrs[:sender_name] = @user.name
-        attrs[:sender_torn_id] = @user.torn_id
-      end
+      message = @room.chat_messages.new(sender_attrs.merge(body: params[:body].to_s.strip))
+      message.image.attach(params[:image])
+      save_message(message)
+    end
 
-      message = @room.chat_messages.new(attrs)
+    private
 
+    def save_message(message)
       if message.save
         Rails.cache.write(cooldown_key, true, expires_in: SEND_COOLDOWN)
         render json: { message: present(message) }, status: :created
@@ -41,28 +45,32 @@ module Api
       end
     end
 
-    private
+    def sender_attrs
+      if @room.public?
+        { user: @user, sender_name: @user.chat_anon_name!, sender_torn_id: nil }
+      else
+        { user: @user, sender_name: @user.name, sender_torn_id: @user.torn_id }
+      end
+    end
 
     def set_room
       @room = @user.chat_rooms.find_by(id: params[:room_id])
       return render json: { error: "Room not found." }, status: :not_found unless @room
 
-      # A suspended member keeps their membership (and the room in their list)
-      # but the server serves them no messages and accepts none — a hard block
-      # that holding the encryption key can't bypass.
       if @room.suspended?(@user)
         render json: { error: "You have been suspended from this chat." }, status: :forbidden
       end
     end
 
-    # `own` lets the client highlight your own messages without exposing a Torn
-    # id in public rooms; anonymous messages carry no torn_id at all.
     def present(message)
       message.as_api_json.merge(own: message.user_id == @user.id)
     end
 
-    def rate_limited?
-      Rails.cache.exist?(cooldown_key)
+    def rate_limited!
+      return false unless Rails.cache.exist?(cooldown_key)
+
+      render json: { error: "You're sending messages too fast." }, status: :too_many_requests
+      true
     end
 
     def cooldown_key

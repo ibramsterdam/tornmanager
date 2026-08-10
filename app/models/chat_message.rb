@@ -1,18 +1,19 @@
 class ChatMessage < ApplicationRecord
-  # Plaintext is capped at ~300 chars client-side; end-to-end encrypted bodies
-  # arrive as base64 ciphertext, which inflates length, so the stored limit is
-  # larger and serves only as an abuse ceiling.
   MAX_LENGTH = 2000
+  MAX_IMAGE_BYTES = 6.megabytes
 
   belongs_to :chat_room
   belongs_to :user, optional: true
+  has_one_attached :image
 
-  validates :body, presence: true, length: { maximum: MAX_LENGTH }
+  validates :body, length: { maximum: MAX_LENGTH }
+  validate :body_or_image_present
+  validate :image_within_size_limit
 
   after_create_commit { chat_room.update_column(:last_message_at, created_at) }
 
   def as_api_json
-    {
+    json = {
       id: id,
       torn_id: sender_torn_id,
       name: sender_name,
@@ -20,5 +21,22 @@ class ChatMessage < ApplicationRecord
       system: system,
       at: created_at.iso8601
     }
+    json[:image_path] = signed_image_path if image.attached?
+    json
+  end
+
+  private
+
+  def signed_image_path
+    Rails.application.routes.url_helpers.rails_blob_path(image, only_path: true)
+  end
+
+  def body_or_image_present
+    errors.add(:body, "can't be blank") if body.blank? && !image.attached?
+  end
+
+  def image_within_size_limit
+    return unless image.attached?
+    errors.add(:image, "is too large") if image.blob.byte_size > MAX_IMAGE_BYTES
   end
 end

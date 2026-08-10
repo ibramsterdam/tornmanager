@@ -41,9 +41,8 @@ gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 2.0"
-# Loaded lazily by Active Storage when processing variants — require: false
-# keeps boot from FFI-loading libvips on machines without it (CI).
 gem "ruby-vips", "~> 2.2", require: false
+gem "aws-sdk-s3", require: false
 
 gem "appsignal"
 gem "onnxruntime"

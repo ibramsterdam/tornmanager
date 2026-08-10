@@ -1650,6 +1650,129 @@ a.tm-cb-sender:hover {
   background: #0061d5;
 }
 
+.tm-cb-attach {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: #bbb;
+  background: #1d1d20;
+  border: 1px solid #333;
+  border-radius: 7px;
+  cursor: pointer;
+  flex: none;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-cb-attach:hover {
+  color: #fff;
+  border-color: #0070f3;
+}
+
+.tm-cb-attach:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.tm-cb-attach--busy {
+  animation: tm-cb-pulse 1s ease-in-out infinite;
+}
+
+@keyframes tm-cb-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.tm-cb-image-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-right: 5px;
+  padding: 2px 8px;
+  font: inherit;
+  color: #9fd0ff;
+  background: rgba(0, 112, 243, 0.14);
+  border: 1px solid rgba(0, 112, 243, 0.4);
+  border-radius: 6px;
+  cursor: pointer;
+  vertical-align: baseline;
+  transition: background 0.15s ease;
+}
+
+.tm-cb-image-chip:hover {
+  background: rgba(0, 112, 243, 0.28);
+}
+
+.tm-cb-caption {
+  margin-left: 4px;
+}
+
+.tm-lightbox {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4vh 4vw;
+  background: rgba(0, 0, 0, 0);
+  cursor: zoom-out;
+  opacity: 0;
+  transition: opacity 0.2s ease, background 0.2s ease;
+}
+
+.tm-lightbox--open {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.82);
+}
+
+.tm-lightbox-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+  cursor: default;
+  animation: tm-lightbox-pop 0.2s ease;
+}
+
+@keyframes tm-lightbox-pop {
+  from { transform: scale(0.85); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.tm-lightbox-spinner {
+  width: 34px;
+  height: 34px;
+  border: 3px solid rgba(255, 255, 255, 0.25);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: tm-lightbox-spin 0.8s linear infinite;
+}
+
+@keyframes tm-lightbox-spin {
+  to { transform: rotate(360deg); }
+}
+
+.tm-lightbox-error {
+  padding: 14px 18px;
+  color: #eee;
+  background: #1d1d20;
+  border: 1px solid #333;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tm-cb-attach--busy,
+  .tm-lightbox,
+  .tm-lightbox-img,
+  .tm-lightbox-spinner {
+    animation: none;
+    transition: none;
+  }
+}
+
 .tm-cb-resize {
   position: absolute;
   right: 0;

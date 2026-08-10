@@ -18,7 +18,7 @@ class ChatRoom < ApplicationRecord
   belongs_to :host_user, class_name: "User", optional: true
   has_many :chat_memberships, dependent: :delete_all
   has_many :users, through: :chat_memberships
-  has_many :chat_messages, dependent: :delete_all
+  has_many :chat_messages, dependent: :destroy
   has_many :chat_suspensions, dependent: :delete_all
 
   validates :name, presence: true, length: { maximum: 40 }

@@ -44,13 +44,14 @@ module Daily
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} chat rooms empty for #{ChatRoom::EMPTY_RETENTION_DAYS}+ days"
     end
 
-    # Public rooms are permanent, but their messages are short-lived to keep the
-    # anonymous history ephemeral and the table small.
     def cleanup_public_chat_messages
       cutoff = ChatRoom::PUBLIC_MESSAGE_RETENTION.ago
-      deleted_count = ChatMessage.where(chat_room: ChatRoom.public_rooms).where("created_at < ?", cutoff).delete_all
+      scope = ChatMessage.where(chat_room: ChatRoom.public_rooms).where("chat_messages.created_at < ?", cutoff)
 
-      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} public chat messages older than #{ChatRoom::PUBLIC_MESSAGE_RETENTION.inspect}"
+      purged_count = scope.joins(:image_attachment).destroy_all.size
+      deleted_count = scope.delete_all
+
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count + purged_count} public chat messages (#{purged_count} with images) older than #{ChatRoom::PUBLIC_MESSAGE_RETENTION.inspect}"
     end
 
     # destroy (not delete_all) so dependent data goes with the faction and

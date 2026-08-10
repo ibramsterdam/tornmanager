@@ -54,6 +54,26 @@ export const ChatCrypto = {
     return new TextDecoder().decode(plaintext);
   },
 
+  async encryptBytes(keyB64, bytes) {
+    const key = await this.importKey(keyB64);
+    const iv = new Uint8Array(12);
+    crypto.getRandomValues(iv);
+    const ciphertext = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, bytes);
+
+    const packed = new Uint8Array(iv.length + ciphertext.byteLength);
+    packed.set(iv, 0);
+    packed.set(new Uint8Array(ciphertext), iv.length);
+    return packed;
+  },
+
+  async decryptBytes(keyB64, packed) {
+    const key = await this.importKey(keyB64);
+    const iv = packed.slice(0, 12);
+    const ciphertext = packed.slice(12);
+    const plaintext = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+    return new Uint8Array(plaintext);
+  },
+
   // --- per-room key storage ---
 
   getKey(roomId) {

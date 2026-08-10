@@ -124,6 +124,50 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_not message["own"]
   end
 
+  test "sending an image attaches it and returns an image path" do
+    assert_difference -> { @room.chat_messages.count }, 1 do
+      post api_chat_send_image_path,
+        params: { api_key: @bram.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+    end
+
+    assert_response :created
+    sent = JSON.parse(response.body)["message"]
+    assert sent["image_path"].present?
+    assert @room.chat_messages.last.image.attached?
+  end
+
+  test "an image can carry a caption body" do
+    post api_chat_send_image_path,
+      params: { api_key: @bram.api_key, room_id: @room.id, body: "check this", image: fixture_file_upload("sample.png", "image/png") }
+
+    assert_response :created
+    assert_equal "check this", JSON.parse(response.body)["message"]["body"]
+  end
+
+  test "sending an image with no file is rejected" do
+    post api_chat_send_image_path, params: { api_key: @bram.api_key, room_id: @room.id }
+
+    assert_response :bad_request
+  end
+
+  test "a suspended member cannot send an image" do
+    @room.chat_suspensions.create!(user: @bert)
+
+    post api_chat_send_image_path,
+      params: { api_key: @bert.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+
+    assert_response :forbidden
+  end
+
+  test "non-members cannot send an image" do
+    outsider = users(:kaneki)
+
+    post api_chat_send_image_path,
+      params: { api_key: outsider.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+
+    assert_response :not_found
+  end
+
   private
 
   def with_memory_cache
