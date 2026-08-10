@@ -15,6 +15,7 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
     @bram.update!(faction: @faction)
     @bert.update!(faction: @faction)
     grant_subscription(@faction, expires_at: 1.month.from_now)
+    FactionsController.any_instance.stubs(:accepting_new_factions?).returns(true)
   end
 
   # -- Access control --
@@ -329,6 +330,20 @@ class FactionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   # -- Setup create: validation errors --
+
+  test "setup is rejected when not accepting new factions" do
+    setup_faction = Faction.create!(
+      torn_id: 55555, name: "New Faction", xanax_target: 2.5, setup_completed: false
+    )
+    @bert.update!(faction: setup_faction, position: "Leader")
+    sign_in_as(@bert)
+    FactionsController.any_instance.stubs(:accepting_new_factions?).returns(false)
+
+    post setup_faction_path(torn_id: 55555), params: { api_key: "ANY_KEY" }
+
+    assert_response :service_unavailable
+    assert_not setup_faction.reload.setup_completed
+  end
 
   test "setup shows error for invalid api key" do
     setup_faction = Faction.create!(

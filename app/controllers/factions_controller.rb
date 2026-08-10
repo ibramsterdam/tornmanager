@@ -4,6 +4,8 @@ class FactionsController < ApplicationController
 
   SORTABLE_COLUMNS = %w[name xanax_daily energy_refills_daily nerve_refills_daily missions_daily crimes_daily activity_time_daily compliance_score].freeze
 
+  ACCEPTING_NEW_FACTIONS = false
+
   before_action :require_faction_member, only: [ :war_data ]
   before_action :find_faction_and_check_access, only: [ :show ]
   before_action :require_setup_completed, only: [ :show ]
@@ -39,6 +41,10 @@ class FactionsController < ApplicationController
   MAX_FACTIONS = 15
 
   def create
+    unless accepting_new_factions?
+      return render :setup, status: :service_unavailable
+    end
+
     if Faction.where(setup_completed: true).count >= MAX_FACTIONS
       flash.now[:alert] = "Maximum number of factions (#{MAX_FACTIONS}) has been reached. Join our Discord from the menu and mention it in #support."
       return render :setup, status: :unprocessable_entity
@@ -128,9 +134,13 @@ class FactionsController < ApplicationController
     end
   end
 
-  helper_method :sort_link
+  helper_method :sort_link, :accepting_new_factions?
 
   private
+
+  def accepting_new_factions?
+    ACCEPTING_NEW_FACTIONS
+  end
 
   def find_faction_and_check_access
     find_faction

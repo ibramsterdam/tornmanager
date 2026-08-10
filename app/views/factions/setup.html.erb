@@ -5,6 +5,12 @@
       <p class="setup-subtitle"><%= @faction.name %></p>
     </div>
 
+    <% unless accepting_new_factions? %>
+      <div class="setup-notice">
+        Notice: TornManager is currently not accepting any new factions.
+      </div>
+    <% end %>
+
     <div class="setup-info">
       <p>Welcome! You're the first person from your faction to use TornManager. Everyone in your faction will receive a <strong>1-month free trial</strong> to explore all features. This key will be stored as the faction's API key and used to fetch member stats, ranked wars, and other faction data.</p>
     </div>
@@ -21,7 +27,8 @@
               class: "setup-input",
               placeholder: "Enter your Limited Access API key",
               autocomplete: "off",
-              required: true %>
+              required: true,
+              disabled: !accepting_new_factions? %>
           <p class="setup-hint">
             Must be a <strong>Limited Access</strong> key that belongs to you.
             <a href="https://www.torn.com/preferences.php#tab=api" target="_blank">Create one in Torn</a>
@@ -30,7 +37,7 @@
       </div>
 
       <div class="setup-actions">
-        <%= form.submit "Set Up My Faction", class: "btn btn-primary btn-lg setup-submit" %>
+        <%= form.submit "Set Up My Faction", class: "btn btn-primary btn-lg setup-submit", disabled: !accepting_new_factions? %>
       </div>
     <% end %>
 
