@@ -189,6 +189,16 @@
             <td>30 days</td>
             <td>Factions that never complete setup and hold no API key are automatically removed, along with their faction data, after 30 days of inactivity. Member accounts are detached, not deleted.</td>
           </tr>
+          <tr>
+            <td>Private chat rooms &amp; messages (incl. images)</td>
+            <td>Until 7 days after the last member leaves</td>
+            <td>Ephemeral, end-to-end encrypted conversations</td>
+          </tr>
+          <tr>
+            <td>Public chat messages (incl. images)</td>
+            <td>24 hours</td>
+            <td>Keeps anonymous public chat ephemeral</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -502,31 +512,54 @@
   <section class="content-section">
     <h2 id="pp-chats">TornManager Chats (Browser Userscript)</h2>
     <p>
-      TornManager Chats is an upcoming companion userscript that runs on Torn.com and lets you create and join
-      chat rooms with other TornManager users. This section describes what data the chat feature stores and for
-      how long.
+      TornManager Chats is a companion userscript that runs on Torn.com and lets you create and join chat rooms
+      &mdash; and share images &mdash; with other TornManager users, beyond the faction, company, and private chats
+      Torn provides. This section describes what the chat feature stores, where, and for how long.
     </p>
 
     <h3>Data Stored on the Server</h3>
     <ul>
-      <li><strong>Rooms</strong> &mdash; the room name, when it was created, and who created it.</li>
-      <li><strong>Memberships</strong> &mdash; which rooms your Torn ID belongs to.</li>
-      <li><strong>Messages</strong> &mdash; the message text (up to 300 characters), your Torn ID and player name, and a timestamp. Joining or leaving a room also posts a small system message.</li>
-      <li><strong>Invite tokens</strong> &mdash; the secret token that a room's invite link contains.</li>
+      <li><strong>Rooms</strong> &mdash; the room name, when it was created, and who created it (the host).</li>
+      <li><strong>Memberships</strong> &mdash; which rooms your Torn ID belongs to, and whether a host has suspended you from a room.</li>
+      <li><strong>Messages</strong> &mdash; the message body (up to 300 characters of text), your Torn ID and player name, and a timestamp. Joining, leaving, and suspension events also post small system messages.</li>
+      <li><strong>Images</strong> &mdash; if you attach a picture to a message, the image file is stored as an attachment (see &ldquo;Images&rdquo; below).</li>
+      <li><strong>Invite tokens</strong> &mdash; the secret token contained in a room's invite link.</li>
     </ul>
+
+    <h3>End-to-End Encryption</h3>
     <p>
-      <strong>Private rooms are end-to-end encrypted.</strong> Message text is encrypted in your browser before it
-      is sent, and the encryption key is contained in the room's invite link and stored only on the devices of
-      people who have that link. The key is never sent to my server, so the messages I store for private rooms are
-      ciphertext that I cannot read. If you lose the key (for example by clearing browser data), rejoin the room
-      through its invite link to restore it. I do still store, and can see, which accounts belong to a private room
-      and each message's sender and timestamp — encryption protects the message content, not the fact that a
-      conversation took place.
+      <strong>Private rooms are end-to-end encrypted.</strong> The message text &mdash; and any attached image &mdash;
+      is encrypted in your browser using AES-GCM before it is sent. The encryption key is generated on your device,
+      travels only inside the room's invite link, and is stored only in the browsers of people who have that link
+      (in localStorage under <code>tm_chat_keys</code>). The key is never sent to my server, so for private rooms the
+      messages and images I store are ciphertext that I cannot read. If you lose the key (for example by clearing
+      browser data), rejoin the room through its invite link to restore it.
     </p>
     <p>
-      Public rooms are <em>not</em> end-to-end encrypted (anyone can join them, so there is no shared secret): their
-      messages are stored so they can be delivered, are anonymised as described above, and I am technically able to
-      read them to investigate abuse. Do not share API keys, passwords, or other secrets in any chat.
+      Encryption protects <em>content</em>, not <em>metadata</em>: I still store, and can see, which accounts belong
+      to a private room and each message's sender and timestamp. Anyone who holds a room's invite link can read that
+      room, so treat invite links as secrets.
+    </p>
+    <p>
+      Public rooms are <em>not</em> end-to-end encrypted &mdash; anyone can join them, so there is no shared secret.
+      Their messages and images are stored so they can be delivered, are anonymised as described below, and I am
+      technically able to read them to investigate abuse. <strong>Never share API keys, passwords, or other secrets
+      in any chat.</strong>
+    </p>
+
+    <h3>Images</h3>
+    <p>
+      You may attach PNG or JPG images to messages. Before upload, each image is resized and re-encoded in your
+      browser (which also strips embedded metadata such as EXIF and GPS location), and then &mdash; for private rooms
+      &mdash; encrypted with the room key. Images have a size limit (a few megabytes each) and are subject to the same
+      rate limits as messages.
+    </p>
+    <p>
+      Image files are stored using Amazon Web Services (AWS) S3 in the <strong>eu-central-1 region (Frankfurt,
+      Germany, EU)</strong>. For private rooms the stored bytes are ciphertext I cannot read; for public rooms they
+      are stored as sent. Images are served only to members of the room and are deleted together with the message or
+      room they belong to (see &ldquo;Retention&rdquo;). You are responsible for the images you upload; prohibited
+      content is described in the Terms of Service.
     </p>
 
     <h3>Public Rooms &amp; Anonymity</h3>
@@ -535,31 +568,36 @@
       (for example "Silent Bandit 42") rather than their Torn name. Each account is assigned one pseudonym that
       stays the same forever and across every public room, so leaving and rejoining does not change it. Messages
       you send in public rooms are stored with your pseudonym and <strong>without your Torn ID</strong>, so other
-      members cannot identify you from the chat. As the operator I can still link a pseudonym to an account when
-      required to investigate abuse. Anonymity applies to other players, not to me.
+      members cannot identify you from the chat. To preserve this anonymity, TornManager does not expose a member
+      list for public rooms. As the operator I can still link a pseudonym to an account when required to investigate
+      abuse &mdash; anonymity applies to other players, not to me.
     </p>
 
     <h3>Retention</h3>
-    <p>
-      Chat data is short-lived by design. A private room &mdash; including all of its messages &mdash; self-destructs
-      7 days after its last member leaves; if someone rejoins in the meantime, the clock resets. Public rooms are
-      permanent, but their messages are automatically deleted once they are older than 24 hours.
-    </p>
+    <p>Chat data is short-lived by design:</p>
+    <ul>
+      <li>A <strong>private room</strong>, including all of its messages and images, self-destructs 7 days after its last member leaves. If someone rejoins in the meantime, the clock resets.</li>
+      <li><strong>Public rooms</strong> are permanent, but their messages (and any attached images) are automatically deleted once they are older than 24 hours.</li>
+      <li>When a message or room is deleted, any images attached to it are purged from S3 as part of the same cleanup.</li>
+    </ul>
 
     <h3>Local Storage (Browser)</h3>
-    <p>The chats userscript stores the following data in your browser's localStorage on the torn.com domain:</p>
+    <p>The chats userscript stores the following in your browser's localStorage on the torn.com domain:</p>
     <ul>
       <li><strong>User profile and API key</strong> (<code>tm_user</code>) &mdash; your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript.</li>
+      <li><strong>Encryption keys</strong> (<code>tm_chat_keys</code>) &mdash; the per-room end-to-end encryption keys for the private rooms you have joined. These never leave your browser.</li>
       <li><strong>Error log</strong> (<code>tm_errors</code>) &mdash; up to 50 error entries for debugging, which you can copy or clear from the userscript panel.</li>
-      <li><strong>Chat interface state</strong> (<code>tm_chat_open</code>, <code>tm_chat_seen</code>) &mdash; which chat windows are open and the last message you have seen per room, used for unread indicators.</li>
+      <li><strong>Interface state and preferences</strong> &mdash; which chat windows are open and the last message seen per room (for unread indicators), plus window positions and sizes, chat button mode, text size, and the last update check.</li>
     </ul>
 
     <h3>Backend Communication</h3>
     <p>
-      The userscript talks exclusively to tornmanager.com using <code>GM.xmlHttpRequest</code>: signing in
-      (<code>/api/session</code>) and the chat endpoints (<code>/api/chat/&hellip;</code>) for listing your rooms,
-      joining via invite token, sending messages, and fetching new messages (polled every few seconds while a chat
-      window is open). Every request includes your API key for authentication. No data is sent to any third party.
+      The userscript talks to tornmanager.com using <code>GM.xmlHttpRequest</code>: signing in
+      (<code>/api/session</code>) and the chat endpoints (<code>/api/chat/&hellip;</code>) for listing rooms,
+      joining via invite token, viewing a private room's members, sending and fetching messages, uploading and
+      downloading images, and host controls such as suspending a member. Requests are polled every few seconds while
+      a chat window is open, and every request includes your API key for authentication. No chat data is shared with
+      any third party, other than the AWS image storage described above, which acts as a processor on my behalf.
     </p>
   </section>
 

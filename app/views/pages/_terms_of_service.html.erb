@@ -170,35 +170,60 @@
   <section class="content-section">
     <h2 id="tos-chats">TornManager Chats (Browser Userscript)</h2>
     <p>
-      TornManager Chats is an upcoming companion userscript that runs on Torn.com via a userscript manager
-      (such as Tampermonkey) and lets you create chat rooms with other players — beyond the faction, company,
-      and private chats Torn provides. Chat rooms are free for every TornManager account and do not require
-      a subscription. A Torn API key with Public access level is sufficient to sign in.
+      TornManager Chats is a companion userscript that runs on Torn.com via a userscript manager (such as
+      Tampermonkey) and lets you create chat rooms &mdash; and share images &mdash; with other players, beyond the
+      faction, company, and private chats Torn provides. Chat rooms are free for every TornManager account and do
+      not require a subscription; a Torn API key with Public access level is sufficient to sign in.
     </p>
     <p>By installing and using the chats userscript, you agree to:</p>
     <ul>
       <li>Allow the userscript to display chat windows on Torn.com pages in your browser</li>
-      <li>Allow the userscript to communicate with tornmanager.com to send and receive chat messages</li>
-      <li>Allow the userscript to store authentication data and interface preferences in your browser's localStorage</li>
+      <li>Allow the userscript to communicate with tornmanager.com to send and receive chat messages and images</li>
+      <li>Allow the userscript to store authentication data, encryption keys, and interface preferences in your browser's localStorage</li>
     </ul>
     <p>
       Private rooms are joined through invite links and are end-to-end encrypted: the invite link carries the
       room's encryption key, which stays in your browser and is never sent to my server. Anyone who has a room's
-      invite link can both join the room and read its messages — treat invite links as secret and only share them
-      with people you want in the room. TornManager also hosts public rooms that anyone can join, where you appear
-      under a permanent anonymous pseudonym instead of your Torn name; public rooms are not encrypted.
+      invite link can both join the room and read its messages &mdash; treat invite links as secret and only share
+      them with people you want in the room. TornManager also hosts public rooms that anyone can join, where you
+      appear under a permanent anonymous pseudonym instead of your Torn name; public rooms are not encrypted.
+    </p>
+
+    <h3>Acceptable Use</h3>
+    <p>
+      You alone are responsible for everything you send through the chat feature, including any images you upload.
+      You must not use chat rooms to:
+    </p>
+    <ul>
+      <li>harass, threaten, defame, or abuse anyone;</li>
+      <li>share content that is illegal under applicable law &mdash; this includes, without limitation, child sexual abuse material (CSAM), which will be removed, preserved, and reported to the relevant authorities;</li>
+      <li>upload malware, run scams, or attempt to phish other users;</li>
+      <li>violate Torn's rules or Terms of Service; or</li>
+      <li>spam, flood, or otherwise disrupt the service.</li>
+    </ul>
+
+    <h3>Moderation, Suspension &amp; Bans</h3>
+    <p>
+      The host of a private room can <strong>suspend</strong> and un-suspend members of that room; a suspended
+      member keeps their membership but can no longer read or send messages there.
     </p>
     <p>
-      You are responsible for what you write. Do not use chat rooms for harassment, scams, or any content
-      that violates Torn's rules or applicable law. I may remove messages or rooms and suspend chat access
-      to deal with abuse. To keep the service healthy, message sending is rate limited, rooms have a member cap,
-      and each account can be in a limited number of rooms at a time.
+      Separately from, and in addition to, the Account Termination terms below, <strong>I reserve the right to ban
+      you &mdash; to remove your access to the chat feature, or to TornManager entirely &mdash; at my sole discretion
+      and without prior notice if you abuse the extension</strong> or break the Acceptable Use rules above. I may
+      also delete individual messages, images, or entire rooms. Where content is unlawful I may preserve it and
+      report it, together with the information needed to identify the account responsible, to law enforcement.
+    </p>
+    <p>
+      To keep the service healthy, message and image sending is rate limited, images are limited to PNG or JPG files
+      up to a few megabytes each, rooms have a member cap, and each account can be in a limited number of rooms at a
+      time.
     </p>
     <p>
       The userscript uses <code>GM.xmlHttpRequest</code> to communicate with tornmanager.com, which bypasses
       standard browser cross-origin restrictions. This is a standard capability of userscript managers and is
-      required for the userscript to function. The userscript only communicates with tornmanager.com and
-      torn.com &mdash; no other domains.
+      required for the userscript to function. The userscript communicates only with tornmanager.com and torn.com;
+      uploaded images are stored with Amazon Web Services (AWS S3, EU region) acting as a processor on my behalf.
     </p>
   </section>
 
