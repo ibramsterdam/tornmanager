@@ -19,23 +19,32 @@ export class ChatsSection {
     this.section = document.createElement("div");
     this.section.className = "tm-chats";
 
-    this.section.appendChild(this.createForm());
+    this.formEl = this.createForm();
+    this.section.appendChild(this.formEl);
 
     this.listEl = document.createElement("div");
     this.listEl.className = "tm-chats-list";
     this.section.appendChild(this.listEl);
 
-    const hint = document.createElement("p");
-    hint.className = "tm-chats-hint";
-    hint.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
-    this.section.appendChild(hint);
+    this.hintEl = document.createElement("p");
+    this.hintEl.className = "tm-chats-hint";
+    this.hintEl.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
+    this.section.appendChild(this.hintEl);
 
-    this.section.appendChild(this.createButtonControl());
-    this.section.appendChild(this.createFontControl());
+    this.buttonControlEl = this.createButtonControl();
+    this.fontControlEl = this.createFontControl();
+    this.section.appendChild(this.buttonControlEl);
+    this.section.appendChild(this.fontControlEl);
+
+    this.browseChrome = [this.formEl, this.hintEl, this.buttonControlEl, this.fontControlEl];
 
     this.refresh();
 
     return this.section;
+  }
+
+  setBrowseChrome(visible) {
+    for (const el of this.browseChrome || []) el.hidden = !visible;
   }
 
   destroy() {}
@@ -103,6 +112,7 @@ export class ChatsSection {
   }
 
   refresh() {
+    this.setBrowseChrome(true);
     this.client
       .listRooms()
       .then(({ rooms, publicRooms }) => this.renderList(rooms, publicRooms))
@@ -124,9 +134,11 @@ export class ChatsSection {
     if (publicRooms.length) {
       this.listEl.appendChild(this.sectionLabel("Public rooms"));
       this.listEl.appendChild(this.sectionNote("Anyone can join. Messages older than 24 hours are deleted."));
+      const grid = this.roomGrid();
       for (const room of publicRooms) {
-        this.listEl.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
+        grid.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
       }
+      this.listEl.appendChild(grid);
     }
 
     if (!privateRooms.length) {
@@ -141,8 +153,16 @@ export class ChatsSection {
     } else {
       this.listEl.appendChild(this.sectionLabel("Your rooms"));
       this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. A room self-destructs 7 days after everyone leaves."));
-      for (const room of privateRooms) this.listEl.appendChild(this.renderRoom(room));
+      const grid = this.roomGrid();
+      for (const room of privateRooms) grid.appendChild(this.renderRoom(room));
+      this.listEl.appendChild(grid);
     }
+  }
+
+  roomGrid() {
+    const grid = document.createElement("div");
+    grid.className = "tm-chats-grid";
+    return grid;
   }
 
   sectionLabel(text) {
@@ -229,7 +249,7 @@ export class ChatsSection {
 
   renderPublicRoom(room, joined) {
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
-    const row = this.roomRow(room.name, members, { chip: "anonymous" });
+    const row = this.roomRow(room.name, members, { chip: "anonymous", chipClass: "tm-chats-room-chip--anon" });
     row.onclick = () => this.openPublic(room);
 
     if (!joined) {
@@ -245,6 +265,7 @@ export class ChatsSection {
   // The room's roster, shown over the list with a back button. Any member can
   // view it; only the host sees suspend/unsuspend controls.
   openMembers(room) {
+    this.setBrowseChrome(false);
     this.listEl.innerHTML = "";
 
     const header = document.createElement("div");
@@ -275,21 +296,28 @@ export class ChatsSection {
 
     const list = document.createElement("div");
     list.className = "tm-members-list";
-    list.textContent = "Loading members…";
+    list.appendChild(this.membersMessage("Loading members…"));
     this.listEl.appendChild(list);
 
     this.client
       .roomMembers(room.id)
       .then((members) => this.renderMembers(room, list, members))
       .catch((err) => {
-        list.textContent = err.message || "Could not load members.";
+        list.replaceChildren(this.membersMessage(err.message || "Could not load members."));
       });
+  }
+
+  membersMessage(text) {
+    const el = document.createElement("p");
+    el.className = "tm-members-empty";
+    el.textContent = text;
+    return el;
   }
 
   renderMembers(room, list, members) {
     list.innerHTML = "";
     if (!members.length) {
-      list.textContent = "No members.";
+      list.appendChild(this.membersMessage("No members."));
       return;
     }
 
@@ -404,7 +432,9 @@ export class ChatsSection {
 
   renderRoom(room) {
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
-    const row = this.roomRow(room.name, `${members}${room.host ? " · host" : ""}`);
+    const row = room.host
+      ? this.roomRow(room.name, members, { chip: "Host", chipClass: "tm-chats-room-chip--host" })
+      : this.roomRow(room.name, members);
     row.onclick = () => this.chatDock.openRoomById(room.id);
 
     const actions = row.querySelector(".tm-chats-room-actions");
@@ -416,6 +446,15 @@ export class ChatsSection {
     if (room.host && room.invite_url) {
       actions.appendChild(
         this.iconButton(INVITE_ICON, "Copy invite link", () => this.copyInvite(room))
+      );
+    } else {
+      actions.appendChild(
+        this.iconButton(
+          INVITE_ICON,
+          "Ask the host for the invite link",
+          () => showToast("Ask the host for the invite link"),
+          "tm-chats-icon-btn--muted"
+        )
       );
     }
 
@@ -433,7 +472,7 @@ export class ChatsSection {
 
   // A compact one-line room row: click anywhere to open; small icon buttons on
   // the right handle secondary actions without stealing the row's click.
-  roomRow(name, meta, { chip } = {}) {
+  roomRow(name, meta, { chip, chipClass = "" } = {}) {
     const row = document.createElement("div");
     row.className = "tm-chats-room";
     row.setAttribute("role", "button");
@@ -452,7 +491,7 @@ export class ChatsSection {
 
     if (chip) {
       const chipEl = document.createElement("span");
-      chipEl.className = "tm-chats-room-chip";
+      chipEl.className = `tm-chats-room-chip ${chipClass}`.trim();
       chipEl.textContent = chip;
       nameLine.appendChild(chipEl);
     }

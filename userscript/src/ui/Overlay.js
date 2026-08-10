@@ -137,7 +137,7 @@ export class Overlay {
 
   renderPanel() {
     this.destroySections();
-    this.panel.classList.remove("tm-overlay-panel--war");
+    this.panel.classList.remove("tm-overlay-panel--war", "tm-overlay-panel--chats");
     this.panel.innerHTML = "";
 
     const closeBtn = document.createElement("button");
@@ -230,6 +230,7 @@ export class Overlay {
     this.destroySections();
     this.updateTabState();
     this.panel.classList.toggle("tm-overlay-panel--war", this.activeTab === "war");
+    this.panel.classList.toggle("tm-overlay-panel--chats", this.activeTab === "chats");
     this.tabContent.innerHTML = "";
 
     if (this.activeTab === "war") {

@@ -1,3 +1,7 @@
+import chatBannerSvg from "../../../assets/chat-banner.svg?raw";
+
+const BANNER_URI = `data:image/svg+xml;utf8,${encodeURIComponent(chatBannerSvg)}`;
+
 export class AuthScreen {
   constructor(auth) {
     this.auth = auth;
@@ -7,13 +11,10 @@ export class AuthScreen {
     const container = document.createElement("div");
     container.className = "tm-auth";
 
-    const title = document.createElement("h1");
-    title.className = "tm-overlay-title";
-    title.textContent = "Welcome to Tornmanager";
-
-    const subtitle = document.createElement("p");
-    subtitle.className = "tm-auth-subtitle";
-    subtitle.textContent = "Sign in with your Torn API key to get started.";
+    const banner = document.createElement("img");
+    banner.className = "tm-auth-banner";
+    banner.src = BANNER_URI;
+    banner.alt = "";
 
     const form = document.createElement("form");
     form.className = "tm-auth-form";
@@ -21,7 +22,7 @@ export class AuthScreen {
     const input = document.createElement("input");
     input.type = "text";
     input.className = "tm-auth-input";
-    input.placeholder = "Torn API key";
+    input.placeholder = "Add Public Torn API key";
     input.autocomplete = "off";
     input.spellcheck = false;
 
@@ -33,8 +34,12 @@ export class AuthScreen {
     const error = document.createElement("p");
     error.className = "tm-auth-error";
 
-    form.appendChild(input);
-    form.appendChild(button);
+    const row = document.createElement("div");
+    row.className = "tm-auth-row";
+    row.appendChild(input);
+    row.appendChild(button);
+
+    form.appendChild(row);
     form.appendChild(error);
 
     form.addEventListener("submit", async (e) => {
@@ -66,8 +71,7 @@ export class AuthScreen {
       'A key with <strong>Public</strong> access is all this extension needs — ' +
       '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">create one here</a>.';
 
-    container.appendChild(title);
-    container.appendChild(subtitle);
+    container.appendChild(banner);
     container.appendChild(form);
     container.appendChild(hint);
 

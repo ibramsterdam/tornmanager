@@ -18,6 +18,8 @@ const LIGHTBOX_ANIM_MS = 200;
 
 const IMAGE_ICON_SVG =
   '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+const PEOPLE_ICON_SVG =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
 
 let zCounter = 99991;
 
@@ -107,7 +109,7 @@ export class ChatBox {
     let dragging = false;
 
     header.addEventListener("pointerdown", (e) => {
-      if (e.target.closest(".tm-cb-action, .tm-cb-count--link")) return;
+      if (e.target.closest(".tm-cb-action, .tm-cb-members--link")) return;
 
       const rect = this.element.getBoundingClientRect();
       start = { x: e.clientX, y: e.clientY, left: rect.left, top: rect.top };
@@ -268,13 +270,17 @@ export class ChatBox {
     name.className = "tm-cb-name";
     name.textContent = this.room.name;
 
-    const count = document.createElement("span");
-    count.className = "tm-cb-count";
-    count.textContent = `· ${this.room.member_count}`;
+    const isPublic = this.room.kind === "public";
+    const count = document.createElement(isPublic ? "span" : "button");
+    count.className = "tm-cb-members";
+    count.innerHTML = `${PEOPLE_ICON_SVG}<span>${this.room.member_count}</span>`;
 
-    if (this.room.kind !== "public") {
-      count.classList.add("tm-cb-count--link");
+    if (isPublic) {
+      count.title = `${this.room.member_count} members`;
+    } else {
+      count.type = "button";
       count.title = "View members";
+      count.classList.add("tm-cb-members--link");
       count.onclick = () => this.onOpenMembers?.(this.room);
     }
 
