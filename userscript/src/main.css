@@ -249,12 +249,20 @@
   margin-top: 16px;
 }
 
+.tm-chats-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #2a2a2c;
+}
+
 .tm-chats-setting {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-top: 10px;
   font-size: 12px;
   color: #888;
 }
@@ -322,7 +330,6 @@
 .tm-prefs-font:nth-child(1) { font-size: 11px; }
 .tm-prefs-font:nth-child(2) { font-size: 13px; }
 .tm-prefs-font:nth-child(3) { font-size: 15px; }
-.tm-prefs-font:nth-child(4) { font-size: 17px; }
 
 .tm-prefs-font:hover {
   color: #fff;
@@ -978,6 +985,16 @@
     padding: 9px 10px 10px;
     font-size: 13px;
   }
+
+  .tm-chats-room {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 6px;
+  }
+
+  .tm-chats-room-actions {
+    justify-content: flex-end;
+  }
 }
 
 @keyframes tm-pulse {
@@ -997,7 +1014,7 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin-bottom: 14px;
+  margin-bottom: 10px;
 }
 
 .tm-chats-input {
@@ -1053,28 +1070,44 @@
 
 .tm-chats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
-.tm-chats-section-label {
-  margin: 10px 0 2px;
-  font-size: 10.5px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #6a6a70;
+.tm-chats-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 3px 12px;
+  margin: 18px 0 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #2a2a2c;
 }
 
-.tm-chats-section-label:first-child {
+.tm-chats-section-head:first-child {
   margin-top: 0;
 }
 
-.tm-chats-section-note {
-  margin: 0 0 6px;
+.tm-chats-section-label {
+  font-size: 12.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #e6e6ea;
+}
+
+.tm-chats-section-desc {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: 11px;
-  line-height: 1.4;
   color: #6a6a70;
+}
+
+.tm-chats-section-desc svg {
+  flex: none;
+  color: #5cb85c;
 }
 
 .tm-chats-empty {
@@ -1140,6 +1173,7 @@
 .tm-chats-room-nameline {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 6px;
   min-width: 0;
 }
@@ -1322,7 +1356,7 @@
 
 .tm-members-list {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 6px;
   font-size: 13px;
   color: #888;
@@ -1465,9 +1499,9 @@ a.tm-members-name:hover {
 }
 
 .tm-chats-hint {
-  margin: 14px 0 0;
-  font-size: 12px;
-  line-height: 1.5;
+  margin: 2px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
   color: #666;
   text-align: center;
 }

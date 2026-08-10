@@ -8,6 +8,8 @@ const LEAVE_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>';
 const MEMBERS_ICON =
   '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>';
+const LOCK_ICON =
+  '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
 
 export class ChatsSection {
   constructor(chatDock) {
@@ -19,28 +21,32 @@ export class ChatsSection {
     this.section = document.createElement("div");
     this.section.className = "tm-chats";
 
-    this.formEl = this.createForm();
-    this.section.appendChild(this.formEl);
-
     this.listEl = document.createElement("div");
     this.listEl.className = "tm-chats-list";
     this.section.appendChild(this.listEl);
 
-    this.hintEl = document.createElement("p");
-    this.hintEl.className = "tm-chats-hint";
-    this.hintEl.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
-    this.section.appendChild(this.hintEl);
+    this.settingsEl = this.createSettings();
+    this.section.appendChild(this.settingsEl);
 
-    this.buttonControlEl = this.createButtonControl();
-    this.fontControlEl = this.createFontControl();
-    this.section.appendChild(this.buttonControlEl);
-    this.section.appendChild(this.fontControlEl);
-
-    this.browseChrome = [this.formEl, this.hintEl, this.buttonControlEl, this.fontControlEl];
+    this.browseChrome = [this.settingsEl];
 
     this.refresh();
 
     return this.section;
+  }
+
+  createSettings() {
+    const wrap = document.createElement("div");
+    wrap.className = "tm-chats-settings";
+    wrap.appendChild(this.createButtonControl());
+    wrap.appendChild(this.createFontControl());
+
+    const hint = document.createElement("p");
+    hint.className = "tm-chats-hint";
+    hint.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
+    wrap.appendChild(hint);
+
+    return wrap;
   }
 
   setBrowseChrome(visible) {
@@ -132,14 +138,18 @@ export class ChatsSection {
     const privateRooms = rooms.filter((room) => room.kind !== "public");
 
     if (publicRooms.length) {
-      this.listEl.appendChild(this.sectionLabel("Public rooms"));
-      this.listEl.appendChild(this.sectionNote("Anyone can join. Messages older than 24 hours are deleted."));
+      this.listEl.appendChild(this.sectionHead("Public rooms", "Anyone can join · messages deleted after 24h"));
       const grid = this.roomGrid();
       for (const room of publicRooms) {
         grid.appendChild(this.renderPublicRoom(room, joinedIds.has(room.id)));
       }
       this.listEl.appendChild(grid);
     }
+
+    this.listEl.appendChild(
+      this.sectionHead("Your rooms", `${LOCK_ICON}<span>End-to-end encrypted</span>`)
+    );
+    this.listEl.appendChild(this.createForm());
 
     if (!privateRooms.length) {
       const empty = document.createElement("div");
@@ -151,8 +161,6 @@ export class ChatsSection {
         "Share its invite link in any chat and clicking it joins instantly. Free for everyone.</p>";
       this.listEl.appendChild(empty);
     } else {
-      this.listEl.appendChild(this.sectionLabel("Your rooms"));
-      this.listEl.appendChild(this.sectionNote("🔒 End-to-end encrypted — only people with the invite link can read them. A room self-destructs 7 days after everyone leaves."));
       const grid = this.roomGrid();
       for (const room of privateRooms) grid.appendChild(this.renderRoom(room));
       this.listEl.appendChild(grid);
@@ -165,11 +173,23 @@ export class ChatsSection {
     return grid;
   }
 
-  sectionLabel(text) {
-    const label = document.createElement("p");
-    label.className = "tm-chats-section-label";
-    label.textContent = text;
-    return label;
+  sectionHead(label, descHtml) {
+    const head = document.createElement("div");
+    head.className = "tm-chats-section-head";
+
+    const lbl = document.createElement("span");
+    lbl.className = "tm-chats-section-label";
+    lbl.textContent = label;
+    head.appendChild(lbl);
+
+    if (descHtml) {
+      const desc = document.createElement("span");
+      desc.className = "tm-chats-section-desc";
+      desc.innerHTML = descHtml;
+      head.appendChild(desc);
+    }
+
+    return head;
   }
 
   createButtonControl() {
@@ -240,12 +260,6 @@ export class ChatsSection {
     return row;
   }
 
-  sectionNote(text) {
-    const note = document.createElement("p");
-    note.className = "tm-chats-section-note";
-    note.textContent = text;
-    return note;
-  }
 
   renderPublicRoom(room, joined) {
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;

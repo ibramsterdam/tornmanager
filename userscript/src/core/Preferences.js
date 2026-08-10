@@ -1,11 +1,10 @@
 const FONT_KEY = "tm_chat_font_px";
-const DEFAULT_FONT = 12.5;
+const DEFAULT_FONT = 11;
 
 export const FONT_SIZES = [
-  { label: "S", px: 11 },
-  { label: "M", px: 12.5 },
+  { label: "S", px: 9.5 },
+  { label: "M", px: 11 },
   { label: "L", px: 14.5 },
-  { label: "XL", px: 17 },
 ];
 
 export const Preferences = {
