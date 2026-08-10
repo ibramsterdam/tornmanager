@@ -53,66 +53,14 @@ export class ChatClient {
     return this.post("/api/chat/send_message", { room_id: roomId, body }).then((data) => data.message);
   }
 
-  sendImage(roomId, blob, { body = "", filename = "image.jpg" } = {}) {
-    const apiKey = this.auth.getApiKey();
-    if (!apiKey) return Promise.reject(new Error("Not authenticated"));
-
-    const form = new FormData();
-    form.append("api_key", apiKey);
-    form.append("room_id", roomId);
-    if (body) form.append("body", body);
-    form.append("image", blob, filename);
-
-    return new Promise((resolve, reject) => {
-      GM.xmlHttpRequest({
-        method: "POST",
-        url: `${API_BASE}/api/chat/send_image`,
-        headers: { Accept: "application/json" },
-        data: form,
-        onload(response) {
-          let data = null;
-          try {
-            data = JSON.parse(response.responseText);
-          } catch {
-            reject(new Error("Invalid response from server"));
-            return;
-          }
-
-          if (response.status >= 200 && response.status < 300) {
-            resolve(data.message);
-          } else {
-            const error = new Error(data.error || "Upload failed");
-            error.status = response.status;
-            reject(error);
-          }
-        },
-        onerror() {
-          reject(new Error("Network error. Could not reach Tornmanager."));
-        },
-      });
-    });
+  sendImage(roomId, imageBase64, { body = "" } = {}) {
+    return this.post("/api/chat/send_image", { room_id: roomId, body, image_base64: imageBase64 }).then(
+      (data) => data.message
+    );
   }
 
-  fetchImageBytes(path) {
-    const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
-
-    return new Promise((resolve, reject) => {
-      GM.xmlHttpRequest({
-        method: "GET",
-        url,
-        responseType: "arraybuffer",
-        onload(response) {
-          if (response.status >= 200 && response.status < 300) {
-            resolve(new Uint8Array(response.response));
-          } else {
-            reject(new Error("Could not load image"));
-          }
-        },
-        onerror() {
-          reject(new Error("Network error loading image"));
-        },
-      });
-    });
+  fetchImage(roomId, messageId) {
+    return this.post("/api/chat/image", { room_id: roomId, message_id: messageId }).then((data) => data.data);
   }
 
   post(path, params = {}) {

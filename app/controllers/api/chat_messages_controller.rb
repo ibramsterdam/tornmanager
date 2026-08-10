@@ -25,16 +25,36 @@ module Api
     def create_image
       return if rate_limited!
 
-      unless params[:image].respond_to?(:read)
-        return render json: { error: "No image provided." }, status: :bad_request
-      end
+      bytes = uploaded_image_bytes
+      return render json: { error: "No image provided." }, status: :bad_request unless bytes
 
       message = @room.chat_messages.new(sender_attrs.merge(body: params[:body].to_s.strip))
-      message.image.attach(params[:image])
+      message.image.attach(
+        io: StringIO.new(bytes),
+        filename: @room.public? ? "image.jpg" : "image.enc",
+        content_type: @room.public? ? "image/jpeg" : "application/octet-stream"
+      )
       save_message(message)
     end
 
+    def image
+      message = @room.chat_messages.with_attached_image.find_by(id: params[:message_id])
+      return render json: { error: "Image not found." }, status: :not_found unless message&.image&.attached?
+
+      render json: { data: Base64.strict_encode64(message.image.download) }
+    end
+
     private
+
+    def uploaded_image_bytes
+      if params[:image_base64].present?
+        Base64.strict_decode64(params[:image_base64].to_s)
+      elsif params[:image].respond_to?(:read)
+        params[:image].read
+      end
+    rescue ArgumentError
+      nil
+    end
 
     def save_message(message)
       if message.save

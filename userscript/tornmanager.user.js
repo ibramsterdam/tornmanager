@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.20
+// @version      0.3.21
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -254,61 +254,13 @@ Stack: ${e.stack}` : ""}`
     sendMessage(roomId, body) {
       return this.post("/api/chat/send_message", { room_id: roomId, body }).then((data) => data.message);
     }
-    sendImage(roomId, blob, { body = "", filename = "image.jpg" } = {}) {
-      const apiKey = this.auth.getApiKey();
-      if (!apiKey) return Promise.reject(new Error("Not authenticated"));
-      const form = new FormData();
-      form.append("api_key", apiKey);
-      form.append("room_id", roomId);
-      if (body) form.append("body", body);
-      form.append("image", blob, filename);
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE}/api/chat/send_image`,
-          headers: { Accept: "application/json" },
-          data: form,
-          onload(response) {
-            let data = null;
-            try {
-              data = JSON.parse(response.responseText);
-            } catch {
-              reject(new Error("Invalid response from server"));
-              return;
-            }
-            if (response.status >= 200 && response.status < 300) {
-              resolve(data.message);
-            } else {
-              const error = new Error(data.error || "Upload failed");
-              error.status = response.status;
-              reject(error);
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
-      });
+    sendImage(roomId, imageBase64, { body = "" } = {}) {
+      return this.post("/api/chat/send_image", { room_id: roomId, body, image_base64: imageBase64 }).then(
+        (data) => data.message
+      );
     }
-    fetchImageBytes(path) {
-      const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "GET",
-          url,
-          responseType: "arraybuffer",
-          onload(response) {
-            if (response.status >= 200 && response.status < 300) {
-              resolve(new Uint8Array(response.response));
-            } else {
-              reject(new Error("Could not load image"));
-            }
-          },
-          onerror() {
-            reject(new Error("Network error loading image"));
-          }
-        });
-      });
+    fetchImage(roomId, messageId) {
+      return this.post("/api/chat/image", { room_id: roomId, message_id: messageId }).then((data) => data.data);
     }
     post(path, params = {}) {
       const apiKey = this.auth.getApiKey();
@@ -1569,7 +1521,7 @@ Stack: ${e.stack}` : ""}`
       return button;
     }
   }
-  const CURRENT = "0.3.20";
+  const CURRENT = "0.3.21";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY = "tm_version_check";
@@ -1892,7 +1844,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.20"}`;
+      version.textContent = `v${"0.3.21"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -1941,7 +1893,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.20"}`,
+        `TornManager v${"0.3.21"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -2019,6 +1971,20 @@ Stack: ${e.stack}` : ""}`
         menu.appendChild(item);
       }
     }
+  }
+  const CHUNK = 32768;
+  function bytesToBase64(bytes) {
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += CHUNK) {
+      binary += String.fromCharCode.apply(null, bytes.subarray(i, i + CHUNK));
+    }
+    return btoa(binary);
+  }
+  function base64ToBytes(b64) {
+    const binary = atob(b64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    return bytes;
   }
   const POLL_INTERVAL_MS = 3e3;
   const MAX_LENGTH = 300;
@@ -2342,25 +2308,19 @@ Stack: ${e.stack}` : ""}`
       const caption = this.input.value.trim();
       this.setUploading(true);
       try {
-        const blob = await this.processImage(file);
-        if (!blob) throw new Error("Could not read that image.");
-        let uploadBlob = blob;
+        let bytes = await this.processImage(file);
+        if (!bytes) throw new Error("Could not read that image.");
         if (this.room.encrypted) {
-          const bytes = new Uint8Array(await blob.arrayBuffer());
-          const packed = await ChatCrypto.encryptBytes(this.encKey, bytes);
-          uploadBlob = new Blob([packed], { type: "application/octet-stream" });
+          bytes = await ChatCrypto.encryptBytes(this.encKey, bytes);
         }
-        if (uploadBlob.size > MAX_UPLOAD_BYTES) {
+        if (bytes.length > MAX_UPLOAD_BYTES) {
           throw new Error("That image is too large to send.");
         }
         let bodyPayload = "";
         if (caption) {
           bodyPayload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
         }
-        await this.client.sendImage(this.room.id, uploadBlob, {
-          body: bodyPayload,
-          filename: this.room.encrypted ? "image.enc" : "image.jpg"
-        });
+        await this.client.sendImage(this.room.id, bytesToBase64(bytes), { body: bodyPayload });
         this.input.value = "";
         this.counter.textContent = "";
         this.poll();
@@ -2376,26 +2336,36 @@ Stack: ${e.stack}` : ""}`
       this.attachBtn.classList.toggle("tm-cb-attach--busy", on);
       this.attachBtn.title = on ? "Uploading…" : "Send an image";
     }
-    async processImage(file) {
-      var _a;
-      let bitmap;
-      try {
-        bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-      } catch {
-        bitmap = await createImageBitmap(file);
-      }
-      const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
-      const width = Math.max(1, Math.round(bitmap.width * scale));
-      const height = Math.max(1, Math.round(bitmap.height * scale));
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx.fillStyle = "#ffffff";
-      ctx.fillRect(0, 0, width, height);
-      ctx.drawImage(bitmap, 0, 0, width, height);
-      (_a = bitmap.close) == null ? void 0 : _a.call(bitmap);
-      return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+    processImage(file) {
+      return new Promise((resolve, reject) => {
+        const objectUrl = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(objectUrl);
+          const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+          const width = Math.max(1, Math.round(img.naturalWidth * scale));
+          const height = Math.max(1, Math.round(img.naturalHeight * scale));
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(async (blob) => {
+            if (!blob) {
+              reject(new Error("Could not read that image."));
+              return;
+            }
+            resolve(new Uint8Array(await blob.arrayBuffer()));
+          }, "image/jpeg", JPEG_QUALITY);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(objectUrl);
+          reject(new Error("Could not read that image."));
+        };
+        img.src = objectUrl;
+      });
     }
     async send() {
       const body = this.input.value.trim();
@@ -2475,7 +2445,7 @@ Stack: ${e.stack}` : ""}`
         sender.style.color = this.colorForName(message.name);
         sender.textContent = `${message.name}:`;
         row.appendChild(sender);
-        if (message.image_path) {
+        if (message.has_image) {
           const chip = document.createElement("button");
           chip.type = "button";
           chip.className = "tm-cb-image-chip";
@@ -2561,7 +2531,7 @@ Stack: ${e.stack}` : ""}`
       if (this.room.encrypted && !this.encKey) {
         throw new Error("Encrypted — rejoin via the invite link to view.");
       }
-      const raw = await this.client.fetchImageBytes(message.image_path);
+      const raw = base64ToBytes(await this.client.fetchImage(this.room.id, message.id));
       const bytes = this.room.encrypted ? await ChatCrypto.decryptBytes(this.encKey, raw) : raw;
       const url = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
       this.imageUrls[message.id] = url;

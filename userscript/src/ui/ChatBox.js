@@ -1,5 +1,6 @@
 import { copyText } from "../core/Clipboard.js";
 import { ChatCrypto } from "../core/ChatCrypto.js";
+import { bytesToBase64, base64ToBytes } from "../core/Base64.js";
 
 const POLL_INTERVAL_MS = 3000;
 const MAX_LENGTH = 300;
@@ -394,16 +395,13 @@ export class ChatBox {
     this.setUploading(true);
 
     try {
-      const blob = await this.processImage(file);
-      if (!blob) throw new Error("Could not read that image.");
+      let bytes = await this.processImage(file);
+      if (!bytes) throw new Error("Could not read that image.");
 
-      let uploadBlob = blob;
       if (this.room.encrypted) {
-        const bytes = new Uint8Array(await blob.arrayBuffer());
-        const packed = await ChatCrypto.encryptBytes(this.encKey, bytes);
-        uploadBlob = new Blob([packed], { type: "application/octet-stream" });
+        bytes = await ChatCrypto.encryptBytes(this.encKey, bytes);
       }
-      if (uploadBlob.size > MAX_UPLOAD_BYTES) {
+      if (bytes.length > MAX_UPLOAD_BYTES) {
         throw new Error("That image is too large to send.");
       }
 
@@ -412,10 +410,7 @@ export class ChatBox {
         bodyPayload = this.room.encrypted ? await ChatCrypto.encrypt(this.encKey, caption) : caption;
       }
 
-      await this.client.sendImage(this.room.id, uploadBlob, {
-        body: bodyPayload,
-        filename: this.room.encrypted ? "image.enc" : "image.jpg",
-      });
+      await this.client.sendImage(this.room.id, bytesToBase64(bytes), { body: bodyPayload });
 
       this.input.value = "";
       this.counter.textContent = "";
@@ -434,28 +429,41 @@ export class ChatBox {
     this.attachBtn.title = on ? "Uploading…" : "Send an image";
   }
 
-  async processImage(file) {
-    let bitmap;
-    try {
-      bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
-    } catch {
-      bitmap = await createImageBitmap(file);
-    }
+  processImage(file) {
+    return new Promise((resolve, reject) => {
+      const objectUrl = URL.createObjectURL(file);
+      const img = new Image();
 
-    const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(bitmap.width, bitmap.height));
-    const width = Math.max(1, Math.round(bitmap.width * scale));
-    const height = Math.max(1, Math.round(bitmap.height * scale));
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const scale = Math.min(1, MAX_IMAGE_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+        const width = Math.max(1, Math.round(img.naturalWidth * scale));
+        const height = Math.max(1, Math.round(img.naturalHeight * scale));
 
-    const canvas = document.createElement("canvas");
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, width, height);
-    ctx.drawImage(bitmap, 0, 0, width, height);
-    bitmap.close?.();
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
 
-    return new Promise((resolve) => canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY));
+        canvas.toBlob(async (blob) => {
+          if (!blob) {
+            reject(new Error("Could not read that image."));
+            return;
+          }
+          resolve(new Uint8Array(await blob.arrayBuffer()));
+        }, "image/jpeg", JPEG_QUALITY);
+      };
+
+      img.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error("Could not read that image."));
+      };
+
+      img.src = objectUrl;
+    });
   }
 
   async send() {
@@ -561,7 +569,7 @@ export class ChatBox {
       sender.textContent = `${message.name}:`;
       row.appendChild(sender);
 
-      if (message.image_path) {
+      if (message.has_image) {
         const chip = document.createElement("button");
         chip.type = "button";
         chip.className = "tm-cb-image-chip";
@@ -661,7 +669,7 @@ export class ChatBox {
       throw new Error("Encrypted — rejoin via the invite link to view.");
     }
 
-    const raw = await this.client.fetchImageBytes(message.image_path);
+    const raw = base64ToBytes(await this.client.fetchImage(this.room.id, message.id));
     const bytes = this.room.encrypted ? await ChatCrypto.decryptBytes(this.encKey, raw) : raw;
     const url = URL.createObjectURL(new Blob([bytes], { type: "image/jpeg" }));
     this.imageUrls[message.id] = url;

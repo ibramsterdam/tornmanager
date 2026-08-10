@@ -124,7 +124,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_not message["own"]
   end
 
-  test "sending an image attaches it and returns an image path" do
+  test "sending an image attaches it and flags the message as carrying one" do
     assert_difference -> { @room.chat_messages.count }, 1 do
       post api_chat_send_image_path,
         params: { api_key: @bram.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
@@ -132,8 +132,52 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
-    assert sent["image_path"].present?
+    assert sent["has_image"]
     assert @room.chat_messages.last.image.attached?
+  end
+
+  test "sending an image as base64 attaches it" do
+    payload = Base64.strict_encode64(file_fixture("sample.png").binread)
+
+    assert_difference -> { @room.chat_messages.count }, 1 do
+      post api_chat_send_image_path, params: { api_key: @bram.api_key, room_id: @room.id, image_base64: payload }, as: :json
+    end
+
+    assert_response :created
+    assert JSON.parse(response.body)["message"]["has_image"]
+  end
+
+  test "the image endpoint returns the attachment bytes as base64 to a member" do
+    original = file_fixture("sample.png").binread
+    post api_chat_send_image_path,
+      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(original) }, as: :json
+    message_id = JSON.parse(response.body)["message"]["id"]
+
+    post api_chat_image_path, params: { api_key: @bert.api_key, room_id: @room.id, message_id: message_id }, as: :json
+
+    assert_response :ok
+    assert_equal original, Base64.strict_decode64(JSON.parse(response.body)["data"])
+  end
+
+  test "a suspended member cannot download an image" do
+    post api_chat_send_image_path,
+      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, as: :json
+    message_id = JSON.parse(response.body)["message"]["id"]
+    @room.chat_suspensions.create!(user: @bert)
+
+    post api_chat_image_path, params: { api_key: @bert.api_key, room_id: @room.id, message_id: message_id }, as: :json
+
+    assert_response :forbidden
+  end
+
+  test "non-members cannot download an image" do
+    post api_chat_send_image_path,
+      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, as: :json
+    message_id = JSON.parse(response.body)["message"]["id"]
+
+    post api_chat_image_path, params: { api_key: users(:kaneki).api_key, room_id: @room.id, message_id: message_id }, as: :json
+
+    assert_response :not_found
   end
 
   test "an image can carry a caption body" do

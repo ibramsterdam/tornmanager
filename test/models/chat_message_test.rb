@@ -28,14 +28,14 @@ class ChatMessageTest < ActiveSupport::TestCase
     assert_includes message.errors[:image], "is too large"
   end
 
-  test "as_api_json exposes an image path only when an image is attached" do
+  test "as_api_json flags an attached image only when one is present" do
     text_only = @room.chat_messages.create!(body: "hi")
-    assert_nil text_only.as_api_json[:image_path]
+    assert_nil text_only.as_api_json[:has_image]
 
     with_image = @room.chat_messages.new(body: "hi")
     attach_sample(with_image)
     with_image.save!
-    assert with_image.as_api_json[:image_path].present?
+    assert with_image.as_api_json[:has_image]
   end
 
   private
