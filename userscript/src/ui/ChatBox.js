@@ -63,12 +63,31 @@ export class ChatBox {
 
     if (this.room.suspended) {
       this.showSuspended();
+    } else if (this.room.encrypted && !this.encKey) {
+      this.showLocked();
     } else {
       this.poll();
       this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
     }
 
     return this.element;
+  }
+
+  // This device is a member of the encrypted room but doesn't hold its key, so
+  // nothing here can be read or sent. Explain how to restore it rather than
+  // showing a wall of locked-message placeholders.
+  showLocked() {
+    this.list.innerHTML = "";
+    const notice = document.createElement("div");
+    notice.className = "tm-cb-locked";
+    notice.innerHTML =
+      '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' +
+      '<p class="tm-cb-locked-title">This room is locked on this device</p>' +
+      '<p class="tm-cb-locked-text">Its messages are end-to-end encrypted and this device doesn\'t have the key. ' +
+      "Open the room's invite link in this browser to unlock it — copy the link from a device where the room already works.</p>";
+    this.list.appendChild(notice);
+
+    this.composer?.remove();
   }
 
   // Replace the conversation with a removed-notice and stop polling. Triggered

@@ -431,11 +431,20 @@ export class ChatsSection {
   }
 
   renderRoom(room) {
+    const locked = room.encrypted && !ChatCrypto.getKey(room.id);
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
     const row = room.host
       ? this.roomRow(room.name, members, { chip: "Host", chipClass: "tm-chats-room-chip--host" })
       : this.roomRow(room.name, members);
     row.onclick = () => this.chatDock.openRoomById(room.id);
+
+    if (locked) {
+      const chip = document.createElement("span");
+      chip.className = "tm-chats-room-chip tm-chats-room-chip--locked";
+      chip.textContent = "Locked";
+      chip.title = "This device doesn't have this room's key. Open its invite link here to unlock.";
+      row.querySelector(".tm-chats-room-nameline").appendChild(chip);
+    }
 
     const actions = row.querySelector(".tm-chats-room-actions");
 
@@ -443,9 +452,18 @@ export class ChatsSection {
       this.iconButton(MEMBERS_ICON, "Members", () => this.openMembers(room))
     );
 
-    if (room.host && room.invite_url) {
+    if (room.host && room.invite_url && !locked) {
       actions.appendChild(
         this.iconButton(INVITE_ICON, "Copy invite link", () => this.copyInvite(room))
+      );
+    } else if (locked) {
+      actions.appendChild(
+        this.iconButton(
+          INVITE_ICON,
+          "Unlock this room on this device to copy its invite link",
+          () => showToast("Open this room's invite link on this device to unlock it"),
+          "tm-chats-icon-btn--muted"
+        )
       );
     } else {
       actions.appendChild(

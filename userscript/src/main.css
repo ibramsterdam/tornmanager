@@ -1170,6 +1170,12 @@
   border: 1px solid rgba(167, 108, 247, 0.45);
 }
 
+.tm-chats-room-chip--locked {
+  color: #f0a83c;
+  background: rgba(240, 168, 60, 0.15);
+  border: 1px solid rgba(240, 168, 60, 0.45);
+}
+
 .tm-chats-room-chip--host {
   color: #7fb3ff;
   background: rgba(0, 112, 243, 0.16);
@@ -1429,6 +1435,32 @@ a.tm-members-name:hover {
 .tm-cb-suspended p {
   margin: 0;
   font-size: 13px;
+  color: #9a9aa2;
+}
+
+.tm-cb-locked {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 100%;
+  padding: 24px;
+  text-align: center;
+  color: #f0a83c;
+}
+
+.tm-cb-locked-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #f0a83c;
+}
+
+.tm-cb-locked-text {
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
   color: #9a9aa2;
 }
 
