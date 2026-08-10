@@ -52,9 +52,9 @@ export class Overlay {
     if (this.updateChecked) return;
     this.updateChecked = true;
 
-    UpdateCheck.outdatedVersion()
-      .then((latest) => {
-        if (!latest) return;
+    UpdateCheck.status()
+      .then(({ latest, outdated }) => {
+        if (!outdated) return;
         this.latestVersion = latest;
         this.renderUpdateNotice();
       })

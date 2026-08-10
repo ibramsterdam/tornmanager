@@ -5,31 +5,31 @@ export const DOWNLOAD_URL =
   "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
 
 const CACHE_KEY = "tm_version_check";
-const CACHE_TTL_MS = 60 * 60 * 1000;
+const CACHE_TTL_MS = 10 * 60 * 1000;
 
-function isNewer(latest, current) {
-  const a = latest.split(".").map(Number);
-  const b = current.split(".").map(Number);
-  for (let i = 0; i < Math.max(a.length, b.length); i++) {
-    const diff = (a[i] || 0) - (b[i] || 0);
+function isNewer(a, b) {
+  const x = String(a).split(".").map(Number);
+  const y = String(b).split(".").map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    const diff = (x[i] || 0) - (y[i] || 0);
     if (diff !== 0) return diff > 0;
   }
   return false;
 }
 
-function cachedLatest() {
+function cachedManifest() {
   try {
     const raw = localStorage.getItem(CACHE_KEY);
     if (!raw) return null;
-    const { latest, at } = JSON.parse(raw);
-    if (!latest || Date.now() - at > CACHE_TTL_MS) return null;
-    return latest;
+    const { manifest, at } = JSON.parse(raw);
+    if (!manifest || Date.now() - at > CACHE_TTL_MS) return null;
+    return manifest;
   } catch {
     return null;
   }
 }
 
-function fetchLatest() {
+function fetchManifest() {
   return new Promise((resolve) => {
     GM.xmlHttpRequest({
       method: "GET",
@@ -37,11 +37,12 @@ function fetchLatest() {
       headers: { Accept: "application/json" },
       onload(response) {
         try {
-          const version = JSON.parse(response.responseText).version;
-          if (version) {
-            localStorage.setItem(CACHE_KEY, JSON.stringify({ latest: version, at: Date.now() }));
+          const parsed = JSON.parse(response.responseText);
+          const manifest = { version: parsed.version, minSupportedVersion: parsed.minSupportedVersion || "0.0.0" };
+          if (manifest.version) {
+            localStorage.setItem(CACHE_KEY, JSON.stringify({ manifest, at: Date.now() }));
           }
-          resolve(version || null);
+          resolve(manifest.version ? manifest : null);
         } catch {
           resolve(null);
         }
@@ -56,10 +57,18 @@ function fetchLatest() {
 export const UpdateCheck = {
   current: CURRENT,
 
-  // Resolves to the latest published version if this build is behind it,
-  // otherwise null. Never rejects — a failed check simply shows no notice.
-  async outdatedVersion() {
-    const latest = cachedLatest() || (await fetchLatest());
-    return latest && isNewer(latest, CURRENT) ? latest : null;
+  // Resolves to { latest, outdated, forced }. `outdated` means a newer version
+  // exists; `forced` means this build is below the minimum supported version
+  // and should be hard-gated. Never rejects — a failed check reports neither.
+  async status() {
+    const manifest = cachedManifest() || (await fetchManifest());
+    if (!manifest || !manifest.version) {
+      return { latest: null, outdated: false, forced: false };
+    }
+    return {
+      latest: manifest.version,
+      outdated: isNewer(manifest.version, CURRENT),
+      forced: isNewer(manifest.minSupportedVersion, CURRENT),
+    };
   },
 };

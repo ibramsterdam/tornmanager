@@ -7,6 +7,7 @@ import { Overlay } from "./ui/Overlay.js";
 import { Sidebar } from "./ui/Sidebar.js";
 import { SettingsMenuEntry } from "./ui/SettingsMenuEntry.js";
 import { ChatDock } from "./ui/ChatDock.js";
+import { UpdateGate } from "./ui/UpdateGate.js";
 
 import { Preferences } from "./core/Preferences.js";
 
@@ -56,3 +57,6 @@ sidebar.init();
 
 const settingsMenuEntry = new SettingsMenuEntry(overlay);
 settingsMenuEntry.init();
+
+const updateGate = new UpdateGate();
+updateGate.start();

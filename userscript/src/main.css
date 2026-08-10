@@ -124,6 +124,54 @@
   text-decoration: underline;
 }
 
+.tm-force-update .tm-cb,
+.tm-force-update .tm-chat-menu,
+.tm-force-update .tm-overlay-panel,
+.tm-force-update .tm-lightbox,
+.tm-force-update #tm_chat_launcher {
+  filter: blur(6px) grayscale(0.4) !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+.tm-force-update-bar {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2147483647;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  max-width: min(92vw, 580px);
+  padding: 12px 16px;
+  color: #e8eaf0;
+  background: #14161c;
+  border: 1px solid #0070f3;
+  border-radius: 10px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  font: 500 13px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.tm-force-update-bar span {
+  flex: 1;
+}
+
+.tm-force-update-link {
+  flex: none;
+  padding: 7px 14px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: #fff;
+  background: #0070f3;
+  border-radius: 7px;
+  text-decoration: none;
+}
+
+.tm-force-update-link:hover {
+  background: #0061d5;
+}
+
 .tm-overlay-title {
   margin: 0;
   font-size: 24px;
