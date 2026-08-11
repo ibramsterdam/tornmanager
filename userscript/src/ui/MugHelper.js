@@ -2,6 +2,7 @@ import { Dom } from "../core/Dom.js";
 import { MugKey } from "../core/MugKey.js";
 import { MugTargets } from "../core/MugTargets.js";
 import { parseMoney, formatMoney } from "../core/Money.js";
+import { showToast } from "../core/Clipboard.js";
 
 const OPEN_KEY = "tm_mug_helper_open";
 const POS_KEY = "tm_mug_helper_pos";
@@ -322,10 +323,20 @@ export class MugHelper {
     this.fetchPriceBtn.disabled = true;
     const label = this.fetchPriceBtn.textContent;
     this.fetchPriceBtn.textContent = "...";
+
+    // Trash the stored value up front so a failed fetch can't leave stale data behind.
+    MugTargets.clearMarketPrice(itemId);
+    this.priceInput.value = "";
+
     try {
       const value = await MugTargets.fetchMarketValue(itemId);
       MugTargets.setMarketPrice(itemId, value);
       this.priceInput.value = formatMoney(value);
+      showToast(`Fetched Torn's market value: ${formatMoney(value)}`);
+      // Any listed targets were computed against the old value.
+      if (this.targetsEl?.querySelector(".tm-mh-target, .tm-mh-summary")) {
+        this.showTargetsMessage("Market value updated. Check targets again.");
+      }
     } catch (err) {
       this.showTargetsMessage(err.message || "Could not fetch the market value.");
     } finally {
@@ -335,16 +346,30 @@ export class MugHelper {
   }
 
   async runBuyMug() {
-    const marketValue = parseMoney(this.priceInput.value);
+    let marketValue = parseMoney(this.priceInput.value);
     const budget = parseMoney(this.budgetInput.value);
 
-    if (!Number.isFinite(marketValue) || marketValue <= 0) {
-      this.showTargetsMessage("Set the item market value first, with Fetch or by typing it.");
-      return;
-    }
     if (!Number.isFinite(budget) || budget <= 0) {
       this.showTargetsMessage("Set your buy budget first.");
       return;
+    }
+
+    // An empty market value is no reason to bother the user — fetch it and go.
+    if (!Number.isFinite(marketValue) || marketValue <= 0) {
+      const itemId = MugTargets.currentItemId();
+      this.scanBtn.disabled = true;
+      this.scanBtn.textContent = "Fetching value…";
+      try {
+        marketValue = await MugTargets.fetchMarketValue(itemId);
+        MugTargets.setMarketPrice(itemId, marketValue);
+        this.priceInput.value = formatMoney(marketValue);
+      } catch (err) {
+        this.showTargetsMessage(err.message || "Could not fetch the market value.");
+        return;
+      } finally {
+        this.scanBtn.disabled = false;
+        this.scanBtn.textContent = "Check targets";
+      }
     }
 
     const sellers = MugTargets.collectSellers();

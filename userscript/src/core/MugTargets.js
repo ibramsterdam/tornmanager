@@ -94,6 +94,18 @@ export const MugTargets = {
     }
   },
 
+  clearMarketPrice(itemId) {
+    try {
+      const raw = localStorage.getItem(MARKET_PRICE_KEY);
+      const map = raw ? JSON.parse(raw) : {};
+      if (!map || typeof map !== "object" || !(itemId in map)) return;
+      delete map[itemId];
+      localStorage.setItem(MARKET_PRICE_KEY, JSON.stringify(map));
+    } catch {
+      return;
+    }
+  },
+
   async fetchMarketValue(itemId) {
     const key = MugKey.get();
     if (!key) throw new Error("Connect your Full Access key on the Mugging tab first.");

@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.41
+// @version      0.3.42
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -2526,7 +2526,7 @@ Stack: ${e.stack}` : ""}`
   function maxDate(a, b) {
     return a > b ? a : b;
   }
-  const CURRENT = "0.3.41";
+  const CURRENT = "0.3.42";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2901,7 +2901,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.41"}`;
+      version.textContent = `v${"0.3.42"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -2950,7 +2950,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.41"}`,
+        `TornManager v${"0.3.42"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -4171,6 +4171,17 @@ Stack: ${e.stack}` : ""}`
         return;
       }
     },
+    clearMarketPrice(itemId) {
+      try {
+        const raw = localStorage.getItem(MARKET_PRICE_KEY);
+        const map = raw ? JSON.parse(raw) : {};
+        if (!map || typeof map !== "object" || !(itemId in map)) return;
+        delete map[itemId];
+        localStorage.setItem(MARKET_PRICE_KEY, JSON.stringify(map));
+      } catch {
+        return;
+      }
+    },
     async fetchMarketValue(itemId) {
       var _a, _b;
       const key = MugKey.get();
@@ -4654,13 +4665,20 @@ Stack: ${e.stack}` : ""}`
       this.showTargetsMessage("Set the market value and your budget, then check for targets.");
     }
     async fetchPrice(itemId) {
+      var _a;
       this.fetchPriceBtn.disabled = true;
       const label = this.fetchPriceBtn.textContent;
       this.fetchPriceBtn.textContent = "...";
+      MugTargets.clearMarketPrice(itemId);
+      this.priceInput.value = "";
       try {
         const value = await MugTargets.fetchMarketValue(itemId);
         MugTargets.setMarketPrice(itemId, value);
         this.priceInput.value = formatMoney(value);
+        showToast(`Fetched Torn's market value: ${formatMoney(value)}`);
+        if ((_a = this.targetsEl) == null ? void 0 : _a.querySelector(".tm-mh-target, .tm-mh-summary")) {
+          this.showTargetsMessage("Market value updated. Check targets again.");
+        }
       } catch (err) {
         this.showTargetsMessage(err.message || "Could not fetch the market value.");
       } finally {
@@ -4669,15 +4687,27 @@ Stack: ${e.stack}` : ""}`
       }
     }
     async runBuyMug() {
-      const marketValue = parseMoney(this.priceInput.value);
+      let marketValue = parseMoney(this.priceInput.value);
       const budget = parseMoney(this.budgetInput.value);
-      if (!Number.isFinite(marketValue) || marketValue <= 0) {
-        this.showTargetsMessage("Set the item market value first, with Fetch or by typing it.");
-        return;
-      }
       if (!Number.isFinite(budget) || budget <= 0) {
         this.showTargetsMessage("Set your buy budget first.");
         return;
+      }
+      if (!Number.isFinite(marketValue) || marketValue <= 0) {
+        const itemId = MugTargets.currentItemId();
+        this.scanBtn.disabled = true;
+        this.scanBtn.textContent = "Fetching value…";
+        try {
+          marketValue = await MugTargets.fetchMarketValue(itemId);
+          MugTargets.setMarketPrice(itemId, marketValue);
+          this.priceInput.value = formatMoney(marketValue);
+        } catch (err) {
+          this.showTargetsMessage(err.message || "Could not fetch the market value.");
+          return;
+        } finally {
+          this.scanBtn.disabled = false;
+          this.scanBtn.textContent = "Check targets";
+        }
       }
       const sellers = MugTargets.collectSellers();
       if (!sellers.length) {
