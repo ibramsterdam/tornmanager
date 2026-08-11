@@ -3,6 +3,7 @@ import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
 import { MuggingSection } from "./MuggingSection.js";
+import { StorageViewer } from "./StorageViewer.js";
 import { copyText } from "../core/Clipboard.js";
 import { UpdateCheck, DOWNLOAD_URL } from "../core/UpdateCheck.js";
 
@@ -299,6 +300,10 @@ export class Overlay {
     this.subscriptionSection = new SubscriptionSection(this.auth, (sub) => this.setSubscription(sub));
     this.tabContent.appendChild(this.subscriptionSection.render());
 
+    const actions = document.createElement("div");
+    actions.className = "tm-settings-actions";
+    this.tabContent.appendChild(actions);
+
     const removeBtn = document.createElement("button");
     removeBtn.className = "tm-remove-key";
     removeBtn.textContent = "Remove API key";
@@ -308,7 +313,25 @@ export class Overlay {
       this.activeTab = "chats";
       this.renderPanel();
     };
-    this.tabContent.appendChild(removeBtn);
+    actions.appendChild(removeBtn);
+
+    const storageBtn = document.createElement("button");
+    storageBtn.className = "tm-remove-key tm-storage-toggle";
+    storageBtn.textContent = "View stored data";
+    actions.appendChild(storageBtn);
+
+    let viewer = null;
+    storageBtn.onclick = () => {
+      if (viewer) {
+        viewer.remove();
+        viewer = null;
+        storageBtn.textContent = "View stored data";
+        return;
+      }
+      viewer = new StorageViewer().render();
+      this.tabContent.appendChild(viewer);
+      storageBtn.textContent = "Hide stored data";
+    };
   }
 
   renderWarTab() {

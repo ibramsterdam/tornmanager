@@ -560,10 +560,9 @@ export class MugHelper {
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "tm-mh-target-remove";
-    remove.title = "Remove, not worth mugging";
+    remove.title = "Remove from this list";
     remove.textContent = "×";
     remove.onclick = () => {
-      MugTargets.dismiss(target.id);
       this.highlightSeller(target.id, false);
       item.remove();
       this.updateSummary();
