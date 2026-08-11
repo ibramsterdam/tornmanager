@@ -7,6 +7,7 @@ import { Overlay } from "./ui/Overlay.js";
 import { Sidebar } from "./ui/Sidebar.js";
 import { SettingsMenuEntry } from "./ui/SettingsMenuEntry.js";
 import { ChatDock } from "./ui/ChatDock.js";
+import { MugHelper } from "./ui/MugHelper.js";
 import { UpdateGate } from "./ui/UpdateGate.js";
 
 import { Preferences } from "./core/Preferences.js";
@@ -57,7 +58,10 @@ console.log(
   "font-size: 30px;"
 );
 
-const overlay = new Overlay(auth, api, logger, chatDock);
+const mugHelper = new MugHelper(auth);
+mugHelper.init();
+
+const overlay = new Overlay(auth, api, logger, chatDock, mugHelper);
 chatDock.overlay = overlay;
 const sidebar = new Sidebar(overlay);
 sidebar.init();

@@ -259,8 +259,7 @@
   color: #fff;
 }
 
-.tm-mugging-connect,
-.tm-mugging-welcome {
+.tm-mugging-connect {
   padding: 22px;
   background: #161618;
   border: 1px solid #2a2a2c;
@@ -336,47 +335,198 @@
   color: #e53935;
 }
 
-.tm-mugging-welcome {
-  padding: 30px 22px;
+.tm-mug-controls {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.tm-mugging-welcome-icon {
+.tm-mug-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+}
+
+.tm-mug-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8a8a92;
+}
+
+.tm-mug-input {
+  width: 100%;
+  padding: 9px 11px;
+  font-size: 13px;
+  color: #fff;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 9px;
+  outline: none;
+  box-sizing: border-box;
+  color-scheme: dark;
+}
+
+.tm-mug-input:focus {
+  border-color: #0070f3;
+}
+
+.tm-mug-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tm-mug-step {
+  flex: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  margin-bottom: 12px;
-  color: #4caf50;
-  background: rgba(76, 175, 80, 0.12);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  border-radius: 50%;
+  width: 34px;
+  height: 36px;
+  color: #fff;
+  background: #1c1c1e;
+  border: 1px solid #333;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.tm-mugging-welcome-icon svg {
-  width: 24px;
-  height: 24px;
+.tm-mug-step:hover:not(:disabled) {
+  background: #26262a;
+  border-color: #3a3a3d;
 }
 
-.tm-mugging-welcome-title {
-  margin: 0 0 6px;
+.tm-mug-step:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.tm-mug-step svg {
+  width: 16px;
+  height: 16px;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+}
+
+.tm-mug-step-value {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  background: #111;
+  border: 1px solid #2a2a2c;
+  border-radius: 9px;
+}
+
+.tm-mug-fetch {
+  flex: none;
+  padding: 10px 22px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: #0070f3;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tm-mug-fetch:hover {
+  background: #0061d5;
+}
+
+.tm-mug-fetch:disabled {
+  background: #2a2a2c;
+  color: #666;
+  cursor: default;
+}
+
+.tm-mug-caption {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: #8a8a92;
+}
+
+.tm-mug-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.tm-mug-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: #161618;
+  border: 1px solid #2a2a2c;
+  border-radius: 11px;
+}
+
+.tm-mug-stat-value {
   font-size: 22px;
   font-weight: 700;
   color: #fff;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
 }
 
-.tm-mugging-note {
-  margin: 0 auto;
-  max-width: 42ch;
+.tm-mug-stat-label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8a8a92;
+}
+
+.tm-mug-viewlog {
+  margin-top: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #4da3ff;
+  text-decoration: none;
+}
+
+.tm-mug-viewlog:hover {
+  text-decoration: underline;
+}
+
+.tm-mug-message {
+  margin: 0;
+  padding: 26px 16px;
+  text-align: center;
   font-size: 13px;
-  line-height: 1.55;
-  color: #9a9aa2;
+  color: #8a8a92;
+  background: #161618;
+  border: 1px solid #2a2a2c;
+  border-radius: 11px;
 }
 
-.tm-mugging-remove {
+.tm-mug-usage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 16px;
-  padding: 7px 16px;
-  font-size: 12.5px;
+  padding-top: 14px;
+  border-top: 1px solid #232325;
+  font-size: 12px;
+  color: #8a8a92;
+}
+
+.tm-mug-remove {
+  flex: none;
+  padding: 6px 14px;
+  font-size: 12px;
   color: #e05650;
   background: none;
   border: 1px solid #333;
@@ -385,9 +535,248 @@
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.tm-mugging-remove:hover {
+.tm-mug-remove:hover {
   background: rgba(229, 57, 53, 0.1);
   border-color: #e53935;
+}
+
+.tm-mugcalc {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #232325;
+}
+
+.tm-mugcalc-heading {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-mugcalc-intro {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #8a8a92;
+}
+
+.tm-mugcalc-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.tm-mugcalc-wide {
+  grid-column: 1 / -1;
+}
+
+.tm-mugcalc-rate {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #c7c7cd;
+}
+
+.tm-mugcalc-rate strong {
+  color: #fff;
+}
+
+.tm-mugcalc-hint {
+  margin: 0;
+  font-size: 12.5px;
+  color: #8a8a92;
+}
+
+.tm-mugcalc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.tm-mugcalc-table th {
+  padding: 8px 10px;
+  text-align: right;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8a8a92;
+  border-bottom: 1px solid #2a2a2c;
+}
+
+.tm-mugcalc-table th:first-child {
+  text-align: left;
+}
+
+.tm-mugcalc-table td {
+  padding: 10px;
+  text-align: right;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid #202022;
+}
+
+.tm-mugcalc-table td:first-child {
+  text-align: left;
+  color: #c7c7cd;
+}
+
+.tm-mugcalc-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.tm-mugcalc-note {
+  margin: 12px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: #7a7a80;
+}
+
+.tm-mug-helper-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #c7c7cd;
+  background: #161618;
+  border: 1px solid #2a2a2c;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tm-mug-helper-toggle svg {
+  width: 16px;
+  height: 16px;
+}
+
+.tm-mug-helper-toggle:hover {
+  background: #1c1c1e;
+  border-color: #3a3a3d;
+  color: #fff;
+}
+
+.tm-mug-helper-toggle--on {
+  color: #4da3ff;
+  background: rgba(0, 112, 243, 0.08);
+  border-color: rgba(0, 112, 243, 0.4);
+}
+
+.tm-mh {
+  position: fixed;
+  z-index: 99995;
+  display: flex;
+  flex-direction: column;
+  width: 300px;
+  height: 340px;
+  background: #1c1c1e;
+  border: 1px solid #333;
+  border-radius: 12px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.tm-mh-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex: none;
+  padding: 9px 8px 9px 14px;
+  background: #161618;
+  border-bottom: 1px solid #2a2a2c;
+  cursor: move;
+  user-select: none;
+}
+
+.tm-mh-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-mh-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  font-size: 19px;
+  line-height: 1;
+  color: #9a9aa2;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tm-mh-action:hover {
+  background: #26262a;
+  color: #fff;
+}
+
+.tm-mh-body {
+  flex: 1;
+  overflow: auto;
+  padding: 16px;
+}
+
+.tm-mh-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  color: #8a8a92;
+}
+
+.tm-mh-placeholder svg {
+  width: 30px;
+  height: 30px;
+  color: #4a4a50;
+  margin-bottom: 10px;
+}
+
+.tm-mh-placeholder-title {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #c7c7cd;
+}
+
+.tm-mh-placeholder-text {
+  margin: 0;
+  max-width: 32ch;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tm-mh-resize {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.tm-mh-resize::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 7px;
+  height: 7px;
+  border-right: 2px solid #555;
+  border-bottom: 2px solid #555;
 }
 
 .tm-chats-settings {
