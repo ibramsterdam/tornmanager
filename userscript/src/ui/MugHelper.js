@@ -177,7 +177,9 @@ export class MugHelper {
     this.content.innerHTML = "";
 
     if (!MugKey.get()) {
-      this.content.appendChild(this.placeholder("Connect your Full Access key on the Mugging tab to scan targets."));
+      this.content.appendChild(
+        this.placeholder("Mug targets", "Connect your Full Access key on the Mugging tab to scan targets."),
+      );
       return;
     }
 
@@ -186,22 +188,31 @@ export class MugHelper {
       return;
     }
 
-    if (MugTargets.onItemMarket() && MugTargets.currentItemId()) {
-      this.renderBuyMug();
+    if (MugTargets.onItemMarket()) {
+      if (MugTargets.currentItemId()) {
+        this.renderBuyMug();
+      } else {
+        this.content.appendChild(
+          this.placeholder(
+            "Buy & mug",
+            "Open an item to load its sellers, then check which ones are worth buying from and mugging.",
+          ),
+        );
+      }
       return;
     }
 
     this.content.appendChild(
-      this.placeholder("Open the Bazaar Directory or an Item Market item to find muggable sellers."),
+      this.placeholder("Mug targets", "Open the Bazaar Directory or an Item Market item to find muggable sellers."),
     );
   }
 
-  placeholder(text) {
+  placeholder(title, text) {
     const wrap = document.createElement("div");
     wrap.className = "tm-mh-placeholder";
     wrap.innerHTML =
       HELPER_ICON +
-      '<p class="tm-mh-placeholder-title">Bazaar targets</p>' +
+      `<p class="tm-mh-placeholder-title">${title}</p>` +
       `<p class="tm-mh-placeholder-text">${text}</p>`;
     return wrap;
   }
@@ -373,7 +384,7 @@ export class MugHelper {
         },
         onTarget: (target) => {
           found += 1;
-          list.appendChild(this.targetRow(target));
+          this.insertByProfit(list, this.targetRow(target), target.profit);
         },
       });
 
@@ -534,6 +545,19 @@ export class MugHelper {
     item.addEventListener("mouseleave", () => this.highlightSeller(target.id, false));
 
     return item;
+  }
+
+  // Targets stream in as the scan walks the page, so place each row where it
+  // belongs instead of appending — the list stays sorted by profit throughout.
+  insertByProfit(list, row, profit) {
+    row.dataset.profit = profit;
+    for (const existing of list.children) {
+      if (Number(existing.dataset.profit) < profit) {
+        list.insertBefore(row, existing);
+        return;
+      }
+    }
+    list.appendChild(row);
   }
 
   highlightSeller(id, on) {

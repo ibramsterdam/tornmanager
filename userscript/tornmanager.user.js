@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.40
+// @version      0.3.41
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -2526,7 +2526,7 @@ Stack: ${e.stack}` : ""}`
   function maxDate(a, b) {
     return a > b ? a : b;
   }
-  const CURRENT = "0.3.40";
+  const CURRENT = "0.3.41";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2901,7 +2901,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.40"}`;
+      version.textContent = `v${"0.3.41"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -2950,7 +2950,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.40"}`,
+        `TornManager v${"0.3.41"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -4535,25 +4535,36 @@ Stack: ${e.stack}` : ""}`
     renderContent() {
       this.content.innerHTML = "";
       if (!MugKey.get()) {
-        this.content.appendChild(this.placeholder("Connect your Full Access key on the Mugging tab to scan targets."));
+        this.content.appendChild(
+          this.placeholder("Mug targets", "Connect your Full Access key on the Mugging tab to scan targets.")
+        );
         return;
       }
       if (MugTargets.onBazaarDirectory()) {
         this.renderTargets();
         return;
       }
-      if (MugTargets.onItemMarket() && MugTargets.currentItemId()) {
-        this.renderBuyMug();
+      if (MugTargets.onItemMarket()) {
+        if (MugTargets.currentItemId()) {
+          this.renderBuyMug();
+        } else {
+          this.content.appendChild(
+            this.placeholder(
+              "Buy & mug",
+              "Open an item to load its sellers, then check which ones are worth buying from and mugging."
+            )
+          );
+        }
         return;
       }
       this.content.appendChild(
-        this.placeholder("Open the Bazaar Directory or an Item Market item to find muggable sellers.")
+        this.placeholder("Mug targets", "Open the Bazaar Directory or an Item Market item to find muggable sellers.")
       );
     }
-    placeholder(text) {
+    placeholder(title, text) {
       const wrap = document.createElement("div");
       wrap.className = "tm-mh-placeholder";
-      wrap.innerHTML = HELPER_ICON + `<p class="tm-mh-placeholder-title">Bazaar targets</p><p class="tm-mh-placeholder-text">${text}</p>`;
+      wrap.innerHTML = HELPER_ICON + `<p class="tm-mh-placeholder-title">${title}</p><p class="tm-mh-placeholder-text">${text}</p>`;
       return wrap;
     }
     renderTargets() {
@@ -4701,7 +4712,7 @@ Stack: ${e.stack}` : ""}`
           },
           onTarget: (target) => {
             found += 1;
-            list.appendChild(this.targetRow(target));
+            this.insertByProfit(list, this.targetRow(target), target.profit);
           }
         });
         bar.remove();
@@ -4837,6 +4848,18 @@ Stack: ${e.stack}` : ""}`
       item.addEventListener("mouseenter", () => this.highlightSeller(target.id, true));
       item.addEventListener("mouseleave", () => this.highlightSeller(target.id, false));
       return item;
+    }
+    // Targets stream in as the scan walks the page, so place each row where it
+    // belongs instead of appending — the list stays sorted by profit throughout.
+    insertByProfit(list, row, profit) {
+      row.dataset.profit = profit;
+      for (const existing of list.children) {
+        if (Number(existing.dataset.profit) < profit) {
+          list.insertBefore(row, existing);
+          return;
+        }
+      }
+      list.appendChild(row);
     }
     highlightSeller(id, on) {
       const row = this.findSellerRow(id);
