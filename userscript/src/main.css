@@ -247,8 +247,22 @@
 }
 
 .tm-tab-content .tm-sub,
-.tm-tab-content .tm-war {
+.tm-tab-content .tm-war,
+.tm-tab-content .tm-mugging {
   margin-top: 16px;
+}
+
+.tm-mugging-title {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-mugging-note {
+  margin: 0;
+  font-size: 13px;
+  color: #888;
 }
 
 .tm-chats-settings {

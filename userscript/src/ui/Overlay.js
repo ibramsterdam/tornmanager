@@ -2,8 +2,11 @@ import { AuthScreen } from "./AuthScreen.js";
 import { SubscriptionSection } from "./SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
+import { MuggingSection } from "./MuggingSection.js";
 import { copyText } from "../core/Clipboard.js";
 import { UpdateCheck, DOWNLOAD_URL } from "../core/UpdateCheck.js";
+
+const DEV_TORN_ID = 2728237;
 
 const LOCK_ICON =
   '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
@@ -22,6 +25,7 @@ export class Overlay {
     this.isOpen = false;
     this.subscriptionSection = null;
     this.warSection = null;
+    this.muggingSection = null;
     this.chatsSection = null;
     this.subscription = null;
     this.activeTab = "chats";
@@ -99,6 +103,10 @@ export class Overlay {
     if (this.warSection) {
       this.warSection.destroy();
       this.warSection = null;
+    }
+    if (this.muggingSection) {
+      this.muggingSection.destroy();
+      this.muggingSection = null;
     }
     if (this.chatsSection) {
       this.chatsSection.destroy();
@@ -182,25 +190,37 @@ export class Overlay {
     this.renderActiveTab();
   }
 
+  devTabsEnabled() {
+    return this.auth.getUser()?.torn_id === DEV_TORN_ID;
+  }
+
   createTabBar() {
     const tabs = document.createElement("div");
     tabs.className = "tm-tabs";
 
     this.chatsTab = this.createTab("Chats", "chats");
-    this.warTab = this.createTab("Ranked War", "war");
+    this.warTab = null;
+    this.warTabLock = null;
+    this.muggingTab = null;
 
-    this.warTabLock = document.createElement("span");
-    this.warTabLock.className = "tm-tab-lock";
-    this.warTabLock.innerHTML = LOCK_ICON;
-    this.warTab.appendChild(this.warTabLock);
+    tabs.appendChild(this.chatsTab);
+
+    if (this.devTabsEnabled()) {
+      this.warTab = this.createTab("Ranked War", "war");
+      this.warTabLock = document.createElement("span");
+      this.warTabLock.className = "tm-tab-lock";
+      this.warTabLock.innerHTML = LOCK_ICON;
+      this.warTab.appendChild(this.warTabLock);
+      tabs.appendChild(this.warTab);
+
+      this.muggingTab = this.createTab("Mugging", "mugging");
+      tabs.appendChild(this.muggingTab);
+    }
 
     this.settingsTab = this.createTab("", "settings");
     this.settingsTab.classList.add("tm-tab--icon");
     this.settingsTab.title = "Settings";
     this.settingsTab.innerHTML = COG_ICON;
-
-    tabs.appendChild(this.chatsTab);
-    tabs.appendChild(this.warTab);
     tabs.appendChild(this.settingsTab);
 
     return tabs;
@@ -223,6 +243,9 @@ export class Overlay {
   renderActiveTab() {
     if (!this.tabContent) return;
 
+    if ((this.activeTab === "war" || this.activeTab === "mugging") && !this.devTabsEnabled()) {
+      this.activeTab = "chats";
+    }
     if (this.activeTab === "war" && !this.subscription?.active) {
       this.activeTab = "settings";
     }
@@ -235,6 +258,8 @@ export class Overlay {
 
     if (this.activeTab === "war") {
       this.renderWarTab();
+    } else if (this.activeTab === "mugging") {
+      this.renderMuggingTab();
     } else if (this.activeTab === "chats") {
       this.renderChatsTab();
     } else {
@@ -243,17 +268,24 @@ export class Overlay {
   }
 
   updateTabState() {
-    const locked = !this.subscription?.active;
     this.settingsTab.classList.toggle("tm-tab--active", this.activeTab === "settings");
-    this.warTab.classList.toggle("tm-tab--active", this.activeTab === "war");
     this.chatsTab.classList.toggle("tm-tab--active", this.activeTab === "chats");
-    this.warTab.classList.toggle("tm-tab--locked", locked);
-    this.warTabLock.style.display = locked ? "" : "none";
 
-    if (locked) {
-      this.warTab.title = "Requires an active subscription";
-    } else {
-      this.warTab.removeAttribute("title");
+    if (this.warTab) {
+      const locked = !this.subscription?.active;
+      this.warTab.classList.toggle("tm-tab--active", this.activeTab === "war");
+      this.warTab.classList.toggle("tm-tab--locked", locked);
+      this.warTabLock.style.display = locked ? "" : "none";
+
+      if (locked) {
+        this.warTab.title = "Requires an active subscription";
+      } else {
+        this.warTab.removeAttribute("title");
+      }
+    }
+
+    if (this.muggingTab) {
+      this.muggingTab.classList.toggle("tm-tab--active", this.activeTab === "mugging");
     }
   }
 
@@ -281,6 +313,11 @@ export class Overlay {
   renderWarTab() {
     this.warSection = new WarSection(this.api);
     this.tabContent.appendChild(this.warSection.render());
+  }
+
+  renderMuggingTab() {
+    this.muggingSection = new MuggingSection(this.api);
+    this.tabContent.appendChild(this.muggingSection.render());
   }
 
   renderChatsTab() {
