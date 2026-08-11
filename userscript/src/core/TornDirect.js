@@ -1,4 +1,5 @@
-const BASE = "https://api.torn.com/v2";
+const BASE_V2 = "https://api.torn.com/v2";
+const BASE_V1 = "https://api.torn.com";
 
 export const TornDirect = {
   keyInfo(key) {
@@ -6,13 +7,21 @@ export const TornDirect = {
   },
 
   get(path, key) {
-    const separator = path.includes("?") ? "&" : "?";
-    const url = `${BASE}${path}${separator}key=${encodeURIComponent(key)}`;
+    return this.request(`${BASE_V2}${path}`, key);
+  },
+
+  getV1(path, key) {
+    return this.request(`${BASE_V1}${path}`, key);
+  },
+
+  request(url, key) {
+    const separator = url.includes("?") ? "&" : "?";
+    const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}`;
 
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
         method: "GET",
-        url,
+        url: fullUrl,
         headers: { Accept: "application/json" },
         onload(response) {
           let data = null;
