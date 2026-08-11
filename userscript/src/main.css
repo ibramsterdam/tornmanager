@@ -253,16 +253,141 @@
 }
 
 .tm-mugging-title {
-  margin: 0 0 8px;
+  margin: 0 0 14px;
   font-size: 18px;
   font-weight: 700;
   color: #fff;
 }
 
-.tm-mugging-note {
-  margin: 0;
+.tm-mugging-connect,
+.tm-mugging-welcome {
+  padding: 22px;
+  background: #161618;
+  border: 1px solid #2a2a2c;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.tm-mugging-connect-sub {
+  margin: 0 auto 16px;
+  max-width: 46ch;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: #9a9aa2;
+}
+
+.tm-mugging-connect-sub strong {
+  color: #c7c7cd;
+}
+
+.tm-mugging-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.tm-mugging-input {
+  width: 100%;
+  padding: 11px 14px;
   font-size: 13px;
-  color: #888;
+  font-family: ui-monospace, Menlo, Consolas, monospace;
+  text-align: center;
+  color: #fff;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 9px;
+  outline: none;
+  box-sizing: border-box;
+  transition: border-color 0.15s ease;
+}
+
+.tm-mugging-input:focus {
+  border-color: #0070f3;
+}
+
+.tm-mugging-save {
+  width: 100%;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: #0070f3;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tm-mugging-save:hover {
+  background: #0061d5;
+}
+
+.tm-mugging-save:disabled {
+  background: #2a2a2c;
+  color: #666;
+  cursor: default;
+}
+
+.tm-mugging-error {
+  margin: 0;
+  min-height: 15px;
+  font-size: 12.5px;
+  color: #e53935;
+}
+
+.tm-mugging-welcome {
+  padding: 30px 22px;
+}
+
+.tm-mugging-welcome-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  margin-bottom: 12px;
+  color: #4caf50;
+  background: rgba(76, 175, 80, 0.12);
+  border: 1px solid rgba(76, 175, 80, 0.3);
+  border-radius: 50%;
+}
+
+.tm-mugging-welcome-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.tm-mugging-welcome-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-mugging-note {
+  margin: 0 auto;
+  max-width: 42ch;
+  font-size: 13px;
+  line-height: 1.55;
+  color: #9a9aa2;
+}
+
+.tm-mugging-remove {
+  margin-top: 16px;
+  padding: 7px 16px;
+  font-size: 12.5px;
+  color: #e05650;
+  background: none;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tm-mugging-remove:hover {
+  background: rgba(229, 57, 53, 0.1);
+  border-color: #e53935;
 }
 
 .tm-chats-settings {
@@ -457,6 +582,82 @@
 }
 
 .tm-auth-hint a:hover {
+  text-decoration: underline;
+}
+
+.tm-tos {
+  margin-top: 4px;
+  padding: 12px 14px;
+  text-align: left;
+  background: #141416;
+  border: 1px solid #2a2a2c;
+  border-radius: 10px;
+}
+
+.tm-tos-heading {
+  margin: 0 0 8px;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #8a8a90;
+}
+
+.tm-tos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 9px 14px;
+}
+
+.tm-tos-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.tm-tos-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #6a6a70;
+}
+
+.tm-tos-value {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c7c7cd;
+}
+
+.tm-tos-agree {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  margin-top: 12px;
+  padding-top: 11px;
+  border-top: 1px solid #2a2a2c;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #9a9aa2;
+  cursor: pointer;
+}
+
+.tm-tos-checkbox {
+  flex: none;
+  margin: 1px 0 0;
+  width: 15px;
+  height: 15px;
+  accent-color: #0070f3;
+  cursor: pointer;
+}
+
+.tm-tos-agree a {
+  color: #4da3ff;
+  text-decoration: none;
+}
+
+.tm-tos-agree a:hover {
   text-decoration: underline;
 }
 
@@ -1816,6 +2017,15 @@ a.tm-members-name:hover {
 .tm-cb-action:hover {
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
+}
+
+.tm-cb-retention {
+  padding-bottom: 6px;
+  font-size: 0.8em;
+  line-height: 1.35;
+  text-align: center;
+  color: #6a6a70;
+  border-bottom: 1px solid #26262a;
 }
 
 .tm-cb-messages {

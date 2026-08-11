@@ -1,4 +1,5 @@
 import chatBannerSvg from "../../../assets/chat-banner.svg?raw";
+import { ApiDisclosure, MAIN_KEY_DISCLOSURE } from "./ApiDisclosure.js";
 
 const BANNER_URI = `data:image/svg+xml;utf8,${encodeURIComponent(chatBannerSvg)}`;
 
@@ -30,6 +31,7 @@ export class AuthScreen {
     button.type = "submit";
     button.className = "tm-auth-button";
     button.textContent = "Sign in";
+    button.disabled = true;
 
     const error = document.createElement("p");
     error.className = "tm-auth-error";
@@ -42,8 +44,15 @@ export class AuthScreen {
     form.appendChild(row);
     form.appendChild(error);
 
+    const disclosure = new ApiDisclosure(MAIN_KEY_DISCLOSURE, (agreed) => {
+      button.disabled = !agreed;
+    });
+    form.appendChild(disclosure.render());
+
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
+
+      if (!disclosure.isAgreed()) return;
 
       const apiKey = input.value.trim();
       if (!apiKey) {
@@ -68,8 +77,8 @@ export class AuthScreen {
     const hint = document.createElement("p");
     hint.className = "tm-auth-hint";
     hint.innerHTML =
-      'A key with <strong>Public</strong> access is all this extension needs — ' +
-      '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">create one here</a>.';
+      'A key with <strong>Public</strong> access is all this extension needs. ' +
+      '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
 
     container.appendChild(banner);
     container.appendChild(form);

@@ -17,7 +17,7 @@ export class SubscriptionSection {
     const note = document.createElement("p");
     note.className = "tm-sub-note";
     note.textContent =
-      "A subscription is an optional extra — it only unlocks additional features like the Ranked War tab. " +
+      "A subscription is an optional extra. It only unlocks additional features like the Ranked War tab. " +
       "Chats and the rest of the extension are free for everyone.";
     section.appendChild(note);
 

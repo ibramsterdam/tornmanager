@@ -30,7 +30,7 @@ export class UpdateGate {
     bar.className = "tm-force-update-bar";
 
     const text = document.createElement("span");
-    text.textContent = `TornManager needs updating to keep working — a required update (v${latest}) is out. You're on v${UpdateCheck.current}.`;
+    text.textContent = `TornManager needs updating to keep working. A required update (v${latest}) is out. You're on v${UpdateCheck.current}.`;
 
     const link = document.createElement("a");
     link.href = DOWNLOAD_URL;

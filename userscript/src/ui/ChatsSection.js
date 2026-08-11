@@ -43,7 +43,7 @@ export class ChatsSection {
 
     const hint = document.createElement("p");
     hint.className = "tm-chats-hint";
-    hint.textContent = "Share a room's invite link in any Torn chat — clicking it joins automatically.";
+    hint.textContent = "Share a room's invite link in any Torn chat. Clicking it joins automatically.";
     wrap.appendChild(hint);
 
     return wrap;
@@ -157,7 +157,7 @@ export class ChatsSection {
       empty.innerHTML =
         '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>' +
         '<p class="tm-chats-empty-title">Chat rooms beyond faction chat</p>' +
-        '<p class="tm-chats-empty-text">Create a room with anyone in Torn — war squads, trade partners, friends. ' +
+        '<p class="tm-chats-empty-text">Create a room with anyone in Torn: war squads, trade partners, friends. ' +
         "Share its invite link in any chat and clicking it joins instantly. Free for everyone.</p>";
       this.listEl.appendChild(empty);
     } else {
@@ -430,7 +430,7 @@ export class ChatsSection {
 
     const key = ChatCrypto.getKey(room.id);
     if (!key) {
-      showToast("Encryption key missing — rejoin via an invite link first");
+      showToast("Encryption key missing. Rejoin via an invite link first");
       return;
     }
     copyText(`${room.invite_url}~${key}`, "Invite link copied");

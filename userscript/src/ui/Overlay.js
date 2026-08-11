@@ -73,7 +73,7 @@ export class Overlay {
     notice.className = "tm-update-notice";
 
     const text = document.createElement("span");
-    text.textContent = `Update available — you're on v${UpdateCheck.current}, latest is v${this.latestVersion}.`;
+    text.textContent = `Update available. You're on v${UpdateCheck.current}, latest is v${this.latestVersion}.`;
 
     const link = document.createElement("a");
     link.href = DOWNLOAD_URL;

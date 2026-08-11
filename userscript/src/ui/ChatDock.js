@@ -42,7 +42,7 @@ export class ChatDock {
       this.fab = document.createElement("button");
       this.fab.type = "button";
       this.fab.className = "tm-chat-fab";
-      this.fab.title = "TornManager chats — drag to move";
+      this.fab.title = "TornManager chats (drag to move)";
       this.fab.innerHTML = `${TM_LOGO}<span class="tm-chat-fab-dot"></span>`;
       this.fab.style.display = "none";
 

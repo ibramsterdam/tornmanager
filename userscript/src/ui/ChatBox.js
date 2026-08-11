@@ -45,6 +45,11 @@ export class ChatBox {
 
     this.list = document.createElement("div");
     this.list.className = "tm-cb-messages";
+
+    if (!this.room.suspended && !(this.room.encrypted && !this.encKey)) {
+      this.list.appendChild(this.createRetentionNotice());
+    }
+
     this.skeleton = this.createSkeleton();
     this.list.appendChild(this.skeleton);
     this.element.appendChild(this.list);
@@ -73,6 +78,16 @@ export class ChatBox {
     return this.element;
   }
 
+  createRetentionNotice() {
+    const notice = document.createElement("div");
+    notice.className = "tm-cb-retention";
+    notice.textContent =
+      this.room.kind === "public"
+        ? `Messages older than 24 hours in ${this.room.name} are deleted.`
+        : "Messages older than 7 days are deleted.";
+    return notice;
+  }
+
   // This device is a member of the encrypted room but doesn't hold its key, so
   // nothing here can be read or sent. Explain how to restore it rather than
   // showing a wall of locked-message placeholders.
@@ -84,7 +99,7 @@ export class ChatBox {
       '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>' +
       '<p class="tm-cb-locked-title">This room is locked on this device</p>' +
       '<p class="tm-cb-locked-text">Its messages are end-to-end encrypted and this device doesn\'t have the key. ' +
-      "Open the room's invite link in this browser to unlock it — copy the link from a device where the room already works.</p>";
+      "Open the room's invite link in this browser to unlock it. Copy the link from a device where the room already works.</p>";
     this.list.appendChild(notice);
 
     this.composer?.remove();
@@ -346,7 +361,7 @@ export class ChatBox {
   copyInvite() {
     if (this.room.encrypted) {
       if (!this.encKey) {
-        this.appendSystem("Encryption key missing — rejoin via an invite link first.");
+        this.appendSystem("Encryption key missing. Rejoin via an invite link first.");
         return;
       }
       copyText(`${this.room.invite_url}~${this.encKey}`, "Invite link copied");
@@ -425,7 +440,7 @@ export class ChatBox {
     if (!file) return;
 
     if (file.type && !file.type.startsWith("image/")) {
-      this.appendTransientNotice("That's not an image — attach a JPG or PNG.");
+      this.appendTransientNotice("That's not an image. Attach a JPG or PNG.");
       return;
     }
     if (this.room.encrypted && !this.encKey) {
@@ -438,12 +453,12 @@ export class ChatBox {
       const bytes = await this.processImage(file);
       if (!bytes) throw new Error("read-failed");
       if (bytes.length > MAX_UPLOAD_BYTES) {
-        this.appendTransientNotice("That image is too large — try a smaller one.");
+        this.appendTransientNotice("That image is too large. Try a smaller one.");
         return;
       }
       this.stagePendingImage(bytes);
     } catch {
-      this.appendTransientNotice("Couldn't read that image. Try a JPG or PNG — iPhone HEIC photos aren't supported.");
+      this.appendTransientNotice("Couldn't read that image. Try a JPG or PNG. iPhone HEIC photos aren't supported.");
     } finally {
       this.setBusy(false);
     }
@@ -461,7 +476,7 @@ export class ChatBox {
 
     const label = document.createElement("span");
     label.className = "tm-cb-pending-label";
-    label.textContent = "Image attached — add a message or send";
+    label.textContent = "Image attached, add a message or send";
 
     const remove = document.createElement("button");
     remove.type = "button";
@@ -532,7 +547,7 @@ export class ChatBox {
     if (!this.pendingImage && !caption) return;
 
     if (this.room.encrypted && !this.encKey) {
-      this.appendSystem("Can't send — rejoin via the invite link to restore this room's key.");
+      this.appendSystem("Can't send. Rejoin via the invite link to restore this room's key.");
       return;
     }
 
@@ -708,7 +723,7 @@ export class ChatBox {
       return { body: "", locked: false };
     }
     if (!this.encKey) {
-      return { body: "🔒 Encrypted — rejoin via the invite link to read.", locked: true };
+      return { body: "🔒 Encrypted. Rejoin via the invite link to read.", locked: true };
     }
     try {
       return { body: await ChatCrypto.decrypt(this.encKey, message.body), locked: false };
@@ -770,7 +785,7 @@ export class ChatBox {
     if (this.imageUrls[message.id]) return this.imageUrls[message.id];
 
     if (this.room.encrypted && !this.encKey) {
-      throw new Error("Encrypted — rejoin via the invite link to view.");
+      throw new Error("Encrypted. Rejoin via the invite link to view.");
     }
 
     const raw = base64ToBytes(await this.client.fetchImage(this.room.id, message.id));
