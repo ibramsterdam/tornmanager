@@ -1,6 +1,7 @@
 import { Dom } from "../core/Dom.js";
 import { MugKey } from "../core/MugKey.js";
 import { MugTargets } from "../core/MugTargets.js";
+import { parseMoney, formatMoney } from "../core/Money.js";
 
 const OPEN_KEY = "tm_mug_helper_open";
 const POS_KEY = "tm_mug_helper_pos";
@@ -70,6 +71,11 @@ export class MugHelper {
       window.removeEventListener("resize", this.onResize);
       this.onResize = null;
     }
+    if (this.navPoll) {
+      clearInterval(this.navPoll);
+      this.navPoll = null;
+    }
+    this.clearHighlights();
     this.element?.remove();
     this.element = null;
     this.setOpenState(false);
@@ -100,6 +106,12 @@ export class MugHelper {
 
     this.onResize = () => this.clampPosition();
     window.addEventListener("resize", this.onResize);
+
+    // Torn's Item Market is a single-page app that swaps items via pushState
+    // without firing hashchange, so poll the viewed item and re-render on change.
+    this.navPoll = setInterval(() => {
+      if (MugTargets.currentItemId() !== this.lastItemId) this.renderBody();
+    }, 700);
   }
 
   createHeader() {
@@ -123,6 +135,7 @@ export class MugHelper {
   }
 
   renderBody() {
+    this.lastItemId = MugTargets.currentItemId();
     this.body.innerHTML = "";
     this.body.appendChild(this.navEl());
 
@@ -168,14 +181,19 @@ export class MugHelper {
       return;
     }
 
-    if (!MugTargets.onBazaarDirectory()) {
-      this.content.appendChild(
-        this.placeholder("Open the Bazaar Directory and this finds sellers you can mug right now."),
-      );
+    if (MugTargets.onBazaarDirectory()) {
+      this.renderTargets();
       return;
     }
 
-    this.renderTargets();
+    if (MugTargets.onItemMarket() && MugTargets.currentItemId()) {
+      this.renderBuyMug();
+      return;
+    }
+
+    this.content.appendChild(
+      this.placeholder("Open the Bazaar Directory or an Item Market item to find muggable sellers."),
+    );
   }
 
   placeholder(text) {
@@ -210,6 +228,169 @@ export class MugHelper {
       this.renderResults(last);
     } else {
       this.showTargetsMessage("Scan the page to find sellers you can mug right now.");
+    }
+  }
+
+  renderBuyMug() {
+    const itemId = MugTargets.currentItemId();
+
+    const form = document.createElement("div");
+    form.className = "tm-mh-buymug";
+
+    const itemName = document.querySelector('.sellerRow___PaRgK img[alt]')?.getAttribute("alt") || "";
+    const heading = document.createElement("div");
+    heading.className = "tm-mh-item";
+    heading.textContent = itemName ? `${itemName} (${itemId})` : `Item ${itemId}`;
+    form.appendChild(heading);
+
+    const priceField = document.createElement("label");
+    priceField.className = "tm-mh-field";
+    const priceLabel = document.createElement("span");
+    priceLabel.className = "tm-mh-field-label";
+    priceLabel.textContent = "Item market value";
+    priceField.appendChild(priceLabel);
+
+    const priceRow = document.createElement("div");
+    priceRow.className = "tm-mh-field-row";
+    this.priceInput = document.createElement("input");
+    this.priceInput.type = "text";
+    this.priceInput.className = "tm-mh-input";
+    this.priceInput.placeholder = "e.g. 13.4m";
+    const storedPrice = MugTargets.marketPrice(itemId);
+    if (storedPrice) this.priceInput.value = formatMoney(storedPrice);
+    this.priceInput.addEventListener("input", () => {
+      const value = parseMoney(this.priceInput.value);
+      if (Number.isFinite(value) && value > 0) MugTargets.setMarketPrice(itemId, value);
+    });
+
+    this.fetchPriceBtn = document.createElement("button");
+    this.fetchPriceBtn.type = "button";
+    this.fetchPriceBtn.className = "tm-mh-fetch";
+    this.fetchPriceBtn.textContent = "Fetch";
+    this.fetchPriceBtn.onclick = () => this.fetchPrice(itemId);
+
+    priceRow.append(this.priceInput, this.fetchPriceBtn);
+    priceField.appendChild(priceRow);
+
+    const budgetField = document.createElement("label");
+    budgetField.className = "tm-mh-field";
+    const budgetLabel = document.createElement("span");
+    budgetLabel.className = "tm-mh-field-label";
+    budgetLabel.textContent = "Buy budget";
+    budgetField.appendChild(budgetLabel);
+
+    this.budgetInput = document.createElement("input");
+    this.budgetInput.type = "text";
+    this.budgetInput.className = "tm-mh-input";
+    this.budgetInput.placeholder = "e.g. 500m";
+    const budget = MugTargets.buyBudget();
+    if (budget) this.budgetInput.value = formatMoney(budget);
+    this.budgetInput.addEventListener("input", () => {
+      const value = parseMoney(this.budgetInput.value);
+      MugTargets.setBuyBudget(Number.isFinite(value) ? value : 0);
+    });
+    budgetField.appendChild(this.budgetInput);
+
+    this.scanBtn = document.createElement("button");
+    this.scanBtn.type = "button";
+    this.scanBtn.className = "tm-mh-scan";
+    this.scanBtn.textContent = "Check targets";
+    this.scanBtn.onclick = () => this.runBuyMug();
+
+    form.append(priceField, budgetField, this.scanBtn);
+    this.content.appendChild(form);
+
+    this.targetsEl = document.createElement("div");
+    this.targetsEl.className = "tm-mh-targets";
+    this.content.appendChild(this.targetsEl);
+
+    this.showTargetsMessage("Set the market value and your budget, then check for targets.");
+  }
+
+  async fetchPrice(itemId) {
+    this.fetchPriceBtn.disabled = true;
+    const label = this.fetchPriceBtn.textContent;
+    this.fetchPriceBtn.textContent = "...";
+    try {
+      const value = await MugTargets.fetchMarketValue(itemId);
+      MugTargets.setMarketPrice(itemId, value);
+      this.priceInput.value = formatMoney(value);
+    } catch (err) {
+      this.showTargetsMessage(err.message || "Could not fetch the market value.");
+    } finally {
+      this.fetchPriceBtn.disabled = false;
+      this.fetchPriceBtn.textContent = label;
+    }
+  }
+
+  async runBuyMug() {
+    const marketValue = parseMoney(this.priceInput.value);
+    const budget = parseMoney(this.budgetInput.value);
+
+    if (!Number.isFinite(marketValue) || marketValue <= 0) {
+      this.showTargetsMessage("Set the item market value first, with Fetch or by typing it.");
+      return;
+    }
+    if (!Number.isFinite(budget) || budget <= 0) {
+      this.showTargetsMessage("Set your buy budget first.");
+      return;
+    }
+
+    const sellers = MugTargets.collectSellers();
+    if (!sellers.length) {
+      this.showTargetsMessage("No named sellers found on this page.");
+      return;
+    }
+
+    const mugRate = mugRateFromSettings();
+    const scannedAt = Date.now();
+
+    this.scanBtn.disabled = true;
+    this.scanBtn.textContent = "Scanning…";
+
+    this.targetsEl.innerHTML = "";
+    const bar = document.createElement("div");
+    bar.className = "tm-mh-progress";
+    const fill = document.createElement("div");
+    fill.className = "tm-mh-progress-fill";
+    bar.appendChild(fill);
+    const progressLabel = document.createElement("p");
+    progressLabel.className = "tm-mh-progress-label";
+    progressLabel.textContent = `Checking 0 / ${sellers.length}...`;
+    const list = document.createElement("div");
+    list.className = "tm-mh-list";
+    this.targetsEl.append(bar, progressLabel, list);
+
+    let found = 0;
+    try {
+      await MugTargets.scanSellers(sellers, {
+        marketValue,
+        budget,
+        mugRate,
+        onProgress: (done, total) => {
+          fill.style.width = `${Math.round((done / total) * 100)}%`;
+          progressLabel.textContent = `Checking ${done} / ${total}...`;
+        },
+        onTarget: (target) => {
+          found += 1;
+          list.appendChild(this.targetRow(target));
+        },
+      });
+
+      bar.remove();
+      progressLabel.remove();
+      this.targetsEl.insertBefore(
+        this.makeSummary((count) => `${count} profitable of ${sellers.length} sellers, ${ago(scannedAt)}`, found),
+        list,
+      );
+      if (!found) {
+        list.appendChild(message("No profitable targets here. Try a bigger budget or a different item."));
+      }
+    } catch (err) {
+      this.showTargetsMessage(err.message || "Could not check targets.");
+    } finally {
+      this.scanBtn.disabled = false;
+      this.scanBtn.textContent = "Check targets";
     }
   }
 
@@ -290,18 +471,47 @@ export class MugHelper {
     const info = document.createElement("div");
     info.className = "tm-mh-target-info";
 
-    const name = document.createElement("span");
-    name.className = "tm-mh-target-name";
-    name.textContent = target.name;
-    info.appendChild(name);
+    if (target.profit != null) {
+      const top = document.createElement("div");
+      top.className = "tm-mh-target-top";
 
-    const link = document.createElement("a");
-    link.className = "tm-mh-target-link";
-    link.href = `https://www.torn.com/bazaar.php?userId=${target.id}#/`;
-    link.target = "_blank";
-    link.rel = "noopener";
-    link.textContent = "Open bazaar";
-    info.appendChild(link);
+      const name = document.createElement("span");
+      name.className = "tm-mh-target-name";
+      name.textContent = target.name;
+
+      const profit = document.createElement("span");
+      profit.className = "tm-mh-target-profit";
+      profit.textContent = `+${formatMoney(target.profit)}`;
+
+      top.append(name, profit);
+      info.appendChild(top);
+
+      const sub = document.createElement("span");
+      sub.className = "tm-mh-target-sub";
+      sub.textContent = `Buy ${target.qty} at ${formatMoney(target.price)}`;
+      info.appendChild(sub);
+
+      const attack = document.createElement("a");
+      attack.className = "tm-mh-target-link";
+      attack.href = `https://www.torn.com/loader.php?sid=attack&user2ID=${target.id}`;
+      attack.target = "_blank";
+      attack.rel = "noopener";
+      attack.textContent = "Attack";
+      info.appendChild(attack);
+    } else {
+      const name = document.createElement("span");
+      name.className = "tm-mh-target-name";
+      name.textContent = target.name;
+      info.appendChild(name);
+
+      const link = document.createElement("a");
+      link.className = "tm-mh-target-link";
+      link.href = `https://www.torn.com/bazaar.php?userId=${target.id}#/`;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.textContent = "Open bazaar";
+      info.appendChild(link);
+    }
 
     item.appendChild(info);
 
@@ -312,32 +522,63 @@ export class MugHelper {
     remove.textContent = "×";
     remove.onclick = () => {
       MugTargets.dismiss(target.id);
+      this.highlightSeller(target.id, false);
       item.remove();
       this.updateSummary();
     };
     item.appendChild(remove);
 
+    item.addEventListener("mouseenter", () => this.highlightSeller(target.id, true));
+    item.addEventListener("mouseleave", () => this.highlightSeller(target.id, false));
+
     return item;
   }
 
+  highlightSeller(id, on) {
+    const row = this.findSellerRow(id);
+    row?.classList.toggle("tm-mh-seller-highlight", on);
+  }
+
+  findSellerRow(id) {
+    const target = String(id);
+    for (const anchor of document.querySelectorAll('a[href*="userId="], a[href*="XID="]')) {
+      const match = /(?:userId|XID)=(\d+)/.exec(anchor.getAttribute("href") || "");
+      if (match && match[1] === target) return anchor.closest("li") || anchor;
+    }
+    return null;
+  }
+
+  clearHighlights() {
+    for (const el of document.querySelectorAll(".tm-mh-seller-highlight")) {
+      el.classList.remove("tm-mh-seller-highlight");
+    }
+  }
+
   summaryEl(result) {
+    return this.makeSummary(
+      (count) => `${count} muggable of ${result.scanned} checked, ${ago(result.at)}`,
+      result.targets.length,
+    );
+  }
+
+  makeSummary(template, initialCount) {
+    this.summaryTemplate = template;
     const summary = document.createElement("p");
     summary.className = "tm-mh-summary";
-    summary.textContent = `${result.targets.length} muggable of ${result.scanned} checked, ${ago(result.at)}`;
+    summary.textContent = template(initialCount);
     this.summaryElement = summary;
-    this.summaryData = { scanned: result.scanned, at: result.at };
     return summary;
   }
 
   updateSummary() {
-    if (!this.summaryElement || !this.summaryData) return;
+    if (!this.summaryElement || !this.summaryTemplate) return;
 
     const count = this.targetsEl.querySelectorAll(".tm-mh-target").length;
-    this.summaryElement.textContent = `${count} muggable of ${this.summaryData.scanned} checked, ${ago(this.summaryData.at)}`;
+    this.summaryElement.textContent = this.summaryTemplate(count);
 
     if (count === 0 && !this.targetsEl.querySelector(".tm-mh-msg")) {
       const list = this.targetsEl.querySelector(".tm-mh-list") || this.targetsEl;
-      list.appendChild(message("No muggable targets left. Rescan to check again."));
+      list.appendChild(message("Nothing left in the list. Rescan to check again."));
     }
   }
 
@@ -510,4 +751,21 @@ function ago(ts) {
   if (mins < 60) return `${mins} minutes ago`;
   const hours = Math.floor(mins / 60);
   return hours === 1 ? "1 hour ago" : `${hours} hours ago`;
+}
+
+function mugRateFromSettings() {
+  let merits = 0;
+  let plunder = 0;
+  try {
+    const raw = localStorage.getItem("tm_mug_calc");
+    if (raw) {
+      const calc = JSON.parse(raw);
+      merits = Math.min(10, Math.max(0, Math.floor(Number(calc.merits)) || 0));
+      plunder = Math.max(0, Number(calc.plunder) || 0);
+    }
+  } catch {
+    merits = 0;
+  }
+  const modifier = 1 + (merits * 5 + plunder) / 100;
+  return 0.05 * modifier;
 }

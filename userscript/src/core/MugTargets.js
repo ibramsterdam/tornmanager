@@ -5,6 +5,8 @@ import { MugLogs } from "./MugLogs.js";
 const CACHE_KEY = "tm_mug_targets_cache";
 const SCAN_KEY = "tm_mug_targets_scan";
 const DISMISS_KEY = "tm_mug_targets_dismissed";
+const MARKET_PRICE_KEY = "tm_mug_market_prices";
+const BUDGET_KEY = "tm_mug_buy_budget";
 const CLOTHING_STORE_TYPE = 5;
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const DISMISS_TTL_MS = 12 * 60 * 60 * 1000;
@@ -28,6 +30,134 @@ export const MugTargets = {
       ids.push(match[1]);
     }
     return ids;
+  },
+
+  onItemMarket() {
+    return /[?&]sid=ItemMarket/i.test(location.href);
+  },
+
+  currentItemId() {
+    const match = /itemID=(\d+)/i.exec(location.href);
+    return match ? match[1] : null;
+  },
+
+  collectSellers() {
+    const sellers = [];
+    const seen = new Set();
+    for (const row of document.querySelectorAll(".sellerRow___PaRgK")) {
+      const link = row.querySelector('a[href*="profiles.php?XID="]');
+      const match = link && /XID=(\d+)/.exec(link.getAttribute("href") || "");
+      if (!match || seen.has(match[1])) continue;
+
+      const price = parseInt((row.querySelector(".price___cFwLC")?.textContent || "").replace(/[^0-9]/g, ""), 10);
+      const available = parseInt(
+        (row.querySelector(".available___XH9yl")?.textContent || "").replace(/[^0-9]/g, ""),
+        10,
+      );
+      if (!Number.isFinite(price) || price <= 0) continue;
+
+      seen.add(match[1]);
+      sellers.push({
+        id: match[1],
+        name: (link.getAttribute("aria-label") || "").replace(/^View profile of\s*/i, "") || `User ${match[1]}`,
+        price,
+        available: Number.isFinite(available) ? available : 1,
+      });
+    }
+    return sellers;
+  },
+
+  marketPrice(itemId) {
+    try {
+      const raw = localStorage.getItem(MARKET_PRICE_KEY);
+      const map = raw ? JSON.parse(raw) : {};
+      return map && typeof map === "object" ? map[itemId] || null : null;
+    } catch {
+      return null;
+    }
+  },
+
+  setMarketPrice(itemId, value) {
+    let map = {};
+    try {
+      const raw = localStorage.getItem(MARKET_PRICE_KEY);
+      const parsed = raw ? JSON.parse(raw) : {};
+      if (parsed && typeof parsed === "object") map = parsed;
+    } catch {
+      map = {};
+    }
+    map[itemId] = value;
+    try {
+      localStorage.setItem(MARKET_PRICE_KEY, JSON.stringify(map));
+    } catch {
+      return;
+    }
+  },
+
+  async fetchMarketValue(itemId) {
+    const key = MugKey.get();
+    if (!key) throw new Error("Connect your Full Access key on the Mugging tab first.");
+    const data = await TornDirect.get(`/market/${itemId}/itemmarket`, key);
+    MugLogs.bumpApiCalls();
+    const value = data?.itemmarket?.item?.average_price;
+    if (!value) throw new Error("Torn returned no market value for this item.");
+    return value;
+  },
+
+  buyBudget() {
+    try {
+      const raw = localStorage.getItem(BUDGET_KEY);
+      return raw ? Number(raw) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  },
+
+  setBuyBudget(value) {
+    try {
+      localStorage.setItem(BUDGET_KEY, String(value));
+    } catch {
+      return;
+    }
+  },
+
+  async scanSellers(sellers, { marketValue, budget, mugRate, force = false, onProgress, onTarget } = {}) {
+    const key = MugKey.get();
+    if (!key) throw new Error("Connect your Full Access key on the Mugging tab first.");
+
+    const limited = sellers.slice(0, MAX_TARGETS);
+    const cache = this.readCache();
+    const dismissed = this.dismissed();
+    let done = 0;
+
+    for (const seller of limited) {
+      const id = seller.id;
+      const cached = cache[id];
+      const fresh = cached && !cached.error && Date.now() - cached.at < CACHE_TTL_MS;
+
+      if (force || !fresh) {
+        try {
+          const data = await TornDirect.getV1(`/user/${id}?selections=profile`, key);
+          MugLogs.bumpApiCalls();
+          cache[id] = this.evaluate(id, data);
+        } catch {
+          cache[id] = { id, name: cached?.name || seller.name, error: true, at: Date.now() };
+        }
+        if (done < limited.length - 1) await delay(SCAN_DELAY_MS);
+      }
+
+      done += 1;
+      const profile = cache[id];
+      if (profile?.muggable && !dismissed[id]) {
+        const deal = buyMugDeal(seller, { marketValue, budget, mugRate });
+        if (deal.qty > 0 && deal.profit > 0) {
+          onTarget?.({ ...seller, ...deal });
+        }
+      }
+      onProgress?.(done, limited.length);
+    }
+
+    this.writeCache(cache);
   },
 
   async scan(ids, { force = false, onProgress, onTarget } = {}) {
@@ -175,6 +305,17 @@ export const MugTargets = {
     }
   },
 };
+
+function buyMugDeal(seller, { marketValue, budget, mugRate }) {
+  const price = seller.price;
+  const affordable = price > 0 ? Math.floor(budget / price) : 0;
+  const qty = Math.max(0, Math.min(seller.available, affordable));
+  const spend = qty * price;
+  const estMug = mugRate * spend;
+  const resale = qty * marketValue;
+  const profit = estMug + resale - spend;
+  return { qty, spend, estMug, profit };
+}
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

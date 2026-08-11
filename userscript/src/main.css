@@ -830,6 +830,80 @@
   cursor: default;
 }
 
+.tm-mh-buymug {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid #232325;
+}
+
+.tm-mh-item {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-mh-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.tm-mh-field-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #8a8a92;
+}
+
+.tm-mh-field-row {
+  display: flex;
+  gap: 8px;
+}
+
+.tm-mh-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #fff;
+  background: #111;
+  border: 1px solid #333;
+  border-radius: 8px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.tm-mh-input:focus {
+  border-color: #0070f3;
+}
+
+.tm-mh-fetch {
+  flex: none;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #c7c7cd;
+  background: #1c1c1e;
+  border: 1px solid #333;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tm-mh-fetch:hover {
+  background: #26262a;
+  color: #fff;
+}
+
+.tm-mh-fetch:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .tm-mh-targets {
   flex: 1;
   overflow: auto;
@@ -937,6 +1011,17 @@
   border-color: rgba(229, 57, 53, 0.35);
 }
 
+.tm-mh-target:hover {
+  border-color: #3a3a3d;
+}
+
+.tm-mh-seller-highlight {
+  outline: 2px solid #0070f3 !important;
+  outline-offset: -2px !important;
+  background: rgba(0, 112, 243, 0.15) !important;
+  border-radius: 4px !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tm-mh-target {
     animation: none;
@@ -950,6 +1035,26 @@
   font-size: 13px;
   font-weight: 600;
   color: #fff;
+}
+
+.tm-mh-target-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.tm-mh-target-profit {
+  flex: none;
+  font-size: 13px;
+  font-weight: 700;
+  color: #3fb950;
+  font-variant-numeric: tabular-nums;
+}
+
+.tm-mh-target-sub {
+  font-size: 11px;
+  color: #8a8a92;
 }
 
 .tm-mh-target-link {
