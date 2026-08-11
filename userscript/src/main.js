@@ -12,17 +12,6 @@ import { UpdateGate } from "./ui/UpdateGate.js";
 
 import { Preferences } from "./core/Preferences.js";
 
-const logger = new Logger();
-const auth = new Auth();
-const api = new ApiClient(auth);
-
-Preferences.applyChatFontSize();
-
-// Swap for MockChatClient (localStorage + fake teammates) to work on chat UI offline.
-const chatClient = new ChatClient(auth);
-const chatDock = new ChatDock(auth, chatClient, logger);
-chatDock.init();
-
 // Only skip errors that identifiably belong to a different userscript —
 // anything ambiguous still gets logged so we don't miss our own failures
 // on managers with other stack formats (PDA, iOS Userscripts, ...).
@@ -37,37 +26,54 @@ function opaqueCrossOriginError(e) {
   return !e.error && !e.filename && (msg === "" || msg === "Script error.");
 }
 
-window.addEventListener("error", (e) => {
-  const msg = e.error?.message || e.message || "";
-  if (msg.includes("ResizeObserver")) return;
-  if (opaqueCrossOriginError(e)) return;
-  if (fromAnotherUserscript(e.filename) || fromAnotherUserscript(e.error?.stack)) return;
-  const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
-  logger.log(e.error || msg, `uncaught (${source})`);
-});
+function boot() {
+  const logger = new Logger();
+  const auth = new Auth();
+  const api = new ApiClient(auth);
 
-window.addEventListener("unhandledrejection", (e) => {
-  if (fromAnotherUserscript(e.reason?.stack)) return;
-  logger.log(e.reason, "unhandled promise");
-});
+  Preferences.applyChatFontSize();
 
-console.log(
-  "%cTorn%cManager %cis running.",
-  "font-size: 30px; font-weight: 600; color: #42a5f5;",
-  "font-size: 30px; font-weight: 600; color: #fff;",
-  "font-size: 30px;"
-);
+  // Swap for MockChatClient (localStorage + fake teammates) to work on chat UI offline.
+  const chatClient = new ChatClient(auth);
+  const chatDock = new ChatDock(auth, chatClient, logger);
+  chatDock.init();
 
-const mugHelper = new MugHelper(auth);
-mugHelper.init();
+  window.addEventListener("error", (e) => {
+    const msg = e.error?.message || e.message || "";
+    if (msg.includes("ResizeObserver")) return;
+    if (opaqueCrossOriginError(e)) return;
+    if (fromAnotherUserscript(e.filename) || fromAnotherUserscript(e.error?.stack)) return;
+    const source = e.filename ? `${e.filename}:${e.lineno}` : "unknown source";
+    logger.log(e.error || msg, `uncaught (${source})`);
+  });
 
-const overlay = new Overlay(auth, api, logger, chatDock, mugHelper);
-chatDock.overlay = overlay;
-const sidebar = new Sidebar(overlay);
-sidebar.init();
+  window.addEventListener("unhandledrejection", (e) => {
+    if (fromAnotherUserscript(e.reason?.stack)) return;
+    logger.log(e.reason, "unhandled promise");
+  });
 
-const settingsMenuEntry = new SettingsMenuEntry(overlay);
-settingsMenuEntry.init();
+  console.log(
+    "%cTorn%cManager %cis running.",
+    "font-size: 30px; font-weight: 600; color: #42a5f5;",
+    "font-size: 30px; font-weight: 600; color: #fff;",
+    "font-size: 30px;"
+  );
 
-const updateGate = new UpdateGate();
-updateGate.start();
+  const mugHelper = new MugHelper(auth);
+  mugHelper.init();
+
+  const overlay = new Overlay(auth, api, logger, chatDock, mugHelper);
+  chatDock.overlay = overlay;
+  const sidebar = new Sidebar(overlay);
+  sidebar.init();
+
+  const settingsMenuEntry = new SettingsMenuEntry(overlay);
+  settingsMenuEntry.init();
+
+  const updateGate = new UpdateGate();
+  updateGate.start();
+}
+
+// Runtime twin of @noframes for managers that ignore it (Torn PDA and co.):
+// running inside Torn's own iframes would mount duplicate UI like the mug helper.
+if (window.self === window.top) boot();

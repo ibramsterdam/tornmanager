@@ -481,14 +481,16 @@ export class MugHelper {
 
       const profit = document.createElement("span");
       profit.className = "tm-mh-target-profit";
-      profit.textContent = `+${formatMoney(target.profit)}`;
+      profit.title = "Estimated net profit: mug + resale at market value − what you pay";
+      profit.textContent = `est profit +${formatMoney(target.profit)}`;
 
       top.append(name, profit);
       info.appendChild(top);
 
       const sub = document.createElement("span");
       sub.className = "tm-mh-target-sub";
-      sub.textContent = `Buy ${target.qty} at ${formatMoney(target.price)}`;
+      sub.title = "The mug estimate only counts the cash you hand the seller — anything they already hold is extra.";
+      sub.textContent = `Buy ${target.qty} at ${formatMoney(target.price)} · est mug ${formatMoney(target.estMug)}`;
       info.appendChild(sub);
 
       const attack = document.createElement("a");

@@ -29,6 +29,7 @@ export default defineConfig({
         icon: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230070f3'/%3E%3Ctext x='32' y='43' text-anchor='middle' font-family='Arial,Helvetica,sans-serif' font-weight='900' font-size='30' fill='white'%3ETM%3C/text%3E%3C/svg%3E",
         description: pkg.description,
         match: ["https://www.torn.com/*"],
+        noframes: true,
         license: "All rights reserved",
         ...(isDev ? {} : { downloadURL: RELEASE_URL, updateURL: RELEASE_URL }),
         grant: ["GM.xmlHttpRequest", "GM.notification"],
