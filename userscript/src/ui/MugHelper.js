@@ -345,7 +345,7 @@ export class MugHelper {
     }
   }
 
-  async runBuyMug() {
+  async runBuyMug(force = false) {
     let marketValue = parseMoney(this.priceInput.value);
     const budget = parseMoney(this.budgetInput.value);
 
@@ -403,6 +403,7 @@ export class MugHelper {
         marketValue,
         budget,
         mugRate,
+        force,
         onProgress: (done, total) => {
           fill.style.width = `${Math.round((done / total) * 100)}%`;
           progressLabel.textContent = `Checking ${done} / ${total}...`;
@@ -425,8 +426,11 @@ export class MugHelper {
     } catch (err) {
       this.showTargetsMessage(err.message || "Could not check targets.");
     } finally {
+      // Like the bazaar Rescan: later runs bypass the profile cache so
+      // hospital timers and cash statuses are checked fresh.
       this.scanBtn.disabled = false;
-      this.scanBtn.textContent = "Check targets";
+      this.scanBtn.onclick = () => this.runBuyMug(true);
+      this.scanBtn.textContent = "Recheck targets";
     }
   }
 

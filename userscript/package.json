@@ -1,6 +1,6 @@
 {
   "name": "tornmanager-userscript",
-  "version": "0.3.42",
+  "version": "0.3.43",
   "minSupportedVersion": "0.0.0",
   "description": "Torn Manager userscript",
   "private": true,

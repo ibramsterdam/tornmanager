@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.42
+// @version      0.3.43
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -2526,7 +2526,7 @@ Stack: ${e.stack}` : ""}`
   function maxDate(a, b) {
     return a > b ? a : b;
   }
-  const CURRENT = "0.3.42";
+  const CURRENT = "0.3.43";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2901,7 +2901,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.42"}`;
+      version.textContent = `v${"0.3.43"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -2950,7 +2950,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.42"}`,
+        `TornManager v${"0.3.43"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -4686,7 +4686,7 @@ Stack: ${e.stack}` : ""}`
         this.fetchPriceBtn.textContent = label;
       }
     }
-    async runBuyMug() {
+    async runBuyMug(force = false) {
       let marketValue = parseMoney(this.priceInput.value);
       const budget = parseMoney(this.budgetInput.value);
       if (!Number.isFinite(budget) || budget <= 0) {
@@ -4736,6 +4736,7 @@ Stack: ${e.stack}` : ""}`
           marketValue,
           budget,
           mugRate,
+          force,
           onProgress: (done, total) => {
             fill.style.width = `${Math.round(done / total * 100)}%`;
             progressLabel.textContent = `Checking ${done} / ${total}...`;
@@ -4758,7 +4759,8 @@ Stack: ${e.stack}` : ""}`
         this.showTargetsMessage(err.message || "Could not check targets.");
       } finally {
         this.scanBtn.disabled = false;
-        this.scanBtn.textContent = "Check targets";
+        this.scanBtn.onclick = () => this.runBuyMug(true);
+        this.scanBtn.textContent = "Recheck targets";
       }
     }
     async runScan(force) {
