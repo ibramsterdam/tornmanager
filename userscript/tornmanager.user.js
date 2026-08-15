@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager
 // @namespace    tornmanager
-// @version      0.3.47
+// @version      0.3.48
 // @author       Bram [2728237]
 // @description  Torn Manager userscript
 // @license      All rights reserved
@@ -290,6 +290,7 @@ Stack: ${e.stack}` : ""}`
             } else {
               const error = new Error(data.error || "Chat request failed");
               error.status = response.status;
+              if (data.suspended) error.suspended = true;
               reject(error);
             }
           },
@@ -1528,7 +1529,12 @@ Stack: ${e.stack}` : ""}`
     }
     refresh() {
       this.setBrowseChrome(true);
-      this.client.listRooms().then(({ rooms, publicRooms }) => this.renderList(rooms, publicRooms)).catch(() => {
+      this.client.listRooms().then(({ rooms, publicRooms }) => this.renderList(rooms, publicRooms)).catch((err) => {
+        var _a;
+        if (err.suspended) {
+          (_a = this.chatDock.overlay) == null ? void 0 : _a.markSuspended(err.message);
+          return;
+        }
         this.listEl.innerHTML = "";
         const error = document.createElement("p");
         error.className = "tm-chats-empty";
@@ -2625,7 +2631,7 @@ Stack: ${e.stack}` : ""}`
     if (chars < 1024) return `${chars} B`;
     return `${(chars / 1024).toFixed(1)} KB`;
   }
-  const CURRENT = "0.3.47";
+  const CURRENT = "0.3.48";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2800,6 +2806,9 @@ Stack: ${e.stack}` : ""}`
       return backdrop;
     }
     renderPanel() {
+      if (this.suspendedMessage && this.auth.isAuthenticated()) {
+        return this.renderSuspendedPanel(this.suspendedMessage);
+      }
       this.destroySections();
       this.panel.classList.remove("tm-overlay-panel--war", "tm-overlay-panel--chats");
       this.panel.innerHTML = "";
@@ -2827,13 +2836,18 @@ Stack: ${e.stack}` : ""}`
       this.panel.appendChild(this.tabContent);
       if (this.subscription === null) {
         this.auth.fetchSubscription().then((sub) => this.setSubscription(sub)).catch((err) => {
-          if (err.suspended) this.renderSuspendedPanel(err.message);
+          if (err.suspended) this.markSuspended(err.message);
         });
       }
       this.renderActiveTab();
     }
+    markSuspended(message2) {
+      this.suspendedMessage = message2;
+      if (this.isOpen) this.renderSuspendedPanel(message2);
+    }
     renderSuspendedPanel(message2) {
       this.destroySections();
+      this.panel.classList.remove("tm-overlay-panel--war", "tm-overlay-panel--chats");
       this.panel.innerHTML = "";
       const closeBtn = document.createElement("button");
       closeBtn.className = "tm-overlay-close";
@@ -3038,7 +3052,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.3.47"}`;
+      version.textContent = `v${"0.3.48"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -3087,7 +3101,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.3.47"}`,
+        `TornManager v${"0.3.48"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -4160,7 +4174,14 @@ Stack: ${e.stack}` : ""}`
         this.rooms = rooms;
         this.renderMenu();
         this.syncBoxes();
-      }).catch((err) => this.logger.log(err, "chat rooms list"));
+      }).catch((err) => {
+        var _a;
+        if (err.suspended) {
+          (_a = this.overlay) == null ? void 0 : _a.markSuspended(err.message);
+          return;
+        }
+        this.logger.log(err, "chat rooms list");
+      });
     }
     renderMenu() {
       if (!this.menu) return;

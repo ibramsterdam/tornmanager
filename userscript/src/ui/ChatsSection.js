@@ -122,7 +122,11 @@ export class ChatsSection {
     this.client
       .listRooms()
       .then(({ rooms, publicRooms }) => this.renderList(rooms, publicRooms))
-      .catch(() => {
+      .catch((err) => {
+        if (err.suspended) {
+          this.chatDock.overlay?.markSuspended(err.message);
+          return;
+        }
         this.listEl.innerHTML = "";
         const error = document.createElement("p");
         error.className = "tm-chats-empty";

@@ -275,7 +275,13 @@ export class ChatDock {
         this.renderMenu();
         this.syncBoxes();
       })
-      .catch((err) => this.logger.log(err, "chat rooms list"));
+      .catch((err) => {
+        if (err.suspended) {
+          this.overlay?.markSuspended(err.message);
+          return;
+        }
+        this.logger.log(err, "chat rooms list");
+      });
   }
 
   renderMenu() {

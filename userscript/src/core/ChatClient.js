@@ -90,6 +90,7 @@ export class ChatClient {
           } else {
             const error = new Error(data.error || "Chat request failed");
             error.status = response.status;
+            if (data.suspended) error.suspended = true;
             reject(error);
           }
         },

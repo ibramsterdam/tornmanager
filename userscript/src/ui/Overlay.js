@@ -146,6 +146,10 @@ export class Overlay {
   }
 
   renderPanel() {
+    if (this.suspendedMessage && this.auth.isAuthenticated()) {
+      return this.renderSuspendedPanel(this.suspendedMessage);
+    }
+
     this.destroySections();
     this.panel.classList.remove("tm-overlay-panel--war", "tm-overlay-panel--chats");
     this.panel.innerHTML = "";
@@ -187,15 +191,21 @@ export class Overlay {
         .fetchSubscription()
         .then((sub) => this.setSubscription(sub))
         .catch((err) => {
-          if (err.suspended) this.renderSuspendedPanel(err.message);
+          if (err.suspended) this.markSuspended(err.message);
         });
     }
 
     this.renderActiveTab();
   }
 
+  markSuspended(message) {
+    this.suspendedMessage = message;
+    if (this.isOpen) this.renderSuspendedPanel(message);
+  }
+
   renderSuspendedPanel(message) {
     this.destroySections();
+    this.panel.classList.remove("tm-overlay-panel--war", "tm-overlay-panel--chats");
     this.panel.innerHTML = "";
 
     const closeBtn = document.createElement("button");
