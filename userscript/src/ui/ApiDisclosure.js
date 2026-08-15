@@ -1,5 +1,5 @@
-const PRIVACY_URL = "https://tornmanager.com/legal#privacy-policy";
-const TOS_URL = "https://tornmanager.com/legal#terms-of-service";
+const PRIVACY_URL = "https://tornmanager.com/legal#userscript-privacy-policy";
+const TOS_URL = "https://tornmanager.com/legal#userscript-terms-of-service";
 
 const LINKS =
   `<a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy Policy</a> and ` +
@@ -17,7 +17,9 @@ export const MAIN_KEY_DISCLOSURE = {
 export const MUG_KEY_DISCLOSURE = {
   storage: "Read live from Torn, nothing is stored on a server",
   sharing: "Nobody. The key never leaves your device",
-  purpose: "Reading your attack mug logs",
+  purpose:
+    "Reading your attack mug logs, and checking the public status of sellers on Bazaar and Item Market pages " +
+    "to find mug targets (competitive advantage)",
   keyStorage: "Stored only in this browser; never sent to TornManager",
   access: "Full Access (required)",
   agreeHtml: `I agree to the ${LINKS}.`,

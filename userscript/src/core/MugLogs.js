@@ -63,7 +63,12 @@ export const MugLogs = {
     let to = endTs;
 
     for (let page = 0; page < MAX_PAGES; page++) {
-      const data = await TornDirect.get(`/user/log?log=${MUG_LOG_TYPE}&limit=${PAGE_LIMIT}&to=${to}`, key);
+      let data;
+      try {
+        data = await TornDirect.get(`/user/log?log=${MUG_LOG_TYPE}&limit=${PAGE_LIMIT}&to=${to}`, key);
+      } catch (err) {
+        throw MugKey.invalidKeyError(err) || err;
+      }
       this.bumpApiCalls();
 
       const entries = Array.isArray(data.log) ? data.log : [];

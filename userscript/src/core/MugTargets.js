@@ -107,7 +107,12 @@ export const MugTargets = {
   async fetchMarketValue(itemId) {
     const key = MugKey.get();
     if (!key) throw new Error("Connect your Full Access key on the Mugging tab first.");
-    const data = await TornDirect.get(`/market/${itemId}/itemmarket`, key);
+    let data;
+    try {
+      data = await TornDirect.get(`/market/${itemId}/itemmarket`, key);
+    } catch (err) {
+      throw MugKey.invalidKeyError(err) || err;
+    }
     MugLogs.bumpApiCalls();
     const value = data?.itemmarket?.item?.average_price;
     if (!value) throw new Error("Torn returned no market value for this item.");
@@ -149,7 +154,9 @@ export const MugTargets = {
           const data = await TornDirect.getV1(`/user/${id}?selections=profile`, key);
           MugLogs.bumpApiCalls();
           cache[id] = this.evaluate(id, data);
-        } catch {
+        } catch (err) {
+          const dead = MugKey.invalidKeyError(err);
+          if (dead) throw dead;
           cache[id] = { id, name: cached?.name || seller.name, error: true, at: Date.now() };
         }
         if (done < limited.length - 1) await delay(SCAN_DELAY_MS);
@@ -186,7 +193,9 @@ export const MugTargets = {
           const data = await TornDirect.getV1(`/user/${id}?selections=profile`, key);
           MugLogs.bumpApiCalls();
           cache[id] = this.evaluate(id, data);
-        } catch {
+        } catch (err) {
+          const dead = MugKey.invalidKeyError(err);
+          if (dead) throw dead;
           cache[id] = { id, name: cached?.name || `User ${id}`, error: true, at: Date.now() };
         }
         if (done < limited.length - 1) await delay(SCAN_DELAY_MS);

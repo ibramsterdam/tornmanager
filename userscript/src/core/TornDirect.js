@@ -16,7 +16,7 @@ export const TornDirect = {
 
   request(url, key) {
     const separator = url.includes("?") ? "&" : "?";
-    const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}`;
+    const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}&comment=tmanager`;
 
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
@@ -33,7 +33,9 @@ export const TornDirect = {
           }
 
           if (data && data.error) {
-            reject(new Error(data.error.error || "Torn API error."));
+            const err = new Error(data.error.error || "Torn API error.");
+            err.code = data.error.code;
+            reject(err);
             return;
           }
 
