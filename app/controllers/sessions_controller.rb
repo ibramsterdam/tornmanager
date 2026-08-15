@@ -20,7 +20,7 @@ class SessionsController < ApplicationController
       user = User.find_by(torn_id: profile.id) || User.new
 
       if user.persisted? && user.banned?
-        return redirect_to new_session_path, alert: "Your access to TornManager has been suspended."
+        return redirect_to new_session_path, alert: user.ban_message
       end
 
       user.assign_attributes(

@@ -1,8 +1,8 @@
 module Bannable
   extend ActiveSupport::Concern
 
-  # A ban with no duration effectively never expires.
   PERMANENT = 1000.years
+  PERMANENT_THRESHOLD = 100.years
 
   included do
     scope :banned, -> { where(banned_until: Time.current..) }
@@ -13,13 +13,26 @@ module Bannable
     banned_until.present? && banned_until.future?
   end
 
-  # user.ban!            -> permanent
-  # user.ban!(24.hours)  -> temporary, auto-lifts when it expires
-  def ban!(duration = PERMANENT)
-    update!(banned_until: duration.from_now)
+  def ban!(until_time = PERMANENT, reason: nil)
+    until_time = until_time.from_now if until_time.is_a?(ActiveSupport::Duration)
+    update!(banned_until: until_time, banned_reason: reason)
   end
 
   def unban!
-    update!(banned_until: nil)
+    update!(banned_until: nil, banned_reason: nil)
+  end
+
+  def permanently_banned?
+    banned? && banned_until.after?(PERMANENT_THRESHOLD.from_now)
+  end
+
+  def ban_message
+    message = if permanently_banned?
+      "Your access to TornManager has been suspended."
+    else
+      "Your access to TornManager has been suspended until #{banned_until.utc.strftime("%-d %B %Y")}."
+    end
+    message = "#{message} Reason: #{banned_reason}." if banned_reason.present?
+    message
   end
 end

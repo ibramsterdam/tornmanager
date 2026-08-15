@@ -3219,6 +3219,31 @@ a.tm-cb-sender:hover {
   overflow-y: auto;
 }
 
+.tm-suspended {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #e05650;
+}
+
+.tm-suspended-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-suspended-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b9b9c0;
+  max-width: 380px;
+}
+
 .tm-remove-key {
   display: block;
   margin: 24px auto 0;

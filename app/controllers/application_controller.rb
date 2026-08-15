@@ -12,7 +12,8 @@ class ApplicationController < ActionController::Base
   def reject_banned_user
     return unless Current.user&.banned?
 
+    message = Current.user.ban_message
     terminate_session
-    redirect_to new_session_path, alert: "Your access to TornManager has been suspended."
+    redirect_to new_session_path, alert: message
   end
 end

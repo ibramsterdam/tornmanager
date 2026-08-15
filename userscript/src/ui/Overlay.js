@@ -186,10 +186,37 @@ export class Overlay {
       this.auth
         .fetchSubscription()
         .then((sub) => this.setSubscription(sub))
-        .catch(() => {});
+        .catch((err) => {
+          if (err.suspended) this.renderSuspendedPanel(err.message);
+        });
     }
 
     this.renderActiveTab();
+  }
+
+  renderSuspendedPanel(message) {
+    this.destroySections();
+    this.panel.innerHTML = "";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "tm-overlay-close";
+    closeBtn.textContent = "×";
+    closeBtn.onclick = () => this.close();
+    this.panel.appendChild(closeBtn);
+
+    const notice = document.createElement("div");
+    notice.className = "tm-suspended";
+    notice.innerHTML =
+      '<svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><line x1="4.9" y1="4.9" x2="19.1" y2="19.1"/></svg>' +
+      '<p class="tm-suspended-title">You are suspended</p>';
+
+    const text = document.createElement("p");
+    text.className = "tm-suspended-text";
+    text.textContent = message;
+    notice.appendChild(text);
+
+    this.panel.appendChild(notice);
+    this.panel.appendChild(this.createFooter());
   }
 
   devTabsEnabled() {

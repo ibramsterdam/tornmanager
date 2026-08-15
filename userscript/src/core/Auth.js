@@ -99,7 +99,9 @@ export class Auth {
           } else {
             try {
               const data = JSON.parse(response.responseText);
-              reject(new Error(data.error || "Could not fetch subscription"));
+              const err = new Error(data.error || "Could not fetch subscription");
+              if (data.suspended) err.suspended = true;
+              reject(err);
             } catch {
               reject(new Error("Could not fetch subscription"));
             }

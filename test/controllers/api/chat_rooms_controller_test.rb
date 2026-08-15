@@ -268,7 +268,19 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
 
     assert_response :forbidden
-    assert_equal "Your access to TornManager has been suspended.", JSON.parse(response.body)["error"]
+    body = JSON.parse(response.body)
+    assert_equal "Your access to TornManager has been suspended.", body["error"]
+    assert body["suspended"]
+  end
+
+  test "a banned user sees the suspension end date and reason" do
+    @bram.ban!(Time.utc(2026, 9, 1), reason: "Scamming")
+
+    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+
+    assert_response :forbidden
+    assert_equal "Your access to TornManager has been suspended until 1 September 2026. Reason: Scamming.",
+      JSON.parse(response.body)["error"]
   end
 
   test "rejects unknown api keys" do

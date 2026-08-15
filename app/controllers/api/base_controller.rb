@@ -18,7 +18,7 @@ module Api
     def reject_banned
       return unless @user&.banned?
 
-      render json: { error: "Your access to TornManager has been suspended." }, status: :forbidden
+      render json: { error: @user.ban_message, suspended: true }, status: :forbidden
     end
   end
 end
