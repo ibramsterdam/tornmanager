@@ -379,14 +379,14 @@ export class Overlay {
     profile.textContent = "Bram [2728237]";
 
     const privacy = document.createElement("a");
-    privacy.href = "https://tornmanager.com/legal#privacy-policy";
+    privacy.href = "https://tornmanager.com/legal#userscript-privacy-policy";
     privacy.target = "_blank";
     privacy.rel = "noopener";
     privacy.className = "tm-footer-link";
     privacy.textContent = "Privacy Policy";
 
     const tos = document.createElement("a");
-    tos.href = "https://tornmanager.com/legal#terms-of-service";
+    tos.href = "https://tornmanager.com/legal#userscript-terms-of-service";
     tos.target = "_blank";
     tos.rel = "noopener";
     tos.className = "tm-footer-link";

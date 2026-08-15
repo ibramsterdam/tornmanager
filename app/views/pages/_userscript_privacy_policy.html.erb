@@ -1,0 +1,191 @@
+<div class="legal-document" id="userscript-privacy-policy">
+  <h1 class="legal-document-title">Userscript Privacy Policy</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
+
+  <section class="content-section">
+    <h2 id="upp-introduction">Introduction</h2>
+    <p>
+      Hi, I'm Bram, the creator of TornManager. This Privacy Policy covers the <strong>TornManager browser
+      userscript</strong>. That is the script you install in a userscript manager (such as Tampermonkey) or in
+      Torn PDA. It runs on Torn.com pages and gives you chat rooms and other in-game tools.
+    </p>
+    <p>
+      The TornManager web platform at tornmanager.com (faction dashboards, war tracking, personal statistics) has
+      its own <a href="#privacy-policy">Platform Privacy Policy</a> and <a href="#terms-of-service">Platform Terms
+      of Service</a>, above on this page. If you only use the userscript, this document is the one that applies to you.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-information-i-collect">Information I Collect</h2>
+    <p>
+      When you sign in to the userscript you provide your <strong>Torn API key</strong>. Public access level is
+      enough. The key is sent to my server once to check who you are with the official Torn API. After that, it is
+      stored as your sign-in credential, so the userscript can prove to tornmanager.com that requests come from you.
+      The chat features do not use your key to call the Torn API again after that first check.
+    </p>
+    <p>On the server, a userscript account consists of:</p>
+    <ul>
+      <li>Your Torn ID, player name, and level</li>
+      <li>Your Torn API key (as the sign-in credential)</li>
+      <li>Xanax payments sent for optional subscriptions, and subscription expiration dates</li>
+      <li>The chat data described below</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-chats">Chat Rooms</h2>
+    <p>
+      The userscript lets you create and join chat rooms with other TornManager users, and share images in them.
+      This goes beyond the faction, company, and private chats Torn provides. This section describes what the chat
+      feature stores, where, and for how long.
+    </p>
+
+    <h3>Data Stored on the Server</h3>
+    <ul>
+      <li><strong>Rooms</strong>: the room name, when it was created, and who created it (the host).</li>
+      <li><strong>Memberships</strong>: which rooms your Torn ID belongs to, and whether a host has suspended you from a room.</li>
+      <li><strong>Messages</strong>: the message body (up to 300 characters of text), your Torn ID and player name, and a timestamp. Joining, leaving, and suspension events also post small system messages.</li>
+      <li><strong>Images</strong>: if you attach a picture to a message, the image file is stored as an attachment (see &ldquo;Images&rdquo; below).</li>
+      <li><strong>Invite tokens</strong>: the secret token contained in a room's invite link.</li>
+    </ul>
+
+    <h3 id="upp-encryption">End-to-End Encryption</h3>
+    <p>
+      <strong>Private rooms are end-to-end encrypted.</strong> The message text and any attached image are encrypted
+      in your browser using AES-GCM before they are sent. The encryption key is generated on your device. It travels
+      only inside the room's invite link, and it is stored only in the browsers of people who have that link
+      (in localStorage under <code>tm_chat_keys</code>). The key is never sent to my server. So for private rooms,
+      the messages and images I store are ciphertext that I cannot read. If you lose the key (for example by clearing
+      browser data), rejoin the room through its invite link to restore it.
+    </p>
+    <p>
+      Encryption protects <em>content</em>, not <em>metadata</em>. I still store, and can see, which accounts belong
+      to a private room, and each message's sender and timestamp. Anyone who holds a room's invite link can read that
+      room, so treat invite links as secrets.
+    </p>
+    <p>
+      Public rooms are <em>not</em> end-to-end encrypted. Anyone can join them, so there is no shared secret.
+      Their messages and images are stored so they can be delivered. They are anonymised as described below, and I am
+      technically able to read them to investigate abuse. <strong>Never share API keys, passwords, or other secrets
+      in any chat.</strong>
+    </p>
+
+    <h3>Images</h3>
+    <p>
+      You may attach PNG or JPG images to messages. Before upload, each image is resized and re-encoded in your
+      browser. This also removes hidden metadata such as EXIF and GPS location. For private rooms, the image is then
+      encrypted with the room key. Images have a size limit (a few megabytes each) and follow the same rate limits
+      as messages.
+    </p>
+    <p>
+      Image files are stored using Amazon Web Services (AWS) S3 in the <strong>eu-central-1 region (Frankfurt,
+      Germany, EU)</strong>. For private rooms the stored bytes are ciphertext I cannot read. For public rooms they
+      are stored as sent. Images are served only to members of the room. They are deleted together with the message
+      or room they belong to (see &ldquo;Retention&rdquo;). You are responsible for the images you upload. Prohibited
+      content is described in the Terms of Service.
+    </p>
+
+    <h3>Public Rooms &amp; Anonymity</h3>
+    <p>
+      Some rooms are public and anonymous. Anyone using TornManager can join them and talk under a pseudonym
+      (for example "Silent Bandit 42") instead of their Torn name. Each account gets one pseudonym that stays the
+      same forever and across every public room. Leaving and rejoining does not change it. Messages you send in
+      public rooms are stored with your pseudonym and <strong>without your Torn ID</strong>, so other members cannot
+      identify you from the chat. To protect this anonymity, TornManager does not show a member list for public
+      rooms. As the operator I can still link a pseudonym to an account when I need to investigate abuse. Anonymity
+      applies to other players, not to me.
+    </p>
+
+    <h3>Retention</h3>
+    <p>Chat data is short-lived by design:</p>
+    <ul>
+      <li>A <strong>private room</strong>, including all of its messages and images, self-destructs 7 days after its last member leaves. If someone rejoins in the meantime, the clock resets.</li>
+      <li><strong>Public rooms</strong> are permanent, but their messages (and any attached images) are automatically deleted once they are older than 24 hours.</li>
+      <li>When a message or room is deleted, any images attached to it are removed from S3 in the same cleanup.</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-torn-pages">Running Inside Torn's Pages</h2>
+    <p>
+      Like every userscript, TornManager shows its interface <strong>inside Torn.com's own pages</strong>. It is
+      important to be honest about what that means:
+    </p>
+    <ul>
+      <li><strong>What is on screen is in the page.</strong> To show you a private room, the script decrypts messages in your browser and puts the readable text in the page. Any JavaScript running on Torn.com can technically read what is shown there, and what you type in a chat box. That includes Torn's own code and any other userscript you have installed.</li>
+      <li><strong>Browser storage belongs to the torn.com domain.</strong> The data the userscript keeps in localStorage (see the next section), including your chat encryption keys and API key, lives on the torn.com origin. Scripts running on that domain can technically read it.</li>
+    </ul>
+    <p>
+      End-to-end encryption protects your messages while they travel and while they sit on my server. I cannot read
+      private rooms, and neither can anyone who gets my database. But encryption cannot protect content from the page
+      it is shown on. In practice, chat content carries the same trust you already give to Torn itself and to the
+      other userscripts you choose to run. I have no sign that Torn or any popular userscript reads such data. This
+      section exists so the encryption claim is never misread as protection against the page the chat lives on.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-local-storage">Data Stored in Your Browser</h2>
+    <p>The userscript stores the following in your browser's localStorage on the torn.com domain:</p>
+    <ul>
+      <li><strong>User profile and API key</strong> (<code>tm_user</code>): your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript.</li>
+      <li><strong>Encryption keys</strong> (<code>tm_chat_keys</code>): the per-room end-to-end encryption keys for the private rooms you have joined. These never leave your browser.</li>
+      <li><strong>Error log</strong> (<code>tm_errors</code>): up to 50 error entries for debugging. You can copy or clear them from the userscript panel.</li>
+      <li><strong>Interface state and preferences</strong>: which chat windows are open, the last message seen per room (for unread indicators), window positions and sizes, chat button mode, text size, and the last update check.</li>
+    </ul>
+    <p>
+      You can see everything the userscript has stored, and delete single entries, at any time. Use the
+      <strong>View stored data</strong> button on the userscript's settings tab.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-backend">Backend Communication</h2>
+    <p>
+      The userscript talks to tornmanager.com using <code>GM.xmlHttpRequest</code>. It signs in through
+      <code>/api/session</code> and uses the chat endpoints (<code>/api/chat/&hellip;</code>) for listing rooms,
+      joining via invite token, viewing a private room's members, sending and fetching messages, uploading and
+      downloading images, and host controls such as suspending a member. Requests are polled every few seconds while
+      a chat window is open. Every request includes your API key for authentication. No chat data is shared with
+      any third party, other than the AWS image storage described above, which acts as a processor on my behalf.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-data-security">Data Security &amp; Location</h2>
+    <p>
+      All communication with tornmanager.com uses secure HTTPS connections. Server data is stored in
+      <strong>Helsinki, Finland</strong> (EU) within the Hetzner datacenter. Chat images are stored in AWS S3 in
+      <strong>Frankfurt, Germany</strong> (EU). This means your data falls under European Union data protection
+      laws, including GDPR. No method of transmission or storage is 100% secure. I work hard to protect your data,
+      but I cannot guarantee absolute security.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-age-requirement">Age Requirement</h2>
+    <p>
+      In line with Torn's Terms of Service, you must be at least 13 years old to use the userscript.
+      I do not knowingly collect information from children under 13.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-changes">Changes to This Privacy Policy</h2>
+    <p>
+      I may update this Privacy Policy from time to time. Material changes are shown by updating the
+      "Last updated" date at the top. If you keep using the userscript after changes, you accept the updated policy.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="upp-contact">Contact Me</h2>
+    <p>
+      If you have questions about this Privacy Policy or how I handle your data, please reach out to me on Torn:
+    </p>
+    <p>
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
+    </p>
+  </section>
+</div>

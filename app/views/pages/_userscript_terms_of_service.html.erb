@@ -1,0 +1,194 @@
+<div class="legal-document" id="userscript-terms-of-service">
+  <h1 class="legal-document-title">Userscript Terms of Service</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
+
+  <section class="content-section">
+    <h2 id="utos-acceptance">Acceptance of Terms</h2>
+    <p>
+      By installing and using the TornManager userscript, you accept and agree to be bound by these Terms of Service
+      and the <a href="#userscript-privacy-policy">Userscript Privacy Policy</a>. If you do not agree to these terms,
+      please uninstall the userscript. Use of the tornmanager.com web platform is governed separately by the
+      <a href="#privacy-policy">Platform Privacy Policy</a> and <a href="#terms-of-service">Platform Terms of
+      Service</a>, above on this page.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-description">Description of Service</h2>
+    <p>
+      The TornManager userscript runs on Torn.com via a userscript manager (such as Tampermonkey) or Torn PDA and
+      lets you create chat rooms with other players and share images in them. This goes beyond the faction, company,
+      and private chats Torn provides. Chat rooms are free for every TornManager account and do not require a
+      subscription; a Torn API key with Public access level is sufficient to sign in. An optional subscription
+      unlocks extra features such as the Ranked War tab.
+    </p>
+    <p>By installing and using the userscript, you agree to:</p>
+    <ul>
+      <li>Allow the userscript to display its interface on Torn.com pages in your browser</li>
+      <li>Allow the userscript to communicate with tornmanager.com to send and receive chat messages and images</li>
+      <li>Allow the userscript to store authentication data, encryption keys, and interface preferences in your browser's localStorage</li>
+    </ul>
+    <p>
+      Private rooms are joined through invite links and are end-to-end encrypted: the invite link carries the
+      room's encryption key, which stays in your browser and is never sent to my server. Anyone who has a room's
+      invite link can both join the room and read its messages. Treat invite links as secret and only share
+      them with people you want in the room. TornManager also hosts public rooms that anyone can join, where you
+      appear under a permanent anonymous pseudonym instead of your Torn name; public rooms are not encrypted.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-api-key">API Key &amp; Authentication</h2>
+    <p>
+      <strong>Never share your Torn password with anyone, including me.</strong> The userscript only requires your
+      API key for authentication. You are responsible for creating and managing your key, monitoring its usage
+      through Torn.com ('key' &rarr; 'log' selection), and revoking or regenerating it if you suspect misuse.
+      By signing in you explicitly authorize TornManager to verify your identity via the Torn API as documented
+      in the Privacy Policy.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-acceptable-use">Acceptable Use</h2>
+    <p>
+      You alone are responsible for everything you send through the chat feature, including any images you upload.
+      You must not use chat rooms to:
+    </p>
+    <ul>
+      <li>harass, threaten, defame, or abuse anyone;</li>
+      <li>share content that is illegal under applicable law. This includes, without limitation, child sexual abuse material (CSAM), which will be removed, preserved, and reported to the relevant authorities;</li>
+      <li>upload malware, run scams, or attempt to phish other users;</li>
+      <li>violate Torn's rules or Terms of Service; or</li>
+      <li>spam, flood, or otherwise disrupt the service.</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-moderation">Moderation, Suspension &amp; Bans</h2>
+    <p>
+      The host of a private room can <strong>suspend</strong> and un-suspend members of that room; a suspended
+      member keeps their membership but can no longer read or send messages there.
+    </p>
+    <p>
+      Separately from room-level moderation, <strong>I reserve the right to ban you if you abuse the userscript</strong>
+      or break the Acceptable Use rules above. A ban can remove your access to the chat feature, or to TornManager
+      entirely, at my sole discretion and without prior notice. I may also delete individual messages,
+      images, or entire rooms. Where content is unlawful I may preserve it and report it, together with the
+      information needed to identify the account responsible, to law enforcement.
+    </p>
+    <p>
+      To keep the service healthy, message and image sending is rate limited, images are limited to PNG or JPG files
+      up to a few megabytes each, rooms have a member cap, and each account can be in a limited number of rooms at a
+      time.
+    </p>
+    <p>
+      The userscript uses <code>GM.xmlHttpRequest</code> to communicate with tornmanager.com, which bypasses
+      standard browser cross-origin restrictions. This is a standard capability of userscript managers and is
+      required for the userscript to function. The userscript communicates only with tornmanager.com and torn.com;
+      uploaded images are stored with Amazon Web Services (AWS S3, EU region) acting as a processor on my behalf.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-subscription">Subscription Model</h2>
+    <p>
+      Chats are free. Certain extra features (such as the Ranked War tab) require an active subscription, obtained
+      by sending Xanax to <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>.
+      Payments are processed automatically once a day. Subscription status is tied to your Torn ID; details and
+      additional ways to obtain subscription time are described in the
+      <a href="#tos-subscription">Platform Terms</a>.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-no-unfair-advantage">No Unfair Advantage</h2>
+    <p>
+      The userscript displays data and provides communication; it does not automate gameplay actions, perform any
+      actions on your Torn account, or bypass game mechanics. All game data it shows is sourced from the official
+      Torn API in accordance with Torn's scripting and fair play rules.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-availability">Service Availability</h2>
+    <p>
+      I strive to keep the userscript and its backend available but do not guarantee uninterrupted service. I may
+      suspend service for maintenance, modify or discontinue features without notice, and experience downtime due
+      to technical issues or Torn API limitations. I am not responsible for data loss or interruptions caused by
+      factors beyond my control.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-intellectual-property">Intellectual Property</h2>
+    <p>
+      TornManager and its original content, features, and functionality are owned by me and protected by
+      international copyright, trademark, and other intellectual property laws. Torn, Torn.com, and all related
+      game data remain the property of Torn City Ltd. I use the Torn API under the terms provided by Torn.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-disclaimer">Disclaimer of Warranties</h2>
+    <p>
+      The userscript is provided "as is" and "as available" without warranties of any kind, either express or
+      implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or
+      non-infringement. I do not warrant that the service will be uninterrupted, timely, secure, or error-free,
+      or that displayed data will be accurate or reliable.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-limitation-of-liability">Limitation of Liability</h2>
+    <p>
+      To the maximum extent permitted by law, I shall not be liable for any indirect, incidental, special,
+      consequential, or punitive damages, or any loss of profits, revenues, data, use, goodwill, or other
+      intangible losses resulting from your use of or inability to use the userscript, unauthorized access to
+      your data or API key, any conduct or content of third parties, or errors or inaccuracies in displayed data.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-indemnification">Indemnification</h2>
+    <p>
+      You agree to indemnify and hold harmless me and TornManager from any claims, damages, obligations, losses,
+      liabilities, costs, or expenses arising from your use of the userscript, your violation of these Terms,
+      your violation of Torn's Terms of Service or API guidelines, or your violation of any third-party rights.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-age-requirement">Age Requirement</h2>
+    <p>
+      You must be at least 13 years old to use the userscript, in line with Torn.com's age requirement. By using
+      it, you confirm that you meet this requirement.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-changes">Changes to Terms</h2>
+    <p>
+      I reserve the right to modify these Terms of Service at any time. Material changes will be indicated by
+      updating the "Last updated" date at the top of this document. Your continued use of the userscript after
+      changes constitutes acceptance of the modified terms.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-governing-law">Governing Law</h2>
+    <p>
+      These Terms of Service are governed by and construed in accordance with applicable laws, without regard to
+      conflict of law principles.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="utos-contact">Contact Me</h2>
+    <p>
+      If you have questions about these Terms of Service, please reach out to me on Torn:
+    </p>
+    <p>
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
+    </p>
+  </section>
+</div>
