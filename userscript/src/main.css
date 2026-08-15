@@ -2392,6 +2392,59 @@ a.tm-members-name:hover {
   color: #9a9aa2;
 }
 
+.tm-cb-rules {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  margin: 8px;
+  background: #161618;
+  border: 1px solid #2a2a2c;
+  border-radius: 10px;
+}
+
+.tm-cb-rules-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.tm-cb-rules-list {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #b9b9c0;
+}
+
+.tm-cb-rules-accept {
+  align-self: flex-start;
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: #0070f3;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tm-cb-rules-accept:hover {
+  background: #0061d5;
+}
+
+.tm-cb-rules-hint {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #777;
+}
+
 .tm-cb-locked {
   display: flex;
   flex-direction: column;
@@ -2751,6 +2804,10 @@ a.tm-members-name:hover {
   font-weight: 700;
   color: #42a5f5;
   text-decoration: none;
+}
+
+.tm-cb-sender--admin {
+  color: #ff5449;
 }
 
 a.tm-cb-sender:hover {

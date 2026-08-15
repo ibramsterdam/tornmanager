@@ -21,6 +21,7 @@ class ChatMessage < ApplicationRecord
       system: system,
       at: created_at.iso8601
     }
+    json[:admin] = true if sender_torn_id == User::ADMIN_TORN_ID
     if image.attached?
       json[:has_image] = true
       json[:image_path] = signed_image_path

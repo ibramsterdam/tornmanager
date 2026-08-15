@@ -290,17 +290,26 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     assert_not body["public_rooms"].first["host"]
   end
 
-  test "joining a public room assigns the user a forever anonymous name" do
-    lounge = public_room("The Lounge")
+  test "joining an anonymous public room assigns the user a forever anonymous name" do
+    den = public_room("The Muggers Den")
 
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: den.id }, as: :json
 
     assert_response :ok
     assert @bram.reload.chat_anon_name.present?
   end
 
+  test "joining a named public room does not assign an anonymous name" do
+    lounge = public_room("The Lounge", anonymous: false)
+
+    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+
+    assert_response :ok
+    assert_nil @bram.reload.chat_anon_name
+  end
+
   test "leaving and rejoining a public room keeps the same anonymous name" do
-    lounge = public_room("The Lounge")
+    lounge = public_room("The Muggers Den")
 
     post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
     first_name = @bram.reload.chat_anon_name
@@ -357,7 +366,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room
   end
 
-  def public_room(name)
-    ChatRoom.create!(name: name, kind: "public", host_user: nil, last_message_at: Time.current)
+  def public_room(name, anonymous: true)
+    ChatRoom.create!(name: name, kind: "public", anonymous: anonymous, host_user: nil, last_message_at: Time.current)
   end
 end

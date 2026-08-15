@@ -66,7 +66,7 @@ module Api
     end
 
     def sender_attrs
-      if @room.public?
+      if @room.anonymous? && !@user.admin?
         { user: @user, sender_name: @user.chat_anon_name!, sender_torn_id: nil }
       else
         { user: @user, sender_name: @user.name, sender_torn_id: @user.torn_id }

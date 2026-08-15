@@ -263,7 +263,8 @@ export class ChatsSection {
 
   renderPublicRoom(room, joined) {
     const members = `${room.member_count} member${room.member_count === 1 ? "" : "s"}`;
-    const row = this.roomRow(room.name, members, { chip: "anonymous", chipClass: "tm-chats-room-chip--anon" });
+    const chip = room.anonymous ? { chip: "anonymous", chipClass: "tm-chats-room-chip--anon" } : {};
+    const row = this.roomRow(room.name, members, chip);
     row.onclick = () => this.openPublic(room);
 
     if (!joined) {

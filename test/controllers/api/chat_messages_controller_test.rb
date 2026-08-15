@@ -90,38 +90,73 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "messages in a public room hide the sender's torn id and use their alias" do
-    lounge = ChatRoom.create!(name: "The Lounge", kind: "public", host_user: nil, last_message_at: Time.current)
-    lounge.chat_memberships.create!(user: @bram)
+  test "messages in an anonymous public room hide the sender's torn id and use their alias" do
+    den = ChatRoom.create!(name: "The Muggers Den", kind: "public", anonymous: true, host_user: nil, last_message_at: Time.current)
+    den.chat_memberships.create!(user: @bert)
 
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "anyone selling xanax?" }, as: :json
+    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: den.id, body: "anyone selling xanax?" }, as: :json
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
-    assert_equal @bram.reload.chat_anon_name, sent["name"]
-    assert_not_equal @bram.name, sent["name"]
+    assert_equal @bert.reload.chat_anon_name, sent["name"]
+    assert_not_equal @bert.name, sent["name"]
     assert_nil sent["torn_id"]
     assert sent["own"]
 
-    stored = lounge.chat_messages.last
+    stored = den.chat_messages.last
     assert_nil stored.sender_torn_id
-    assert_equal @bram.id, stored.user_id
+    assert_equal @bert.id, stored.user_id
   end
 
-  test "public room messages appear anonymous to other members" do
-    lounge = ChatRoom.create!(name: "The Lounge", kind: "public", host_user: nil, last_message_at: Time.current)
-    lounge.chat_memberships.create!(user: @bram)
-    lounge.chat_memberships.create!(user: @bert)
+  test "anonymous public room messages appear anonymous to other members" do
+    den = ChatRoom.create!(name: "The Muggers Den", kind: "public", anonymous: true, host_user: nil, last_message_at: Time.current)
+    den.chat_memberships.create!(user: @bram)
+    den.chat_memberships.create!(user: @bert)
 
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "hey" }, as: :json
+    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: den.id, body: "hey" }, as: :json
 
-    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: lounge.id, since_id: 0 }, as: :json
+    post api_chat_messages_path, params: { api_key: @bram.api_key, room_id: den.id, since_id: 0 }, as: :json
 
     assert_response :ok
     message = JSON.parse(response.body)["messages"].first
-    assert_equal @bram.reload.chat_anon_name, message["name"]
+    assert_equal @bert.reload.chat_anon_name, message["name"]
     assert_nil message["torn_id"]
     assert_not message["own"]
+  end
+
+  test "admin messages stay public even in an anonymous room and carry the admin flag" do
+    den = ChatRoom.create!(name: "The Muggers Den", kind: "public", anonymous: true, host_user: nil, last_message_at: Time.current)
+    den.chat_memberships.create!(user: @bram)
+
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: den.id, body: "final warning" }, as: :json
+
+    assert_response :created
+    sent = JSON.parse(response.body)["message"]
+    assert_equal @bram.name, sent["name"]
+    assert_equal @bram.torn_id, sent["torn_id"]
+    assert sent["admin"]
+  end
+
+  test "non-admin messages carry no admin flag" do
+    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: @room.id, body: "hello" }, as: :json
+
+    assert_response :created
+    assert_nil JSON.parse(response.body)["message"]["admin"]
+  end
+
+  test "messages in a named public room carry the sender's real name and torn id" do
+    lounge = ChatRoom.create!(name: "The Lounge", kind: "public", anonymous: false, host_user: nil, last_message_at: Time.current)
+    lounge.chat_memberships.create!(user: @bram)
+
+    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "evening all" }, as: :json
+
+    assert_response :created
+    sent = JSON.parse(response.body)["message"]
+    assert_equal @bram.name, sent["name"]
+    assert_equal @bram.torn_id, sent["torn_id"]
+
+    stored = lounge.chat_messages.last
+    assert_equal @bram.torn_id, stored.sender_torn_id
   end
 
   test "sending an image attaches it and flags the message as carrying one" do

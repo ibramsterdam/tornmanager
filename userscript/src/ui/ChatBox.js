@@ -1,5 +1,6 @@
 import { copyText } from "../core/Clipboard.js";
 import { ChatCrypto } from "../core/ChatCrypto.js";
+import { HouseRules } from "../core/HouseRules.js";
 import { bytesToBase64, base64ToBytes } from "../core/Base64.js";
 
 const POLL_INTERVAL_MS = 3000;
@@ -70,12 +71,63 @@ export class ChatBox {
       this.showSuspended();
     } else if (this.room.encrypted && !this.encKey) {
       this.showLocked();
+    } else if (this.room.kind === "public" && !HouseRules.accepted()) {
+      this.showHouseRules();
     } else {
-      this.poll();
-      this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+      this.startPolling();
     }
 
     return this.element;
+  }
+
+  startPolling() {
+    this.poll();
+    this.pollInterval = setInterval(() => this.poll(), POLL_INTERVAL_MS);
+  }
+
+  showHouseRules() {
+    this.skeleton?.remove();
+    this.composer.style.display = "none";
+
+    const notice = document.createElement("div");
+    notice.className = "tm-cb-rules";
+
+    const title = document.createElement("p");
+    title.className = "tm-cb-rules-title";
+    title.textContent = "House rules";
+
+    const list = document.createElement("ul");
+    list.className = "tm-cb-rules-list";
+    const rules = [
+      "Public rooms are moderated. I (Bram) can remove messages and ban accounts that abuse the chat.",
+      this.room.anonymous
+        ? "This room is anonymous for other players. For moderation it is not encrypted, so I can link messages to accounts."
+        : "This room shows your Torn name. It is not encrypted, so I can read messages for moderation.",
+      "Follow Torn's rules. No harassment, scams, or illegal content.",
+    ];
+    for (const rule of rules) {
+      const item = document.createElement("li");
+      item.textContent = rule;
+      list.appendChild(item);
+    }
+
+    const accept = document.createElement("button");
+    accept.type = "button";
+    accept.className = "tm-cb-rules-accept";
+    accept.textContent = "I agree";
+    accept.onclick = () => {
+      HouseRules.accept();
+      notice.remove();
+      this.composer.style.display = "";
+      this.startPolling();
+    };
+
+    const hint = document.createElement("p");
+    hint.className = "tm-cb-rules-hint";
+    hint.textContent = "Your agreement is saved on this device. You can see and delete it under View stored data in settings.";
+
+    notice.append(title, list, accept, hint);
+    this.list.appendChild(notice);
   }
 
   createRetentionNotice() {
@@ -684,8 +736,13 @@ export class ChatBox {
         sender = document.createElement("span");
       }
       sender.className = "tm-cb-sender";
-      sender.style.color = this.colorForName(message.name);
-      sender.textContent = `${message.name}:`;
+      if (message.admin) {
+        sender.classList.add("tm-cb-sender--admin");
+        sender.textContent = `${message.name} (admin):`;
+      } else {
+        sender.style.color = this.colorForName(message.name);
+        sender.textContent = `${message.name}:`;
+      }
       row.appendChild(sender);
 
       if (message.has_image) {

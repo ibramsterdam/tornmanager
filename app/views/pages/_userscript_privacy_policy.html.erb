@@ -88,13 +88,19 @@
 
     <h3>Public Rooms &amp; Anonymity</h3>
     <p>
-      Some rooms are public and anonymous. Anyone using TornManager can join them and talk under a pseudonym
-      (for example "Silent Bandit 42") instead of their Torn name. Each account gets one pseudonym that stays the
-      same forever and across every public room. Leaving and rejoining does not change it. Messages you send in
-      public rooms are stored with your pseudonym and <strong>without your Torn ID</strong>, so other members cannot
-      identify you from the chat. To protect this anonymity, TornManager does not show a member list for public
-      rooms. As the operator I can still link a pseudonym to an account when I need to investigate abuse. Anonymity
-      applies to other players, not to me.
+      TornManager hosts public rooms that anyone can join. Each room shows whether it is anonymous before you join.
+      Before you can use a public room, you must accept its house rules. Your agreement is saved on your device
+      (see &ldquo;Data Stored in Your Browser&rdquo;).
+    </p>
+    <p>
+      Some public rooms show your Torn name, just like private rooms. Other public rooms are anonymous. There you
+      talk under a pseudonym (for example "Silent Bandit 42") instead of your Torn name. Each account gets one
+      pseudonym that stays the same forever and across every anonymous room. Leaving and rejoining does not change
+      it. Messages you send in anonymous rooms are stored with your pseudonym and <strong>without your Torn
+      ID</strong>, so other members cannot identify you from the chat. To protect this anonymity, TornManager does
+      not show a member list for public rooms. As the operator I can still link a pseudonym to an account when I
+      need to investigate abuse. Anonymity applies to other players, not to me. My own messages are the other
+      exception: they always show my real name with an admin label, so official warnings are easy to recognize.
     </p>
 
     <h3>Retention</h3>
@@ -131,6 +137,7 @@
     <ul>
       <li><strong>User profile and API key</strong> (<code>tm_user</code>): your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript.</li>
       <li><strong>Encryption keys</strong> (<code>tm_chat_keys</code>): the per-room end-to-end encryption keys for the private rooms you have joined. These never leave your browser.</li>
+      <li><strong>House rules agreement</strong> (<code>tm_chat_house_rules</code>): the date you accepted the public room house rules. If you delete this entry, you will be asked to accept the rules again.</li>
       <li><strong>Error log</strong> (<code>tm_errors</code>): up to 50 error entries for debugging. You can copy or clear them from the userscript panel.</li>
       <li><strong>Interface state and preferences</strong>: which chat windows are open, the last message seen per room (for unread indicators), window positions and sizes, chat button mode, text size, and the last update check.</li>
     </ul>

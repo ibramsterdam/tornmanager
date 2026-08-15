@@ -52,6 +52,7 @@ class ChatRoom < ApplicationRecord
       id: id,
       name: name,
       kind: kind,
+      anonymous: anonymous,
       encrypted: encrypted,
       host: host,
       suspended: suspended?(user),

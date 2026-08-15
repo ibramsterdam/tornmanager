@@ -158,9 +158,9 @@ module Api
 
         room.chat_memberships.create!(user: @user)
 
-        if room.public?
-          @user.chat_anon_name!
-        else
+        @user.chat_anon_name! if room.anonymous?
+
+        unless room.public?
           room.update!(emptied_at: nil) if room.emptied_at
           room.post_system_message("#{@user.name} joined.")
         end

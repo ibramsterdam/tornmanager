@@ -197,6 +197,7 @@ export class MockChatClient {
       id: room.id,
       name: room.name,
       kind: room.kind || "private",
+      anonymous: !!room.anonymous,
       encrypted: !!room.encrypted,
       host,
       suspended: false,
