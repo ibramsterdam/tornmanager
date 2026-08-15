@@ -1,5 +1,5 @@
-const PRIVACY_URL = "https://tornmanager.com/legal#userscript-privacy-policy";
-const TOS_URL = "https://tornmanager.com/legal#userscript-terms-of-service";
+export const PRIVACY_URL = "https://tornmanager.com/legal#userscript-privacy-policy";
+export const TOS_URL = "https://tornmanager.com/legal#userscript-terms-of-service";
 
 const LINKS =
   `<a href="${PRIVACY_URL}" target="_blank" rel="noopener">Privacy Policy</a> and ` +

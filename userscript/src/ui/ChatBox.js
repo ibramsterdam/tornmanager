@@ -1,6 +1,7 @@
 import { copyText } from "../core/Clipboard.js";
 import { ChatCrypto } from "../core/ChatCrypto.js";
 import { HouseRules } from "../core/HouseRules.js";
+import { PRIVACY_URL, TOS_URL } from "./ApiDisclosure.js";
 import { bytesToBase64, base64ToBytes } from "../core/Base64.js";
 
 const POLL_INTERVAL_MS = 3000;
@@ -99,11 +100,12 @@ export class ChatBox {
     const list = document.createElement("ul");
     list.className = "tm-cb-rules-list";
     const rules = [
-      "Public rooms are moderated. I (Bram) can remove messages and ban accounts that abuse the chat.",
+      "This chat is moderated. I (Bram) can remove messages and ban accounts.",
       this.room.anonymous
-        ? "This room is anonymous for other players. For moderation it is not encrypted, so I can link messages to accounts."
-        : "This room shows your Torn name. It is not encrypted, so I can read messages for moderation.",
+        ? "Anonymous to other players, but not encrypted. For moderation I can link messages to accounts."
+        : "Shows your Torn name. Not encrypted, so I can read messages for moderation.",
       "Follow Torn's rules. No harassment, scams, or illegal content.",
+      "Never share API keys, passwords, or personal information.",
     ];
     for (const rule of rules) {
       const item = document.createElement("li");
@@ -124,7 +126,13 @@ export class ChatBox {
 
     const hint = document.createElement("p");
     hint.className = "tm-cb-rules-hint";
-    hint.textContent = "Your agreement is saved on this device. You can see and delete it under View stored data in settings.";
+    hint.append(
+      "Full details: ",
+      link(PRIVACY_URL, "Privacy Policy"),
+      " · ",
+      link(TOS_URL, "Terms of Service"),
+      ". Your agreement is saved on this device (View stored data in settings).",
+    );
 
     notice.append(title, list, accept, hint);
     this.list.appendChild(notice);
@@ -886,4 +894,13 @@ export class ChatBox {
     const hue = Math.abs(hash) % 360;
     return `hsl(${hue}, 60%, 68%)`;
   }
+}
+
+function link(href, label) {
+  const anchor = document.createElement("a");
+  anchor.href = href;
+  anchor.target = "_blank";
+  anchor.rel = "noopener";
+  anchor.textContent = label;
+  return anchor;
 }

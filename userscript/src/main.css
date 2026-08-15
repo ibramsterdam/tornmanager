@@ -2395,41 +2395,43 @@ a.tm-members-name:hover {
 .tm-cb-rules {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding: 18px;
-  margin: 8px;
+  gap: 9px;
+  padding: 12px 14px;
+  margin: 6px;
   background: #161618;
   border: 1px solid #2a2a2c;
-  border-radius: 10px;
+  border-radius: 9px;
+  font-size: 11.5px;
 }
 
 .tm-cb-rules-title {
   margin: 0;
-  font-size: 14px;
+  font-size: 12.5px;
   font-weight: 700;
   color: #fff;
 }
 
 .tm-cb-rules-list {
   margin: 0;
-  padding-left: 18px;
+  padding-left: 16px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  font-size: 12.5px;
-  line-height: 1.5;
+  gap: 5px;
+  list-style: disc;
+  font-size: 11.5px;
+  line-height: 1.45;
   color: #b9b9c0;
 }
 
 .tm-cb-rules-accept {
   align-self: flex-start;
-  padding: 8px 18px;
-  font-size: 13px;
+  padding: 6px 16px;
+  font-size: 12px;
   font-weight: 600;
   color: #fff;
   background: #0070f3;
   border: none;
-  border-radius: 7px;
+  border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s ease;
 }
@@ -2440,9 +2442,18 @@ a.tm-members-name:hover {
 
 .tm-cb-rules-hint {
   margin: 0;
-  font-size: 11px;
+  font-size: 10.5px;
   line-height: 1.5;
   color: #777;
+}
+
+.tm-cb-rules-hint a {
+  color: #7fb3ff;
+  text-decoration: none;
+}
+
+.tm-cb-rules-hint a:hover {
+  text-decoration: underline;
 }
 
 .tm-cb-locked {
