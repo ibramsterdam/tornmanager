@@ -703,6 +703,7 @@ export class ChatBox {
   }
 
   async appendMessages(messages) {
+    messages = messages.filter((message) => message.id > this.lastMessageId);
     if (!messages.length) return;
 
     // Reserve ids up front so an overlapping poll won't refetch the same

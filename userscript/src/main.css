@@ -31,6 +31,46 @@
   background-position: center;
 }
 
+.tm-overlay-panel,
+.tm-mh-targets,
+.tm-tt-wrap,
+.tm-cb-messages,
+.tm-storage-value {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3e transparent;
+}
+
+.tm-overlay-panel::-webkit-scrollbar,
+.tm-mh-targets::-webkit-scrollbar,
+.tm-tt-wrap::-webkit-scrollbar,
+.tm-cb-messages::-webkit-scrollbar,
+.tm-storage-value::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tm-overlay-panel::-webkit-scrollbar-thumb,
+.tm-mh-targets::-webkit-scrollbar-thumb,
+.tm-tt-wrap::-webkit-scrollbar-thumb,
+.tm-cb-messages::-webkit-scrollbar-thumb,
+.tm-storage-value::-webkit-scrollbar-thumb {
+  background: #3a3a3e;
+  border-radius: 4px;
+}
+
+.tm-overlay-panel::-webkit-scrollbar-track,
+.tm-mh-targets::-webkit-scrollbar-track,
+.tm-tt-wrap::-webkit-scrollbar-track,
+.tm-cb-messages::-webkit-scrollbar-track,
+.tm-storage-value::-webkit-scrollbar-track,
+.tm-overlay-panel::-webkit-scrollbar-corner,
+.tm-mh-targets::-webkit-scrollbar-corner,
+.tm-tt-wrap::-webkit-scrollbar-corner,
+.tm-cb-messages::-webkit-scrollbar-corner,
+.tm-storage-value::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .tm-overlay-backdrop {
   position: fixed;
   inset: 0;
