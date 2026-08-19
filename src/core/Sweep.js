@@ -20,10 +20,14 @@ export class Sweep {
     let offset = resume ? resume.offset : 0;
     const byId = resume ? resume.byId : {};
     let lowest = resume ? resume.lowest ?? null : null;
+    let lastSample = resume ? resume.lastSample ?? null : null;
+    let etaPages = resume ? resume.etaPages ?? null : null;
     let reachedFloor = false;
 
     const report = (rank) => {
-      onProgress?.({ rank, found: Object.keys(byId).length, lowest, floor });
+      const donePages = Math.max(0, (rank - offset) / PAGE_SIZE);
+      const remainingPages = etaPages === null ? null : Math.max(1, etaPages - donePages);
+      onProgress?.({ rank, found: Object.keys(byId).length, lowest, floor, remainingPages });
     };
 
     while (!reachedFloor) {
@@ -56,7 +60,14 @@ export class Sweep {
       }
 
       offset += pages * PAGE_SIZE;
-      Store.set("sweep_progress", { floor, offset, byId, lowest });
+
+      if (lastSample && lowest !== null && lastSample.lowest > lowest && offset > lastSample.rank) {
+        const valuePerRank = (lastSample.lowest - lowest) / (offset - lastSample.rank);
+        etaPages = lowest > floor && valuePerRank > 0 ? Math.ceil((lowest - floor) / valuePerRank / PAGE_SIZE) : 1;
+      }
+      lastSample = { rank: offset, lowest };
+
+      Store.set("sweep_progress", { floor, offset, byId, lowest, lastSample, etaPages });
       report(offset);
 
       if (!reachedFloor) {

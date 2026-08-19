@@ -27,6 +27,7 @@ export class OverviewScreen {
     container.appendChild(this.syncRows(matches));
     this.progress = Dom.el("div", "rc-progress");
     container.appendChild(this.progress);
+    if (this.barState) this.renderBar();
 
     const filterRow = Dom.el("div", "rc-row rc-row--filters");
     const filterField = Dom.el("div", "rc-field");
@@ -119,13 +120,24 @@ export class OverviewScreen {
 
   async updateStats() {
     const floor = Settings.get().floor;
-    await this.sweep.run(floor, {
-      onProgress: ({ rank, found, lowest }) => {
-        const depth = lowest === null ? "" : ` · now at ${formatStat(lowest)}, sweeping down to ${formatStat(floor)}`;
-        this.setProgress(`Sweeping Hall of Fame · rank ~${rank.toLocaleString()} · ${found.toLocaleString()} players collected${depth}`);
-      },
-    });
-    this.setProgress("Working stats sweep finished.");
+    try {
+      await this.sweep.run(floor, {
+        onProgress: ({ rank, found, lowest, remainingPages }) => {
+          const pagesPerMinute = Math.max(1, this.api.capacityPerWindow());
+          const etaSeconds = remainingPages == null ? null : Math.round((remainingPages / pagesPerMinute) * 60);
+          const fraction = remainingPages == null ? null : rank / (rank + remainingPages * 100);
+          const depth = lowest == null ? "" : ` · at ${formatStat(lowest)}, target ${formatStat(floor)}`;
+          this.setBar({
+            etaSeconds,
+            fraction,
+            text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} collected${depth}`,
+          });
+        },
+      });
+      this.setProgress("Working stats sweep finished.");
+    } finally {
+      this.stopTicker();
+    }
   }
 
   async updateStatus(matches) {
@@ -134,13 +146,67 @@ export class OverviewScreen {
       this.setProgress("No matches yet. Update the roster and working stats first.");
       return;
     }
-    await this.status.refresh(companyIds, {
-      onProgress: (done, total) => this.setProgress(`Refreshing status · ${done} of ${total} companies`),
-    });
+    try {
+      await this.status.refresh(companyIds, {
+        onProgress: (done, total) => {
+          const capacity = Math.max(1, this.api.capacityPerWindow());
+          this.setBar({
+            etaSeconds: Math.round(((total - done) / capacity) * 60),
+            fraction: done / total,
+            text: `status ${done} of ${total} companies`,
+          });
+        },
+      });
+      this.setProgress(`Status refreshed for ${companyIds.length} companies.`);
+    } finally {
+      this.stopTicker();
+    }
   }
 
   setProgress(text) {
+    this.stopTicker();
+    this.barState = null;
     if (this.progress) this.progress.textContent = text;
+  }
+
+  setBar(state) {
+    this.barState = { ...state, at: Date.now() };
+    if (!this.ticker) this.ticker = setInterval(() => this.renderBar(), 1000);
+    this.renderBar();
+  }
+
+  stopTicker() {
+    if (this.ticker) {
+      clearInterval(this.ticker);
+      this.ticker = null;
+    }
+  }
+
+  renderBar() {
+    if (!this.progress || !this.barState) return;
+    const { etaSeconds, at, text, fraction } = this.barState;
+
+    if (!this.barEl?.isConnected || this.barEl.parentElement !== this.progress) {
+      this.barEl = Dom.el("div", "rc-bar");
+      this.barFill = Dom.el("div", "rc-bar-fill");
+      this.barText = Dom.el("span", "rc-bar-text");
+      this.barEl.append(this.barFill, this.barText);
+      this.progress.replaceChildren(this.barEl);
+    }
+
+    this.barEl.classList.toggle("rc-bar--indeterminate", fraction == null);
+    if (fraction != null) {
+      this.barFill.style.width = `${Math.min(97, Math.max(3, fraction * 100)).toFixed(1)}%`;
+    } else {
+      this.barFill.style.width = "";
+    }
+
+    let countdown = "estimating time left";
+    if (etaSeconds != null) {
+      const remaining = Math.max(0, etaSeconds - (Date.now() - at) / 1000);
+      countdown = remaining < 1 ? "any moment now" : `~${formatDuration(remaining)} left`;
+    }
+    this.barText.textContent = `${countdown} · ${text}`;
   }
 
   matches(settings) {
@@ -242,4 +308,14 @@ function shortAge(fetchedAt) {
 
 function formatStat(value) {
   return value >= 1000 ? `${Math.round(value / 1000)}k` : String(value);
+}
+
+function formatDuration(seconds) {
+  seconds = Math.round(seconds);
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+  if (hours) return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  if (minutes) return `${minutes}m ${String(secs).padStart(2, "0")}s`;
+  return `${secs}s`;
 }
