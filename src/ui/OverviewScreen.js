@@ -34,13 +34,13 @@ export class OverviewScreen {
     container.appendChild(this.progress);
     if (this.barState) this.renderBar();
 
-    container.appendChild(this.filterRow(matches));
+    container.appendChild(this.filterRow());
     this.resultsWrap = Dom.el("div");
     container.appendChild(this.resultsWrap);
     this.renderResults();
   }
 
-  filterRow(matches) {
+  filterRow() {
     const row = Dom.el("div", "rc-row rc-row--filters");
 
     const statusField = Dom.el("div", "rc-field rc-field--chip");
@@ -57,27 +57,26 @@ export class OverviewScreen {
     statusField.appendChild(this.statusChip);
     row.appendChild(statusField);
 
-    const maxStat = Math.max(100_000, ...matches.map((m) => m.stat.v));
-    const sliderMax = Math.ceil(maxStat / 50_000) * 50_000;
-    this.minStats = Math.min(this.minStats || 0, sliderMax);
-
-    const sliderField = Dom.el("div", "rc-field");
-    this.sliderLabel = Dom.el("div", "rc-label");
-    const slider = Dom.el("input", "rc-range");
-    slider.type = "range";
-    slider.min = 0;
-    slider.max = sliderMax;
-    slider.step = 5_000;
-    slider.value = this.minStats;
-    slider.addEventListener("input", () => {
-      this.minStats = Number(slider.value);
+    const statsField = Dom.el("div", "rc-field");
+    statsField.appendChild(Dom.el("div", "rc-label", "Min working stats"));
+    const input = Dom.el("input", "rc-input");
+    input.type = "number";
+    input.min = 0;
+    input.placeholder = "0";
+    if (this.minStats > 0) input.value = this.minStats;
+    const apply = () => {
+      const value = Math.max(0, Number(input.value) || 0);
+      if (value === (this.minStats || 0)) return;
+      this.minStats = value;
       this.page = 0;
-      this.syncSliderLabel();
       this.renderResults();
+    };
+    input.addEventListener("blur", apply);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") input.blur();
     });
-    this.syncSliderLabel();
-    sliderField.append(this.sliderLabel, slider);
-    row.appendChild(sliderField);
+    statsField.appendChild(input);
+    row.appendChild(statsField);
 
     return row;
   }
@@ -86,10 +85,6 @@ export class OverviewScreen {
     const labels = { any: "Any", online: "Online", active: "Online + idle" };
     this.statusChip.textContent = labels[this.statusFilter];
     this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
-  }
-
-  syncSliderLabel() {
-    this.sliderLabel.textContent = this.minStats > 0 ? `Min working stats · ${formatStat(this.minStats)}` : "Min working stats · off";
   }
 
   renderResults() {
