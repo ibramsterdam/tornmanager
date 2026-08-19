@@ -34,26 +34,69 @@ export class OverviewScreen {
     container.appendChild(this.progress);
     if (this.barState) this.renderBar();
 
-    const filterRow = Dom.el("div", "rc-row rc-row--filters");
-    const filterField = Dom.el("div", "rc-field");
-    filterField.appendChild(Dom.el("div", "rc-label", "Status"));
-    const select = Dom.el("select", "rc-input");
-    for (const [value, label] of [["any", "Any"], ["online", "Online"], ["active", "Online or idle"]]) {
-      const option = Dom.el("option", null, label);
-      option.value = value;
-      if (value === this.statusFilter) option.selected = true;
-      select.appendChild(option);
-    }
-    select.addEventListener("change", () => {
-      this.statusFilter = select.value;
-      this.page = 0;
-      this.overlay.refresh();
-    });
-    filterField.appendChild(select);
-    filterRow.appendChild(filterField);
-    container.appendChild(filterRow);
+    container.appendChild(this.filterRow(matches));
+    this.resultsWrap = Dom.el("div");
+    container.appendChild(this.resultsWrap);
+    this.renderResults();
+  }
 
-    const visible = this.filterByStatus(matches);
+  filterRow(matches) {
+    const row = Dom.el("div", "rc-row rc-row--filters");
+
+    const statusField = Dom.el("div", "rc-field rc-field--chip");
+    statusField.appendChild(Dom.el("div", "rc-label", "Status"));
+    this.statusChip = Dom.el("button", "rc-chip rc-chip--filter");
+    this.statusChip.addEventListener("click", () => {
+      const order = ["any", "online", "active"];
+      this.statusFilter = order[(order.indexOf(this.statusFilter) + 1) % order.length];
+      this.page = 0;
+      this.syncStatusChip();
+      this.renderResults();
+    });
+    this.syncStatusChip();
+    statusField.appendChild(this.statusChip);
+    row.appendChild(statusField);
+
+    const maxStat = Math.max(100_000, ...matches.map((m) => m.stat.v));
+    const sliderMax = Math.ceil(maxStat / 50_000) * 50_000;
+    this.minStats = Math.min(this.minStats || 0, sliderMax);
+
+    const sliderField = Dom.el("div", "rc-field");
+    this.sliderLabel = Dom.el("div", "rc-label");
+    const slider = Dom.el("input", "rc-range");
+    slider.type = "range";
+    slider.min = 0;
+    slider.max = sliderMax;
+    slider.step = 5_000;
+    slider.value = this.minStats;
+    slider.addEventListener("input", () => {
+      this.minStats = Number(slider.value);
+      this.page = 0;
+      this.syncSliderLabel();
+      this.renderResults();
+    });
+    this.syncSliderLabel();
+    sliderField.append(this.sliderLabel, slider);
+    row.appendChild(sliderField);
+
+    return row;
+  }
+
+  syncStatusChip() {
+    const labels = { any: "Any", online: "Online", active: "Online + idle" };
+    this.statusChip.textContent = labels[this.statusFilter];
+    this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
+  }
+
+  syncSliderLabel() {
+    this.sliderLabel.textContent = this.minStats > 0 ? `Min working stats · ${formatStat(this.minStats)}` : "Min working stats · off";
+  }
+
+  renderResults() {
+    if (!this.resultsWrap) return;
+    const matches = this.matches(Settings.get());
+    const visible = this.filterByStatus(matches).filter((m) => m.stat.v >= (this.minStats || 0));
+
     const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
     this.page = Math.min(Math.max(0, this.page), totalPages - 1);
 
@@ -62,8 +105,8 @@ export class OverviewScreen {
       Dom.el("span", null, `${visible.length} of ${matches.length} matches shown`),
       Dom.el("span", "rc-dim", "sorted by working stats")
     );
-    container.appendChild(meta);
-    container.appendChild(this.table(visible.slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)));
+
+    const parts = [meta, this.table(visible.slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE))];
 
     if (totalPages > 1) {
       const pager = Dom.el("div", "rc-pager");
@@ -73,15 +116,17 @@ export class OverviewScreen {
       next.disabled = this.page >= totalPages - 1;
       prev.addEventListener("click", () => {
         this.page -= 1;
-        this.overlay.refresh();
+        this.renderResults();
       });
       next.addEventListener("click", () => {
         this.page += 1;
-        this.overlay.refresh();
+        this.renderResults();
       });
       pager.append(prev, Dom.el("span", "rc-dim", `page ${this.page + 1} of ${totalPages}`), next);
-      container.appendChild(pager);
+      parts.push(pager);
     }
+
+    this.resultsWrap.replaceChildren(...parts);
   }
 
   syncRows(matches) {
