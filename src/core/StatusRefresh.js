@@ -12,7 +12,7 @@ export class StatusRefresh {
 
     const byId = this.data.byId || {};
     for (const result of results) {
-      if (result instanceof Error) continue;
+      if (!result || result instanceof Error) continue;
       for (const employee of result.employees || []) {
         const action = employee.last_action || {};
         byId[employee.id] = {

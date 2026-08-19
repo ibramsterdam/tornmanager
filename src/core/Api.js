@@ -78,11 +78,19 @@ export class Api {
 
       if (queue.length) {
         const elapsed = Date.now() - windowStart;
-        if (elapsed < WINDOW_MS) await sleep(WINDOW_MS - elapsed);
+        if (elapsed < WINDOW_MS) await interruptibleSleep(WINDOW_MS - elapsed, shouldStop);
       }
     }
 
     return results;
+  }
+}
+
+export async function interruptibleSleep(ms, shouldStop) {
+  const until = Date.now() + ms;
+  while (Date.now() < until) {
+    if (shouldStop?.()) return;
+    await sleep(Math.min(1000, until - Date.now()));
   }
 }
 

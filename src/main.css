@@ -1025,3 +1025,25 @@
   font-variant-numeric: tabular-nums;
   color: #fff;
 }
+
+.rc-link {
+  display: block;
+  text-decoration: none;
+}
+
+a.rc-link:hover {
+  color: #4a9df8;
+  text-decoration: underline;
+}
+
+.rc-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.rc-act svg {
+  display: block;
+}

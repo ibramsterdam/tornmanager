@@ -8,6 +8,7 @@ import { StatusRefresh } from "./core/StatusRefresh.js";
 import { Overlay } from "./ui/Overlay.js";
 import { Sidebar } from "./ui/Sidebar.js";
 import { MenuEntry } from "./ui/MenuEntry.js";
+import { ChatOpener } from "./ui/ChatOpener.js";
 import { AuthScreen } from "./ui/AuthScreen.js";
 import { SubscriptionScreen } from "./ui/SubscriptionScreen.js";
 import { LegalScreen } from "./ui/LegalScreen.js";
@@ -33,6 +34,7 @@ function boot() {
 
   new Sidebar(overlay).init();
   new MenuEntry(overlay).init();
+  new ChatOpener().init();
 
   console.log(`%cRecruiter %cv${__RC_VERSION__} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
 }

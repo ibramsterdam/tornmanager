@@ -1,6 +1,9 @@
 import { Dom } from "../core/Dom.js";
 import { Settings } from "../core/Settings.js";
 import { typeName } from "../core/CompanyTypes.js";
+import { ChatOpener } from "./ChatOpener.js";
+
+const PAGE_SIZE = 100;
 
 export class OverviewScreen {
   constructor({ roster, stats, status, api, overlay }) {
@@ -9,8 +12,10 @@ export class OverviewScreen {
     this.status = status;
     this.api = api;
     this.overlay = overlay;
-    this.busy = false;
+    this.running = null;
+    this.stopRequested = false;
     this.statusFilter = "any";
+    this.page = 0;
   }
 
   subtitle() {
@@ -41,6 +46,7 @@ export class OverviewScreen {
     }
     select.addEventListener("change", () => {
       this.statusFilter = select.value;
+      this.page = 0;
       this.overlay.refresh();
     });
     filterField.appendChild(select);
@@ -48,13 +54,34 @@ export class OverviewScreen {
     container.appendChild(filterRow);
 
     const visible = this.filterByStatus(matches);
+    const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
+    this.page = Math.min(Math.max(0, this.page), totalPages - 1);
+
     const meta = Dom.el("div", "rc-meta");
     meta.append(
       Dom.el("span", null, `${visible.length} of ${matches.length} matches shown`),
       Dom.el("span", "rc-dim", "sorted by working stats")
     );
     container.appendChild(meta);
-    container.appendChild(this.table(visible.slice(0, 300)));
+    container.appendChild(this.table(visible.slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE)));
+
+    if (totalPages > 1) {
+      const pager = Dom.el("div", "rc-pager");
+      const prev = Dom.el("button", "rc-btn rc-btn--ghost", "‹ Prev");
+      const next = Dom.el("button", "rc-btn rc-btn--ghost", "Next ›");
+      prev.disabled = this.page === 0;
+      next.disabled = this.page >= totalPages - 1;
+      prev.addEventListener("click", () => {
+        this.page -= 1;
+        this.overlay.refresh();
+      });
+      next.addEventListener("click", () => {
+        this.page += 1;
+        this.overlay.refresh();
+      });
+      pager.append(prev, Dom.el("span", "rc-dim", `page ${this.page + 1} of ${totalPages}`), next);
+      container.appendChild(pager);
+    }
   }
 
   syncRows(matches) {
@@ -101,21 +128,41 @@ export class OverviewScreen {
 
   syncRow({ name, desc, fetchedAt, staleAfterHours, action }) {
     const row = Dom.el("div", "rc-sync");
-    const button = Dom.el("button", "rc-btn rc-btn--ghost", "Update");
+    const isRunning = this.running === name;
+    const button = Dom.el("button", "rc-btn rc-btn--ghost", isRunning ? "Pause" : "Update");
+    button.disabled = !!this.running && !isRunning;
+
     button.addEventListener("click", async () => {
-      if (this.busy) return;
-      this.busy = true;
+      if (this.running === name) {
+        this.stopRequested = true;
+        button.textContent = "Pausing…";
+        button.disabled = true;
+        return;
+      }
+      if (this.running) return;
+
+      this.running = name;
+      this.stopRequested = false;
+      button.textContent = "Pause";
+
+      let message = null;
+      let paused = false;
       try {
-        await action();
+        message = await action();
       } catch (error) {
         this.setProgress(`${name} failed: ${error.message}`);
         return;
       } finally {
-        this.busy = false;
+        paused = this.stopRequested;
+        this.running = null;
+        this.stopRequested = false;
         this.stopTicker();
+        this.barState = null;
       }
       this.overlay.refresh();
+      this.setProgress(paused ? `${name} paused, progress so far is saved.` : message || "");
     });
+
     row.append(
       Dom.el("span", "rc-sync-name", name),
       Dom.el("span", "rc-dim", desc),
@@ -127,51 +174,34 @@ export class OverviewScreen {
 
   async updateRoster() {
     await this.roster.update(Settings.get(), { onProgress: (text) => this.setProgress(text) });
+    return "Roster updated.";
   }
 
   async updateStats() {
     const roster = this.roster.data;
-    if (!roster) {
-      this.setProgress("Update the roster first, stats are fetched for the employees in your tracked companies.");
-      return;
-    }
+    if (!roster) return "Update the roster first, stats are fetched for the employees in your tracked companies.";
+
     const players = roster.players.filter((p) => !p.director);
     const staleCount = this.stats.stalePlayers(players).length;
-    const capacity = Math.max(1, this.api.capacityPerWindow());
 
     await this.stats.run(players, {
-      onProgress: (done, total) => {
-        this.setBar({
-          etaSeconds: Math.round(((total - done) / capacity) * 60),
-          fraction: total ? done / total : 1,
-          text: `stats ${done.toLocaleString()} of ${total.toLocaleString()} employees`,
-        });
-      },
+      shouldStop: () => this.stopRequested,
+      onProgress: (done, total) => this.setBar({ done, total, unit: "employees" }),
     });
-    this.setProgress(
-      staleCount
-        ? `Working stats fetched for ${staleCount.toLocaleString()} employees (${(players.length - staleCount).toLocaleString()} were still fresh).`
-        : "All employees were already fresh, nothing to fetch."
-    );
+    return staleCount
+      ? `Working stats fetched for ${staleCount.toLocaleString()} employees (${(players.length - staleCount).toLocaleString()} were still fresh).`
+      : "All employees were already fresh, nothing to fetch.";
   }
 
   async updateStatus(matches) {
     const companyIds = [...new Set(matches.map((m) => m.player.companyId))];
-    if (!companyIds.length) {
-      this.setProgress("No matches yet. Update the roster and working stats first.");
-      return;
-    }
-    const capacity = Math.max(1, this.api.capacityPerWindow());
+    if (!companyIds.length) return "No matches yet. Update the roster and working stats first.";
+
     await this.status.refresh(companyIds, {
-      onProgress: (done, total) => {
-        this.setBar({
-          etaSeconds: Math.round(((total - done) / capacity) * 60),
-          fraction: done / total,
-          text: `status ${done} of ${total} companies`,
-        });
-      },
+      shouldStop: () => this.stopRequested,
+      onProgress: (done, total) => this.setBar({ done, total, unit: "companies" }),
     });
-    this.setProgress(`Status refreshed for ${companyIds.length} companies.`);
+    return `Status refreshed for ${companyIds.length} companies.`;
   }
 
   setProgress(text) {
@@ -180,8 +210,8 @@ export class OverviewScreen {
     if (this.progress) this.progress.textContent = text;
   }
 
-  setBar(state) {
-    this.barState = { ...state, at: Date.now() };
+  setBar({ done, total, unit }) {
+    this.barState = { done, total, unit, at: Date.now() };
     if (!this.ticker) this.ticker = setInterval(() => this.renderBar(), 1000);
     this.renderBar();
   }
@@ -195,7 +225,7 @@ export class OverviewScreen {
 
   renderBar() {
     if (!this.progress || !this.barState) return;
-    const { etaSeconds, at, text, fraction } = this.barState;
+    const { done, total, unit, at } = this.barState;
 
     if (!this.barEl?.isConnected || this.barEl.parentElement !== this.progress) {
       this.barEl = Dom.el("div", "rc-bar");
@@ -205,19 +235,19 @@ export class OverviewScreen {
       this.progress.replaceChildren(this.barEl);
     }
 
-    this.barEl.classList.toggle("rc-bar--indeterminate", fraction == null);
-    if (fraction != null) {
-      this.barFill.style.width = `${Math.min(97, Math.max(3, fraction * 100)).toFixed(1)}%`;
-    } else {
-      this.barFill.style.width = "";
-    }
+    // Calls land in one burst per minute-window; between bursts the counter
+    // advances at the pool's average rate and snaps to the real number on
+    // every progress event.
+    const ratePerSecond = Math.max(1, this.api.capacityPerWindow()) / 60;
+    const elapsed = (Date.now() - at) / 1000;
+    const displayed = Math.min(total, Math.floor(done + ratePerSecond * elapsed));
 
-    let countdown = "estimating time left";
-    if (etaSeconds != null) {
-      const remaining = Math.max(0, etaSeconds - (Date.now() - at) / 1000);
-      countdown = remaining < 1 ? "any moment now" : `~${formatDuration(remaining)} left`;
-    }
-    this.barText.textContent = `${countdown} · ${text}`;
+    const fraction = total ? displayed / total : 1;
+    this.barFill.style.width = `${Math.min(97, Math.max(3, fraction * 100)).toFixed(1)}%`;
+
+    const remaining = (total - displayed) / ratePerSecond;
+    const countdown = remaining < 1 ? "any moment now" : `~${formatDuration(remaining)} left`;
+    this.barText.textContent = `${countdown} · ${displayed.toLocaleString()} of ${total.toLocaleString()} ${unit} fetched`;
   }
 
   matches(settings) {
@@ -264,7 +294,11 @@ export class OverviewScreen {
       const row = Dom.el("div", "rc-trow");
 
       const who = Dom.el("div");
-      who.append(Dom.el("div", "rc-name", player.name), Dom.el("div", "rc-dim", `Lv ${player.level} · ${player.id}`));
+      const playerLink = Dom.el("a", "rc-name rc-link", player.name);
+      playerLink.href = `https://www.torn.com/profiles.php?XID=${player.id}`;
+      playerLink.target = "_blank";
+      playerLink.rel = "noopener";
+      who.append(playerLink, Dom.el("div", "rc-dim", `Lv ${player.level} · ${player.id}`));
 
       const ws = Dom.el("div", "rc-ws", stat.v.toLocaleString());
       ws.appendChild(Dom.el("small", null, stat.t ? shortAge(stat.t) : ""));
@@ -274,19 +308,27 @@ export class OverviewScreen {
       state.append(Dom.el("span", `rc-dot ${dotClass}`), Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown"));
 
       const co = Dom.el("div");
-      const coName = Dom.el("div", "rc-name rc-name--co", company?.name || "?");
-      coName.appendChild(Dom.el("span", "rc-star", ` ★ ${company?.rating ?? "?"}`));
+      const coLink = Dom.el("a", "rc-name rc-name--co rc-link", company?.name || "?");
+      if (player.companyId) {
+        coLink.href = `https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.companyId}`;
+        coLink.target = "_blank";
+        coLink.rel = "noopener";
+      }
+      coLink.appendChild(Dom.el("span", "rc-star", ` ★ ${company?.rating ?? "?"}`));
       const detail = [typeName(company?.typeId), status?.position, status?.days != null ? `${status.days}d` : null]
         .filter(Boolean)
         .join(" · ");
-      co.append(coName, Dom.el("div", "rc-dim", detail));
+      co.append(coLink, Dom.el("div", "rc-dim", detail));
 
       const acts = Dom.el("div", "rc-acts");
-      const profile = Dom.el("a", "rc-act", "↗");
-      profile.href = `https://www.torn.com/profiles.php?XID=${player.id}`;
-      profile.target = "_blank";
-      profile.rel = "noopener";
-      acts.appendChild(profile);
+      const chat = Dom.el("a", "rc-act");
+      chat.title = "Start Torn chat";
+      chat.innerHTML =
+        '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.5c-4 0-7 2.6-7 5.8 0 1.8.9 3.4 2.4 4.5-.1 1-.5 1.9-1.2 2.7 1.5-.1 2.8-.6 3.8-1.3.6.2 1.3.2 2 .2 4 0 7-2.6 7-5.8s-3-6.1-7-6.1z"/></svg>';
+      chat.href = ChatOpener.chatUrl(player.id);
+      chat.target = "_blank";
+      chat.rel = "noopener";
+      acts.appendChild(chat);
 
       row.append(who, ws, state, co, acts);
       table.appendChild(row);
@@ -317,7 +359,7 @@ function formatDuration(seconds) {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const secs = seconds % 60;
-  if (hours) return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  if (hours) return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
   if (minutes) return `${minutes}m ${String(secs).padStart(2, "0")}s`;
   return `${secs}s`;
 }

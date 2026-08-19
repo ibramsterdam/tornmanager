@@ -1,5 +1,5 @@
 import { Store } from "./Store.js";
-import { TornApiError } from "./Api.js";
+import { TornApiError, interruptibleSleep } from "./Api.js";
 
 const STAT_MAX_AGE_MS = 10 * 86_400_000;
 const WINDOW_MS = 61_000;
@@ -67,14 +67,10 @@ export class Stats {
 
       if (index < stale.length) {
         const elapsed = Date.now() - windowStart;
-        if (elapsed < WINDOW_MS) await sleep(WINDOW_MS - elapsed);
+        if (elapsed < WINDOW_MS) await interruptibleSleep(WINDOW_MS - elapsed, shouldStop);
       }
     }
 
     return this.data;
   }
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
