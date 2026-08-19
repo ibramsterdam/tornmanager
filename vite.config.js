@@ -5,6 +5,8 @@ import { readFileSync } from "fs";
 const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
 const isDev = process.env.NODE_ENV === "development";
 
+const API_BASE = isDev ? "http://localhost:3000" : "https://tornmanager.com";
+
 // Distribution stays private: point this at a secret gist raw URL once one
 // exists, then uncomment downloadURL/updateURL below.
 const RELEASE_URL = null;
@@ -12,6 +14,7 @@ const RELEASE_URL = null;
 export default defineConfig({
   define: {
     __RC_VERSION__: JSON.stringify(pkg.version),
+    __API_BASE__: JSON.stringify(API_BASE),
   },
   build: {
     minify: false,
@@ -30,7 +33,8 @@ export default defineConfig({
         noframes: true,
         license: "All rights reserved",
         ...(RELEASE_URL && !isDev ? { downloadURL: RELEASE_URL, updateURL: RELEASE_URL } : {}),
-        grant: [],
+        grant: ["GM.xmlHttpRequest"],
+        connect: ["torn.com", "api.torn.com", "tornmanager.com", ...(isDev ? ["localhost"] : [])],
         "run-at": "document-start",
       },
       build: {

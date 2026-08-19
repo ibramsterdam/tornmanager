@@ -30,6 +30,13 @@ export class Keys {
     if (!key) throw new Error("Paste a key first");
     if (this.list.some((k) => k.key === key)) throw new Error("That key is already in the pool");
 
+    const info = await api.call("/key/info", {}, key);
+    const access = info.info?.access || info.access || {};
+    const accessType = String(access.type || "Unknown");
+    if (!/public/i.test(accessType)) {
+      throw new Error(`That key has ${accessType} access. Only Public access keys are accepted.`);
+    }
+
     const basic = await api.call("/user/basic", {}, key);
     const owner = basic.basic || basic.profile || basic;
     if (!owner?.id) throw new Error("Could not resolve the key's owner");
@@ -37,14 +44,6 @@ export class Keys {
     const duplicate = this.list.find((k) => k.ownerId === owner.id);
     if (duplicate) {
       throw new Error(`Also owned by ${owner.name} [${owner.id}], same player as an existing key. Extra keys from one player share the same 100/min limit.`);
-    }
-
-    let accessType = "Unknown";
-    try {
-      const info = await api.call("/key/info", {}, key);
-      accessType = info.info?.access?.type || info.access?.type || "Unknown";
-    } catch {
-      accessType = "Public";
     }
 
     const entry = {

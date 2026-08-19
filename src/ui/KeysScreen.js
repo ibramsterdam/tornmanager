@@ -3,10 +3,11 @@ import { Dom } from "../core/Dom.js";
 const CALLS_PER_KEY_PER_MINUTE = 75;
 
 export class KeysScreen {
-  constructor(keys, api, overlay) {
+  constructor(keys, api, overlay, auth) {
     this.keys = keys;
     this.api = api;
     this.overlay = overlay;
+    this.auth = auth;
   }
 
   hasKeys() {
@@ -56,7 +57,8 @@ export class KeysScreen {
       const item = Dom.el("div", "rc-list-row");
       const badge = Dom.el("span", `rc-badge ${entry.valid ? "rc-badge--fresh" : "rc-badge--stale"}`, entry.valid ? "valid" : "invalid");
       const masked = Dom.el("span", "rc-mono", `${entry.key.slice(0, 4)}…${entry.key.slice(-4)}`);
-      const owner = Dom.el("span", "rc-dim", `${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}`);
+      const isSignIn = entry.key === this.auth.getApiKey();
+      const owner = Dom.el("span", "rc-dim", `${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}${isSignIn ? " · sign-in key" : ""}`);
       const usage = Dom.el("span", "rc-dim", `${entry.callsToday.toLocaleString()} calls today`);
       const remove = Dom.el("button", "rc-act", "✕");
       remove.addEventListener("click", () => {
