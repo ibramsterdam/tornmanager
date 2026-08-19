@@ -62,6 +62,7 @@ export class Api {
           try {
             results[item.index] = await this.call(item.task.path, item.task.params, pool[i % pool.length]);
             completed += 1;
+            onProgress?.(completed, tasks.length);
           } catch (error) {
             item.tries += 1;
             if (error instanceof TornApiError && error.code === 5 && item.tries < MAX_TRIES) {
@@ -69,12 +70,11 @@ export class Api {
             } else {
               results[item.index] = error;
               completed += 1;
+              onProgress?.(completed, tasks.length);
             }
           }
         })
       );
-
-      onProgress?.(completed, tasks.length);
 
       if (queue.length) {
         const elapsed = Date.now() - windowStart;

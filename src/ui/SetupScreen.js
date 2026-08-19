@@ -45,6 +45,13 @@ export class SetupScreen {
 
     row.append(starMin.wrap, starMax.wrap, floor.wrap, inactive.wrap);
     rangeCard.appendChild(row);
+    rangeCard.appendChild(
+      Dom.el(
+        "div",
+        "rc-hint",
+        "The floor decides how deep the working stats sweep goes. 400,000 stops around rank 50,000 (≈500 calls, ~7 min per key). 100,000 sweeps several times deeper and can take an hour on a single key."
+      )
+    );
     container.appendChild(rangeCard);
 
     const save = Dom.el("button", "rc-btn", "Save");

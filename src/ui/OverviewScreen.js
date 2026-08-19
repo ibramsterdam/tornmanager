@@ -67,11 +67,15 @@ export class OverviewScreen {
       staleAfterHours: 24,
       action: () => this.updateRoster(),
     }));
+    const paused = this.sweep.pausedProgress(Settings.get().floor);
     wrap.appendChild(this.syncRow({
       name: "Working stats",
-      desc: "HoF sweep down to the floor",
+      desc: paused
+        ? `paused at rank ~${paused.offset.toLocaleString()} · Update continues where it left off`
+        : "HoF sweep down to the floor",
       fetchedAt: this.sweep.stats?.fetchedAt,
       staleAfterHours: 24 * 10,
+      badge: paused ? pausedBadge() : null,
       action: () => this.updateStats(),
     }));
     wrap.appendChild(this.syncRow({
@@ -84,7 +88,7 @@ export class OverviewScreen {
     return wrap;
   }
 
-  syncRow({ name, desc, fetchedAt, staleAfterHours, action }) {
+  syncRow({ name, desc, fetchedAt, staleAfterHours, badge, action }) {
     const row = Dom.el("div", "rc-sync");
     const button = Dom.el("button", "rc-btn rc-btn--ghost", "Update");
     button.addEventListener("click", async () => {
@@ -103,7 +107,7 @@ export class OverviewScreen {
     row.append(
       Dom.el("span", "rc-sync-name", name),
       Dom.el("span", "rc-dim", desc),
-      ageBadge(fetchedAt, staleAfterHours),
+      badge || ageBadge(fetchedAt, staleAfterHours),
       button
     );
     return row;
@@ -116,10 +120,12 @@ export class OverviewScreen {
   async updateStats() {
     const floor = Settings.get().floor;
     await this.sweep.run(floor, {
-      onProgress: (offset, byId) => {
-        this.setProgress(`Sweeping Hall of Fame · rank ~${offset.toLocaleString()} · ${Object.keys(byId).length.toLocaleString()} players above ${formatStat(floor)}`);
+      onProgress: ({ rank, found, lowest }) => {
+        const depth = lowest === null ? "" : ` · now at ${formatStat(lowest)}, sweeping down to ${formatStat(floor)}`;
+        this.setProgress(`Sweeping Hall of Fame · rank ~${rank.toLocaleString()} · ${found.toLocaleString()} players collected${depth}`);
       },
     });
+    this.setProgress("Working stats sweep finished.");
   }
 
   async updateStatus(matches) {
@@ -211,6 +217,10 @@ export class OverviewScreen {
     }
     return table;
   }
+}
+
+function pausedBadge() {
+  return Dom.el("span", "rc-badge rc-badge--aging", "paused");
 }
 
 function ageBadge(fetchedAt, staleAfterHours) {

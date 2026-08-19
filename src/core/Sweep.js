@@ -9,12 +9,22 @@ export class Sweep {
     this.stats = Store.get("stats", { byId: {}, fetchedAt: null, floor: null });
   }
 
-  async run(floor, { onProgress, shouldStop } = {}) {
+  pausedProgress(floor) {
     const progress = Store.get("sweep_progress");
-    const resuming = progress && progress.floor === floor;
-    let offset = resuming ? progress.offset : 0;
-    const byId = resuming ? progress.byId : {};
+    if (!progress || progress.floor !== floor) return null;
+    return progress;
+  }
+
+  async run(floor, { onProgress, shouldStop } = {}) {
+    const resume = this.pausedProgress(floor);
+    let offset = resume ? resume.offset : 0;
+    const byId = resume ? resume.byId : {};
+    let lowest = resume ? resume.lowest ?? null : null;
     let reachedFloor = false;
+
+    const report = (rank) => {
+      onProgress?.({ rank, found: Object.keys(byId).length, lowest, floor });
+    };
 
     while (!reachedFloor) {
       if (shouldStop?.()) return null;
@@ -27,7 +37,7 @@ export class Sweep {
       }));
 
       const results = await this.api.runBatch(tasks, {
-        onProgress: () => onProgress?.(offset, byId),
+        onProgress: (done) => report(offset + done * PAGE_SIZE),
         shouldStop,
       });
 
@@ -35,6 +45,7 @@ export class Sweep {
         if (result instanceof Error) throw result;
         const rows = result.hof || [];
         for (const row of rows) {
+          if (lowest === null || row.value < lowest) lowest = row.value;
           if (row.value >= floor) {
             byId[row.id] = { v: row.value, la: row.last_action, lvl: row.level, n: row.username };
           } else {
@@ -45,8 +56,8 @@ export class Sweep {
       }
 
       offset += pages * PAGE_SIZE;
-      Store.set("sweep_progress", { floor, offset, byId });
-      onProgress?.(offset, byId);
+      Store.set("sweep_progress", { floor, offset, byId, lowest });
+      report(offset);
 
       if (!reachedFloor) {
         const elapsed = Date.now() - windowStart;

@@ -1,6 +1,6 @@
 {
   "name": "torn-recruiter",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Company recruiting scout for Torn",
   "private": true,
   "type": "module",
