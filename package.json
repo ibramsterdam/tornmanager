@@ -1,0 +1,16 @@
+{
+  "name": "torn-recruiter",
+  "version": "0.1.0",
+  "description": "Company recruiting scout for Torn",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "NODE_ENV=development vite build --watch",
+    "build": "vite build",
+    "release": "vite build && cp dist/recruiter.user.js recruiter.user.js"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5",
+    "vite-plugin-monkey": "^5.0.8"
+  }
+}
