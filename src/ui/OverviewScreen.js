@@ -1,12 +1,11 @@
 import { Dom } from "../core/Dom.js";
 import { Settings } from "../core/Settings.js";
 import { typeName } from "../core/CompanyTypes.js";
-import { estimateSweepPages } from "../core/Sweep.js";
 
 export class OverviewScreen {
-  constructor({ roster, sweep, status, api, overlay }) {
+  constructor({ roster, stats, status, api, overlay }) {
     this.roster = roster;
-    this.sweep = sweep;
+    this.stats = stats;
     this.status = status;
     this.api = api;
     this.overlay = overlay;
@@ -17,7 +16,7 @@ export class OverviewScreen {
   subtitle() {
     const settings = Settings.get();
     const types = settings.typeIds.map(typeName).join(" + ") || "no types";
-    return `${types} · ${settings.starMin}-${settings.starMax}★ · ${formatStat(settings.floor)}+`;
+    return `${types} · ${settings.starMin}-${settings.starMax}★`;
   }
 
   render(container) {
@@ -61,6 +60,7 @@ export class OverviewScreen {
   syncRows(matches) {
     const wrap = Dom.el("div", "rc-syncs");
     const companyCount = new Set(matches.map((m) => m.player.companyId)).size;
+    const capacity = Math.max(1, this.api.capacityPerWindow());
 
     wrap.appendChild(this.syncRow({
       name: "Roster",
@@ -69,33 +69,26 @@ export class OverviewScreen {
       staleAfterHours: 24,
       action: () => this.updateRoster(),
     }));
-    const settings = Settings.get();
-    const paused = this.sweep.pausedProgress(settings.floor);
+
     let statsDesc = "needs a roster update first";
-    if (paused) {
-      statsDesc = `paused at rank ~${paused.offset.toLocaleString()} · Update continues where it left off`;
-    } else if (this.roster.data) {
+    if (this.roster.data) {
       const players = this.roster.data.players.filter((p) => !p.director);
-      const stale = this.sweep.staleDirectPlayers(players).length;
-      const pages = estimateSweepPages(settings.floor);
-      const calls = Math.min(stale, pages);
-      const minutes = Math.max(1, Math.ceil(calls / Math.max(1, this.api.capacityPerWindow())));
+      const stale = this.stats.stalePlayers(players).length;
       if (stale === 0) {
-        statsDesc = "all roster players fresh (10 day cache)";
-      } else if (stale <= pages) {
-        statsDesc = `${stale.toLocaleString()} player lookups · ~${minutes} min`;
+        statsDesc = `all ${players.length.toLocaleString()} employees fresh (10 day cache)`;
       } else {
-        statsDesc = `HoF sweep ≈ ${pages.toLocaleString()} calls · ~${minutes} min`;
+        const minutes = Math.max(1, Math.ceil(stale / capacity));
+        statsDesc = `${stale.toLocaleString()} of ${players.length.toLocaleString()} employees to fetch · ~${minutes} min`;
       }
     }
     wrap.appendChild(this.syncRow({
       name: "Working stats",
       desc: statsDesc,
-      fetchedAt: this.sweep.stats?.fetchedAt,
+      fetchedAt: this.stats.data?.fetchedAt,
       staleAfterHours: 24 * 10,
-      badge: paused ? pausedBadge() : null,
       action: () => this.updateStats(),
     }));
+
     wrap.appendChild(this.syncRow({
       name: "Status",
       desc: `online state of ${matches.length} matches · ${companyCount} calls`,
@@ -106,7 +99,7 @@ export class OverviewScreen {
     return wrap;
   }
 
-  syncRow({ name, desc, fetchedAt, staleAfterHours, badge, action }) {
+  syncRow({ name, desc, fetchedAt, staleAfterHours, action }) {
     const row = Dom.el("div", "rc-sync");
     const button = Dom.el("button", "rc-btn rc-btn--ghost", "Update");
     button.addEventListener("click", async () => {
@@ -119,13 +112,14 @@ export class OverviewScreen {
         return;
       } finally {
         this.busy = false;
+        this.stopTicker();
       }
       this.overlay.refresh();
     });
     row.append(
       Dom.el("span", "rc-sync-name", name),
       Dom.el("span", "rc-dim", desc),
-      badge || ageBadge(fetchedAt, staleAfterHours),
+      ageBadge(fetchedAt, staleAfterHours),
       button
     );
     return row;
@@ -136,49 +130,29 @@ export class OverviewScreen {
   }
 
   async updateStats() {
-    const floor = Settings.get().floor;
     const roster = this.roster.data;
     if (!roster) {
-      this.setProgress("Update the roster first, stats are only fetched for players in your tracked companies.");
+      this.setProgress("Update the roster first, stats are fetched for the employees in your tracked companies.");
       return;
     }
     const players = roster.players.filter((p) => !p.director);
-    const stale = this.sweep.staleDirectPlayers(players);
-    const sweepPages = estimateSweepPages(floor);
+    const staleCount = this.stats.stalePlayers(players).length;
     const capacity = Math.max(1, this.api.capacityPerWindow());
 
-    try {
-      if (stale.length <= sweepPages) {
-        await this.sweep.runDirect(players, {
-          onProgress: (done, total) => {
-            this.setBar({
-              etaSeconds: Math.round(((total - done) / capacity) * 60),
-              fraction: done / total,
-              text: `stats ${done} of ${total} players (per-player lookups)`,
-            });
-          },
+    await this.stats.run(players, {
+      onProgress: (done, total) => {
+        this.setBar({
+          etaSeconds: Math.round(((total - done) / capacity) * 60),
+          fraction: total ? done / total : 1,
+          text: `stats ${done.toLocaleString()} of ${total.toLocaleString()} employees`,
         });
-        this.setProgress(`Working stats fetched for ${stale.length.toLocaleString()} players (${(players.length - stale.length).toLocaleString()} were still fresh).`);
-      } else {
-        const rosterIds = new Set(players.map((p) => p.id));
-        await this.sweep.run(floor, {
-          rosterIds,
-          onProgress: ({ rank, found, lowest, remainingPages }) => {
-            const etaSeconds = remainingPages == null ? null : Math.round((remainingPages / capacity) * 60);
-            const fraction = remainingPages == null ? null : rank / (rank + remainingPages * 100);
-            const depth = lowest == null ? "" : ` · at ${formatStat(lowest)}, target ${formatStat(floor)}`;
-            this.setBar({
-              etaSeconds,
-              fraction,
-              text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} roster players found${depth}`,
-            });
-          },
-        });
-        this.setProgress("Working stats sweep finished.");
-      }
-    } finally {
-      this.stopTicker();
-    }
+      },
+    });
+    this.setProgress(
+      staleCount
+        ? `Working stats fetched for ${staleCount.toLocaleString()} employees (${(players.length - staleCount).toLocaleString()} were still fresh).`
+        : "All employees were already fresh, nothing to fetch."
+    );
   }
 
   async updateStatus(matches) {
@@ -187,21 +161,17 @@ export class OverviewScreen {
       this.setProgress("No matches yet. Update the roster and working stats first.");
       return;
     }
-    try {
-      await this.status.refresh(companyIds, {
-        onProgress: (done, total) => {
-          const capacity = Math.max(1, this.api.capacityPerWindow());
-          this.setBar({
-            etaSeconds: Math.round(((total - done) / capacity) * 60),
-            fraction: done / total,
-            text: `status ${done} of ${total} companies`,
-          });
-        },
-      });
-      this.setProgress(`Status refreshed for ${companyIds.length} companies.`);
-    } finally {
-      this.stopTicker();
-    }
+    const capacity = Math.max(1, this.api.capacityPerWindow());
+    await this.status.refresh(companyIds, {
+      onProgress: (done, total) => {
+        this.setBar({
+          etaSeconds: Math.round(((total - done) / capacity) * 60),
+          fraction: done / total,
+          text: `status ${done} of ${total} companies`,
+        });
+      },
+    });
+    this.setProgress(`Status refreshed for ${companyIds.length} companies.`);
   }
 
   setProgress(text) {
@@ -252,7 +222,7 @@ export class OverviewScreen {
 
   matches(settings) {
     const roster = this.roster.data;
-    const stats = this.sweep.stats?.byId || {};
+    const stats = this.stats.data?.byId || {};
     const statuses = this.status.data?.byId || {};
     if (!roster) return [];
 
@@ -261,7 +231,7 @@ export class OverviewScreen {
     for (const player of roster.players) {
       if (player.director) continue;
       const stat = stats[player.id];
-      if (!stat || stat.v < settings.floor) continue;
+      if (!stat || !(stat.v > 0)) continue;
       const status = statuses[player.id];
       const lastAction = status?.timestamp || stat.la;
       if (lastAction && lastAction < cutoff) continue;
@@ -290,7 +260,6 @@ export class OverviewScreen {
       return table;
     }
 
-    const statsAge = shortAge(this.sweep.stats?.fetchedAt);
     for (const { player, company, stat, status } of rows) {
       const row = Dom.el("div", "rc-trow");
 
@@ -298,7 +267,7 @@ export class OverviewScreen {
       who.append(Dom.el("div", "rc-name", player.name), Dom.el("div", "rc-dim", `Lv ${player.level} · ${player.id}`));
 
       const ws = Dom.el("div", "rc-ws", stat.v.toLocaleString());
-      ws.appendChild(Dom.el("small", null, statsAge ? `${statsAge} old` : ""));
+      ws.appendChild(Dom.el("small", null, stat.t ? shortAge(stat.t) : ""));
 
       const state = Dom.el("div", "rc-state");
       const dotClass = status?.status === "Online" ? "rc-dot--on" : status?.status === "Idle" ? "rc-dot--idle" : "rc-dot--off";
@@ -326,10 +295,6 @@ export class OverviewScreen {
   }
 }
 
-function pausedBadge() {
-  return Dom.el("span", "rc-badge rc-badge--aging", "paused");
-}
-
 function ageBadge(fetchedAt, staleAfterHours) {
   if (!fetchedAt) return Dom.el("span", "rc-badge rc-badge--stale", "never");
   const hours = (Date.now() - fetchedAt) / 3_600_000;
@@ -345,10 +310,6 @@ function shortAge(fetchedAt) {
   const hours = Math.floor(minutes / 60);
   if (hours < 48) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
-}
-
-function formatStat(value) {
-  return value >= 1000 ? `${Math.round(value / 1000)}k` : String(value);
 }
 
 function formatDuration(seconds) {

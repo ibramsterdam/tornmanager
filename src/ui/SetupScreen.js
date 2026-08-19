@@ -49,7 +49,6 @@ export class SetupScreen {
         Settings.set({ starMax: value });
       })
     );
-    row.appendChild(this.floorField(settings.floor));
     row.appendChild(
       this.stepper("Ignore inactive over (days)", settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max, (value) => {
         Settings.set({ inactiveDays: value });
@@ -61,7 +60,7 @@ export class SetupScreen {
       Dom.el(
         "div",
         "rc-hint",
-        "Everything saves automatically. The floor decides how deep the working stats sweep goes: 400,000 stops around rank 50,000 (≈500 calls, ~7 min per key), 100,000 sweeps several times deeper and can take an hour on a single key."
+        "Everything saves automatically. Working stats are fetched once per employee of the tracked companies and cached for 10 days, so the cost scales with how many companies you track."
       )
     );
     container.appendChild(rangeCard);
@@ -93,31 +92,6 @@ export class SetupScreen {
 
     control.append(minus, display, plus);
     wrap.appendChild(control);
-    return wrap;
-  }
-
-  floorField(floor) {
-    const wrap = Dom.el("div", "rc-field");
-    wrap.appendChild(Dom.el("div", "rc-label", "Working stats floor"));
-
-    const input = Dom.el("input", "rc-input");
-    input.type = "number";
-    input.min = 0;
-    input.value = floor;
-
-    const save = () => {
-      const value = Math.max(0, Number(input.value) || 0);
-      if (value !== Settings.get().floor) {
-        Settings.set({ floor: value });
-        this.overlay.refresh();
-      }
-    };
-    input.addEventListener("blur", save);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") input.blur();
-    });
-
-    wrap.appendChild(input);
     return wrap;
   }
 }

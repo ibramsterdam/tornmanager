@@ -4,7 +4,6 @@ const DEFAULTS = {
   typeIds: [10],
   starMin: 8,
   starMax: 10,
-  floor: 100_000,
   inactiveDays: 7,
 };
 
@@ -16,8 +15,8 @@ export const Settings = {
     const settings = { ...DEFAULTS, ...Store.get("settings", {}) };
     settings.starMin = clamp(settings.starMin, STAR_RANGE.min, STAR_RANGE.max);
     settings.starMax = clamp(settings.starMax, settings.starMin, STAR_RANGE.max);
-    settings.floor = Math.max(0, Number(settings.floor) || DEFAULTS.floor);
     settings.inactiveDays = clamp(settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max);
+    delete settings.floor;
     return settings;
   },
 
