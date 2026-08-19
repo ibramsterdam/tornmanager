@@ -120,7 +120,7 @@ export class AuthScreen {
       const info = await this.api.call("/key/info", {}, apiKey);
       access = info.info?.access || info.access || {};
     } catch (err) {
-      throw new Error(err.message || "Could not validate the key with Torn");
+      throw new Error(err.message || "Could not validate the key with Torn", { cause: err });
     }
     const type = String(access.type || "");
     if (!/public/i.test(type)) {

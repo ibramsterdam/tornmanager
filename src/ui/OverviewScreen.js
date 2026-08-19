@@ -185,8 +185,8 @@ export class OverviewScreen {
       this.stopRequested = false;
       button.textContent = "Pause";
 
-      let message = null;
-      let paused = false;
+      let message;
+      let paused;
       try {
         message = await action();
       } catch (error) {

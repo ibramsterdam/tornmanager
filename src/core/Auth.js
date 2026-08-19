@@ -62,7 +62,7 @@ export class Auth {
         },
         data: JSON.stringify(body),
         onload(response) {
-          let data = null;
+          let data;
           try {
             data = JSON.parse(response.responseText);
           } catch {

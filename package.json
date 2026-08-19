@@ -1,15 +1,19 @@
 {
   "name": "torn-recruiter",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Company recruiting scout for Torn",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development vite build --watch",
-    "build": "vite build",
-    "release": "vite build && cp dist/recruiter.user.js recruiter.user.js"
+    "build": "eslint src && vite build",
+    "release": "vite build && cp dist/recruiter.user.js recruiter.user.js",
+    "lint": "eslint src"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
     "vite": "^6.3.5",
     "vite-plugin-monkey": "^5.0.8"
   }
