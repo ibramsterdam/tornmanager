@@ -1,6 +1,7 @@
 import { Dom } from "../core/Dom.js";
 import { Settings } from "../core/Settings.js";
 import { typeName } from "../core/CompanyTypes.js";
+import { estimateSweepPages } from "../core/Sweep.js";
 
 export class OverviewScreen {
   constructor({ roster, sweep, status, api, overlay }) {
@@ -68,12 +69,28 @@ export class OverviewScreen {
       staleAfterHours: 24,
       action: () => this.updateRoster(),
     }));
-    const paused = this.sweep.pausedProgress(Settings.get().floor);
+    const settings = Settings.get();
+    const paused = this.sweep.pausedProgress(settings.floor);
+    let statsDesc = "needs a roster update first";
+    if (paused) {
+      statsDesc = `paused at rank ~${paused.offset.toLocaleString()} · Update continues where it left off`;
+    } else if (this.roster.data) {
+      const players = this.roster.data.players.filter((p) => !p.director);
+      const stale = this.sweep.staleDirectPlayers(players).length;
+      const pages = estimateSweepPages(settings.floor);
+      const calls = Math.min(stale, pages);
+      const minutes = Math.max(1, Math.ceil(calls / Math.max(1, this.api.capacityPerWindow())));
+      if (stale === 0) {
+        statsDesc = "all roster players fresh (10 day cache)";
+      } else if (stale <= pages) {
+        statsDesc = `${stale.toLocaleString()} player lookups · ~${minutes} min`;
+      } else {
+        statsDesc = `HoF sweep ≈ ${pages.toLocaleString()} calls · ~${minutes} min`;
+      }
+    }
     wrap.appendChild(this.syncRow({
       name: "Working stats",
-      desc: paused
-        ? `paused at rank ~${paused.offset.toLocaleString()} · Update continues where it left off`
-        : "HoF sweep down to the floor",
+      desc: statsDesc,
       fetchedAt: this.sweep.stats?.fetchedAt,
       staleAfterHours: 24 * 10,
       badge: paused ? pausedBadge() : null,
@@ -122,26 +139,43 @@ export class OverviewScreen {
     const floor = Settings.get().floor;
     const roster = this.roster.data;
     if (!roster) {
-      this.setProgress("Update the roster first, the sweep only keeps stats for players in your tracked companies.");
+      this.setProgress("Update the roster first, stats are only fetched for players in your tracked companies.");
       return;
     }
-    const rosterIds = new Set(roster.players.filter((p) => !p.director).map((p) => p.id));
+    const players = roster.players.filter((p) => !p.director);
+    const stale = this.sweep.staleDirectPlayers(players);
+    const sweepPages = estimateSweepPages(floor);
+    const capacity = Math.max(1, this.api.capacityPerWindow());
+
     try {
-      await this.sweep.run(floor, {
-        rosterIds,
-        onProgress: ({ rank, found, lowest, remainingPages }) => {
-          const pagesPerMinute = Math.max(1, this.api.capacityPerWindow());
-          const etaSeconds = remainingPages == null ? null : Math.round((remainingPages / pagesPerMinute) * 60);
-          const fraction = remainingPages == null ? null : rank / (rank + remainingPages * 100);
-          const depth = lowest == null ? "" : ` · at ${formatStat(lowest)}, target ${formatStat(floor)}`;
-          this.setBar({
-            etaSeconds,
-            fraction,
-            text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} roster players found${depth}`,
-          });
-        },
-      });
-      this.setProgress("Working stats sweep finished.");
+      if (stale.length <= sweepPages) {
+        await this.sweep.runDirect(players, {
+          onProgress: (done, total) => {
+            this.setBar({
+              etaSeconds: Math.round(((total - done) / capacity) * 60),
+              fraction: done / total,
+              text: `stats ${done} of ${total} players (per-player lookups)`,
+            });
+          },
+        });
+        this.setProgress(`Working stats fetched for ${stale.length.toLocaleString()} players (${(players.length - stale.length).toLocaleString()} were still fresh).`);
+      } else {
+        const rosterIds = new Set(players.map((p) => p.id));
+        await this.sweep.run(floor, {
+          rosterIds,
+          onProgress: ({ rank, found, lowest, remainingPages }) => {
+            const etaSeconds = remainingPages == null ? null : Math.round((remainingPages / capacity) * 60);
+            const fraction = remainingPages == null ? null : rank / (rank + remainingPages * 100);
+            const depth = lowest == null ? "" : ` · at ${formatStat(lowest)}, target ${formatStat(floor)}`;
+            this.setBar({
+              etaSeconds,
+              fraction,
+              text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} roster players found${depth}`,
+            });
+          },
+        });
+        this.setProgress("Working stats sweep finished.");
+      }
     } finally {
       this.stopTicker();
     }

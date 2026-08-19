@@ -2,6 +2,32 @@ import { Store } from "./Store.js";
 
 const PAGE_SIZE = 100;
 const WINDOW_MS = 61_000;
+const STAT_MAX_AGE_MS = 10 * 86_400_000;
+
+// Measured value-at-rank samples from the workstats leaderboard (Aug 2026),
+// used to predict how many pages a sweep to a given floor costs.
+const RANK_CURVE = [
+  [565_457, 100],
+  [483_000, 200],
+  [452_000, 300],
+  [403_000, 500],
+  [279_000, 1_000],
+  [36_000, 3_000],
+  [7_500, 6_000],
+];
+
+export function estimateSweepPages(floor) {
+  if (floor >= RANK_CURVE[0][0]) return RANK_CURVE[0][1];
+  for (let i = 1; i < RANK_CURVE.length; i++) {
+    const [hiValue, hiPages] = RANK_CURVE[i - 1];
+    const [loValue, loPages] = RANK_CURVE[i];
+    if (floor >= loValue) {
+      const t = (hiValue - floor) / (hiValue - loValue);
+      return Math.round(hiPages + t * (loPages - hiPages));
+    }
+  }
+  return RANK_CURVE[RANK_CURVE.length - 1][1] * 2;
+}
 
 export class Sweep {
   constructor(api) {
@@ -13,6 +39,41 @@ export class Sweep {
     const progress = Store.get("sweep_progress");
     if (!progress || progress.floor > floor) return null;
     return progress;
+  }
+
+  staleDirectPlayers(players) {
+    const byId = this.stats.byId || {};
+    const now = Date.now();
+    return players.filter((p) => {
+      const stat = byId[p.id];
+      return !(stat?.t && now - stat.t < STAT_MAX_AGE_MS);
+    });
+  }
+
+  async runDirect(players, { onProgress, shouldStop } = {}) {
+    const byId = { ...(this.stats.byId || {}) };
+    const stale = this.staleDirectPlayers(players);
+
+    if (stale.length) {
+      const tasks = stale.map((p) => ({ path: `/user/${p.id}/hof` }));
+      const results = await this.api.runBatch(tasks, {
+        onProgress: (done, total) => onProgress?.(done, total),
+        shouldStop,
+      });
+
+      results.forEach((result, i) => {
+        if (!result || result instanceof Error) return;
+        const hof = result.hof || {};
+        const workstats = hof.working_stats || hof.workstats || hof.workingstats;
+        if (workstats?.value != null) {
+          byId[stale[i].id] = { v: workstats.value, la: null, lvl: stale[i].level, n: stale[i].name, t: Date.now() };
+        }
+      });
+    }
+
+    this.stats = { byId, fetchedAt: Date.now(), floor: 0 };
+    Store.set("stats", this.stats);
+    return this.stats;
   }
 
   async run(floor, { rosterIds, onProgress, shouldStop } = {}) {
@@ -57,7 +118,7 @@ export class Sweep {
           if (lowest === null || row.value < lowest) lowest = row.value;
           if (row.value >= floor) {
             if (!rosterIds || rosterIds.has(row.id)) {
-              byId[row.id] = { v: row.value, la: row.last_action, lvl: row.level, n: row.username };
+              byId[row.id] = { v: row.value, la: row.last_action, lvl: row.level, n: row.username, t: Date.now() };
             }
           } else {
             reachedFloor = true;
