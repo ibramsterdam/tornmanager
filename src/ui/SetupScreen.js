@@ -1,6 +1,6 @@
 import { Dom } from "../core/Dom.js";
 import { COMPANY_TYPES } from "../core/CompanyTypes.js";
-import { Settings } from "../core/Settings.js";
+import { Settings, STAR_RANGE, INACTIVE_RANGE } from "../core/Settings.js";
 
 export class SetupScreen {
   constructor(overlay) {
@@ -29,6 +29,7 @@ export class SetupScreen {
           selected.add(type.id);
           chip.classList.add("rc-chip--on");
         }
+        Settings.set({ typeIds: [...selected].sort((a, b) => a - b) });
       });
       chips.appendChild(chip);
     }
@@ -38,52 +39,85 @@ export class SetupScreen {
     const rangeCard = Dom.el("div", "rc-card");
     const row = Dom.el("div", "rc-row");
 
-    const starMin = numberField("Min stars", settings.starMin, 0, 10);
-    const starMax = numberField("Max stars", settings.starMax, 0, 10);
-    const floor = numberField("Working stats floor", settings.floor, 0);
-    const inactive = numberField("Ignore inactive over (days)", settings.inactiveDays, 1);
+    row.appendChild(
+      this.stepper("Min stars", settings.starMin, STAR_RANGE.min, settings.starMax, (value) => {
+        Settings.set({ starMin: value });
+      })
+    );
+    row.appendChild(
+      this.stepper("Max stars", settings.starMax, settings.starMin, STAR_RANGE.max, (value) => {
+        Settings.set({ starMax: value });
+      })
+    );
+    row.appendChild(this.floorField(settings.floor));
+    row.appendChild(
+      this.stepper("Ignore inactive over (days)", settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max, (value) => {
+        Settings.set({ inactiveDays: value });
+      })
+    );
 
-    row.append(starMin.wrap, starMax.wrap, floor.wrap, inactive.wrap);
     rangeCard.appendChild(row);
     rangeCard.appendChild(
       Dom.el(
         "div",
         "rc-hint",
-        "The floor decides how deep the working stats sweep goes. 400,000 stops around rank 50,000 (≈500 calls, ~7 min per key). 100,000 sweeps several times deeper and can take an hour on a single key."
+        "Everything saves automatically. The floor decides how deep the working stats sweep goes: 400,000 stops around rank 50,000 (≈500 calls, ~7 min per key), 100,000 sweeps several times deeper and can take an hour on a single key."
       )
     );
     container.appendChild(rangeCard);
 
-    const save = Dom.el("button", "rc-btn", "Save");
-    const note = Dom.el("span", "rc-dim", " Changes apply after the next roster update.");
-    const footer = Dom.el("div", "rc-footer-row");
-    save.addEventListener("click", () => {
-      Settings.set({
-        typeIds: [...selected].sort((a, b) => a - b),
-        starMin: clamp(starMin.input.value, 0, 10),
-        starMax: clamp(starMax.input.value, 0, 10),
-        floor: Math.max(0, Number(floor.input.value) || 0),
-        inactiveDays: Math.max(1, Number(inactive.input.value) || 30),
-      });
-      this.overlay.show("overview");
-    });
-    footer.append(save, note);
-    container.appendChild(footer);
+    container.appendChild(Dom.el("div", "rc-hint", "Company type and star changes apply after the next roster update."));
   }
-}
 
-function numberField(labelText, value, min, max) {
-  const wrap = Dom.el("div", "rc-field");
-  const label = Dom.el("div", "rc-label", labelText);
-  const input = Dom.el("input", "rc-input");
-  input.type = "number";
-  input.value = value;
-  if (min !== undefined) input.min = min;
-  if (max !== undefined) input.max = max;
-  wrap.append(label, input);
-  return { wrap, input };
-}
+  stepper(labelText, value, min, max, onChange) {
+    const wrap = Dom.el("div", "rc-field");
+    wrap.appendChild(Dom.el("div", "rc-label", labelText));
 
-function clamp(value, min, max) {
-  return Math.min(max, Math.max(min, Number(value) || min));
+    const control = Dom.el("div", "rc-stepper");
+    const minus = Dom.el("button", "rc-stepper-btn", "−");
+    const display = Dom.el("span", "rc-stepper-value", String(value));
+    const plus = Dom.el("button", "rc-stepper-btn", "+");
+
+    const apply = (next) => {
+      onChange(next);
+      this.overlay.refresh();
+    };
+    minus.addEventListener("click", () => {
+      if (value > min) apply(value - 1);
+    });
+    plus.addEventListener("click", () => {
+      if (value < max) apply(value + 1);
+    });
+    minus.disabled = value <= min;
+    plus.disabled = value >= max;
+
+    control.append(minus, display, plus);
+    wrap.appendChild(control);
+    return wrap;
+  }
+
+  floorField(floor) {
+    const wrap = Dom.el("div", "rc-field");
+    wrap.appendChild(Dom.el("div", "rc-label", "Working stats floor"));
+
+    const input = Dom.el("input", "rc-input");
+    input.type = "number";
+    input.min = 0;
+    input.value = floor;
+
+    const save = () => {
+      const value = Math.max(0, Number(input.value) || 0);
+      if (value !== Settings.get().floor) {
+        Settings.set({ floor: value });
+        this.overlay.refresh();
+      }
+    };
+    input.addEventListener("blur", save);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") input.blur();
+    });
+
+    wrap.appendChild(input);
+    return wrap;
+  }
 }
