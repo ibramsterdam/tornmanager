@@ -11,14 +11,19 @@ export class Sweep {
 
   pausedProgress(floor) {
     const progress = Store.get("sweep_progress");
-    if (!progress || progress.floor !== floor) return null;
+    if (!progress || progress.floor > floor) return null;
     return progress;
   }
 
-  async run(floor, { onProgress, shouldStop } = {}) {
+  async run(floor, { rosterIds, onProgress, shouldStop } = {}) {
     const resume = this.pausedProgress(floor);
     let offset = resume ? resume.offset : 0;
-    const byId = resume ? resume.byId : {};
+    const byId = {};
+    if (resume?.byId) {
+      for (const [id, stat] of Object.entries(resume.byId)) {
+        if (!rosterIds || rosterIds.has(Number(id))) byId[id] = stat;
+      }
+    }
     let lowest = resume ? resume.lowest ?? null : null;
     let lastSample = resume ? resume.lastSample ?? null : null;
     let etaPages = resume ? resume.etaPages ?? null : null;
@@ -51,7 +56,9 @@ export class Sweep {
         for (const row of rows) {
           if (lowest === null || row.value < lowest) lowest = row.value;
           if (row.value >= floor) {
-            byId[row.id] = { v: row.value, la: row.last_action, lvl: row.level, n: row.username };
+            if (!rosterIds || rosterIds.has(row.id)) {
+              byId[row.id] = { v: row.value, la: row.last_action, lvl: row.level, n: row.username };
+            }
           } else {
             reachedFloor = true;
           }
@@ -67,7 +74,11 @@ export class Sweep {
       }
       lastSample = { rank: offset, lowest };
 
-      Store.set("sweep_progress", { floor, offset, byId, lowest, lastSample, etaPages });
+      try {
+        Store.set("sweep_progress", { floor, offset, byId, lowest, lastSample, etaPages });
+      } catch {
+        Store.remove("sweep_progress");
+      }
       report(offset);
 
       if (!reachedFloor) {

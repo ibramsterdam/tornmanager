@@ -120,8 +120,15 @@ export class OverviewScreen {
 
   async updateStats() {
     const floor = Settings.get().floor;
+    const roster = this.roster.data;
+    if (!roster) {
+      this.setProgress("Update the roster first, the sweep only keeps stats for players in your tracked companies.");
+      return;
+    }
+    const rosterIds = new Set(roster.players.filter((p) => !p.director).map((p) => p.id));
     try {
       await this.sweep.run(floor, {
+        rosterIds,
         onProgress: ({ rank, found, lowest, remainingPages }) => {
           const pagesPerMinute = Math.max(1, this.api.capacityPerWindow());
           const etaSeconds = remainingPages == null ? null : Math.round((remainingPages / pagesPerMinute) * 60);
@@ -130,7 +137,7 @@ export class OverviewScreen {
           this.setBar({
             etaSeconds,
             fraction,
-            text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} collected${depth}`,
+            text: `rank ~${rank.toLocaleString()} · ${found.toLocaleString()} roster players found${depth}`,
           });
         },
       });
