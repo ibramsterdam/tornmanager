@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_130200) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -64,6 +64,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
     t.boolean "faction_access", default: false, null: false
     t.integer "faction_id"
     t.string "key", null: false
+    t.boolean "recruiter_fetch_allowed", default: false, null: false
+    t.integer "submitted_by_id"
     t.string "type", null: false
     t.datetime "updated_at", null: false
     t.integer "user_id"
@@ -138,6 +140,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
     t.index ["chat_room_id", "user_id"], name: "index_chat_suspensions_on_chat_room_id_and_user_id", unique: true
     t.index ["chat_room_id"], name: "index_chat_suspensions_on_chat_room_id"
     t.index ["user_id"], name: "index_chat_suspensions_on_user_id"
+  end
+
+  create_table "companies", force: :cascade do |t|
+    t.integer "company_type_id", null: false
+    t.datetime "created_at", null: false
+    t.integer "employees_hired"
+    t.string "name"
+    t.integer "rating", default: 0, null: false
+    t.datetime "synced_at"
+    t.integer "torn_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_type_id", "rating"], name: "index_companies_on_company_type_id_and_rating"
+    t.index ["torn_id"], name: "index_companies_on_torn_id", unique: true
   end
 
   create_table "faction_settings", force: :cascade do |t|
@@ -411,6 +426,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
     t.string "banned_reason"
     t.datetime "banned_until"
     t.string "chat_anon_name"
+    t.boolean "company_director", default: false, null: false
+    t.integer "company_id"
+    t.datetime "company_synced_at"
     t.datetime "created_at", null: false
     t.integer "faction_id"
     t.boolean "fallen", default: false, null: false
@@ -425,13 +443,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
     t.integer "torn_id", null: false
     t.datetime "trial_granted_at"
     t.datetime "updated_at", null: false
+    t.bigint "working_stats"
+    t.datetime "working_stats_at"
     t.index ["api_token"], name: "index_users_on_api_token", unique: true
     t.index ["banned_until"], name: "index_users_on_banned_until"
     t.index ["chat_anon_name"], name: "index_users_on_chat_anon_name", unique: true
+    t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["faction_id"], name: "index_users_on_faction_id"
     t.index ["hof_stats_user"], name: "index_users_on_hof_stats_user"
     t.index ["subscription_expires_at"], name: "index_users_on_subscription_expires_at"
     t.index ["torn_id"], name: "index_users_on_torn_id", unique: true
+    t.index ["working_stats"], name: "index_users_on_working_stats"
   end
 
   create_table "xanax_payments", force: :cascade do |t|

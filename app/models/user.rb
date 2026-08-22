@@ -1,5 +1,6 @@
 class User < ApplicationRecord
   include Bannable
+  include Employable
 
   has_secure_token :api_token
 

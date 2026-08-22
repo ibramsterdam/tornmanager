@@ -11,6 +11,8 @@ bert:
   api_token: 1234567_api_token_fixture
   level: 50
   hof_stats_user: false
+  company_id: 91001
+  working_stats: 250000
 
 kaneki:
   name: Kaneki

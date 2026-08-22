@@ -1,0 +1,13 @@
+adult_novelties:
+  torn_id: 91001
+  name: Pleasure Dome
+  company_type_id: 10
+  rating: 9
+  employees_hired: 8
+
+television_network:
+  torn_id: 91002
+  name: Prime Time
+  company_type_id: 26
+  rating: 10
+  employees_hired: 12

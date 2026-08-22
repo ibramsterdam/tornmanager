@@ -1,6 +1,7 @@
 class ApiKey < ApplicationRecord
   belongs_to :faction, optional: true
   belongs_to :user, optional: true
+  belongs_to :submitted_by, class_name: "User", optional: true
 
   validates :key, presence: true
   validates :type, presence: true
