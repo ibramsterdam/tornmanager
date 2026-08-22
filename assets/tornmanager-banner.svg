@@ -1,0 +1,96 @@
+<svg width="1000" height="400" viewBox="0 0 1000 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
+  <title id="t">TornManager</title>
+  <desc id="d">Faction dashboards, war tracking, and personal statistics for Torn City.</desc>
+
+  <defs>
+    <linearGradient id="tmbg" x1="0" y1="0" x2="1000" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0e1116"/>
+      <stop offset="1" stop-color="#161c29"/>
+    </linearGradient>
+    <linearGradient id="tmaccent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#0070f3"/>
+      <stop offset="1" stop-color="#4da3ff"/>
+    </linearGradient>
+    <linearGradient id="tmarea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0070f3" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#0070f3" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0.5" y="0.5" width="999" height="399" rx="20" fill="url(#tmbg)" stroke="#232838"/>
+
+  <!-- wordmark -->
+  <text x="500" y="68" text-anchor="middle" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="40" fill="url(#tmaccent)">TornManager</text>
+  <text x="500" y="95" text-anchor="middle" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="13.5" fill="#5b6580">faction dashboards &#183; war tracking &#183; personal stats &#183; the platform behind the scripts</text>
+
+  <!-- zone A: ranked war -->
+  <rect x="60" y="124" width="400" height="214" rx="14" fill="#17181c" stroke="#2b2f3a" stroke-width="1.5"/>
+  <text x="82" y="154" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#e8eaf0">Ranked War</text>
+  <circle cx="196" cy="149" r="4" fill="#34d399">
+    <animate attributeName="opacity" values="1;0.35;1" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <text x="206" y="154" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11" fill="#6b7280">live</text>
+  <text x="438" y="154" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11" fill="#565f89">target 5,000</text>
+  <line x1="72" y1="166" x2="448" y2="166" stroke="#24262e" stroke-width="1"/>
+
+  <text x="82" y="196" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#4da3ff">The Hive</text>
+  <text x="82" y="222" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="24" fill="#e8eaf0">4,812</text>
+  <text x="438" y="196" text-anchor="end" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="13" font-weight="700" fill="#f7768e">Red Static</text>
+  <text x="438" y="222" text-anchor="end" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-weight="800" font-size="24" fill="#8a93b2">4,506</text>
+
+  <rect x="82" y="240" width="356" height="14" rx="7" fill="#2a1a20"/>
+  <rect x="82" y="240" width="184" height="14" rx="7" fill="url(#tmaccent)">
+    <animate attributeName="width" values="184;196;188;202;184" dur="7s" repeatCount="indefinite"/>
+  </rect>
+  <text x="82" y="276" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#7ee787">+306 lead</text>
+  <text x="438" y="276" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#565f89">polling every 6s</text>
+
+  <line x1="72" y1="290" x2="448" y2="290" stroke="#24262e" stroke-width="1"/>
+  <text x="82" y="316" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#8a93b2">hits 214 &#183; retals 89 &#183; online 23/31</text>
+
+  <!-- zone B: personal stats -->
+  <rect x="500" y="124" width="440" height="214" rx="14" fill="#17181c" stroke="#2b2f3a" stroke-width="1.5"/>
+  <text x="522" y="154" font-family="system-ui, -apple-system, 'Segoe UI', sans-serif" font-size="15" font-weight="700" fill="#e8eaf0">Personal stats</text>
+  <text x="918" y="154" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11" fill="#565f89">daily snapshots &#183; 30d</text>
+  <line x1="512" y1="166" x2="928" y2="166" stroke="#24262e" stroke-width="1"/>
+
+  <path d="M 524 292 L 560 286 L 596 288 L 632 274 L 668 268 L 704 256 L 740 260 L 776 242 L 812 234 L 848 222 L 884 212 L 916 200 L 916 300 L 524 300 Z" fill="url(#tmarea)"/>
+  <path d="M 524 292 L 560 286 L 596 288 L 632 274 L 668 268 L 704 256 L 740 260 L 776 242 L 812 234 L 848 222 L 884 212 L 916 200" fill="none" stroke="url(#tmaccent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="460">
+    <animate attributeName="stroke-dashoffset" values="460;0;0" keyTimes="0;0.55;1" dur="7s" repeatCount="indefinite"/>
+  </path>
+  <circle cx="916" cy="200" r="4.5" fill="#4da3ff">
+    <animate attributeName="opacity" values="0;0;1;0.4;1" keyTimes="0;0.55;0.62;0.8;1" dur="7s" repeatCount="indefinite"/>
+  </circle>
+
+  <text x="522" y="322" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#8a93b2">xanax 412 &#183; refills 388 &#183; networth $2.1b</text>
+  <text x="918" y="322" text-anchor="end" font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5" fill="#7ee787">no gaps</text>
+
+  <!-- nightly pipeline -->
+  <g font-family="ui-monospace, Menlo, Consolas, monospace" font-size="11.5">
+    <text x="262" y="374" text-anchor="end" fill="#565f89">nightly pipeline</text>
+
+    <rect x="278" y="358" width="118" height="22" rx="11" fill="#101216" stroke="#262b36"/>
+    <circle cx="292" cy="369" r="3.5" fill="#34d399">
+      <animate attributeName="opacity" values="1;1;0.2;0.2;0.2" keyTimes="0;0.3;0.34;0.96;1" dur="5.4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="302" y="373" fill="#8a93b2">sync roster</text>
+
+    <text x="404" y="373" fill="#3a4258">&#8250;</text>
+
+    <rect x="416" y="358" width="118" height="22" rx="11" fill="#101216" stroke="#262b36"/>
+    <circle cx="430" cy="369" r="3.5" fill="#34d399">
+      <animate attributeName="opacity" values="0.2;0.2;1;1;0.2;0.2" keyTimes="0;0.3;0.34;0.63;0.67;1" dur="5.4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="440" y="373" fill="#8a93b2">sweep stats</text>
+
+    <text x="542" y="373" fill="#3a4258">&#8250;</text>
+
+    <rect x="554" y="358" width="100" height="22" rx="11" fill="#101216" stroke="#262b36"/>
+    <circle cx="568" cy="369" r="3.5" fill="#34d399">
+      <animate attributeName="opacity" values="0.2;0.2;1;1;0.2" keyTimes="0;0.63;0.67;0.96;1" dur="5.4s" repeatCount="indefinite"/>
+    </circle>
+    <text x="578" y="373" fill="#8a93b2">backfill</text>
+
+    <text x="672" y="373" fill="#565f89">&#183; 42 calls/min budget</text>
+  </g>
+</svg>
