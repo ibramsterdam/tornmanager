@@ -6,6 +6,7 @@ import { ChatOpener } from "./ChatOpener.js";
 const STATUS_POLL_MS = 4_000;
 const STATUS_POLL_ATTEMPTS = 5;
 const STATUS_COMPANIES_PER_REQUEST = 30;
+const SECONDS_PER_COMPANY = 2.5;
 
 export class SearchScreen {
   constructor(api, overlay) {
@@ -16,6 +17,7 @@ export class SearchScreen {
     this.minStats = 0;
     this.filtersOpen = false;
     this.statusByPlayer = {};
+    this.statusRefresh = null;
   }
 
   subtitle() {
@@ -38,6 +40,16 @@ export class SearchScreen {
 
   filterRow() {
     const row = Dom.el("div", "rc-row rc-row--filters");
+
+    const filtersField = Dom.el("div", "rc-field rc-field--chip");
+    filtersField.appendChild(Dom.el("div", "rc-label", "Companies"));
+    this.filtersChip = Dom.el("button", "rc-chip rc-chip--filter");
+    this.filtersChip.addEventListener("click", () => {
+      this.filtersOpen = !this.filtersOpen;
+      this.syncFiltersChip();
+    });
+    filtersField.appendChild(this.filtersChip);
+    row.appendChild(filtersField);
 
     const statusField = Dom.el("div", "rc-field rc-field--chip");
     statusField.appendChild(Dom.el("div", "rc-label", "Status"));
@@ -73,16 +85,6 @@ export class SearchScreen {
     statsField.appendChild(input);
     row.appendChild(statsField);
 
-    const filtersField = Dom.el("div", "rc-field rc-field--chip");
-    filtersField.appendChild(Dom.el("div", "rc-label", "Companies"));
-    this.filtersChip = Dom.el("button", "rc-chip rc-chip--filter");
-    this.filtersChip.addEventListener("click", () => {
-      this.filtersOpen = !this.filtersOpen;
-      this.syncFiltersChip();
-    });
-    filtersField.appendChild(this.filtersChip);
-    row.appendChild(filtersField);
-
     return row;
   }
 
@@ -97,15 +99,19 @@ export class SearchScreen {
     const count = settings.typeIds.length;
     this.filtersChip.textContent = `${count} ${count === 1 ? "type" : "types"} · ${settings.starMin}-${settings.starMax}★`;
     this.filtersChip.classList.toggle("rc-chip--on", this.filtersOpen);
-    if (this.filtersCard) this.filtersCard.style.display = this.filtersOpen ? "" : "none";
+    if (this.filtersCard) this.filtersCard.classList.toggle("rc-filters--open", this.filtersOpen);
   }
 
   buildFiltersCard() {
     const settings = Settings.get();
     const selected = new Set(settings.typeIds);
 
-    const card = Dom.el("div", "rc-card");
-    card.appendChild(Dom.el("div", "rc-label", "Company types to search"));
+    const card = Dom.el("div", "rc-card rc-filters");
+    if (this.filtersOpen) card.classList.add("rc-filters--open");
+    const inner = Dom.el("div", "rc-filters-inner");
+    card.appendChild(inner);
+
+    inner.appendChild(Dom.el("div", "rc-label", "Company types to search"));
     const chips = Dom.el("div", "rc-chips");
     for (const type of COMPANY_TYPES) {
       const chip = Dom.el("button", "rc-chip", type.name);
@@ -116,15 +122,17 @@ export class SearchScreen {
         } else {
           selected.add(type.id);
         }
+        chip.classList.toggle("rc-chip--on");
         Settings.set({ typeIds: [...selected].sort((a, b) => a - b) });
         this.page = 0;
+        this.syncFiltersChip();
         this.overlay.refresh();
       });
       chips.appendChild(chip);
     }
-    card.appendChild(chips);
+    inner.appendChild(chips);
 
-    const row = Dom.el("div", "rc-row");
+    const row = Dom.el("div", "rc-row rc-filters-stars");
     row.appendChild(
       this.stepper("Min stars", settings.starMin, STAR_RANGE.min, settings.starMax, (value) => {
         Settings.set({ starMin: value });
@@ -135,7 +143,10 @@ export class SearchScreen {
         Settings.set({ starMax: value });
       })
     );
-    card.appendChild(row);
+    const hint = Dom.el("div", "rc-field rc-filters-hint");
+    hint.appendChild(Dom.el("div", "rc-hint", `The server collects working stats for ${STAR_RANGE.min}★ companies and up, refreshed daily.`));
+    row.appendChild(hint);
+    inner.appendChild(row);
     return card;
   }
 
@@ -196,10 +207,7 @@ export class SearchScreen {
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
     this.page = Math.min(this.page, totalPages - 1);
 
-    this.metaEl.replaceChildren(
-      Dom.el("span", null, `${total.toLocaleString()} matches · sorted by working stats`),
-      Dom.el("span", "rc-dim", this.freshness())
-    );
+    this.renderMeta(total);
 
     const parts = [this.table(visible)];
     if (totalPages > 1) {
@@ -223,6 +231,29 @@ export class SearchScreen {
     this.resultsWrap.replaceChildren(...parts);
   }
 
+  renderMeta(total) {
+    const right = Dom.el("div", "rc-meta-right");
+    if (this.statusRefresh) {
+      const { total: refreshTotal, pending } = this.statusRefresh;
+      const eta = Math.ceil(pending * SECONDS_PER_COMPANY);
+      right.appendChild(
+        Dom.el("span", "rc-dim", `Refreshing status · ${refreshTotal - pending} of ${refreshTotal} companies · ~${eta}s left`)
+      );
+    } else {
+      right.appendChild(Dom.el("span", "rc-dim", this.freshness()));
+      const refresh = Dom.el("button", "rc-btn rc-btn--ghost rc-btn--sm", "↻ Refresh status");
+      refresh.title = "Fetch the live online state of every company in these results";
+      refresh.disabled = !(this.response?.matches || []).length;
+      refresh.addEventListener("click", () => this.forceRefreshStatus());
+      right.appendChild(refresh);
+    }
+
+    this.metaEl.replaceChildren(
+      Dom.el("span", null, `${total.toLocaleString()} matches · sorted by working stats`),
+      right
+    );
+  }
+
   freshness() {
     const meta = this.response?.meta || {};
     const parts = [];
@@ -231,27 +262,90 @@ export class SearchScreen {
     return parts.join(" · ") || "no data yet — the server syncs daily";
   }
 
-  async refreshStatuses(attempt = 0) {
+  pageCompanyIds() {
     const matches = this.response?.matches || [];
-    const companyIds = [...new Set(matches.map((m) => m.company.torn_id))].slice(0, STATUS_COMPANIES_PER_REQUEST);
-    if (!companyIds.length) return;
+    return [...new Set(matches.map((m) => m.company.torn_id))];
+  }
 
-    let data;
-    try {
-      data = await this.api.status(companyIds);
-    } catch {
-      return;
+  companyChunks() {
+    const ids = this.pageCompanyIds();
+    const chunks = [];
+    for (let i = 0; i < ids.length; i += STATUS_COMPANIES_PER_REQUEST) {
+      chunks.push(ids.slice(i, i + STATUS_COMPANIES_PER_REQUEST));
     }
+    return chunks;
+  }
 
+  async statusForAllChunks({ refresh = false } = {}) {
+    let pending = 0;
+    for (const chunk of this.companyChunks()) {
+      const data = await this.api.status(chunk, { refresh });
+      this.applyStatuses(data);
+      pending += data.pending?.length || 0;
+    }
+    return pending;
+  }
+
+  applyStatuses(data) {
     for (const employees of Object.values(data.statuses || {})) {
       for (const employee of employees || []) {
         this.statusByPlayer[employee.torn_id] = employee;
       }
     }
+  }
+
+  async refreshStatuses(attempt = 0) {
+    if (!this.pageCompanyIds().length || this.statusRefresh) return;
+
+    let pending;
+    try {
+      pending = await this.statusForAllChunks();
+    } catch {
+      return;
+    }
+
     this.renderResults();
 
-    if (data.pending?.length && attempt < STATUS_POLL_ATTEMPTS && this.container?.isConnected) {
+    if (pending > 0 && attempt < STATUS_POLL_ATTEMPTS && this.container?.isConnected) {
       setTimeout(() => this.refreshStatuses(attempt + 1), STATUS_POLL_MS);
+    }
+  }
+
+  async forceRefreshStatus() {
+    const total = this.pageCompanyIds().length;
+    if (!total || this.statusRefresh) return;
+
+    this.statusRefresh = { total, pending: total };
+    this.renderResults();
+
+    try {
+      await this.statusForAllChunks({ refresh: true });
+      await this.pollStatusRefresh(total);
+    } catch {
+      return;
+    } finally {
+      this.statusRefresh = null;
+      if (this.container?.isConnected) this.renderResults();
+    }
+  }
+
+  async pollStatusRefresh(total) {
+    const maxAttempts = Math.ceil((total * SECONDS_PER_COMPANY * 1000) / STATUS_POLL_MS) + 10;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (!this.container?.isConnected) return;
+      await sleep(STATUS_POLL_MS);
+
+      let pending;
+      try {
+        pending = await this.statusForAllChunks();
+      } catch {
+        continue;
+      }
+
+      this.statusRefresh = { total, pending };
+      this.renderResults();
+      if (pending === 0) return;
     }
   }
 
@@ -343,4 +437,8 @@ function shortAge(fetchedAt) {
   const hours = Math.floor(minutes / 60);
   if (hours < 48) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

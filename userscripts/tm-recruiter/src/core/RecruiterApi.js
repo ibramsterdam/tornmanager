@@ -9,8 +9,10 @@ export class RecruiterApi {
     return this.post("/api/recruiter/matches", filters);
   }
 
-  status(companyIds) {
-    return this.post("/api/recruiter/status", { company_ids: companyIds });
+  status(companyIds, { refresh = false } = {}) {
+    const body = { company_ids: companyIds };
+    if (refresh) body.refresh = true;
+    return this.post("/api/recruiter/status", body);
   }
 
   submitKey(key) {
