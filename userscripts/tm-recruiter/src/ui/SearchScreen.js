@@ -1,19 +1,20 @@
 import { Dom } from "@shared/core/Dom.js";
-import { Settings } from "../core/Settings.js";
-import { typeName } from "../core/CompanyTypes.js";
+import { Settings, STAR_RANGE } from "../core/Settings.js";
+import { COMPANY_TYPES, typeName } from "../core/CompanyTypes.js";
 import { ChatOpener } from "./ChatOpener.js";
 
 const STATUS_POLL_MS = 4_000;
 const STATUS_POLL_ATTEMPTS = 5;
 const STATUS_COMPANIES_PER_REQUEST = 30;
 
-export class OverviewScreen {
+export class SearchScreen {
   constructor(api, overlay) {
     this.api = api;
     this.overlay = overlay;
     this.statusFilter = "any";
     this.page = 0;
     this.minStats = 0;
+    this.filtersOpen = false;
     this.statusByPlayer = {};
   }
 
@@ -26,9 +27,12 @@ export class OverviewScreen {
   render(container) {
     this.container = container;
     container.appendChild(this.filterRow());
+    this.filtersCard = this.buildFiltersCard();
+    container.appendChild(this.filtersCard);
     this.metaEl = Dom.el("div", "rc-meta");
     this.resultsWrap = Dom.el("div");
     container.append(this.metaEl, this.resultsWrap);
+    this.syncFiltersChip();
     this.fetchMatches();
   }
 
@@ -69,6 +73,16 @@ export class OverviewScreen {
     statsField.appendChild(input);
     row.appendChild(statsField);
 
+    const filtersField = Dom.el("div", "rc-field rc-field--chip");
+    filtersField.appendChild(Dom.el("div", "rc-label", "Companies"));
+    this.filtersChip = Dom.el("button", "rc-chip rc-chip--filter");
+    this.filtersChip.addEventListener("click", () => {
+      this.filtersOpen = !this.filtersOpen;
+      this.syncFiltersChip();
+    });
+    filtersField.appendChild(this.filtersChip);
+    row.appendChild(filtersField);
+
     return row;
   }
 
@@ -76,6 +90,81 @@ export class OverviewScreen {
     const labels = { any: "Any", online: "Online", active: "Online + idle" };
     this.statusChip.textContent = labels[this.statusFilter];
     this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
+  }
+
+  syncFiltersChip() {
+    const settings = Settings.get();
+    const count = settings.typeIds.length;
+    this.filtersChip.textContent = `${count} ${count === 1 ? "type" : "types"} · ${settings.starMin}-${settings.starMax}★`;
+    this.filtersChip.classList.toggle("rc-chip--on", this.filtersOpen);
+    if (this.filtersCard) this.filtersCard.style.display = this.filtersOpen ? "" : "none";
+  }
+
+  buildFiltersCard() {
+    const settings = Settings.get();
+    const selected = new Set(settings.typeIds);
+
+    const card = Dom.el("div", "rc-card");
+    card.appendChild(Dom.el("div", "rc-label", "Company types to search"));
+    const chips = Dom.el("div", "rc-chips");
+    for (const type of COMPANY_TYPES) {
+      const chip = Dom.el("button", "rc-chip", type.name);
+      if (selected.has(type.id)) chip.classList.add("rc-chip--on");
+      chip.addEventListener("click", () => {
+        if (selected.has(type.id)) {
+          selected.delete(type.id);
+        } else {
+          selected.add(type.id);
+        }
+        Settings.set({ typeIds: [...selected].sort((a, b) => a - b) });
+        this.page = 0;
+        this.overlay.refresh();
+      });
+      chips.appendChild(chip);
+    }
+    card.appendChild(chips);
+
+    const row = Dom.el("div", "rc-row");
+    row.appendChild(
+      this.stepper("Min stars", settings.starMin, STAR_RANGE.min, settings.starMax, (value) => {
+        Settings.set({ starMin: value });
+      })
+    );
+    row.appendChild(
+      this.stepper("Max stars", settings.starMax, settings.starMin, STAR_RANGE.max, (value) => {
+        Settings.set({ starMax: value });
+      })
+    );
+    card.appendChild(row);
+    return card;
+  }
+
+  stepper(labelText, value, min, max, onChange) {
+    const wrap = Dom.el("div", "rc-field");
+    wrap.appendChild(Dom.el("div", "rc-label", labelText));
+
+    const control = Dom.el("div", "rc-stepper");
+    const minus = Dom.el("button", "rc-stepper-btn", "−");
+    const display = Dom.el("span", "rc-stepper-value", String(value));
+    const plus = Dom.el("button", "rc-stepper-btn", "+");
+
+    const apply = (next) => {
+      onChange(next);
+      this.page = 0;
+      this.overlay.refresh();
+    };
+    minus.addEventListener("click", () => {
+      if (value > min) apply(value - 1);
+    });
+    plus.addEventListener("click", () => {
+      if (value < max) apply(value + 1);
+    });
+    minus.disabled = value <= min;
+    plus.disabled = value >= max;
+
+    control.append(minus, display, plus);
+    wrap.appendChild(control);
+    return wrap;
   }
 
   async fetchMatches() {
@@ -188,7 +277,7 @@ export class OverviewScreen {
     table.appendChild(head);
 
     if (!rows.length) {
-      table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in Setup — the server refreshes data daily."));
+      table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in the filters above — the server refreshes data daily."));
       return table;
     }
 

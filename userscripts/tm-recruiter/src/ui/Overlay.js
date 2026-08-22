@@ -1,6 +1,9 @@
 import { Dom } from "@shared/core/Dom.js";
 import { Store } from "../core/Store.js";
 
+const COG_ICON =
+  '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
+
 const SUBSCRIPTION_RECHECK_MS = 6 * 3_600_000;
 
 export class Overlay {
@@ -33,12 +36,18 @@ export class Overlay {
     title.append(Dom.el("div", "rc-head-title", "Recruiter"), (this.subtitle = Dom.el("div", "rc-head-sub", "")));
 
     this.nav = Dom.el("div", "rc-nav");
-    for (const [name, label] of [["overview", "Overview"], ["setup", "Setup"], ["keys", "Keys"]]) {
+    for (const [name, label] of [["search", "Search"], ["keys", "Keys"]]) {
       const link = Dom.el("button", "rc-nav-link", label);
       link.dataset.screen = name;
       link.addEventListener("click", () => this.show(name));
       this.nav.appendChild(link);
     }
+    const gear = Dom.el("button", "rc-nav-link rc-nav-link--icon");
+    gear.dataset.screen = "settings";
+    gear.title = "Settings";
+    gear.innerHTML = COG_ICON;
+    gear.addEventListener("click", () => this.show("settings"));
+    this.nav.appendChild(gear);
 
     const close = Dom.el("button", "rc-close", "×");
     close.addEventListener("click", () => this.close());
@@ -152,7 +161,7 @@ export class Overlay {
   }
 
   defaultScreen() {
-    return "overview";
+    return "search";
   }
 
   refresh() {

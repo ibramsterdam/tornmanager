@@ -1,10 +1,9 @@
 import { Dom } from "@shared/core/Dom.js";
 
 export class KeysScreen {
-  constructor(api, overlay, auth) {
+  constructor(api, overlay) {
     this.api = api;
     this.overlay = overlay;
-    this.auth = auth;
   }
 
   subtitle() {
@@ -57,8 +56,6 @@ export class KeysScreen {
     this.listEl = Dom.el("div", "rc-list");
     container.appendChild(this.listEl);
     this.loadKeys();
-
-    container.appendChild(this.subscriptionCard());
   }
 
   async loadKeys() {
@@ -98,80 +95,5 @@ export class KeysScreen {
       return item;
     });
     this.listEl.replaceChildren(...rows);
-  }
-
-  subscriptionCard() {
-    this.stopCountdown();
-
-    const card = Dom.el("div", "rc-card rc-subcard");
-    card.appendChild(Dom.el("div", "rc-label", "TornManager subscription"));
-
-    const row = Dom.el("div", "rc-subcard-row");
-    const badge = Dom.el("span", "rc-badge");
-    const countdown = Dom.el("span", "rc-subcard-count");
-    const check = Dom.el("button", "rc-btn rc-btn--ghost", "Check for new payments");
-    row.append(badge, countdown, check);
-    card.appendChild(row);
-
-    const info = Dom.el("div", "rc-hint");
-    info.innerHTML =
-      'Send <strong>Xanax</strong> to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">Bram [2728237]</a> to extend it. Each Xanax adds <strong>1 week</strong>.';
-    card.appendChild(info);
-
-    const apply = (sub) => {
-      this.stopCountdown();
-      if (sub?.active && sub.expires_at) {
-        badge.className = "rc-badge rc-badge--fresh";
-        badge.textContent = "active";
-        const expiresAt = new Date(sub.expires_at);
-        const tick = () => {
-          const diff = expiresAt - Date.now();
-          if (diff <= 0) {
-            countdown.textContent = "Expired";
-            this.stopCountdown();
-            return;
-          }
-          const days = Math.floor(diff / 86400000);
-          const hours = Math.floor((diff % 86400000) / 3600000);
-          const minutes = Math.floor((diff % 3600000) / 60000);
-          const seconds = Math.floor((diff % 60000) / 1000);
-          const parts = [];
-          if (days > 0) parts.push(`${days}d`);
-          parts.push(`${hours}h`, `${minutes}m`, `${seconds}s`);
-          countdown.textContent = parts.join(" ") + " remaining";
-        };
-        tick();
-        this.countdownInterval = setInterval(tick, 1000);
-      } else {
-        badge.className = "rc-badge rc-badge--stale";
-        badge.textContent = "inactive";
-        countdown.textContent = "No active subscription.";
-      }
-    };
-
-    check.addEventListener("click", () => {
-      check.disabled = true;
-      check.textContent = "Checking...";
-      this.auth
-        .fetchSubscription({ refresh: true })
-        .then((sub) => apply(sub))
-        .catch((err) => {
-          countdown.textContent = err.message;
-        })
-        .finally(() => {
-          check.disabled = false;
-          check.textContent = "Check for new payments";
-        });
-    });
-
-    apply(this.auth.subscription());
-    return card;
-  }
-
-  stopCountdown() {
-    if (this.countdownInterval) {
-      clearInterval(this.countdownInterval);
-      this.countdownInterval = null;
-    }
   }
 }

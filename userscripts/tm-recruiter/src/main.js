@@ -9,8 +9,8 @@ import { ChatOpener } from "./ui/ChatOpener.js";
 import { AuthScreen } from "./ui/AuthScreen.js";
 import { SubscriptionScreen } from "./ui/SubscriptionScreen.js";
 import { KeysScreen } from "./ui/KeysScreen.js";
-import { SetupScreen } from "./ui/SetupScreen.js";
-import { OverviewScreen } from "./ui/OverviewScreen.js";
+import { SearchScreen } from "./ui/SearchScreen.js";
+import { SettingsScreen } from "./ui/SettingsScreen.js";
 
 const LEGACY_STORE_KEYS = ["keys", "roster", "stats", "status", "sweep_progress"];
 
@@ -21,11 +21,11 @@ function boot() {
   const api = new RecruiterApi(auth);
 
   const overlay = new Overlay(auth);
-  overlay.register("auth", new AuthScreen(auth, overlay));
+  overlay.register("auth", new AuthScreen(auth, overlay, api));
   overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-  overlay.register("keys", new KeysScreen(api, overlay, auth));
-  overlay.register("setup", new SetupScreen(overlay));
-  overlay.register("overview", new OverviewScreen(api, overlay));
+  overlay.register("keys", new KeysScreen(api, overlay));
+  overlay.register("search", new SearchScreen(api, overlay));
+  overlay.register("settings", new SettingsScreen(auth, overlay));
 
   new Sidebar(overlay).init();
   new MenuEntry(overlay).init();

@@ -1,17 +1,16 @@
 import { Dom } from "@shared/core/Dom.js";
 import { SubscriptionSection } from "@shared/ui/SubscriptionSection.js";
+import { StorageViewer } from "@shared/ui/StorageViewer.js";
+import { SUBSCRIPTION_NOTE } from "./SubscriptionScreen.js";
 
-export const SUBSCRIPTION_NOTE =
-  "Recruiter requires an active TornManager subscription. The script stays locked until your subscription is active.";
-
-export class SubscriptionScreen {
+export class SettingsScreen {
   constructor(auth, overlay) {
     this.auth = auth;
     this.overlay = overlay;
   }
 
   subtitle() {
-    return "subscription";
+    return "settings";
   }
 
   render(container) {
@@ -19,9 +18,6 @@ export class SubscriptionScreen {
     this.section = new SubscriptionSection(this.auth, {
       classPrefix: "rc",
       note: SUBSCRIPTION_NOTE,
-      onUpdate: (sub) => {
-        if (sub.active && this.auth.isSubscribed()) this.overlay.open();
-      },
     });
     container.appendChild(this.section.render());
 
@@ -33,6 +29,21 @@ export class SubscriptionScreen {
       this.overlay.open();
     });
     actions.appendChild(removeKey);
+
+    const storageBtn = Dom.el("button", "rc-btn rc-btn--ghost", "View stored data");
+    let viewer = null;
+    storageBtn.addEventListener("click", () => {
+      if (viewer) {
+        viewer.remove();
+        viewer = null;
+        storageBtn.textContent = "View stored data";
+        return;
+      }
+      viewer = new StorageViewer({ storagePrefix: "rc_", classPrefix: "rc" }).render();
+      container.appendChild(viewer);
+      storageBtn.textContent = "Hide stored data";
+    });
+    actions.appendChild(storageBtn);
     container.appendChild(actions);
   }
 }
