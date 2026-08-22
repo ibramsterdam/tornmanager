@@ -1,0 +1,38 @@
+<%= turbo_frame_tag "recruiter-jobs" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Jobs</h2><span class="admin-stats-hint">daily pipeline &middot; run now enqueues immediately</span></div>
+    <table class="admin-stats-table">
+      <thead>
+        <tr><th>Job</th><th>Last run</th><th>Next run</th><th>Countdown</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% @jobs.each do |job| %>
+          <tr>
+            <td><%= job[:klass].name.demodulize.underscore.humanize %></td>
+            <td>
+              <% if job[:failed] %>
+                failed <%= time_ago_in_words(job[:last].created_at) %> ago
+              <% elsif job[:last]&.finished_at %>
+                <%= time_ago_in_words(job[:last].finished_at) %> ago
+              <% elsif job[:last] %>
+                queued
+              <% else %>
+                never
+              <% end %>
+            </td>
+            <td><%= job[:next_time] ? job[:next_time].strftime("%H:%M TCT") : "—" %></td>
+            <td>
+              <% if job[:next_time] %>
+                <span data-controller="countdown" data-countdown-target-value="<%= job[:next_time].iso8601 %>"><span data-countdown-target="display"></span></span>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td><%= button_to "Run now", admin_recruiter_run_path(job: job[:slug]), class: "btn btn-secondary btn-sm" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+<% end %>

@@ -111,8 +111,10 @@ Rails.application.routes.draw do
   namespace :admin do
     get "/", to: "dashboard#index", as: :dashboard
     get "recruiter", to: "recruiter#show"
+    get "recruiter/section/:name", to: "recruiter#section", as: :recruiter_section
     post "recruiter/run/:job", to: "recruiter#run", as: :recruiter_run
     resources :stats, only: [ :index ]
+    get "stats/section/:name", to: "stats#section", as: :stats_section
     resources :subscriptions, only: [ :index ] do
       collection do
         post :grant

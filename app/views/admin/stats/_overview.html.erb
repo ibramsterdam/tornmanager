@@ -1,0 +1,69 @@
+<%= turbo_frame_tag "stats-overview" do %>
+  <div class="admin-health">
+    <% if @users_missing_yesterday > 0 %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Collection</b><span class="why"><%= @users_missing_yesterday %> users missing yesterday's snapshot</span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Collection</b><span class="why">all tracked users snapshotted yesterday</span></span>
+    <% end %>
+
+    <% if @keys_over_budget > 0 %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Budget</b><span class="why"><%= @keys_over_budget %> keys peaked over <%= @per_key_budget %>/min (24h)</span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Budget</b><span class="why">all keys &le;<%= @per_key_budget %>/min (24h)</span></span>
+    <% end %>
+
+    <% if @pipeline_stats %>
+      <% if @pipeline_stats[:failed] > 0 %>
+        <%= link_to "/jobs", class: "admin-hpill bad", data: { turbo_prefetch: false, turbo: false } do %><span class="dot"></span><b>Queue</b><span class="why"><%= number_with_delimiter(@pipeline_stats[:failed]) %> failed jobs awaiting triage</span><% end %>
+      <% else %>
+        <span class="admin-hpill ok"><span class="dot"></span><b>Queue</b><span class="why">no failed jobs</span></span>
+      <% end %>
+    <% end %>
+
+    <% if @api_peak_rate_today > @global_budget %>
+      <span class="admin-hpill bad"><span class="dot"></span><b>Aggregate API</b><span class="why"><%= @api_peak_rate_today %>/min peak today &middot; global cap <%= @global_budget %></span></span>
+    <% else %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Aggregate API</b><span class="why"><%= @api_peak_rate_today %>/min peak today &middot; global cap <%= @global_budget %></span></span>
+    <% end %>
+
+    <% if @completeness_pct %>
+      <span class="admin-hpill <%= @completeness_pct >= 100 ? 'ok' : 'warn' %>"><span class="dot"></span><b>Completeness</b><span class="why"><%= @completeness_pct %>% of <%= number_with_delimiter(@total_snapshots) %> snapshots</span></span>
+    <% end %>
+  </div>
+
+  <%# ── 2. KPI hero row ── %>
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <div class="v"><%= @tracked_users %></div>
+      <div class="k">Tracked users</div>
+      <div class="sub">of <%= number_with_delimiter(@total_users) %> total</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= @total_subscribers %></div>
+      <div class="k">Active subs</div>
+      <div class="sub"><%= @xanax_received_past_month %> xanax (30d)</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@api_calls_today) %></div>
+      <div class="k">API calls today</div>
+      <div class="sub"><%= number_with_delimiter(@api_calls_this_week) %> this week</div>
+    </div>
+    <div class="admin-kpi <%= @api_peak_rate_today > @global_budget ? 'bad' : 'good' %>">
+      <div class="v"><%= @api_peak_rate_today %><small>/min</small></div>
+      <div class="k">Peak today</div>
+      <div class="sub">global budget <%= @global_budget %>/min</div>
+    </div>
+    <div class="admin-kpi <%= 'warn' if @users_missing_yesterday > 0 %>">
+      <div class="v"><%= @users_missing_yesterday %></div>
+      <div class="k">Missing yesterday</div>
+      <div class="sub">of <%= @tracked_users %> tracked (03:00 TCT)</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@snapshots_this_week) %></div>
+      <div class="k">Snapshots this week</div>
+      <div class="sub">today: <%= @snapshots_today %></div>
+    </div>
+  </div>
+
+  <%# ── 3. Data collection ── %>
+<% end %>

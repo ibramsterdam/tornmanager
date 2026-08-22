@@ -1,0 +1,124 @@
+<%= turbo_frame_tag "stats-collection" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Data Collection</h2><span class="admin-stats-hint">snapshots &middot; gaps &middot; the nightly pipeline's output</span></div>
+    <div class="admin-stats-grid">
+
+      <div class="admin-stats-panel">
+        <h3>Snapshot coverage</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@total_snapshots) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Days with data</span>
+            <span class="admin-stat-value"><%= @unique_snapshot_days %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @earliest_snapshot ? Time.at(@earliest_snapshot).utc.strftime("%d %b %Y") : "N/A" %> &ndash; <%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %Y") : "N/A" %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Complete / incomplete</span>
+            <span class="admin-stat-value"><span class="success"><%= number_with_delimiter(@complete_snapshots) %></span> / <span class="<%= 'warning' if @incomplete_snapshots > 0 %>"><%= number_with_delimiter(@incomplete_snapshots) %></span></span>
+          </div>
+          <% if @tombstoned_snapshots > 0 %>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">No data at Torn <span class="admin-stats-hint">(tombstoned)</span></span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@tombstoned_snapshots) %></span>
+            </div>
+          <% end %>
+        </div>
+        <% if @daily_snapshots.any? %>
+          <% max_daily = [ @daily_snapshots.map(&:last).max, 1 ].max %>
+          <div class="admin-chart">
+            <div class="admin-chart-title">Snapshots per day &mdash; last <%= @daily_snapshots.size %></div>
+            <div class="admin-chart-plot">
+              <% @daily_snapshots.each do |_date, count| %>
+                <div class="admin-chart-bar">
+                  <span class="n"><%= count %></span>
+                  <div class="b" style="height: <%= ((count.to_f / max_daily) * 100).round %>%"></div>
+                </div>
+              <% end %>
+            </div>
+            <div class="admin-chart-x">
+              <% @daily_snapshots.each do |date, _count| %>
+                <span><%= Date.parse(date.to_s).strftime("%d") %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Gaps <span class="admin-stats-hint">&mdash; what backfill chases tonight</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Users with gaps</span>
+            <span class="admin-stat-value <%= @users_with_gaps > 0 ? 'warning' : 'success' %>"><%= @users_with_gaps %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total missing days</span>
+            <span class="admin-stat-value <%= @total_missing_snapshot_days > 0 ? 'warning' : 'success' %>"><%= number_with_delimiter(@total_missing_snapshot_days) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Missing yesterday <span class="admin-stats-hint">(03:00 TCT)</span></span>
+            <span class="admin-stat-value <%= @users_missing_yesterday > 0 ? 'error' : 'success' %>"><%= @users_missing_yesterday %></span>
+          </div>
+        </div>
+        <% if @missing_dates_summary.any? %>
+          <div class="admin-tscroll" style="max-height: 240px">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Date</th><th class="admin-num">Missing</th><th class="admin-num">of tracked</th></tr>
+              </thead>
+              <tbody>
+                <% @missing_dates_summary.each do |date, count| %>
+                  <tr>
+                    <td><%= date.strftime("%d %b") %></td>
+                    <td class="admin-num <%= 'warning' if count > @tracked_users * 0.05 %>"><%= count %></td>
+                    <td class="admin-num admin-muted"><%= @tracked_users > 0 ? "#{((count.to_f / @tracked_users) * 100).round(1)}%" : "—" %></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Pipeline health</h3>
+        <% if @pipeline_stats %>
+          <div class="admin-stats-rows">
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Failed jobs</span>
+              <span class="admin-stat-value <%= @pipeline_stats[:failed] > 0 ? 'error' : 'success' %>"><%= link_to number_with_delimiter(@pipeline_stats[:failed]), "/jobs", class: "admin-plain-link", data: { turbo_prefetch: false, turbo: false } %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Blocked (semaphores)</span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@pipeline_stats[:blocked]) %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Scheduled retries</span>
+              <span class="admin-stat-value"><%= number_with_delimiter(@pipeline_stats[:scheduled]) %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Latest snapshot written</span>
+              <span class="admin-stat-value"><%= @latest_snapshot ? Time.at(@latest_snapshot).utc.strftime("%d %b %H:%M") : "N/A" %></span>
+            </div>
+            <div class="admin-stat-row">
+              <span class="admin-stat-label">Latest armoury entry</span>
+              <span class="admin-stat-value"><%= @armory_latest&.strftime("%d %b %H:%M") || "N/A" %></span>
+            </div>
+          </div>
+          <p class="admin-stats-footnote">Counts come from solid_queue. Failed &gt; 0 turns the header pill red &mdash; it's the "act now" signal.</p>
+        <% else %>
+          <p class="admin-stats-footnote">Queue database unavailable.</p>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+
+  <%# ── 4. Torn API ── %>
+<% end %>

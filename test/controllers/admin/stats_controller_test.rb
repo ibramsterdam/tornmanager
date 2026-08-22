@@ -19,18 +19,29 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
   end
 
-  test "renders all sections" do
+  test "renders the shell with a lazy frame per section" do
     get admin_stats_path
     assert_response :success
 
-    assert_select "h2", text: "Data Collection"
-    assert_select "h2", text: "Torn API"
-    assert_select "h2", text: "Factions"
-    assert_select "h2", text: /Storage/
+    %w[overview collection api factions volume].each do |name|
+      assert_select "turbo-frame#stats-#{name}[src=?]", admin_stats_section_path(name: name)
+    end
+  end
+
+  test "every section renders" do
+    %w[overview collection api factions volume].each do |name|
+      get admin_stats_section_path(name: name)
+      assert_response :success
+    end
+  end
+
+  test "unknown sections are not found" do
+    get admin_stats_section_path(name: "everything")
+    assert_response :not_found
   end
 
   test "health strip renders verdict pills" do
-    get admin_stats_path
+    get admin_stats_section_path(name: "overview")
     assert_response :success
 
     assert_select ".admin-hpill", minimum: 3
@@ -39,11 +50,13 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "shows kpi tiles and user stats" do
-    get admin_stats_path
+    get admin_stats_section_path(name: "overview")
     assert_response :success
-
     assert_select ".admin-kpi .k", text: "Tracked users"
     assert_select ".admin-kpi .k", text: "Active subs"
+
+    get admin_stats_section_path(name: "volume")
+    assert_response :success
     assert_select ".admin-stat-label", text: "API keys"
     assert_select ".admin-stat-label", text: "HoF users"
   end
@@ -52,7 +65,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @admin.update!(faction: faction)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "factions")
     assert_response :success
 
     assert_select ".admin-stats-table td", text: "Test Faction"
@@ -61,7 +74,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   test "shows snapshot coverage stats" do
     PersonalStatSnapshot.create!(user: @admin, date: Date.yesterday, timestamp: Date.yesterday.to_time.to_i)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "collection")
     assert_response :success
 
     assert_select ".admin-stat-label", text: "Days with data"
@@ -70,7 +83,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   test "shows api call stats with admin key breakdown" do
     ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: "ABCDEF")
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "api")
     assert_response :success
 
     assert_select ".admin-stat-label", text: "Total calls"
@@ -89,14 +102,14 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     ApiCall.create!(user: @admin, endpoint: "/admin", status: "success", api_key: admin_key)
     ApiCall.create!(user: @bert, endpoint: "/faction", status: "success", api_key: "FACTION_KEY")
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "api")
     assert_response :success
 
     assert_select ".admin-stats-sub .admin-stat-value", text: "2"
   end
 
   test "shows sign-in stats" do
-    get admin_stats_path
+    get admin_stats_section_path(name: "volume")
     assert_response :success
 
     assert_select ".admin-stat-label", text: "Sessions this week"
@@ -106,7 +119,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     new_user = User.create!(torn_id: 999888, name: "NewPlayer", level: 10)
     Session.create!(user: new_user, ip_address: "1.2.3.4", user_agent: "test")
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "volume")
     assert_response :success
 
     assert_select ".admin-stats-table td a", text: /NewPlayer/
@@ -116,7 +129,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     new_user = User.create!(torn_id: 999888, name: "NewPlayer", level: 10, created_at: 1.year.ago)
     Session.create!(user: new_user, ip_address: "1.2.3.4", user_agent: "test", created_at: 2.days.ago)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "volume")
     assert_response :success
 
     first_session_date = 2.days.ago.strftime("%d %b")
@@ -139,7 +152,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     Session.create!(user: old_user, ip_address: "1.2.3.4", user_agent: "test", created_at: 2.weeks.ago)
     Session.create!(user: old_user, ip_address: "1.2.3.4", user_agent: "test")
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "volume")
     assert_response :success
 
     assert_select ".admin-stats-table td a", text: /OldPlayer/, count: 0
@@ -148,7 +161,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
   test "shows daily snapshots chart" do
     PersonalStatSnapshot.create!(user: @admin, date: Date.yesterday, timestamp: Date.yesterday.to_time.to_i)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "collection")
     assert_response :success
 
     assert_select ".admin-chart-bar", minimum: 1
@@ -158,7 +171,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     faction = Faction.create!(torn_id: 99999, name: "Test Faction", xanax_target: 2.5)
     @admin.update!(faction: faction)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "collection")
     assert_response :success
 
     assert_select ".admin-stat-value.warning"
@@ -185,7 +198,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
       ApiCall.create!(user: @admin, endpoint: "/test", status: "success", api_key: key)
     end
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "api")
     assert_response :success
 
     row = css_select(".admin-stats-table tr").find { |r| r.text.include?("PEAK...Y123") }
@@ -195,7 +208,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
 
   test "single-call keys are folded into one row" do
     # fixture key ABCDEF has exactly 1 call and 0 errors -> folded
-    get admin_stats_path
+    get admin_stats_section_path(name: "api")
     assert_response :success
 
     assert_select ".admin-folded td", text: /keys with 1 call/
@@ -207,7 +220,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     faction = Faction.create!(torn_id: 88888, name: "Ghost Crew", xanax_target: 2.5, setup_completed: false)
     faction.update_column(:updated_at, 40.days.ago)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "factions")
     assert_response :success
 
     row = css_select(".admin-stats-table tr").find { |r| r.text.include?("Ghost Crew") }
@@ -226,7 +239,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
     )
     PersonalStatSnapshot.create!(user: @bert, date: 3.days.ago.to_date, drugs_xanax: 5)
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "collection")
     assert_response :success
 
     row = css_select(".admin-stat-row").find { |r| r.text.include?("Complete / incomplete") }
@@ -244,7 +257,7 @@ class Admin::StatsControllerTest < ActionDispatch::IntegrationTest
 
     tracked_count = User.tracked_for_stats.count
 
-    get admin_stats_path
+    get admin_stats_section_path(name: "collection")
     assert_response :success
 
     # every tracked user except Gapless misses both window days

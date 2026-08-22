@@ -14,13 +14,42 @@ module Admin
       "backfill_missing_stats" => "recruiter_backfill_missing_stats"
     }.freeze
 
-    def show
-      @pool_keys = ApiKey.where(recruiter_fetch_allowed: true).includes(:user, :submitted_by).order(:created_at)
-      @calls_today = ApiCall.where(api_key: @pool_keys.map(&:key), created_at: Time.current.all_day).group(:api_key).count
-      @service_key_present = Rails.application.credentials.dig(:recruiter, :api_key).present?
+    SECTION_LOADERS = {
+      "pipeline" => :load_pipeline,
+      "jobs" => :load_jobs,
+      "keys" => :load_keys,
+      "ratings" => :load_ratings
+    }.freeze
 
+    def show
+    end
+
+    def section
+      loader = SECTION_LOADERS[params[:name]]
+      return head :not_found unless loader
+
+      send(loader)
+      render partial: "admin/recruiter/#{params[:name]}"
+    end
+
+    def run
+      klass = JOBS[params[:job]]
+      return redirect_to admin_recruiter_path, alert: "Unknown job." unless klass
+
+      klass.perform_later
+      redirect_to admin_recruiter_path, notice: "#{klass.name} enqueued."
+    end
+
+    private
+
+    def load_pool
+      @pool_keys = ApiKey.where(recruiter_fetch_allowed: true).includes(:user, :submitted_by).order(:created_at)
+      @service_key_present = Rails.application.credentials.dig(:recruiter, :api_key).present?
+    end
+
+    def load_pipeline
+      load_pool
       @companies_count = Company.count
-      @companies_by_rating = Company.group(:rating).count
       @roster_synced_at = Company.maximum(:synced_at)
       @employed_count = User.employed.count
       @with_stats_count = User.employed.with_working_stats.count
@@ -30,7 +59,9 @@ module Admin
         .where(company_director: false, working_stats: nil)
         .where(company_id: Company.where(rating: Recruiter::BackfillMissingStatsJob::MIN_COMPANY_RATING..).select(:torn_id))
         .count
+    end
 
+    def load_jobs
       @jobs = JOBS.map do |slug, klass|
         last = SolidQueue::Job.where(class_name: klass.name).order(id: :desc).first
         {
@@ -43,12 +74,13 @@ module Admin
       end
     end
 
-    def run
-      klass = JOBS[params[:job]]
-      return redirect_to admin_recruiter_path, alert: "Unknown job." unless klass
+    def load_keys
+      load_pool
+      @calls_today = ApiCall.where(api_key: @pool_keys.map(&:key), created_at: Time.current.all_day).group(:api_key).count
+    end
 
-      klass.perform_later
-      redirect_to admin_recruiter_path, notice: "#{klass.name} enqueued."
+    def load_ratings
+      @companies_by_rating = Company.group(:rating).count
     end
   end
 end

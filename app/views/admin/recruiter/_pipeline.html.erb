@@ -1,0 +1,45 @@
+<%= turbo_frame_tag "recruiter-pipeline" do %>
+  <div class="admin-health">
+    <% if @pool_keys.any? || @service_key_present %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Key pool</b><span class="why"><%= @pool_keys.size %> consented <%= "key".pluralize(@pool_keys.size) %><%= " · service key configured" if @service_key_present %></span></span>
+    <% else %>
+      <span class="admin-hpill bad"><span class="dot"></span><b>Key pool</b><span class="why">pipeline idle — no consented keys and no service key, every job skips</span></span>
+    <% end %>
+
+    <% if @roster_synced_at %>
+      <span class="admin-hpill <%= @roster_synced_at > 26.hours.ago ? "ok" : "warn" %>"><span class="dot"></span><b>Roster</b><span class="why">synced <%= time_ago_in_words(@roster_synced_at) %> ago</span></span>
+    <% else %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Roster</b><span class="why">never synced</span></span>
+    <% end %>
+
+    <% if @swept_at %>
+      <span class="admin-hpill <%= @swept_at > 26.hours.ago ? "ok" : "warn" %>"><span class="dot"></span><b>Working stats</b><span class="why">swept <%= time_ago_in_words(@swept_at) %> ago</span></span>
+    <% else %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Working stats</b><span class="why">never swept</span></span>
+    <% end %>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@companies_count) %></div>
+      <div class="k">Companies</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@employed_count) %></div>
+      <div class="k">Employed players</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@with_stats_count) %></div>
+      <div class="k">With working stats</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@backfill_pending) %></div>
+      <div class="k">Backfill queue</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@coverage_gap) %></div>
+      <div class="k">Missing stats (<%= Recruiter::BackfillMissingStatsJob::MIN_COMPANY_RATING %>★+ companies)</div>
+    </div>
+  </div>
+
+<% end %>

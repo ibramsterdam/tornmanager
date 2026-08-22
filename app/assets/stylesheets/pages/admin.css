@@ -1251,3 +1251,20 @@ th.admin-num { text-align: right; }
 .admin-chart-bar .n { font-size: 11px; color: var(--gray-400); font-variant-numeric: tabular-nums; }
 .admin-chart-x { display: flex; gap: 6px; margin-top: 6px; }
 .admin-chart-x span { flex: 1; text-align: center; font-size: 10.5px; color: var(--gray-500); }
+
+.admin-skel {
+  padding: 4px 0;
+}
+
+.admin-skel-row {
+  border-radius: 8px;
+  background: linear-gradient(90deg, #1c1c1e 25%, #26262a 37%, #1c1c1e 63%);
+  background-size: 400% 100%;
+  animation: admin-skel 1.2s ease infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes admin-skel {
+  0% { background-position: 100% 0; }
+  100% { background-position: 0 0; }
+}

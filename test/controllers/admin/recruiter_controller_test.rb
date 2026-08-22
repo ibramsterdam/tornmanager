@@ -14,8 +14,29 @@ class Admin::RecruiterControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to root_path
   end
 
-  test "shows the idle warning without any keys" do
+  test "renders the shell with a lazy frame per section" do
     get admin_recruiter_path
+
+    assert_response :success
+    %w[pipeline jobs keys ratings].each do |name|
+      assert_select "turbo-frame#recruiter-#{name}[src=?]", admin_recruiter_section_path(name: name)
+    end
+  end
+
+  test "every section renders" do
+    %w[pipeline jobs keys ratings].each do |name|
+      get admin_recruiter_section_path(name: name)
+      assert_response :success
+    end
+  end
+
+  test "unknown sections are not found" do
+    get admin_recruiter_section_path(name: "everything")
+    assert_response :not_found
+  end
+
+  test "shows the idle warning without any keys" do
+    get admin_recruiter_section_path(name: "pipeline")
 
     assert_response :success
     assert_match "pipeline idle", response.body
@@ -24,11 +45,13 @@ class Admin::RecruiterControllerTest < ActionDispatch::IntegrationTest
   test "lists consented pool keys with owner and submitter" do
     api_keys(:bram_personal_key).update!(recruiter_fetch_allowed: true, submitted_by: @admin)
 
-    get admin_recruiter_path
+    get admin_recruiter_section_path(name: "keys")
 
     assert_response :success
     assert_match "ABCD", response.body
     assert_match "Bram [2728237]", response.body
+
+    get admin_recruiter_section_path(name: "pipeline")
     assert_no_match "pipeline idle", response.body
   end
 

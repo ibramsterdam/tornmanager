@@ -1,0 +1,82 @@
+<%= turbo_frame_tag "stats-api" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Torn API</h2><span class="admin-stats-hint">30d retention &middot; budget: <%= @per_key_budget %>/min per key &middot; <%= @global_budget %>/min global</span></div>
+    <div class="admin-stats-grid admin-stats-grid-api">
+
+      <div class="admin-stats-panel">
+        <h3>Aggregate</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Total calls</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@total_api_calls) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Peak rate</span>
+            <span class="admin-stat-value"><%= @api_peak_rate_all_time %>/min</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Peak today</span>
+            <span class="admin-stat-value <%= @api_peak_rate_today > @global_budget ? 'error' : 'success' %>"><%= @api_peak_rate_today %>/min</span>
+          </div>
+        </div>
+        <div class="admin-stats-rows admin-stats-sub">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin key calls</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@admin_api_total) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin peak rate</span>
+            <span class="admin-stat-value"><%= @admin_api_peak_all_time %>/min</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Admin peak today</span>
+            <span class="admin-stat-value"><%= @admin_api_peak_today %>/min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-stats-panel admin-span2">
+        <h3>Per key &mdash; last 24h <span class="admin-stats-hint">&middot; single-call keys folded</span></h3>
+        <% if @api_key_breakdown.any? %>
+          <div class="admin-tscroll">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Owner</th><th>Key</th><th class="admin-num">Calls</th><th>Peak vs <%= @per_key_budget %>/min</th><th class="admin-num">Errors</th></tr>
+              </thead>
+              <tbody>
+                <% @api_key_rows.each do |row| %>
+                  <% over = row[:peak_rate] > @per_key_budget %>
+                  <tr>
+                    <td><%= row[:owner] %></td>
+                    <td class="admin-muted"><code><%= row[:display_key] %></code></td>
+                    <td class="admin-num"><%= number_with_delimiter(row[:total]) %></td>
+                    <td>
+                      <span class="admin-bud <%= 'over' if over %>">
+                        <span class="track"><span class="fill" style="width: <%= [ (row[:peak_rate].to_f / @per_key_budget * 100).round, 100 ].min %>%"></span></span>
+                        <span class="n"><%= row[:peak_rate] %>/min</span>
+                      </span>
+                    </td>
+                    <td class="admin-num <%= 'error' if row[:errors] > 0 %>"><%= row[:errors] %></td>
+                  </tr>
+                <% end %>
+                <% if @api_single_call_keys > 0 %>
+                  <tr class="admin-folded">
+                    <td class="admin-muted">+ <%= @api_single_call_keys %> keys with 1 call</td>
+                    <td class="admin-muted">&mdash;</td>
+                    <td class="admin-num admin-muted"><%= @api_single_call_keys %></td>
+                    <td class="admin-muted">1/min</td>
+                    <td class="admin-num admin-muted">0</td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+          <p class="admin-stats-footnote">Bars measure 24h peak against the <%= @per_key_budget %>/min client budget &mdash; a red bar after the redesign deploy is a real violation.</p>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+
+  <%# ── 5. Factions ── %>
+<% end %>

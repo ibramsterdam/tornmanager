@@ -2,17 +2,23 @@ module Admin
   class StatsController < ApplicationController
     before_action :require_admin
 
+    SECTION_LOADERS = {
+      "overview" => [ :load_user_stats, :load_subscription_stats, :load_activity_stats, :load_data_health, :load_api_stats, :load_pipeline_stats ],
+      "collection" => [ :load_user_stats, :load_snapshot_stats, :load_activity_stats, :load_data_health, :load_pipeline_stats, :load_armory_latest ],
+      "api" => [ :load_api_stats ],
+      "factions" => [ :load_faction_stats ],
+      "volume" => [ :load_user_stats, :load_subscription_stats, :load_snapshot_stats, :load_armory_stats, :load_sign_in_stats ]
+    }.freeze
+
     def index
-      load_user_stats
-      load_subscription_stats
-      load_faction_stats
-      load_snapshot_stats
-      load_activity_stats
-      load_data_health
-      load_api_stats
-      load_sign_in_stats
-      load_armory_stats
-      load_pipeline_stats
+    end
+
+    def section
+      loaders = SECTION_LOADERS[params[:name]]
+      return head :not_found unless loaders
+
+      loaders.each { |loader| send(loader) }
+      render partial: "admin/stats/#{params[:name]}"
     end
 
     private
@@ -128,6 +134,7 @@ module Admin
 
       calculate_snapshot_gaps
 
+      @total_snapshots ||= PersonalStatSnapshot.count
       @incomplete_snapshots = PersonalStatSnapshot.partial.count
       @tombstoned_snapshots = PersonalStatSnapshot.where(torn_data_missing: true).count
       @complete_snapshots = @total_snapshots - @incomplete_snapshots - @tombstoned_snapshots
@@ -218,6 +225,10 @@ module Admin
 
       @first_session_dates = first_session_dates
       @new_sign_ins = User.where(id: first_session_dates.keys).order(created_at: :desc)
+    end
+
+    def load_armory_latest
+      @armory_latest = ArmoryNewsEntry.maximum(:occurred_at)
     end
 
     def load_armory_stats

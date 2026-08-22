@@ -1,0 +1,18 @@
+<%= turbo_frame_tag "recruiter-ratings" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Companies by rating</h2><span class="admin-stats-hint">backfill covers <%= Recruiter::BackfillMissingStatsJob::MIN_COMPANY_RATING %>★ and up</span></div>
+    <table class="admin-stats-table">
+      <thead>
+        <tr><th>Rating</th><th>Companies</th></tr>
+      </thead>
+      <tbody>
+        <% @companies_by_rating.sort_by { |rating, _| -rating }.each do |rating, count| %>
+          <tr>
+            <td><%= rating %>★</td>
+            <td><%= number_with_delimiter(count) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+<% end %>

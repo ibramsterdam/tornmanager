@@ -1,0 +1,26 @@
+<%= turbo_frame_tag "recruiter-keys" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Key Pool</h2><span class="admin-stats-hint">consented keys used for background fetching &middot; tagged tmrecruiter</span></div>
+    <% if @pool_keys.any? %>
+      <table class="admin-stats-table">
+        <thead>
+          <tr><th>Key</th><th>Owner</th><th>Submitted by</th><th>Access</th><th>Calls today</th></tr>
+        </thead>
+        <tbody>
+          <% @pool_keys.each do |key| %>
+            <tr>
+              <td><code><%= key.key.first(4) %>…<%= key.key.last(4) %></code></td>
+              <td><%= key.user ? "#{key.user.name} [#{key.user.torn_id}]" : "faction ##{key.faction_id}" %></td>
+              <td><%= key.submitted_by ? "#{key.submitted_by.name} [#{key.submitted_by.torn_id}]" : "—" %></td>
+              <td><%= key.access_type %></td>
+              <td><%= number_with_delimiter(@calls_today.fetch(key.key, 0)) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="admin-stats-hint">No consented keys yet. Flip <code>recruiter_fetch_allowed</code> on an ApiKey or configure <code>recruiter.api_key</code> in credentials.</p>
+    <% end %>
+  </section>
+
+<% end %>

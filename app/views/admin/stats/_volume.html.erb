@@ -1,0 +1,105 @@
+<%= turbo_frame_tag "stats-volume" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Storage &amp; Volume</h2><span class="admin-stats-hint">big tables, slow growth</span></div>
+    <div class="admin-stats-grid">
+
+      <div class="admin-stats-panel">
+        <h3>Member activity <span class="admin-stats-hint">&middot; kept forever</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Snapshots</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_snapshots) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Growth</span>
+            <span class="admin-stat-value">~<%= number_with_delimiter(@activity_daily_growth) %>/day</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Polls / members</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@activity_total_polls) %> / <%= @activity_members_tracked %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @activity_earliest&.strftime("%d %b %Y") || "N/A" %> &ndash; <%= @activity_latest&.strftime("%d %b %Y") || "N/A" %></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Armoury news <span class="admin-stats-hint">&middot; 365d retention</span></h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Entries</span>
+            <span class="admin-stat-value"><%= number_with_delimiter(@armory_total_entries) %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Range</span>
+            <span class="admin-stat-value"><%= @armory_earliest&.strftime("%d %b %Y") || "N/A" %> &ndash; <%= @armory_latest&.strftime("%d %b %Y") || "N/A" %></span>
+          </div>
+        </div>
+        <% if @armory_by_faction.any? %>
+          <div class="admin-tscroll" style="max-height: 200px">
+            <table class="admin-stats-table">
+              <thead>
+                <tr><th>Faction</th><th class="admin-num">Entries</th><th>Backfill</th></tr>
+              </thead>
+              <tbody>
+                <% @armory_by_faction.sort_by { |f| -f[:count] }.each do |f| %>
+                  <tr>
+                    <td><%= f[:faction].name %></td>
+                    <td class="admin-num"><%= number_with_delimiter(f[:count]) %></td>
+                    <td><span class="admin-chip <%= f[:backfill_pending] ? 'warn' : 'ok' %>"><%= f[:backfill_pending] ? "running" : "done" %></span></td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="admin-stats-panel">
+        <h3>Users &amp; sessions</h3>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">HoF users</span>
+            <span class="admin-stat-value"><%= @hof_stats_users %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">API keys</span>
+            <span class="admin-stat-value"><%= @api_keys_configured %></span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Sessions this week</span>
+            <span class="admin-stat-value"><%= @sign_ins_this_week %> &middot; <%= @unique_sign_ins_this_week %> unique</span>
+          </div>
+        </div>
+        <% if @subscribed_factions.any? %>
+          <div class="admin-stats-rows admin-stats-sub">
+            <% @subscribed_factions.each do |f| %>
+              <div class="admin-stat-row">
+                <span class="admin-stat-label"><%= f.name %></span>
+                <span class="admin-stat-value"><%= f.subscription.days_remaining %>d left</span>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        <% if @new_sign_ins.any? %>
+          <table class="admin-stats-table">
+            <thead>
+              <tr><th>New User</th><th>Joined</th></tr>
+            </thead>
+            <tbody>
+              <% @new_sign_ins.each do |user| %>
+                <tr>
+                  <td><a href="https://www.torn.com/profiles.php?XID=<%= user.torn_id %>" target="_blank" class="player-link"><%= user.name %></a></td>
+                  <td><%= @first_session_dates[user.id]&.strftime("%d %b") || "&mdash;".html_safe %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+<% end %>

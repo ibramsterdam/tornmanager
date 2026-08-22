@@ -1,0 +1,45 @@
+<%= turbo_frame_tag "stats-factions" do %>
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Factions</h2><span class="admin-stats-hint"><%= @total_factions %> total &middot; <%= @active_factions %> active &middot; sorted by status, then members</span></div>
+    <div class="admin-stats-panel">
+      <% if @faction_rows.any? %>
+        <div class="admin-tscroll tall">
+          <table class="admin-stats-table">
+            <thead>
+              <tr><th>Faction</th><th class="admin-num">Members</th><th>Status</th><th>Setup &middot; API &middot; TS &middot; Poll &middot; BF</th><th>Last sync</th></tr>
+            </thead>
+            <tbody>
+              <% @faction_rows.each do |row| %>
+                <tr>
+                  <td><%= row[:faction].name %></td>
+                  <td class="admin-num"><%= row[:member_count] %></td>
+                  <td>
+                    <% case row[:status] %>
+                    <% when :active %>
+                      <span class="admin-chip ok">active</span>
+                    <% when :stale %>
+                      <span class="admin-chip warn">stale <%= row[:stale_days] %>d</span>
+                    <% else %>
+                      <span class="admin-chip off">no setup</span>
+                    <% end %>
+                  </td>
+                  <td>
+                    <span class="admin-caps">
+                      <% row[:caps].each do |on| %>
+                        <span class="admin-cap <%= 'on' if on %>"></span>
+                      <% end %>
+                    </span>
+                  </td>
+                  <td class="admin-muted"><%= row[:last_sync]&.strftime("%d %b %H:%M") || "&mdash;".html_safe %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+        <p class="admin-stats-footnote">"stale" = no setup, no key, unchanged for 30+ days &mdash; the target of the upcoming faction cleanup.</p>
+      <% end %>
+    </div>
+  </section>
+
+  <%# ── 6. Storage & volume ── %>
+<% end %>
