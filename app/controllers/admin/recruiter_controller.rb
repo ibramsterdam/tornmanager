@@ -14,22 +14,22 @@ module Admin
       "backfill_missing_stats" => "recruiter_backfill_missing_stats"
     }.freeze
 
-    SECTION_LOADERS = {
-      "pipeline" => :load_pipeline,
-      "jobs" => :load_jobs,
-      "keys" => :load_keys,
-      "ratings" => :load_ratings
+    SECTIONS = {
+      "pipeline" => { partial: "admin/recruiter/pipeline", loader: :load_pipeline },
+      "jobs" => { partial: "admin/recruiter/jobs", loader: :load_jobs },
+      "keys" => { partial: "admin/recruiter/keys", loader: :load_keys },
+      "ratings" => { partial: "admin/recruiter/ratings", loader: :load_ratings }
     }.freeze
 
     def show
     end
 
     def section
-      loader = SECTION_LOADERS[params[:name]]
-      return head :not_found unless loader
+      section = SECTIONS[params[:name]]
+      return head :not_found unless section
 
-      send(loader)
-      render partial: "admin/recruiter/#{params[:name]}"
+      send(section[:loader])
+      render partial: section[:partial]
     end
 
     def run

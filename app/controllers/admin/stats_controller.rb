@@ -2,23 +2,23 @@ module Admin
   class StatsController < ApplicationController
     before_action :require_admin
 
-    SECTION_LOADERS = {
-      "overview" => [ :load_user_stats, :load_subscription_stats, :load_activity_stats, :load_data_health, :load_api_stats, :load_pipeline_stats ],
-      "collection" => [ :load_user_stats, :load_snapshot_stats, :load_activity_stats, :load_data_health, :load_pipeline_stats, :load_armory_latest ],
-      "api" => [ :load_api_stats ],
-      "factions" => [ :load_faction_stats ],
-      "volume" => [ :load_user_stats, :load_subscription_stats, :load_snapshot_stats, :load_armory_stats, :load_sign_in_stats ]
+    SECTIONS = {
+      "overview" => { partial: "admin/stats/overview", loaders: [ :load_user_stats, :load_subscription_stats, :load_activity_stats, :load_data_health, :load_api_stats, :load_pipeline_stats ] },
+      "collection" => { partial: "admin/stats/collection", loaders: [ :load_user_stats, :load_snapshot_stats, :load_activity_stats, :load_data_health, :load_pipeline_stats, :load_armory_latest ] },
+      "api" => { partial: "admin/stats/api", loaders: [ :load_api_stats ] },
+      "factions" => { partial: "admin/stats/factions", loaders: [ :load_faction_stats ] },
+      "volume" => { partial: "admin/stats/volume", loaders: [ :load_user_stats, :load_subscription_stats, :load_snapshot_stats, :load_armory_stats, :load_sign_in_stats ] }
     }.freeze
 
     def index
     end
 
     def section
-      loaders = SECTION_LOADERS[params[:name]]
-      return head :not_found unless loaders
+      section = SECTIONS[params[:name]]
+      return head :not_found unless section
 
-      loaders.each { |loader| send(loader) }
-      render partial: "admin/stats/#{params[:name]}"
+      section[:loaders].each { |loader| send(loader) }
+      render partial: section[:partial]
     end
 
     private
