@@ -1,41 +1,48 @@
 bram:
   name: Bram
   torn_id: 2728237
+  api_token: 2728237_api_token_fixture
   level: 69
   hof_stats_user: false
 
 bert:
   name: Bert
   torn_id: 1234567
+  api_token: 1234567_api_token_fixture
   level: 50
   hof_stats_user: false
 
 kaneki:
   name: Kaneki
   torn_id: 2685512
+  api_token: 2685512_api_token_fixture
   level: 75
   hof_stats_user: false
 
 user_with_keyed_faction:
   name: KeyedUser
   torn_id: 9999001
+  api_token: 9999001_api_token_fixture
   level: 30
   faction: with_api_key
 
 user_with_unkeyed_faction:
   name: UnkeyedUser
   torn_id: 9999002
+  api_token: 9999002_api_token_fixture
   level: 30
   faction: without_api_key
 
 user_no_faction:
   name: NoFactionUser
   torn_id: 9999003
+  api_token: 9999003_api_token_fixture
   level: 30
   hof_stats_user: true
 
 user_hof_no_faction:
   name: HofUser
   torn_id: 9999004
+  api_token: 9999004_api_token_fixture
   level: 30
   hof_stats_user: true

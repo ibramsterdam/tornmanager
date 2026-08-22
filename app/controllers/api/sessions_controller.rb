@@ -8,6 +8,11 @@ module Api
       end
 
       key_info = TornApi::Key::Info.new(api_key).fetch
+
+      if key_info.access.type == "Full Access"
+        return render json: { error: "Full Access keys are not allowed. Please use a Public or Limited Access key instead." }, status: :bad_request
+      end
+
       profile = TornApi::User::Profile.new(api_key).fetch
 
       user = User.find_by(torn_id: profile.id) || User.new
@@ -24,8 +29,10 @@ module Api
       )
       user.save!
       user.set_api_key!(api_key, key_info.access.type)
+      user.regenerate_api_token if user.api_token.blank?
 
       render json: {
+        token: user.api_token,
         user: {
           torn_id: user.torn_id,
           name: user.name,

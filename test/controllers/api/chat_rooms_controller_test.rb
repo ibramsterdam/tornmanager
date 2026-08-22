@@ -8,7 +8,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creating a room returns the invite url to the host" do
-    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Hawaii squad" }, as: :json
+    post api_chat_create_room_path, params: { name: "Hawaii squad" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     room = JSON.parse(response.body)["room"]
@@ -19,7 +19,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creating a room with encrypted flag marks it end-to-end encrypted" do
-    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Secret", encrypted: true }, as: :json
+    post api_chat_create_room_path, params: { name: "Secret", encrypted: true }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     room = JSON.parse(response.body)["room"]
@@ -28,25 +28,25 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "creating a room without the encrypted flag is not encrypted" do
-    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Plain" }, as: :json
+    post api_chat_create_room_path, params: { name: "Plain" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     assert_not JSON.parse(response.body)["room"]["encrypted"]
   end
 
   test "creating a room requires a name" do
-    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "  " }, as: :json
+    post api_chat_create_room_path, params: { name: "  " }, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
   end
 
   test "a user cannot create more rooms than the per-user limit" do
     ChatRoom::PER_USER_LIMIT.times do |i|
-      post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Room #{i}" }, as: :json
+      post api_chat_create_room_path, params: { name: "Room #{i}" }, headers: api_auth(@bram), as: :json
       assert_response :created
     end
 
-    post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "One too many" }, as: :json
+    post api_chat_create_room_path, params: { name: "One too many" }, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
     assert_equal "You're already in #{ChatRoom::PER_USER_LIMIT} rooms. Leave one first.", JSON.parse(response.body)["error"]
@@ -57,7 +57,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
 
     room = create_room(@bram, "Hawaii squad")
 
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+    post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bert), as: :json
 
     assert_response :unprocessable_entity
     assert_equal 1, room.chat_memberships.count
@@ -66,7 +66,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "rejoining an existing room works even at the per-user limit" do
     rooms = ChatRoom::PER_USER_LIMIT.times.map { |i| create_room(@bert, "Bert #{i}") }
 
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: rooms.first.invite_token }, as: :json
+    post api_chat_join_path, params: { token: rooms.first.invite_token }, headers: api_auth(@bert), as: :json
 
     assert_response :ok
   end
@@ -74,7 +74,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "joining via invite token adds a membership and announces it" do
     room = create_room(@bram, "Hawaii squad")
 
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+    post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bert), as: :json
 
     assert_response :ok
     joined = JSON.parse(response.body)["room"]
@@ -88,7 +88,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room = create_room(@bram, "Hawaii squad")
 
     2.times do
-      post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+      post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bert), as: :json
       assert_response :ok
     end
 
@@ -96,7 +96,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "joining with an unknown token fails" do
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: "nope" }, as: :json
+    post api_chat_join_path, params: { token: "nope" }, headers: api_auth(@bert), as: :json
 
     assert_response :not_found
   end
@@ -108,7 +108,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
       room.chat_memberships.create!(user: user)
     end
 
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+    post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bert), as: :json
 
     assert_response :unprocessable_entity
     assert_equal "This room is full.", JSON.parse(response.body)["error"]
@@ -118,7 +118,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     mine = create_room(@bram, "Mine")
     create_room(@bert, "Not mine")
 
-    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+    post api_chat_rooms_path, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     rooms = JSON.parse(response.body)["rooms"]
@@ -129,7 +129,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room = create_room(@bram, "Hawaii squad")
     room.chat_memberships.create!(user: @bert)
 
-    post api_chat_leave_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_leave_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
 
     assert_response :ok
     assert_not room.chat_memberships.exists?(user: @bert)
@@ -139,7 +139,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "a non-member cannot leave or probe a room by guessing its id" do
     room = create_room(@bram, "Private room")
 
-    post api_chat_leave_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_leave_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
 
     assert_response :not_found
     assert ChatRoom.exists?(room.id)
@@ -149,7 +149,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "the last member leaving starts the self-destruct clock instead of deleting" do
     room = create_room(@bram, "Hawaii squad")
 
-    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
+    post api_chat_leave_path, params: { room_id: room.id }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert ChatRoom.exists?(room.id)
@@ -158,10 +158,10 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
 
   test "rejoining an emptied room resets its self-destruct clock" do
     room = create_room(@bram, "Hawaii squad")
-    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: room.id }, as: :json
+    post api_chat_leave_path, params: { room_id: room.id }, headers: api_auth(@bram), as: :json
     assert_not_nil room.reload.emptied_at
 
-    post api_chat_join_path, params: { api_key: @bram.api_key, token: room.invite_token }, as: :json
+    post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert_nil room.reload.emptied_at
@@ -186,12 +186,12 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room = create_room(@bram, "Squad")
     room.chat_memberships.create!(user: @bert)
 
-    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+    post api_chat_suspend_path, params: { room_id: room.id, torn_id: @bert.torn_id }, headers: api_auth(@bram), as: :json
     assert_response :ok
     assert room.chat_suspensions.exists?(user: @bert)
     assert room.chat_messages.exists?(system: true, body: "#{@bram.name} has suspended #{@bert.name}.")
 
-    post api_chat_unsuspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+    post api_chat_unsuspend_path, params: { room_id: room.id, torn_id: @bert.torn_id }, headers: api_auth(@bram), as: :json
     assert_response :ok
     assert_not room.chat_suspensions.exists?(user: @bert)
     assert room.chat_messages.exists?(system: true, body: "#{@bram.name} has unsuspended #{@bert.name}.")
@@ -201,7 +201,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room = create_room(@bram, "Squad")
     room.chat_memberships.create!(user: @bert)
 
-    post api_chat_suspend_path, params: { api_key: @bert.api_key, room_id: room.id, torn_id: @bram.torn_id }, as: :json
+    post api_chat_suspend_path, params: { room_id: room.id, torn_id: @bram.torn_id }, headers: api_auth(@bert), as: :json
 
     assert_response :forbidden
     assert_empty room.chat_suspensions
@@ -210,7 +210,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "the host cannot suspend themselves" do
     room = create_room(@bram, "Squad")
 
-    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bram.torn_id }, as: :json
+    post api_chat_suspend_path, params: { room_id: room.id, torn_id: @bram.torn_id }, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
   end
@@ -218,10 +218,10 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "a suspension survives the member leaving and rejoining" do
     room = create_room(@bram, "Squad")
     room.chat_memberships.create!(user: @bert)
-    post api_chat_suspend_path, params: { api_key: @bram.api_key, room_id: room.id, torn_id: @bert.torn_id }, as: :json
+    post api_chat_suspend_path, params: { room_id: room.id, torn_id: @bert.torn_id }, headers: api_auth(@bram), as: :json
 
-    post api_chat_leave_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
-    post api_chat_join_path, params: { api_key: @bert.api_key, token: room.invite_token }, as: :json
+    post api_chat_leave_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
+    post api_chat_join_path, params: { token: room.invite_token }, headers: api_auth(@bert), as: :json
 
     assert room.chat_suspensions.exists?(user: @bert)
     assert JSON.parse(response.body)["room"]["suspended"]
@@ -232,7 +232,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     room.chat_memberships.create!(user: @bert)
     room.chat_suspensions.create!(user: @bert)
 
-    post api_chat_room_members_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_room_members_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
     assert_response :ok
     members = JSON.parse(response.body)["members"].index_by { |m| m["torn_id"] }
     assert members[@bram.torn_id]["host"]
@@ -242,7 +242,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "non-members cannot view the roster" do
     room = create_room(@bram, "Squad")
 
-    post api_chat_room_members_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_room_members_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
 
     assert_response :not_found
   end
@@ -251,21 +251,21 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     lounge = public_room("The Lounge")
     lounge.chat_memberships.create!(user: @bram)
 
-    post api_chat_room_members_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_room_members_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     assert_response :not_found
   end
 
-  test "requires an api key" do
+  test "requires a session token" do
     post api_chat_rooms_path, params: {}, as: :json
 
-    assert_response :bad_request
+    assert_response :unauthorized
   end
 
   test "a banned user is rejected from chat endpoints" do
     @bram.ban!
 
-    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+    post api_chat_rooms_path, headers: api_auth(@bram), as: :json
 
     assert_response :forbidden
     body = JSON.parse(response.body)
@@ -276,23 +276,23 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "a banned user sees the suspension end date and reason" do
     @bram.ban!(Time.utc(2026, 9, 1), reason: "Scamming")
 
-    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+    post api_chat_rooms_path, headers: api_auth(@bram), as: :json
 
     assert_response :forbidden
     assert_equal "Your access to TornManager has been suspended until 1 September 2026. Reason: Scamming.",
       JSON.parse(response.body)["error"]
   end
 
-  test "rejects unknown api keys" do
-    post api_chat_rooms_path, params: { api_key: "nonexistent" }, as: :json
+  test "rejects unknown tokens" do
+    post api_chat_rooms_path, headers: { "Authorization" => "Bearer nonexistent" }, as: :json
 
-    assert_response :not_found
+    assert_response :unauthorized
   end
 
   test "index returns public rooms to everyone without membership" do
     lounge = public_room("The Lounge")
 
-    post api_chat_rooms_path, params: { api_key: @bram.api_key }, as: :json
+    post api_chat_rooms_path, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     body = JSON.parse(response.body)
@@ -305,7 +305,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "joining an anonymous public room assigns the user a forever anonymous name" do
     den = public_room("The Muggers Den")
 
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: den.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: den.id }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert @bram.reload.chat_anon_name.present?
@@ -314,7 +314,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "joining a named public room does not assign an anonymous name" do
     lounge = public_room("The Lounge", anonymous: false)
 
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert_nil @bram.reload.chat_anon_name
@@ -323,11 +323,11 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "leaving and rejoining a public room keeps the same anonymous name" do
     lounge = public_room("The Muggers Den")
 
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
     first_name = @bram.reload.chat_anon_name
 
-    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_leave_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
+    post api_chat_join_public_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     assert_equal first_name, @bram.reload.chat_anon_name
   end
@@ -335,7 +335,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "joining a public room does not post a join system message" do
     lounge = public_room("The Lounge")
 
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert_equal 0, lounge.chat_messages.count
@@ -344,7 +344,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
   test "join_public rejects a private room id" do
     room = create_room(@bram, "Private")
 
-    post api_chat_join_public_path, params: { api_key: @bert.api_key, room_id: room.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: room.id }, headers: api_auth(@bert), as: :json
 
     assert_response :not_found
     assert_not room.chat_memberships.exists?(user: @bert)
@@ -354,7 +354,7 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
     lounge = public_room("The Lounge")
     lounge.chat_memberships.create!(user: @bram)
 
-    post api_chat_leave_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_leave_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     assert ChatRoom.exists?(lounge.id)
@@ -362,10 +362,10 @@ class Api::ChatRoomsControllerTest < ActionDispatch::IntegrationTest
 
   test "public room memberships do not count toward the per-user room limit" do
     lounge = public_room("The Lounge")
-    post api_chat_join_public_path, params: { api_key: @bram.api_key, room_id: lounge.id }, as: :json
+    post api_chat_join_public_path, params: { room_id: lounge.id }, headers: api_auth(@bram), as: :json
 
     ChatRoom::PER_USER_LIMIT.times do |i|
-      post api_chat_create_room_path, params: { api_key: @bram.api_key, name: "Room #{i}" }, as: :json
+      post api_chat_create_room_path, params: { name: "Room #{i}" }, headers: api_auth(@bram), as: :json
       assert_response :created
     end
   end

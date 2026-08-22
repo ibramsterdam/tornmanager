@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_15_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -406,6 +406,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_150000) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.string "api_token"
     t.datetime "backfill_ends_at"
     t.string "banned_reason"
     t.datetime "banned_until"
@@ -424,6 +425,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_15_150000) do
     t.integer "torn_id", null: false
     t.datetime "trial_granted_at"
     t.datetime "updated_at", null: false
+    t.index ["api_token"], name: "index_users_on_api_token", unique: true
     t.index ["banned_until"], name: "index_users_on_banned_until"
     t.index ["chat_anon_name"], name: "index_users_on_chat_anon_name", unique: true
     t.index ["faction_id"], name: "index_users_on_faction_id"

@@ -1,24 +1,14 @@
 module Api
-  class WarsController < ActionController::API
+  class WarsController < BaseController
     def show
-      api_key = params[:api_key].to_s.strip
       torn_ids = Array(params[:torn_ids]).map(&:to_i).reject(&:zero?)
       enemy_faction_id = params[:enemy_faction_id].to_s.strip.presence
-
-      if api_key.blank?
-        return render json: { error: "API key is required" }, status: :bad_request
-      end
 
       if torn_ids.empty?
         return render json: { error: "torn_ids is required" }, status: :bad_request
       end
 
-      user = User.find_by_api_key(api_key)
-      unless user
-        return render json: { error: "Unknown API key. Please sign in first." }, status: :not_found
-      end
-
-      faction = user.faction
+      faction = @user.faction
       unless faction
         return render json: { error: "You are not a member of any faction." }, status: :unprocessable_entity
       end

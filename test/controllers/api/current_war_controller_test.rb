@@ -20,7 +20,7 @@ class Api::CurrentWarControllerTest < ActionDispatch::IntegrationTest
     with_memory_cache do
       Rails.cache.write(@faction.war_cache_key, war_data)
 
-      post api_current_war_path, params: { api_key: @bram.api_key }, as: :json
+      post api_current_war_path, headers: api_auth(@bram), as: :json
 
       assert_response :ok
       json = JSON.parse(response.body)
@@ -32,7 +32,7 @@ class Api::CurrentWarControllerTest < ActionDispatch::IntegrationTest
 
   test "returns null war when cache is empty" do
     with_memory_cache do
-      post api_current_war_path, params: { api_key: @bram.api_key }, as: :json
+      post api_current_war_path, headers: api_auth(@bram), as: :json
 
       assert_response :ok
       json = JSON.parse(response.body)
@@ -40,26 +40,26 @@ class Api::CurrentWarControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "returns error when api key is blank" do
-    post api_current_war_path, params: { api_key: "" }, as: :json
+  test "returns error when token is missing" do
+    post api_current_war_path, params: {}, as: :json
 
-    assert_response :bad_request
+    assert_response :unauthorized
     json = JSON.parse(response.body)
-    assert_equal "API key is required", json["error"]
+    assert_equal "Session token is required. Please sign in again.", json["error"]
   end
 
-  test "returns error for unknown api key" do
-    post api_current_war_path, params: { api_key: "nonexistent_key" }, as: :json
+  test "returns error for unknown token" do
+    post api_current_war_path, headers: { "Authorization" => "Bearer nonexistent_token" }, as: :json
 
-    assert_response :not_found
+    assert_response :unauthorized
     json = JSON.parse(response.body)
-    assert_match /Unknown API key/, json["error"]
+    assert_match /Unknown session/, json["error"]
   end
 
   test "returns error when user has no faction" do
     @bram.update!(faction: nil)
 
-    post api_current_war_path, params: { api_key: @bram.api_key }, as: :json
+    post api_current_war_path, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
     json = JSON.parse(response.body)

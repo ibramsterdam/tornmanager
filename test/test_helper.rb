@@ -23,6 +23,11 @@ module ActiveSupport
       end
     end
 
+    # Bearer auth headers for userscript API requests
+    def api_auth(user)
+      { "Authorization" => "Bearer #{user.api_token}" }
+    end
+
     # Helper to grant a subscription to a user or faction via the Subscription model
     def grant_subscription(subscribable, expires_at:)
       sub = subscribable.subscription || subscribable.build_subscription

@@ -1,10 +1,7 @@
 module Api
-  class SubscriptionsController < ActionController::API
+  class SubscriptionsController < BaseController
     PAYMENT_CHECK_COOLDOWN = 5.minutes
     CACHE_KEY = "api:payment_check:last_run"
-
-    before_action :require_api_key
-    before_action :set_user
 
     def show
       refresh_payments! if params[:refresh].present?
@@ -19,15 +16,6 @@ module Api
     end
 
     private
-
-    def require_api_key
-      render json: { error: "API key is required" }, status: :bad_request if params[:api_key].blank?
-    end
-
-    def set_user
-      @user = User.find_by_api_key(params[:api_key].to_s.strip)
-      render json: { error: "Unknown API key. Please sign in first." }, status: :not_found unless @user
-    end
 
     def refresh_payments!
       if rate_limited?

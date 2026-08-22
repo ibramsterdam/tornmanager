@@ -30,8 +30,48 @@ class Api::SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://profileimages.torn.com/abc.jpg", json.dig("user", "profile_image")
 
     bram.reload
+    assert_equal bram.api_token, json["token"]
     assert_equal "valid_key_123", bram.api_key
     assert_equal "Limited Access", bram.api_access_type
+  end
+
+  test "keeps the existing token across sign-ins so other scripts stay signed in" do
+    bram = users(:bram)
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(@key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(@profile)
+
+    post api_session_path, params: { api_key: "valid_key_123" }, as: :json
+
+    assert_response :ok
+    assert_equal bram.api_token, JSON.parse(response.body)["token"]
+  end
+
+  test "generates a token for users that have none yet" do
+    bram = users(:bram)
+    bram.update_column(:api_token, nil)
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(@key_info)
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(@profile)
+
+    post api_session_path, params: { api_key: "valid_key_123" }, as: :json
+
+    assert_response :ok
+    token = JSON.parse(response.body)["token"]
+    assert token.present?
+    assert_equal token, bram.reload.api_token
+  end
+
+  test "rejects Full Access keys" do
+    full_key_info = TornApi::Key::Info::InfoData.new(
+      access: TornApi::Key::Info::AccessData.new(level: 4, type: "Full Access", faction: true, company: true),
+      user: TornApi::Key::Info::UserData.new(id: 2728237, faction_id: 99999, company_id: nil)
+    )
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(full_key_info)
+
+    post api_session_path, params: { api_key: "full_access_key" }, as: :json
+
+    assert_response :bad_request
+    json = JSON.parse(response.body)
+    assert_match /Full Access keys are not allowed/, json["error"]
   end
 
   test "creates new user when torn_id not found" do

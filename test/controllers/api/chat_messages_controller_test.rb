@@ -12,7 +12,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sending a message returns it and fetching with since_id picks it up" do
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "wheels up in 5" }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "wheels up in 5" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
@@ -21,13 +21,13 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal @bram.name, sent["name"]
     assert_not sent["system"]
 
-    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: 0 }, as: :json
+    post api_chat_messages_path, params: { room_id: @room.id, since_id: 0 }, headers: api_auth(@bert), as: :json
 
     assert_response :ok
     messages = JSON.parse(response.body)["messages"]
     assert_equal [ "wheels up in 5" ], messages.map { |m| m["body"] }
 
-    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: sent["id"] }, as: :json
+    post api_chat_messages_path, params: { room_id: @room.id, since_id: sent["id"] }, headers: api_auth(@bert), as: :json
 
     assert_empty JSON.parse(response.body)["messages"]
   end
@@ -35,7 +35,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   test "sending updates the room's last_message_at" do
     @room.update!(last_message_at: 2.days.ago)
 
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "ping" }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "ping" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     assert @room.reload.last_message_at > 1.minute.ago
@@ -43,23 +43,23 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
   test "rejects messages over the length limit" do
     post api_chat_send_message_path,
-      params: { api_key: @bram.api_key, room_id: @room.id, body: "x" * (ChatMessage::MAX_LENGTH + 1) }, as: :json
+      params: { room_id: @room.id, body: "x" * (ChatMessage::MAX_LENGTH + 1) }, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
   end
 
   test "rejects blank messages" do
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "   " }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "   " }, headers: api_auth(@bram), as: :json
 
     assert_response :unprocessable_entity
   end
 
   test "rate limits rapid sending" do
     with_memory_cache do
-      post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "one" }, as: :json
+      post api_chat_send_message_path, params: { room_id: @room.id, body: "one" }, headers: api_auth(@bram), as: :json
       assert_response :created
 
-      post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: @room.id, body: "two" }, as: :json
+      post api_chat_send_message_path, params: { room_id: @room.id, body: "two" }, headers: api_auth(@bram), as: :json
       assert_response :too_many_requests
     end
   end
@@ -67,17 +67,17 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   test "a suspended member is blocked from reading and sending" do
     @room.chat_suspensions.create!(user: @bert)
 
-    post api_chat_messages_path, params: { api_key: @bert.api_key, room_id: @room.id, since_id: 0 }, as: :json
+    post api_chat_messages_path, params: { room_id: @room.id, since_id: 0 }, headers: api_auth(@bert), as: :json
     assert_response :forbidden
 
-    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: @room.id, body: "let me back" }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "let me back" }, headers: api_auth(@bert), as: :json
     assert_response :forbidden
   end
 
   test "non-members cannot read messages" do
     outsider = users(:kaneki)
 
-    post api_chat_messages_path, params: { api_key: outsider.api_key, room_id: @room.id, since_id: 0 }, as: :json
+    post api_chat_messages_path, params: { room_id: @room.id, since_id: 0 }, headers: api_auth(outsider), as: :json
 
     assert_response :not_found
   end
@@ -85,7 +85,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   test "non-members cannot send messages" do
     outsider = users(:kaneki)
 
-    post api_chat_send_message_path, params: { api_key: outsider.api_key, room_id: @room.id, body: "hi" }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "hi" }, headers: api_auth(outsider), as: :json
 
     assert_response :not_found
   end
@@ -94,7 +94,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     den = ChatRoom.create!(name: "The Muggers Den", kind: "public", anonymous: true, host_user: nil, last_message_at: Time.current)
     den.chat_memberships.create!(user: @bert)
 
-    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: den.id, body: "anyone selling xanax?" }, as: :json
+    post api_chat_send_message_path, params: { room_id: den.id, body: "anyone selling xanax?" }, headers: api_auth(@bert), as: :json
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
@@ -113,9 +113,9 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     den.chat_memberships.create!(user: @bram)
     den.chat_memberships.create!(user: @bert)
 
-    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: den.id, body: "hey" }, as: :json
+    post api_chat_send_message_path, params: { room_id: den.id, body: "hey" }, headers: api_auth(@bert), as: :json
 
-    post api_chat_messages_path, params: { api_key: @bram.api_key, room_id: den.id, since_id: 0 }, as: :json
+    post api_chat_messages_path, params: { room_id: den.id, since_id: 0 }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     message = JSON.parse(response.body)["messages"].first
@@ -128,7 +128,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     den = ChatRoom.create!(name: "The Muggers Den", kind: "public", anonymous: true, host_user: nil, last_message_at: Time.current)
     den.chat_memberships.create!(user: @bram)
 
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: den.id, body: "final warning" }, as: :json
+    post api_chat_send_message_path, params: { room_id: den.id, body: "final warning" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
@@ -138,7 +138,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "non-admin messages carry no admin flag" do
-    post api_chat_send_message_path, params: { api_key: @bert.api_key, room_id: @room.id, body: "hello" }, as: :json
+    post api_chat_send_message_path, params: { room_id: @room.id, body: "hello" }, headers: api_auth(@bert), as: :json
 
     assert_response :created
     assert_nil JSON.parse(response.body)["message"]["admin"]
@@ -148,7 +148,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     lounge = ChatRoom.create!(name: "The Lounge", kind: "public", anonymous: false, host_user: nil, last_message_at: Time.current)
     lounge.chat_memberships.create!(user: @bram)
 
-    post api_chat_send_message_path, params: { api_key: @bram.api_key, room_id: lounge.id, body: "evening all" }, as: :json
+    post api_chat_send_message_path, params: { room_id: lounge.id, body: "evening all" }, headers: api_auth(@bram), as: :json
 
     assert_response :created
     sent = JSON.parse(response.body)["message"]
@@ -162,7 +162,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   test "sending an image attaches it and flags the message as carrying one" do
     assert_difference -> { @room.chat_messages.count }, 1 do
       post api_chat_send_image_path,
-        params: { api_key: @bram.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+        params: { room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }, headers: api_auth(@bram)
     end
 
     assert_response :created
@@ -175,7 +175,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     payload = Base64.strict_encode64(file_fixture("sample.png").binread)
 
     assert_difference -> { @room.chat_messages.count }, 1 do
-      post api_chat_send_image_path, params: { api_key: @bram.api_key, room_id: @room.id, image_base64: payload }, as: :json
+      post api_chat_send_image_path, params: { room_id: @room.id, image_base64: payload }, headers: api_auth(@bram), as: :json
     end
 
     assert_response :created
@@ -185,10 +185,10 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
   test "the image endpoint returns the attachment bytes as base64 to a member" do
     original = file_fixture("sample.png").binread
     post api_chat_send_image_path,
-      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(original) }, as: :json
+      params: { room_id: @room.id, image_base64: Base64.strict_encode64(original) }, headers: api_auth(@bram), as: :json
     message_id = JSON.parse(response.body)["message"]["id"]
 
-    post api_chat_image_path, params: { api_key: @bert.api_key, room_id: @room.id, message_id: message_id }, as: :json
+    post api_chat_image_path, params: { room_id: @room.id, message_id: message_id }, headers: api_auth(@bert), as: :json
 
     assert_response :ok
     assert_equal original, Base64.strict_decode64(JSON.parse(response.body)["data"])
@@ -196,35 +196,35 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
 
   test "a suspended member cannot download an image" do
     post api_chat_send_image_path,
-      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, as: :json
+      params: { room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, headers: api_auth(@bram), as: :json
     message_id = JSON.parse(response.body)["message"]["id"]
     @room.chat_suspensions.create!(user: @bert)
 
-    post api_chat_image_path, params: { api_key: @bert.api_key, room_id: @room.id, message_id: message_id }, as: :json
+    post api_chat_image_path, params: { room_id: @room.id, message_id: message_id }, headers: api_auth(@bert), as: :json
 
     assert_response :forbidden
   end
 
   test "non-members cannot download an image" do
     post api_chat_send_image_path,
-      params: { api_key: @bram.api_key, room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, as: :json
+      params: { room_id: @room.id, image_base64: Base64.strict_encode64(file_fixture("sample.png").binread) }, headers: api_auth(@bram), as: :json
     message_id = JSON.parse(response.body)["message"]["id"]
 
-    post api_chat_image_path, params: { api_key: users(:kaneki).api_key, room_id: @room.id, message_id: message_id }, as: :json
+    post api_chat_image_path, params: { room_id: @room.id, message_id: message_id }, headers: api_auth(users(:kaneki)), as: :json
 
     assert_response :not_found
   end
 
   test "an image can carry a caption body" do
     post api_chat_send_image_path,
-      params: { api_key: @bram.api_key, room_id: @room.id, body: "check this", image: fixture_file_upload("sample.png", "image/png") }
+      params: { room_id: @room.id, body: "check this", image: fixture_file_upload("sample.png", "image/png") }, headers: api_auth(@bram)
 
     assert_response :created
     assert_equal "check this", JSON.parse(response.body)["message"]["body"]
   end
 
   test "sending an image with no file is rejected" do
-    post api_chat_send_image_path, params: { api_key: @bram.api_key, room_id: @room.id }
+    post api_chat_send_image_path, params: { room_id: @room.id }, headers: api_auth(@bram)
 
     assert_response :bad_request
   end
@@ -233,7 +233,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     @room.chat_suspensions.create!(user: @bert)
 
     post api_chat_send_image_path,
-      params: { api_key: @bert.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+      params: { room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }, headers: api_auth(@bert)
 
     assert_response :forbidden
   end
@@ -242,7 +242,7 @@ class Api::ChatMessagesControllerTest < ActionDispatch::IntegrationTest
     outsider = users(:kaneki)
 
     post api_chat_send_image_path,
-      params: { api_key: outsider.api_key, room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }
+      params: { room_id: @room.id, image: fixture_file_upload("sample.png", "image/png") }, headers: api_auth(outsider)
 
     assert_response :not_found
   end

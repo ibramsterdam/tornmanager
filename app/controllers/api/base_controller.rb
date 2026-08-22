@@ -1,24 +1,28 @@
 module Api
   class BaseController < ActionController::API
-    before_action :require_api_key
+    before_action :require_token
     before_action :set_user
     before_action :reject_banned
 
     private
 
-    def require_api_key
-      render json: { error: "API key is required" }, status: :bad_request if params[:api_key].blank?
+    def require_token
+      render json: { error: "Session token is required. Please sign in again." }, status: :unauthorized if bearer_token.blank?
     end
 
     def set_user
-      @user = User.find_by_api_key(params[:api_key].to_s.strip)
-      render json: { error: "Unknown API key. Please sign in first." }, status: :not_found unless @user
+      @user = User.find_by(api_token: bearer_token)
+      render json: { error: "Unknown session. Please sign in again." }, status: :unauthorized unless @user
     end
 
     def reject_banned
       return unless @user&.banned?
 
       render json: { error: @user.ban_message, suspended: true }, status: :forbidden
+    end
+
+    def bearer_token
+      @bearer_token ||= request.headers["Authorization"].to_s[/\ABearer (.+)\z/, 1].to_s.strip
     end
   end
 end

@@ -9,7 +9,7 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   test "returns subscription status for valid api key" do
     grant_subscription(@bram, expires_at: 1.week.from_now)
 
-    post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
+    post api_subscription_path, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     json = JSON.parse(response.body)
@@ -20,7 +20,7 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   test "returns inactive subscription when expired" do
     grant_subscription(@bram, expires_at: 1.day.ago)
 
-    post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
+    post api_subscription_path, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     json = JSON.parse(response.body)
@@ -28,7 +28,7 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "returns inactive subscription when never subscribed" do
-    post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
+    post api_subscription_path, headers: api_auth(@bram), as: :json
 
     assert_response :ok
     json = JSON.parse(response.body)
@@ -36,34 +36,34 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_nil json.dig("subscription", "expires_at")
   end
 
-  test "returns error when api key is blank" do
-    post api_subscription_path, params: { api_key: "" }, as: :json
+  test "returns error when token is blank" do
+    post api_subscription_path, headers: { "Authorization" => "Bearer " }, as: :json
 
-    assert_response :bad_request
+    assert_response :unauthorized
     json = JSON.parse(response.body)
-    assert_equal "API key is required", json["error"]
+    assert_equal "Session token is required. Please sign in again.", json["error"]
   end
 
-  test "returns error when api key is missing" do
+  test "returns error when token is missing" do
     post api_subscription_path, params: {}, as: :json
 
-    assert_response :bad_request
+    assert_response :unauthorized
     json = JSON.parse(response.body)
-    assert_equal "API key is required", json["error"]
+    assert_equal "Session token is required. Please sign in again.", json["error"]
   end
 
-  test "returns not found for unknown api key" do
-    post api_subscription_path, params: { api_key: "nonexistent_key" }, as: :json
+  test "returns error for unknown token" do
+    post api_subscription_path, headers: { "Authorization" => "Bearer nonexistent_token" }, as: :json
 
-    assert_response :not_found
+    assert_response :unauthorized
     json = JSON.parse(response.body)
-    assert_equal "Unknown API key. Please sign in first.", json["error"]
+    assert_equal "Unknown session. Please sign in again.", json["error"]
   end
 
   test "refresh triggers payment check and reloads user" do
     Daily::XanaxPaymentsJob.expects(:perform_now).once
 
-    post api_subscription_path, params: { api_key: @bram.api_key, refresh: "1" }, as: :json
+    post api_subscription_path, params: { refresh: "1" }, headers: api_auth(@bram), as: :json
 
     assert_response :ok
   end
@@ -72,10 +72,10 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     with_memory_cache do
       Daily::XanaxPaymentsJob.stubs(:perform_now)
 
-      post api_subscription_path, params: { api_key: @bram.api_key, refresh: "1" }, as: :json
+      post api_subscription_path, params: { refresh: "1" }, headers: api_auth(@bram), as: :json
       assert_response :ok
 
-      post api_subscription_path, params: { api_key: @bram.api_key, refresh: "1" }, as: :json
+      post api_subscription_path, params: { refresh: "1" }, headers: api_auth(@bram), as: :json
       assert_response :too_many_requests
       json = JSON.parse(response.body)
       assert_match /Payment check was run recently/, json["error"]
@@ -87,11 +87,11 @@ class Api::SubscriptionsControllerTest < ActionDispatch::IntegrationTest
       Daily::XanaxPaymentsJob.stubs(:perform_now)
 
       # First call with refresh — triggers rate limit
-      post api_subscription_path, params: { api_key: @bram.api_key, refresh: "1" }, as: :json
+      post api_subscription_path, params: { refresh: "1" }, headers: api_auth(@bram), as: :json
       assert_response :ok
 
       # Second call without refresh — not rate limited
-      post api_subscription_path, params: { api_key: @bram.api_key }, as: :json
+      post api_subscription_path, headers: api_auth(@bram), as: :json
       assert_response :ok
     end
   end

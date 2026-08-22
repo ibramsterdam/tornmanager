@@ -1,6 +1,8 @@
 class User < ApplicationRecord
   include Bannable
 
+  has_secure_token :api_token
+
   belongs_to :faction, optional: true
   has_many :sessions, dependent: :destroy
   has_many :personal_stat_snapshots, dependent: :destroy
