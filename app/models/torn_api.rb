@@ -46,7 +46,8 @@ module TornApi
       check_for_errors(body)
 
       response_time = ((Time.current - start_time) * 1000).to_i
-      log_api_call(path, merged_params, "success", response_time, body["_metadata"])
+      metadata = body.is_a?(Hash) ? body["_metadata"] : nil
+      log_api_call(path, merged_params, "success", response_time, metadata)
       log_success(uri)
 
       body
@@ -97,11 +98,15 @@ module TornApi
         raise ApiError, "Torn API request failed (HTTP #{status})"
       end
 
-      JSON.parse(response.body)
+      parse_body(response.body)
+    end
+
+    def parse_body(body)
+      JSON.parse(body)
     end
 
     def check_for_errors(body)
-      return unless body["error"]
+      return unless body.is_a?(Hash) && body["error"]
       handle_api_error(body["error"])
     end
 
