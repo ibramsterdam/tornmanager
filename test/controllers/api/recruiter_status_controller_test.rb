@@ -36,6 +36,20 @@ class Api::RecruiterStatusControllerTest < ActionDispatch::IntegrationTest
     assert_empty json["statuses"]
   end
 
+  test "refresh drops the cache and re-enqueues" do
+    payload = [ { torn_id: 1234567, status: "Online" } ]
+    Rails.cache.stubs(:read).with("recruiter:status:91001").returns(payload)
+    Rails.cache.expects(:delete).with("recruiter:status:91001")
+
+    assert_enqueued_with(job: Recruiter::CompanyStatusJob, args: [ 91001 ]) do
+      post api_recruiter_status_path, params: { company_ids: [ 91001 ], refresh: true }, headers: api_auth(@bram), as: :json
+    end
+
+    json = JSON.parse(response.body)
+    assert_equal [ 91001 ], json["pending"]
+    assert_empty json["statuses"]
+  end
+
   test "caps the companies per request" do
     post api_recruiter_status_path, params: { company_ids: (1..40).to_a }, headers: api_auth(@bram), as: :json
 

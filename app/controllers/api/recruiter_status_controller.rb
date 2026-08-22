@@ -7,11 +7,13 @@ module Api
 
     def show
       company_ids = Array(params[:company_ids]).map(&:to_i).reject(&:zero?).uniq.first(MAX_COMPANIES)
+      force = params[:refresh].present?
 
       statuses = {}
       pending = []
       company_ids.each do |company_id|
-        cached = Rails.cache.read(Recruiter::CompanyStatusJob.cache_key(company_id))
+        Rails.cache.delete(Recruiter::CompanyStatusJob.cache_key(company_id)) if force
+        cached = force ? nil : Rails.cache.read(Recruiter::CompanyStatusJob.cache_key(company_id))
         if cached
           statuses[company_id] = cached
         else
