@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Chats
 // @namespace    tornmanager
-// @version      0.4.0
+// @version      0.4.1
 // @author       Bram [2728237]
 // @description  TornManager Chats userscript
 // @license      All rights reserved
@@ -26,7 +26,7 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY$4 = "tm_errors";
+  const STORAGE_KEY$3 = "tm_errors";
   const MAX_ENTRIES = 50;
   class Logger {
     log(error, context = "unknown") {
@@ -40,20 +40,20 @@
       errors.push(entry);
       if (errors.length > MAX_ENTRIES) errors.splice(0, errors.length - MAX_ENTRIES);
       try {
-        localStorage.setItem(STORAGE_KEY$4, JSON.stringify(errors));
+        localStorage.setItem(STORAGE_KEY$3, JSON.stringify(errors));
       } catch {
       }
     }
     getAll() {
       try {
-        const raw = localStorage.getItem(STORAGE_KEY$4);
+        const raw = localStorage.getItem(STORAGE_KEY$3);
         return raw ? JSON.parse(raw) : [];
       } catch {
         return [];
       }
     }
     clear() {
-      localStorage.removeItem(STORAGE_KEY$4);
+      localStorage.removeItem(STORAGE_KEY$3);
     }
     format() {
       const errors = this.getAll();
@@ -66,16 +66,48 @@ Stack: ${e.stack}` : ""}`
       ).join("\n\n");
     }
   }
-  const STORAGE_KEY$3 = "tm_user";
-  const API_BASE$2 = "https://tornmanager.com";
+  const API_BASE = "https://tornmanager.com";
+  function post(path, body = {}, { token = null } = {}) {
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: "POST",
+        url: `${API_BASE}${path}`,
+        headers,
+        data: JSON.stringify(body),
+        onload(response) {
+          let data = null;
+          try {
+            data = JSON.parse(response.responseText);
+          } catch {
+            data = null;
+          }
+          if (response.status >= 200 && response.status < 300 && data) {
+            resolve(data);
+          } else {
+            const error = new Error((data == null ? void 0 : data.error) || "Request failed");
+            error.status = response.status;
+            if (response.status === 429) error.rateLimited = true;
+            if (data == null ? void 0 : data.suspended) error.suspended = true;
+            reject(error);
+          }
+        },
+        onerror() {
+          reject(new Error("Network error. Could not reach Tornmanager."));
+        }
+      });
+    });
+  }
   class Auth {
+    constructor(store) {
+      this.store = store;
+    }
     getUser() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY$3);
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
-      }
+      return this.store.get("user");
     }
     getToken() {
       var _a;
@@ -85,97 +117,54 @@ Stack: ${e.stack}` : ""}`
       return this.getToken() != null;
     }
     clear() {
-      localStorage.removeItem(STORAGE_KEY$3);
+      this.store.remove("user");
+      this.store.remove("subscription");
     }
     authenticate(apiKey) {
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE$2}/api/session`,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json"
-          },
-          data: JSON.stringify({ api_key: apiKey }),
-          onload(response) {
-            if (response.status === 200) {
-              try {
-                const data = JSON.parse(response.responseText);
-                localStorage.setItem(
-                  STORAGE_KEY$3,
-                  JSON.stringify({ ...data.user, token: data.token })
-                );
-                resolve(data.user);
-              } catch {
-                reject(new Error("Invalid response from server"));
-              }
-            } else {
-              try {
-                const data = JSON.parse(response.responseText);
-                reject(new Error(data.error || "Authentication failed"));
-              } catch {
-                reject(new Error("Authentication failed"));
-              }
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
+      return post("/api/session", { api_key: apiKey }).then((data) => {
+        this.store.set("user", { ...data.user, token: data.token });
+        return data.user;
       });
     }
     fetchSubscription({ refresh = false } = {}) {
       const token = this.getToken();
-      if (!token) return Promise.reject(new Error("Not authenticated"));
+      if (!token) return Promise.reject(new Error("Not signed in"));
       const body = {};
       if (refresh) body.refresh = true;
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE$2}/api/subscription`,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          data: JSON.stringify(body),
-          onload(response) {
-            if (response.status === 200) {
-              try {
-                resolve(JSON.parse(response.responseText).subscription);
-              } catch {
-                reject(new Error("Invalid response from server"));
-              }
-            } else if (response.status === 429) {
-              try {
-                const data = JSON.parse(response.responseText);
-                const err = new Error(data.error || "Too many requests");
-                err.rateLimited = true;
-                reject(err);
-              } catch {
-                const err = new Error("Too many requests. Try again later.");
-                err.rateLimited = true;
-                reject(err);
-              }
-            } else {
-              try {
-                const data = JSON.parse(response.responseText);
-                const err = new Error(data.error || "Could not fetch subscription");
-                if (data.suspended) err.suspended = true;
-                reject(err);
-              } catch {
-                reject(new Error("Could not fetch subscription"));
-              }
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
+      return post("/api/subscription", body, { token }).then((data) => {
+        const subscription = { ...data.subscription, checkedAt: Date.now() };
+        this.store.set("subscription", subscription);
+        return subscription;
       });
     }
+    subscription() {
+      return this.store.get("subscription");
+    }
+    isSubscribed() {
+      const sub = this.subscription();
+      if (!(sub == null ? void 0 : sub.active)) return false;
+      return !sub.expires_at || new Date(sub.expires_at) > /* @__PURE__ */ new Date();
+    }
   }
-  const API_BASE$1 = "https://tornmanager.com";
+  function createStore(prefix) {
+    return {
+      get(key, fallback = null) {
+        try {
+          const raw = localStorage.getItem(prefix + key);
+          return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+          return fallback;
+        }
+      },
+      set(key, value) {
+        localStorage.setItem(prefix + key, JSON.stringify(value));
+      },
+      remove(key) {
+        localStorage.removeItem(prefix + key);
+      }
+    };
+  }
+  const Store = createStore("tm_");
   class ApiClient {
     constructor(auth) {
       this.auth = auth;
@@ -183,40 +172,9 @@ Stack: ${e.stack}` : ""}`
     fetchCurrentWar() {
       const token = this.auth.getToken();
       if (!token) return Promise.reject(new Error("Not authenticated"));
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE$1}/api/current_war`,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          data: JSON.stringify({}),
-          onload(response) {
-            if (response.status === 200) {
-              try {
-                resolve(JSON.parse(response.responseText));
-              } catch {
-                reject(new Error("Invalid response from server"));
-              }
-            } else {
-              try {
-                const data = JSON.parse(response.responseText);
-                reject(new Error(data.error || "Could not fetch war data"));
-              } catch {
-                reject(new Error("Could not fetch war data"));
-              }
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
-      });
+      return post("/api/current_war", {}, { token });
     }
   }
-  const API_BASE = "https://tornmanager.com";
   class ChatClient {
     constructor(auth) {
       this.auth = auth;
@@ -269,38 +227,7 @@ Stack: ${e.stack}` : ""}`
     post(path, params = {}) {
       const token = this.auth.getToken();
       if (!token) return Promise.reject(new Error("Not authenticated"));
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE}${path}`,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            Authorization: `Bearer ${token}`
-          },
-          data: JSON.stringify(params),
-          onload(response) {
-            let data = null;
-            try {
-              data = JSON.parse(response.responseText);
-            } catch {
-              reject(new Error("Invalid response from server"));
-              return;
-            }
-            if (response.status >= 200 && response.status < 300) {
-              resolve(data);
-            } else {
-              const error = new Error(data.error || "Chat request failed");
-              error.status = response.status;
-              if (data.suspended) error.suspended = true;
-              reject(error);
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
-      });
+      return post(path, params, { token });
     }
   }
   const chatBannerSvg = `<svg width="1000" height="400" viewBox="0 0 1000 400" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="t d">
@@ -2633,7 +2560,7 @@ Stack: ${e.stack}` : ""}`
     if (chars < 1024) return `${chars} B`;
     return `${(chars / 1024).toFixed(1)} KB`;
   }
-  const CURRENT = "0.4.0";
+  const CURRENT = "0.4.1";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscripts/tm-chats/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-chats.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -3011,7 +2938,13 @@ Stack: ${e.stack}` : ""}`
     }
     renderUnauthenticatedPanel() {
       const authScreen = new AuthScreen(this.auth);
-      this.panel.appendChild(authScreen.render(() => this.renderPanel()));
+      this.panel.appendChild(
+        authScreen.render(() => {
+          var _a;
+          (_a = this.chatDock) == null ? void 0 : _a.init();
+          this.renderPanel();
+        })
+      );
     }
     createFooter() {
       const footer = document.createElement("footer");
@@ -3054,7 +2987,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.4.0"}`;
+      version.textContent = `v${"0.4.1"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -3103,7 +3036,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.4.0"}`,
+        `TornManager v${"0.4.1"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -3130,6 +3063,12 @@ Stack: ${e.stack}` : ""}`
           callback(el2);
         }
       }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+    static el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== void 0) node.textContent = text;
+      return node;
     }
   }
   class Sidebar {
@@ -3982,8 +3921,11 @@ Stack: ${e.stack}` : ""}`
       this.menuOpen = false;
       this.unreadInterval = null;
     }
+    // Idempotent: boot calls it before sign-in (no-op) and the overlay calls it
+    // again after a successful sign-in, so rooms open without a page reload.
     init() {
-      if (!this.auth.isAuthenticated()) return;
+      if (this.initialized || !this.auth.isAuthenticated()) return;
+      this.initialized = true;
       Dom.ready("body", () => {
         this.fab = document.createElement("button");
         this.fab.type = "button";
@@ -4226,6 +4168,7 @@ Stack: ${e.stack}` : ""}`
       this.updateUnreadUI();
     }
     mountBox(roomId) {
+      if (!this.boxesEl) return;
       const room = this.rooms.find((r) => r.id === roomId);
       if (!room) return;
       const box = new ChatBox(room, this.client, {
@@ -5357,7 +5300,7 @@ Stack: ${e.stack}` : ""}`
   }
   function boot() {
     const logger = new Logger();
-    const auth = new Auth();
+    const auth = new Auth(Store);
     const api = new ApiClient(auth);
     Preferences.applyChatFontSize();
     const chatClient = new ChatClient(auth);

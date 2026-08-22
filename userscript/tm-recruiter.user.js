@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Recruiter
 // @namespace    torn-recruiter
-// @version      0.4.0
+// @version      0.4.1
 // @author       Bram [2728237]
 // @description  Company recruiting scout for Torn
 // @license      All rights reserved
@@ -23,27 +23,48 @@
 (function () {
   'use strict';
 
-  const PREFIX = "rc_";
-  const Store = {
-    get(key, fallback = null) {
-      try {
-        const raw = localStorage.getItem(PREFIX + key);
-        return raw === null ? fallback : JSON.parse(raw);
-      } catch {
-        return fallback;
-      }
-    },
-    set(key, value) {
-      localStorage.setItem(PREFIX + key, JSON.stringify(value));
-    },
-    remove(key) {
-      localStorage.removeItem(PREFIX + key);
-    }
-  };
   const API_BASE = "https://tornmanager.com";
+  function post(path, body = {}, { token = null } = {}) {
+    const headers = {
+      "Content-Type": "application/json",
+      Accept: "application/json"
+    };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return new Promise((resolve, reject) => {
+      GM.xmlHttpRequest({
+        method: "POST",
+        url: `${API_BASE}${path}`,
+        headers,
+        data: JSON.stringify(body),
+        onload(response) {
+          let data = null;
+          try {
+            data = JSON.parse(response.responseText);
+          } catch {
+            data = null;
+          }
+          if (response.status >= 200 && response.status < 300 && data) {
+            resolve(data);
+          } else {
+            const error = new Error((data == null ? void 0 : data.error) || "Request failed");
+            error.status = response.status;
+            if (response.status === 429) error.rateLimited = true;
+            if (data == null ? void 0 : data.suspended) error.suspended = true;
+            reject(error);
+          }
+        },
+        onerror() {
+          reject(new Error("Network error. Could not reach Tornmanager."));
+        }
+      });
+    });
+  }
   class Auth {
+    constructor(store) {
+      this.store = store;
+    }
     getUser() {
-      return Store.get("user");
+      return this.store.get("user");
     }
     getToken() {
       var _a;
@@ -53,12 +74,12 @@
       return this.getToken() != null;
     }
     clear() {
-      Store.remove("user");
-      Store.remove("subscription");
+      this.store.remove("user");
+      this.store.remove("subscription");
     }
     authenticate(apiKey) {
-      return this.post("/api/session", { api_key: apiKey }).then((data) => {
-        Store.set("user", { ...data.user, token: data.token });
+      return post("/api/session", { api_key: apiKey }).then((data) => {
+        this.store.set("user", { ...data.user, token: data.token });
         return data.user;
       });
     }
@@ -67,54 +88,40 @@
       if (!token) return Promise.reject(new Error("Not signed in"));
       const body = {};
       if (refresh) body.refresh = true;
-      return this.post("/api/subscription", body, { Authorization: `Bearer ${token}` }).then((data) => {
+      return post("/api/subscription", body, { token }).then((data) => {
         const subscription = { ...data.subscription, checkedAt: Date.now() };
-        Store.set("subscription", subscription);
+        this.store.set("subscription", subscription);
         return subscription;
       });
     }
     subscription() {
-      return Store.get("subscription");
+      return this.store.get("subscription");
     }
     isSubscribed() {
       const sub = this.subscription();
       if (!(sub == null ? void 0 : sub.active)) return false;
       return !sub.expires_at || new Date(sub.expires_at) > /* @__PURE__ */ new Date();
     }
-    post(path, body, headers = {}) {
-      return new Promise((resolve, reject) => {
-        GM.xmlHttpRequest({
-          method: "POST",
-          url: `${API_BASE}${path}`,
-          headers: {
-            "Content-Type": "application/json",
-            Accept: "application/json",
-            ...headers
-          },
-          data: JSON.stringify(body),
-          onload(response) {
-            let data;
-            try {
-              data = JSON.parse(response.responseText);
-            } catch {
-              data = null;
-            }
-            if (response.status === 200 && data) {
-              resolve(data);
-            } else {
-              const error = new Error((data == null ? void 0 : data.error) || "Request failed");
-              if (response.status === 429) error.rateLimited = true;
-              if (data == null ? void 0 : data.suspended) error.suspended = true;
-              reject(error);
-            }
-          },
-          onerror() {
-            reject(new Error("Network error. Could not reach Tornmanager."));
-          }
-        });
-      });
-    }
   }
+  function createStore(prefix) {
+    return {
+      get(key, fallback = null) {
+        try {
+          const raw = localStorage.getItem(prefix + key);
+          return raw === null ? fallback : JSON.parse(raw);
+        } catch {
+          return fallback;
+        }
+      },
+      set(key, value) {
+        localStorage.setItem(prefix + key, JSON.stringify(value));
+      },
+      remove(key) {
+        localStorage.removeItem(prefix + key);
+      }
+    };
+  }
+  const Store = createStore("rc_");
   class Keys {
     constructor() {
       this.list = Store.get("keys", []);
@@ -525,7 +532,7 @@
       debug.addEventListener("click", () => this.copyDebugInfo(debug));
       links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
       this.footer.appendChild(links);
-      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.4.0"}`));
+      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.4.1"}`));
     }
     openLegal(anchor) {
       const legal = this.screens.legal;
@@ -537,7 +544,7 @@
       const stats = Store.get("stats");
       const status = Store.get("status");
       const info = {
-        version: "0.4.0",
+        version: "0.4.1",
         generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
         user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
         subscribed: this.auth.isSubscribed(),
@@ -1589,7 +1596,7 @@
     return `${secs}s`;
   }
   function boot() {
-    const auth = new Auth();
+    const auth = new Auth(Store);
     const keys = new Keys();
     const api = new Api(keys);
     const roster = new Roster(api);
@@ -1605,7 +1612,7 @@
     new Sidebar(overlay).init();
     new MenuEntry(overlay).init();
     new ChatOpener().init();
-    console.log(`%cRecruiter %cv${"0.4.0"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
+    console.log(`%cRecruiter %cv${"0.4.1"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
   }
   if (window.self === window.top) boot();
 

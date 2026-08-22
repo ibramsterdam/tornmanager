@@ -1,6 +1,6 @@
 {
   "name": "tm-chats",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "minSupportedVersion": "0.4.0",
   "description": "TornManager Chats userscript",
   "private": true,
