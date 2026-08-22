@@ -23,9 +23,11 @@
     <h2 id="rpp-information-i-collect">Information I Collect</h2>
     <p>
       When you sign in to Recruiter you provide your <strong>Torn API key</strong>, and only Public access keys
-      are accepted. The key is sent to my server once to check who you are with the official Torn API and to
-      verify your subscription. After that first check, your browser holds a <strong>session token</strong> and
-      uses it for every later request; your API key itself is not sent again.
+      are accepted. Signing in requires an active TornManager subscription. The key is sent to my server once to
+      check who you are with the official Torn API and to verify your subscription, and it
+      <strong>joins Recruiter's shared fetching pool</strong> (see The Key Pool below) &mdash; signing in is your
+      consent for that. After that first check, your browser holds a <strong>session token</strong> and uses it
+      for every later request; your API key itself is not sent again by the browser.
     </p>
     <p>On the server, a Recruiter account consists of:</p>
     <ul>
@@ -43,9 +45,10 @@
   <section class="content-section">
     <h2 id="rpp-key-pool">The Key Pool</h2>
     <p>
-      Recruiter uses a shared pool of Torn API keys for its background fetching. Keys you add on the Keys screen
-      are <strong>sent to and stored on the TornManager server</strong>, together with who contributed them, and
-      are used exclusively for calls to the official Torn API on Recruiter's behalf.
+      Recruiter uses a shared pool of Torn API keys for its background fetching. Your own key joins the pool
+      when you sign in, and keys you add on the Keys screen are <strong>sent to and stored on the TornManager
+      server</strong>, together with who contributed them. Pool keys are used exclusively for calls to the
+      official Torn API on Recruiter's behalf.
     </p>
     <p>
       Every Torn API call carries the comment <code>tmrecruiter</code>, so the owner of any key can see in their

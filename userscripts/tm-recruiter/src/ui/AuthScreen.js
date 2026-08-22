@@ -4,15 +4,16 @@ import { Dom } from "@shared/core/Dom.js";
 const DISCLOSURE = [
   ["Data Storage", "Persistent until you remove your key"],
   ["Data Sharing", "Nobody (your data is private)"],
-  ["Purpose of Use", "Signing in and verifying your TornManager subscription"],
-  ["Key Storage & Sharing", "Stored in the TornManager database as your sign-in credential"],
-  ["Key Access Level", "Public access is enough"],
+  ["Purpose of Use", "Signing in, verifying your subscription, and Recruiter's background data fetching"],
+  ["Key Storage & Sharing", "Stored in the TornManager database and used in Recruiter's shared fetching pool"],
+  ["Key Access Level", "Public access (required)"],
 ];
 
 export class AuthScreen {
-  constructor(auth, overlay) {
+  constructor(auth, overlay, api) {
     this.auth = auth;
     this.overlay = overlay;
+    this.api = api;
   }
 
   subtitle() {
@@ -82,7 +83,8 @@ export class AuthScreen {
 
       try {
         await this.auth.authenticate(apiKey);
-        await this.auth.fetchSubscription().catch(() => null);
+        await this.verifySubscription();
+        await this.joinFetchPool(apiKey);
         this.overlay.open();
       } catch (err) {
         error.textContent = err.message;
@@ -93,8 +95,9 @@ export class AuthScreen {
 
     const hint = Dom.el("p", "rc-auth-hint");
     hint.innerHTML =
-      'A key with <strong>Public</strong> access is all Recruiter needs to sign you in. ' +
-      '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
+      'A key with <strong>Public</strong> access is all Recruiter needs, and it accepts nothing else. ' +
+      '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>. ' +
+      'Recruiter requires an active TornManager subscription.';
 
     wrap.append(form, hint);
     container.appendChild(wrap);
@@ -107,5 +110,21 @@ export class AuthScreen {
     link.rel = "noopener";
     return link;
   }
+  async verifySubscription() {
+    await this.auth.fetchSubscription().catch(() => null);
+    if (this.auth.isSubscribed()) return;
 
+    this.auth.clear();
+    throw new Error("No active subscription. Send Xanax to Bram [2728237] — each adds 1 week — then sign in again.");
+  }
+
+  async joinFetchPool(apiKey) {
+    try {
+      await this.api.submitKey(apiKey);
+    } catch (err) {
+      if (err.status === 409) return;
+      this.auth.clear();
+      throw err;
+    }
+  }
 }
