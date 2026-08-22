@@ -21,6 +21,12 @@ module Api
       render json: { error: @user.ban_message, suspended: true }, status: :forbidden
     end
 
+    def require_active_subscription
+      return if @user.subscribed?
+
+      render json: { error: "An active subscription is required.", subscription_required: true }, status: :forbidden
+    end
+
     def bearer_token
       @bearer_token ||= request.headers["Authorization"].to_s[/\ABearer (.+)\z/, 1].to_s.strip
     end

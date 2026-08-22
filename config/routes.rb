@@ -22,6 +22,14 @@ Rails.application.routes.draw do
       post :send_image, to: "chat_messages#create_image", as: :chat_send_image
       post :image, to: "chat_messages#image", as: :chat_image
     end
+
+    scope :recruiter do
+      post :matches, to: "recruiter_matches#index", as: :recruiter_matches
+      post :status, to: "recruiter_status#show", as: :recruiter_status
+      post :submit_key, to: "recruiter_keys#create", as: :recruiter_submit_key
+      post :keys, to: "recruiter_keys#index", as: :recruiter_keys
+      post :revoke_key, to: "recruiter_keys#destroy", as: :recruiter_revoke_key
+    end
   end
 
   resource :session
