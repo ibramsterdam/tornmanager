@@ -2,8 +2,8 @@ module Recruiter
   class BackfillMissingStatsJob < ApplicationJob
     queue_as :default
 
-    NIGHTLY_CAP = 2_000
-    STALE_AFTER = 10.days
+    NIGHTLY_CAP = 5_000
+    STALE_AFTER = 14.days
     SECONDS_PER_API_CALL = 1.5
     MIN_COMPANY_RATING = 7
 

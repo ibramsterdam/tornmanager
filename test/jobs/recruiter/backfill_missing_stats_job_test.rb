@@ -5,7 +5,7 @@ class Recruiter::BackfillMissingStatsJobTest < ActiveJob::TestCase
     never_fetched = users(:bert)
     never_fetched.update!(company_id: 91001, working_stats: nil, working_stats_at: nil)
     stale = users(:kaneki)
-    stale.update!(company_id: 91001, working_stats: 5000, working_stats_at: 11.days.ago)
+    stale.update!(company_id: 91001, working_stats: 5000, working_stats_at: 15.days.ago)
     fresh = users(:user_no_faction)
     fresh.update!(company_id: 91001, working_stats: 9000, working_stats_at: 1.day.ago)
     director = users(:user_hof_no_faction)
