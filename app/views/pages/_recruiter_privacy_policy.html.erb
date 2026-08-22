@@ -45,17 +45,16 @@
   <section class="content-section">
     <h2 id="rpp-key-pool">The Key Pool</h2>
     <p>
-      Recruiter uses a shared pool of Torn API keys for its background fetching. Your own key joins the pool
-      when you sign in, and keys you add on the Keys screen are <strong>sent to and stored on the TornManager
-      server</strong>, together with who contributed them. Pool keys are used exclusively for calls to the
+      Recruiter uses a shared pool of Torn API keys for its background fetching. The pool consists of the
+      sign-in keys of Recruiter subscribers: your key joins the pool when you sign in and is
+      <strong>stored on the TornManager server</strong>. Pool keys are used exclusively for calls to the
       official Torn API on Recruiter's behalf.
     </p>
     <p>
-      Every Torn API call carries the comment <code>tmrecruiter</code>, so the owner of any key can see in their
-      own Torn key log exactly what their key was used for. The pool accepts only Public access keys and at most
-      one key per player, matching how Torn's rate limit works. Only add keys that their owners gave you
-      willingly. You can revoke a key on the Keys screen at any time, which stops all use of it, and a key owner
-      can revoke access themselves by deleting or regenerating their key on Torn.com.
+      Every Torn API call carries the comment <code>tmrecruiter</code>, so every key owner can see in their own
+      Torn key log exactly what their key was used for. The pool accepts only Public access keys and at most one
+      key per player, matching how Torn's rate limit works. You can revoke your key on the Keys screen at any
+      time, which stops all use of it, or by deleting or regenerating the key on Torn.com.
     </p>
   </section>
 
