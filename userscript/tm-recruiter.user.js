@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Recruiter
 // @namespace    torn-recruiter
-// @version      0.4.3
+// @version      0.5.0
 // @author       Bram [2728237]
 // @description  Company recruiting scout for Torn
 // @license      All rights reserved
@@ -43,7 +43,7 @@
           } catch {
             data = null;
           }
-          if (response.status >= 200 && response.status < 300 && data) {
+          if (response.status >= 200 && response.status < 300) {
             resolve(data);
           } else {
             const error = new Error((data == null ? void 0 : data.error) || "Request failed");
@@ -122,336 +122,29 @@
     };
   }
   const Store = createStore("rc_");
-  class Keys {
-    constructor() {
-      this.list = Store.get("keys", []);
-      this.cursor = 0;
+  class RecruiterApi {
+    constructor(auth) {
+      this.auth = auth;
     }
-    save() {
-      Store.set("keys", this.list);
+    matches(filters) {
+      return this.post("/api/recruiter/matches", filters);
     }
-    all() {
-      return this.list;
+    status(companyIds) {
+      return this.post("/api/recruiter/status", { company_ids: companyIds });
     }
-    active() {
-      return this.list.filter((k) => k.valid).map((k) => k.key);
+    submitKey(key) {
+      return this.post("/api/recruiter/submit_key", { key });
     }
-    next() {
-      const pool = this.active();
-      if (!pool.length) return null;
-      this.cursor = (this.cursor + 1) % pool.length;
-      return pool[this.cursor];
+    listKeys() {
+      return this.post("/api/recruiter/keys", {});
     }
-    async add(key, api) {
-      var _a;
-      key = key.trim();
-      if (!key) throw new Error("Paste a key first");
-      if (this.list.some((k) => k.key === key)) throw new Error("That key is already in the pool");
-      const info = await api.call("/key/info", {}, key);
-      const access = ((_a = info.info) == null ? void 0 : _a.access) || info.access || {};
-      const accessType = String(access.type || "Unknown");
-      if (!/public/i.test(accessType)) {
-        throw new Error(`That key has ${accessType} access. Only Public access keys are accepted.`);
-      }
-      const basic = await api.call("/user/basic", {}, key);
-      const owner = basic.basic || basic.profile || basic;
-      if (!(owner == null ? void 0 : owner.id)) throw new Error("Could not resolve the key's owner");
-      const duplicate = this.list.find((k) => k.ownerId === owner.id);
-      if (duplicate) {
-        throw new Error(`Also owned by ${owner.name} [${owner.id}], same player as an existing key. Extra keys from one player share the same 100/min limit.`);
-      }
-      const entry = {
-        key,
-        ownerId: owner.id,
-        ownerName: owner.name,
-        accessType,
-        valid: true,
-        addedAt: Date.now(),
-        callsToday: 0,
-        dayStamp: todayStamp()
-      };
-      this.list.push(entry);
-      this.save();
-      return entry;
+    revokeKey(tornId) {
+      return this.post("/api/recruiter/revoke_key", { torn_id: tornId });
     }
-    remove(key) {
-      this.list = this.list.filter((k) => k.key !== key);
-      this.save();
-    }
-    markInvalid(key) {
-      const entry = this.list.find((k) => k.key === key);
-      if (entry) {
-        entry.valid = false;
-        this.save();
-      }
-    }
-    recordCall(key) {
-      const entry = this.list.find((k) => k.key === key);
-      if (!entry) return;
-      const stamp = todayStamp();
-      if (entry.dayStamp !== stamp) {
-        entry.dayStamp = stamp;
-        entry.callsToday = 0;
-      }
-      entry.callsToday += 1;
-      this.save();
-    }
-  }
-  function todayStamp() {
-    return (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-  }
-  const BASE = "https://api.torn.com/v2";
-  const CALLS_PER_KEY_PER_MINUTE$1 = 75;
-  const WINDOW_MS$1 = 61e3;
-  const MAX_TRIES = 3;
-  class TornApiError extends Error {
-    constructor(code, message) {
-      super(message);
-      this.name = "TornApiError";
-      this.code = code;
-    }
-  }
-  class Api {
-    constructor(keys) {
-      this.keys = keys;
-    }
-    async call(path, params = {}, key = null) {
-      const apiKey = key || this.keys.next();
-      if (!apiKey) throw new Error("No valid API key configured");
-      const url = new URL(BASE + path);
-      for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
-      url.searchParams.set("comment", "tmrecruiter");
-      const res = await fetch(url, { headers: { Authorization: `ApiKey ${apiKey}` } });
-      this.keys.recordCall(apiKey);
-      const text = await res.text();
-      if (text.startsWith("{") || text.startsWith("[")) {
-        const json = JSON.parse(text);
-        if (json.error) throw new TornApiError(json.error.code, json.error.error);
-        return json;
-      }
-      return text;
-    }
-    capacityPerWindow() {
-      return this.keys.active().length * CALLS_PER_KEY_PER_MINUTE$1;
-    }
-    // One burst per minute-window, round-robin across the key pool. Burst
-    // pacing instead of a 1/sec timer chain: background tabs throttle timers
-    // to ~1/min, so the fewer timer ticks a long fetch needs, the better.
-    async runBatch(tasks, { onProgress, shouldStop } = {}) {
-      const results = new Array(tasks.length);
-      const queue = tasks.map((task, index) => ({ task, index, tries: 0 }));
-      let completed = 0;
-      while (queue.length) {
-        if (shouldStop == null ? void 0 : shouldStop()) break;
-        const pool = this.keys.active();
-        if (!pool.length) throw new Error("No valid API key configured");
-        const windowStart = Date.now();
-        const slice = queue.splice(0, pool.length * CALLS_PER_KEY_PER_MINUTE$1);
-        await Promise.all(
-          slice.map(async (item, i) => {
-            try {
-              results[item.index] = await this.call(item.task.path, item.task.params, pool[i % pool.length]);
-              completed += 1;
-              onProgress == null ? void 0 : onProgress(completed, tasks.length);
-            } catch (error) {
-              item.tries += 1;
-              if (error instanceof TornApiError && error.code === 5 && item.tries < MAX_TRIES) {
-                queue.push(item);
-              } else {
-                results[item.index] = error;
-                completed += 1;
-                onProgress == null ? void 0 : onProgress(completed, tasks.length);
-              }
-            }
-          })
-        );
-        if (queue.length) {
-          const elapsed = Date.now() - windowStart;
-          if (elapsed < WINDOW_MS$1) await interruptibleSleep(WINDOW_MS$1 - elapsed, shouldStop);
-        }
-      }
-      return results;
-    }
-  }
-  async function interruptibleSleep(ms, shouldStop) {
-    const until = Date.now() + ms;
-    while (Date.now() < until) {
-      if (shouldStop == null ? void 0 : shouldStop()) return;
-      await sleep(Math.min(1e3, until - Date.now()));
-    }
-  }
-  function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-  function parseCsv(text) {
-    const rows = [];
-    let field = "";
-    let row = [];
-    let inQuotes = false;
-    for (let i = 0; i < text.length; i++) {
-      const char = text[i];
-      if (inQuotes) {
-        if (char === '"') {
-          if (text[i + 1] === '"') {
-            field += '"';
-            i++;
-          } else {
-            inQuotes = false;
-          }
-        } else {
-          field += char;
-        }
-      } else if (char === '"') {
-        inQuotes = true;
-      } else if (char === ",") {
-        row.push(field);
-        field = "";
-      } else if (char === "\n") {
-        row.push(field.endsWith("\r") ? field.slice(0, -1) : field);
-        rows.push(row);
-        field = "";
-        row = [];
-      } else {
-        field += char;
-      }
-    }
-    if (field !== "" || row.length) {
-      row.push(field);
-      rows.push(row);
-    }
-    const header = rows.shift() || [];
-    return rows.filter((r) => r.length === header.length).map((r) => Object.fromEntries(header.map((name, i) => [name, r[i]])));
-  }
-  class Roster {
-    constructor(api) {
-      this.api = api;
-      this.data = Store.get("roster");
-    }
-    async update(settings, { onProgress } = {}) {
-      onProgress == null ? void 0 : onProgress("Downloading company snapshot…");
-      const companyCsv = await this.api.call("/company/snapshot");
-      onProgress == null ? void 0 : onProgress("Downloading player snapshot…");
-      const userCsv = await this.api.call("/user/snapshot");
-      onProgress == null ? void 0 : onProgress("Building roster…");
-      const wantedTypes = new Set(settings.typeIds.map(String));
-      const companies = {};
-      for (const row of parseCsv(companyCsv)) {
-        const rating = Number(row.rating || 0);
-        if (!wantedTypes.has(row.type)) continue;
-        if (rating < settings.starMin || rating > settings.starMax) continue;
-        companies[row.id] = {
-          name: row.name,
-          typeId: Number(row.type),
-          rating,
-          hired: Number(row.employees_hired || 0)
-        };
-      }
-      const players = [];
-      for (const row of parseCsv(userCsv)) {
-        const company = companies[row.company];
-        if (!company) continue;
-        players.push({
-          id: Number(row.id),
-          name: row.name,
-          level: Number(row.level || 0),
-          companyId: Number(row.company),
-          director: row.job === "Director"
-        });
-      }
-      this.data = { companies, players, fetchedAt: Date.now() };
-      Store.set("roster", this.data);
-      return this.data;
-    }
-  }
-  const STAT_MAX_AGE_MS = 10 * 864e5;
-  const WINDOW_MS = 61e3;
-  class Stats {
-    constructor(api) {
-      this.api = api;
-      this.data = Store.get("stats", { byId: {}, fetchedAt: null });
-      Store.remove("sweep_progress");
-    }
-    stalePlayers(players) {
-      const byId = this.data.byId || {};
-      const now = Date.now();
-      return players.filter((p) => {
-        const stat = byId[p.id];
-        return !((stat == null ? void 0 : stat.t) && now - stat.t < STAT_MAX_AGE_MS);
-      });
-    }
-    async run(players, { onProgress, shouldStop } = {}) {
-      const byId = { ...this.data.byId || {} };
-      const stale = this.stalePlayers(players);
-      const total = stale.length;
-      let done = 0;
-      let index = 0;
-      while (index < stale.length) {
-        if (shouldStop == null ? void 0 : shouldStop()) break;
-        const windowStart = Date.now();
-        const capacity = Math.max(1, this.api.capacityPerWindow());
-        const slice = stale.slice(index, index + capacity);
-        const tasks = slice.map((p) => ({ path: `/user/${p.id}/hof` }));
-        const results = await this.api.runBatch(tasks, {
-          onProgress: (doneInWindow) => onProgress == null ? void 0 : onProgress(done + doneInWindow, total),
-          shouldStop
-        });
-        results.forEach((result, i) => {
-          const player = slice[i];
-          if (!result) return;
-          if (result instanceof TornApiError) {
-            if (result.code !== 5) byId[player.id] = { v: 0, t: Date.now(), n: player.name, lvl: player.level };
-            return;
-          }
-          if (result instanceof Error) return;
-          const hof = result.hof || {};
-          const workstats = hof.working_stats || hof.workstats || hof.workingstats;
-          if ((workstats == null ? void 0 : workstats.value) != null) {
-            byId[player.id] = { v: workstats.value, lvl: player.level, n: player.name, t: Date.now() };
-          }
-        });
-        done += slice.length;
-        index += slice.length;
-        this.data = { byId, fetchedAt: Date.now() };
-        try {
-          Store.set("stats", this.data);
-        } catch {
-          Store.remove("stats");
-        }
-        onProgress == null ? void 0 : onProgress(done, total);
-        if (index < stale.length) {
-          const elapsed = Date.now() - windowStart;
-          if (elapsed < WINDOW_MS) await interruptibleSleep(WINDOW_MS - elapsed, shouldStop);
-        }
-      }
-      return this.data;
-    }
-  }
-  class StatusRefresh {
-    constructor(api) {
-      this.api = api;
-      this.data = Store.get("status", { byId: {}, fetchedAt: null });
-    }
-    async refresh(companyIds, { onProgress, shouldStop } = {}) {
-      var _a;
-      const tasks = companyIds.map((id) => ({ path: `/company/${id}/employees` }));
-      const results = await this.api.runBatch(tasks, { onProgress, shouldStop });
-      const byId = this.data.byId || {};
-      for (const result of results) {
-        if (!result || result instanceof Error) continue;
-        for (const employee of result.employees || []) {
-          const action = employee.last_action || {};
-          byId[employee.id] = {
-            status: action.status || "Offline",
-            relative: action.relative || "",
-            timestamp: action.timestamp || null,
-            position: typeof employee.position === "object" ? (_a = employee.position) == null ? void 0 : _a.name : employee.position,
-            days: employee.days_in_company ?? null
-          };
-        }
-      }
-      this.data = { byId, fetchedAt: Date.now() };
-      Store.set("status", this.data);
-      return this.data;
+    post(path, body) {
+      const token = this.auth.getToken();
+      if (!token) return Promise.reject(new Error("Not signed in"));
+      return post(path, body, { token });
     }
   }
   class Dom {
@@ -536,28 +229,15 @@
       debug.addEventListener("click", () => this.copyDebugInfo(debug));
       links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
       this.footer.appendChild(links);
-      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.4.3"}`));
+      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.5.0"}`));
     }
     copyDebugInfo(button) {
-      const roster = Store.get("roster");
-      const stats = Store.get("stats");
-      const status = Store.get("status");
       const info = {
-        version: "0.4.3",
+        version: "0.5.0",
         generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
         user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
         subscribed: this.auth.isSubscribed(),
         settings: Store.get("settings"),
-        keys: (Store.get("keys", []) || []).map((k) => ({
-          key: `${k.key.slice(0, 4)}…${k.key.slice(-4)}`,
-          owner: `${k.ownerName} [${k.ownerId}]`,
-          accessType: k.accessType,
-          valid: k.valid,
-          callsToday: k.callsToday
-        })),
-        roster: roster ? { companies: Object.keys(roster.companies).length, players: roster.players.length, fetchedAt: roster.fetchedAt } : null,
-        stats: (stats == null ? void 0 : stats.fetchedAt) ? { entries: Object.keys(stats.byId).length, floor: stats.floor, fetchedAt: stats.fetchedAt } : null,
-        status: (status == null ? void 0 : status.fetchedAt) ? { entries: Object.keys(status.byId).length, fetchedAt: status.fetchedAt } : null,
         userAgent: navigator.userAgent
       };
       navigator.clipboard.writeText(JSON.stringify(info, null, 2)).then(() => button.textContent = "Copied!").catch(() => button.textContent = "Copy failed").finally(() => setTimeout(() => button.textContent = "Copy debug info", 2e3));
@@ -611,8 +291,7 @@
       }
     }
     defaultScreen() {
-      var _a;
-      return ((_a = this.screens.keys) == null ? void 0 : _a.hasKeys()) ? "overview" : "keys";
+      return "overview";
     }
     refresh() {
       var _a;
@@ -689,15 +368,13 @@
     ["Data Storage", "Persistent until you remove your key"],
     ["Data Sharing", "Nobody (your data is private)"],
     ["Purpose of Use", "Signing in and verifying your TornManager subscription"],
-    ["Key Storage & Sharing", "Stored in the TornManager database, used only for verification"],
-    ["Key Access Level", "Public access (required)"]
+    ["Key Storage & Sharing", "Stored in the TornManager database as your sign-in credential"],
+    ["Key Access Level", "Public access is enough"]
   ];
   class AuthScreen {
-    constructor(auth, overlay, keys, api) {
+    constructor(auth, overlay) {
       this.auth = auth;
       this.overlay = overlay;
-      this.keys = keys;
-      this.api = api;
     }
     subtitle() {
       return "sign in";
@@ -752,10 +429,8 @@
         button.textContent = "Signing in...";
         error.textContent = "";
         try {
-          await this.requirePublicAccess(apiKey);
           await this.auth.authenticate(apiKey);
           await this.auth.fetchSubscription().catch(() => null);
-          await this.addToPool(apiKey);
           this.overlay.open();
         } catch (err) {
           error.textContent = err.message;
@@ -764,7 +439,7 @@
         }
       });
       const hint = Dom.el("p", "rc-auth-hint");
-      hint.innerHTML = 'A key with <strong>Public</strong> access is all this script needs, and it accepts nothing else. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
+      hint.innerHTML = 'A key with <strong>Public</strong> access is all Recruiter needs to sign you in. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
       wrap.append(form, hint);
       container.appendChild(wrap);
     }
@@ -774,27 +449,6 @@
       link.target = "_blank";
       link.rel = "noopener";
       return link;
-    }
-    async requirePublicAccess(apiKey) {
-      var _a;
-      let access;
-      try {
-        const info = await this.api.call("/key/info", {}, apiKey);
-        access = ((_a = info.info) == null ? void 0 : _a.access) || info.access || {};
-      } catch (err) {
-        throw new Error(err.message || "Could not validate the key with Torn", { cause: err });
-      }
-      const type = String(access.type || "");
-      if (!/public/i.test(type)) {
-        throw new Error(`This key has ${type || "unknown"} access. Recruiter only accepts Public access keys.`);
-      }
-    }
-    async addToPool(apiKey) {
-      const user = this.auth.getUser();
-      if (!user) return;
-      const pool = this.keys.all();
-      if (pool.some((k) => k.ownerId === user.torn_id || k.key === apiKey)) return;
-      await this.keys.add(apiKey, this.api).catch(() => null);
     }
   }
   class SubscriptionScreen {
@@ -893,24 +547,18 @@
       }
     }
   }
-  const CALLS_PER_KEY_PER_MINUTE = 75;
   class KeysScreen {
-    constructor(keys, api, overlay, auth) {
-      this.keys = keys;
+    constructor(api, overlay, auth) {
       this.api = api;
       this.overlay = overlay;
       this.auth = auth;
     }
-    hasKeys() {
-      return this.keys.active().length > 0;
-    }
     subtitle() {
-      return "api keys";
+      return "key pool";
     }
     render(container) {
-      var _a;
       const addCard = Dom.el("div", "rc-card");
-      const label = Dom.el("div", "rc-label", "Add a key (public access is enough)");
+      const label = Dom.el("div", "rc-label", "Add a key to the shared pool (Public access only)");
       const row = Dom.el("div", "rc-row");
       const input = Dom.el("input", "rc-input");
       input.type = "text";
@@ -923,11 +571,11 @@
         feedback.textContent = "";
         feedback.className = "rc-feedback";
         try {
-          const entry = await this.keys.add(input.value, this.api);
-          feedback.textContent = `Added ${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}`;
+          const data = await this.api.submitKey(input.value.trim());
+          feedback.textContent = `Added ${data.key.owner_name} [${data.key.owner_torn_id}] · ${data.key.access_type}`;
           feedback.classList.add("rc-feedback--ok");
           input.value = "";
-          this.overlay.refresh();
+          this.loadKeys();
         } catch (error) {
           feedback.textContent = error.message;
           feedback.classList.add("rc-feedback--error");
@@ -939,32 +587,52 @@
       row.append(input, button);
       addCard.append(label, row, feedback);
       container.appendChild(addCard);
-      const list = Dom.el("div", "rc-list");
-      for (const entry of this.keys.all()) {
-        const item = Dom.el("div", "rc-list-row");
-        const badge = Dom.el("span", `rc-badge ${entry.valid ? "rc-badge--fresh" : "rc-badge--stale"}`, entry.valid ? "valid" : "invalid");
-        const masked = Dom.el("span", "rc-mono", `${entry.key.slice(0, 4)}…${entry.key.slice(-4)}`);
-        const isSignIn = entry.ownerId === ((_a = this.auth.getUser()) == null ? void 0 : _a.torn_id);
-        const owner = Dom.el("span", "rc-dim", `${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}${isSignIn ? " · sign-in key" : ""}`);
-        const usage = Dom.el("span", "rc-dim", `${entry.callsToday.toLocaleString()} calls today`);
-        const remove = Dom.el("button", "rc-act", "✕");
-        remove.addEventListener("click", () => {
-          this.keys.remove(entry.key);
-          this.overlay.refresh();
-        });
-        item.append(badge, masked, owner, usage, remove);
-        list.appendChild(item);
-      }
-      container.appendChild(list);
-      const count = this.keys.active().length;
-      const budget = count * CALLS_PER_KEY_PER_MINUTE;
-      const summary = Dom.el(
+      const consent = Dom.el(
         "div",
         "rc-scope",
-        count ? `${count} key${count === 1 ? "" : "s"}, ${count} player${count === 1 ? "" : "s"} · budget ~${budget} calls/min (${CALLS_PER_KEY_PER_MINUTE} per key, headroom kept)` : "No keys yet. Every key must come from a different player, Torn's 100/min limit is per player."
+        "Pool keys are stored on the TornManager server and used for background fetching from the official Torn API. Every call carries the comment tmrecruiter, so any owner can audit usage in their own Torn key log. Only add keys their owners handed you willingly. Revoking a key stops all use of it."
       );
-      container.appendChild(summary);
+      container.appendChild(consent);
+      this.listEl = Dom.el("div", "rc-list");
+      container.appendChild(this.listEl);
+      this.loadKeys();
       container.appendChild(this.subscriptionCard());
+    }
+    async loadKeys() {
+      if (!this.listEl) return;
+      this.listEl.replaceChildren(Dom.el("div", "rc-dim", "Loading…"));
+      try {
+        const data = await this.api.listKeys();
+        this.renderList(data.keys || []);
+      } catch (error) {
+        this.listEl.replaceChildren(Dom.el("div", "rc-feedback rc-feedback--error", error.message));
+      }
+    }
+    renderList(keys) {
+      if (!keys.length) {
+        this.listEl.replaceChildren(Dom.el("div", "rc-dim", "No keys in your pool yet. More keys from different players means faster server-side fetching for everyone."));
+        return;
+      }
+      const rows = keys.map((key) => {
+        const item = Dom.el("div", "rc-list-row");
+        const badge = Dom.el("span", "rc-badge rc-badge--fresh", key.mine ? "your key" : "contributed");
+        const owner = Dom.el("span", "rc-dim", `${key.owner_name} [${key.owner_torn_id}] · ${key.access_type}`);
+        const added = Dom.el("span", "rc-dim", `added ${new Date(key.added_at).toLocaleDateString()}`);
+        const remove = Dom.el("button", "rc-act", "✕");
+        remove.title = "Revoke this key from the pool";
+        remove.addEventListener("click", async () => {
+          remove.disabled = true;
+          try {
+            await this.api.revokeKey(key.owner_torn_id);
+            this.loadKeys();
+          } catch {
+            remove.disabled = false;
+          }
+        });
+        item.append(badge, owner, added, remove);
+        return item;
+      });
+      this.listEl.replaceChildren(...rows);
     }
     subscriptionCard() {
       this.stopCountdown();
@@ -1077,18 +745,16 @@
   const DEFAULTS = {
     typeIds: [10],
     starMin: 8,
-    starMax: 10,
-    inactiveDays: 7
+    starMax: 10
   };
   const STAR_RANGE = { min: 1, max: 10 };
-  const INACTIVE_RANGE = { min: 1, max: 14 };
   const Settings = {
     get() {
       const settings = { ...DEFAULTS, ...Store.get("settings", {}) };
       settings.starMin = clamp(settings.starMin, STAR_RANGE.min, STAR_RANGE.max);
       settings.starMax = clamp(settings.starMax, settings.starMin, STAR_RANGE.max);
-      settings.inactiveDays = clamp(settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max);
       delete settings.floor;
+      delete settings.inactiveDays;
       return settings;
     },
     set(patch) {
@@ -1140,21 +806,15 @@
           Settings.set({ starMax: value });
         })
       );
-      row.appendChild(
-        this.stepper("Ignore inactive over (days)", settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max, (value) => {
-          Settings.set({ inactiveDays: value });
-        })
-      );
       rangeCard.appendChild(row);
       rangeCard.appendChild(
         Dom.el(
           "div",
           "rc-hint",
-          "Everything saves automatically. Working stats are fetched once per employee of the tracked companies and cached for 10 days, so the cost scales with how many companies you track."
+          "Everything saves automatically. Company rosters and working stats are fetched and refreshed on the TornManager server daily, so changes apply the next time the overview loads."
         )
       );
       container.appendChild(rangeCard);
-      container.appendChild(Dom.el("div", "rc-hint", "Company type and star changes apply after the next roster update."));
     }
     stepper(labelText, value, min, max, onChange) {
       const wrap = Dom.el("div", "rc-field");
@@ -1180,18 +840,17 @@
       return wrap;
     }
   }
-  const PAGE_SIZE = 100;
+  const STATUS_POLL_MS = 4e3;
+  const STATUS_POLL_ATTEMPTS = 5;
+  const STATUS_COMPANIES_PER_REQUEST = 30;
   class OverviewScreen {
-    constructor({ roster, stats, status, api, overlay }) {
-      this.roster = roster;
-      this.stats = stats;
-      this.status = status;
+    constructor(api, overlay) {
       this.api = api;
       this.overlay = overlay;
-      this.running = null;
-      this.stopRequested = false;
       this.statusFilter = "any";
       this.page = 0;
+      this.minStats = 0;
+      this.statusByPlayer = {};
     }
     subtitle() {
       const settings = Settings.get();
@@ -1200,16 +859,11 @@
     }
     render(container) {
       this.container = container;
-      const settings = Settings.get();
-      const matches = this.matches(settings);
-      container.appendChild(this.syncRows(matches));
-      this.progress = Dom.el("div", "rc-progress");
-      container.appendChild(this.progress);
-      if (this.barState) this.renderBar();
       container.appendChild(this.filterRow());
+      this.metaEl = Dom.el("div", "rc-meta");
       this.resultsWrap = Dom.el("div");
-      container.appendChild(this.resultsWrap);
-      this.renderResults();
+      container.append(this.metaEl, this.resultsWrap);
+      this.fetchMatches();
     }
     filterRow() {
       const row = Dom.el("div", "rc-row rc-row--filters");
@@ -1219,7 +873,6 @@
       this.statusChip.addEventListener("click", () => {
         const order = ["any", "online", "active"];
         this.statusFilter = order[(order.indexOf(this.statusFilter) + 1) % order.length];
-        this.page = 0;
         this.syncStatusChip();
         this.renderResults();
       });
@@ -1238,7 +891,7 @@
         if (value === (this.minStats || 0)) return;
         this.minStats = value;
         this.page = 0;
-        this.renderResults();
+        this.fetchMatches();
       };
       input.addEventListener("blur", apply);
       input.addEventListener("keydown", (e) => {
@@ -1253,18 +906,36 @@
       this.statusChip.textContent = labels[this.statusFilter];
       this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
     }
-    renderResults() {
+    async fetchMatches() {
       if (!this.resultsWrap) return;
-      const matches = this.matches(Settings.get());
-      const visible = this.filterByStatus(matches).filter((m) => m.stat.v >= (this.minStats || 0));
-      const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
-      this.page = Math.min(Math.max(0, this.page), totalPages - 1);
-      const meta = Dom.el("div", "rc-meta");
-      meta.append(
-        Dom.el("span", null, `${visible.length} of ${matches.length} matches shown`),
-        Dom.el("span", "rc-dim", "sorted by working stats")
+      this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", "Loading matches…"));
+      const settings = Settings.get();
+      try {
+        this.response = await this.api.matches({
+          type_ids: settings.typeIds,
+          star_min: settings.starMin,
+          star_max: settings.starMax,
+          min_stats: this.minStats || 0,
+          page: this.page
+        });
+      } catch (error) {
+        this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", error.message));
+        return;
+      }
+      this.renderResults();
+      this.refreshStatuses();
+    }
+    renderResults() {
+      if (!this.resultsWrap || !this.response) return;
+      const { matches, total, page_size: pageSize } = this.response;
+      const visible = this.filterByStatus(matches);
+      const totalPages = Math.max(1, Math.ceil(total / pageSize));
+      this.page = Math.min(this.page, totalPages - 1);
+      this.metaEl.replaceChildren(
+        Dom.el("span", null, `${total.toLocaleString()} matches · sorted by working stats`),
+        Dom.el("span", "rc-dim", this.freshness())
       );
-      const parts = [meta, this.table(visible.slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE))];
+      const parts = [this.table(visible)];
       if (totalPages > 1) {
         const pager = Dom.el("div", "rc-pager");
         const prev = Dom.el("button", "rc-btn rc-btn--ghost", "‹ Prev");
@@ -1273,182 +944,59 @@
         next.disabled = this.page >= totalPages - 1;
         prev.addEventListener("click", () => {
           this.page -= 1;
-          this.renderResults();
+          this.fetchMatches();
         });
         next.addEventListener("click", () => {
           this.page += 1;
-          this.renderResults();
+          this.fetchMatches();
         });
         pager.append(prev, Dom.el("span", "rc-dim", `page ${this.page + 1} of ${totalPages}`), next);
         parts.push(pager);
       }
       this.resultsWrap.replaceChildren(...parts);
     }
-    syncRows(matches) {
-      var _a, _b, _c;
-      const wrap = Dom.el("div", "rc-syncs");
-      const companyCount = new Set(matches.map((m) => m.player.companyId)).size;
-      const capacity = Math.max(1, this.api.capacityPerWindow());
-      wrap.appendChild(this.syncRow({
-        name: "Roster",
-        desc: "who works where, ratings · 2 calls",
-        fetchedAt: (_a = this.roster.data) == null ? void 0 : _a.fetchedAt,
-        staleAfterHours: 24,
-        action: () => this.updateRoster()
-      }));
-      let statsDesc = "needs a roster update first";
-      if (this.roster.data) {
-        const players = this.roster.data.players.filter((p) => !p.director);
-        const stale = this.stats.stalePlayers(players).length;
-        if (stale === 0) {
-          statsDesc = `all ${players.length.toLocaleString()} employees fresh (10 day cache)`;
-        } else {
-          const minutes = Math.max(1, Math.ceil(stale / capacity));
-          statsDesc = `${stale.toLocaleString()} of ${players.length.toLocaleString()} employees to fetch · ~${minutes} min`;
-        }
-      }
-      wrap.appendChild(this.syncRow({
-        name: "Working stats",
-        desc: statsDesc,
-        fetchedAt: (_b = this.stats.data) == null ? void 0 : _b.fetchedAt,
-        staleAfterHours: 24 * 10,
-        action: () => this.updateStats()
-      }));
-      wrap.appendChild(this.syncRow({
-        name: "Status",
-        desc: `online state of ${matches.length} matches · ${companyCount} calls`,
-        fetchedAt: (_c = this.status.data) == null ? void 0 : _c.fetchedAt,
-        staleAfterHours: 1,
-        action: () => this.updateStatus(matches)
-      }));
-      return wrap;
-    }
-    syncRow({ name, desc, fetchedAt, staleAfterHours, action }) {
-      const row = Dom.el("div", "rc-sync");
-      const isRunning = this.running === name;
-      const button = Dom.el("button", "rc-btn rc-btn--ghost", isRunning ? "Pause" : "Update");
-      button.disabled = !!this.running && !isRunning;
-      button.addEventListener("click", async () => {
-        if (this.running === name) {
-          this.stopRequested = true;
-          button.textContent = "Pausing…";
-          button.disabled = true;
-          return;
-        }
-        if (this.running) return;
-        this.running = name;
-        this.stopRequested = false;
-        button.textContent = "Pause";
-        let message;
-        let paused;
-        try {
-          message = await action();
-        } catch (error) {
-          this.setProgress(`${name} failed: ${error.message}`);
-          return;
-        } finally {
-          paused = this.stopRequested;
-          this.running = null;
-          this.stopRequested = false;
-          this.stopTicker();
-          this.barState = null;
-        }
-        this.overlay.refresh();
-        this.setProgress(paused ? `${name} paused, progress so far is saved.` : message || "");
-      });
-      row.append(
-        Dom.el("span", "rc-sync-name", name),
-        Dom.el("span", "rc-dim", desc),
-        ageBadge(fetchedAt, staleAfterHours),
-        button
-      );
-      return row;
-    }
-    async updateRoster() {
-      await this.roster.update(Settings.get(), { onProgress: (text) => this.setProgress(text) });
-      return "Roster updated.";
-    }
-    async updateStats() {
-      const roster = this.roster.data;
-      if (!roster) return "Update the roster first, stats are fetched for the employees in your tracked companies.";
-      const players = roster.players.filter((p) => !p.director);
-      const staleCount = this.stats.stalePlayers(players).length;
-      await this.stats.run(players, {
-        shouldStop: () => this.stopRequested,
-        onProgress: (done, total) => this.setBar({ done, total, unit: "employees" })
-      });
-      return staleCount ? `Working stats fetched for ${staleCount.toLocaleString()} employees (${(players.length - staleCount).toLocaleString()} were still fresh).` : "All employees were already fresh, nothing to fetch.";
-    }
-    async updateStatus(matches) {
-      const companyIds = [...new Set(matches.map((m) => m.player.companyId))];
-      if (!companyIds.length) return "No matches yet. Update the roster and working stats first.";
-      await this.status.refresh(companyIds, {
-        shouldStop: () => this.stopRequested,
-        onProgress: (done, total) => this.setBar({ done, total, unit: "companies" })
-      });
-      return `Status refreshed for ${companyIds.length} companies.`;
-    }
-    setProgress(text) {
-      this.stopTicker();
-      this.barState = null;
-      if (this.progress) this.progress.textContent = text;
-    }
-    setBar({ done, total, unit }) {
-      this.barState = { done, total, unit, at: Date.now() };
-      if (!this.ticker) this.ticker = setInterval(() => this.renderBar(), 1e3);
-      this.renderBar();
-    }
-    stopTicker() {
-      if (this.ticker) {
-        clearInterval(this.ticker);
-        this.ticker = null;
-      }
-    }
-    renderBar() {
+    freshness() {
       var _a;
-      if (!this.progress || !this.barState) return;
-      const { done, total, unit, at } = this.barState;
-      if (!((_a = this.barEl) == null ? void 0 : _a.isConnected) || this.barEl.parentElement !== this.progress) {
-        this.barEl = Dom.el("div", "rc-bar");
-        this.barFill = Dom.el("div", "rc-bar-fill");
-        this.barText = Dom.el("span", "rc-bar-text");
-        this.barEl.append(this.barFill, this.barText);
-        this.progress.replaceChildren(this.barEl);
-      }
-      const ratePerSecond = Math.max(1, this.api.capacityPerWindow()) / 60;
-      const elapsed = (Date.now() - at) / 1e3;
-      const displayed = Math.min(total, Math.floor(done + ratePerSecond * elapsed));
-      const fraction = total ? displayed / total : 1;
-      this.barFill.style.width = `${Math.min(97, Math.max(3, fraction * 100)).toFixed(1)}%`;
-      const remaining = (total - displayed) / ratePerSecond;
-      const countdown = remaining < 1 ? "any moment now" : `~${formatDuration(remaining)} left`;
-      this.barText.textContent = `${countdown} · ${displayed.toLocaleString()} of ${total.toLocaleString()} ${unit} fetched`;
+      const meta = ((_a = this.response) == null ? void 0 : _a.meta) || {};
+      const parts = [];
+      if (meta.roster_synced_at) parts.push(`roster ${shortAge(Date.parse(meta.roster_synced_at))}`);
+      if (meta.stats_swept_at) parts.push(`stats ${shortAge(Date.parse(meta.stats_swept_at))}`);
+      return parts.join(" · ") || "no data yet — the server syncs daily";
     }
-    matches(settings) {
-      var _a, _b;
-      const roster = this.roster.data;
-      const stats = ((_a = this.stats.data) == null ? void 0 : _a.byId) || {};
-      const statuses = ((_b = this.status.data) == null ? void 0 : _b.byId) || {};
-      if (!roster) return [];
-      const cutoff = Date.now() / 1e3 - settings.inactiveDays * 86400;
-      const result = [];
-      for (const player of roster.players) {
-        if (player.director) continue;
-        const stat = stats[player.id];
-        if (!stat || !(stat.v > 0)) continue;
-        const status = statuses[player.id];
-        const lastAction = (status == null ? void 0 : status.timestamp) || stat.la;
-        if (lastAction && lastAction < cutoff) continue;
-        result.push({ player, company: roster.companies[player.companyId], stat, status });
+    async refreshStatuses(attempt = 0) {
+      var _a, _b, _c;
+      const matches = ((_a = this.response) == null ? void 0 : _a.matches) || [];
+      const companyIds = [...new Set(matches.map((m) => m.company.torn_id))].slice(0, STATUS_COMPANIES_PER_REQUEST);
+      if (!companyIds.length) return;
+      let data;
+      try {
+        data = await this.api.status(companyIds);
+      } catch {
+        return;
       }
-      return result.sort((a, b) => b.stat.v - a.stat.v);
+      for (const employees of Object.values(data.statuses || {})) {
+        for (const employee of employees || []) {
+          this.statusByPlayer[employee.torn_id] = employee;
+        }
+      }
+      this.renderResults();
+      if (((_b = data.pending) == null ? void 0 : _b.length) && attempt < STATUS_POLL_ATTEMPTS && ((_c = this.container) == null ? void 0 : _c.isConnected)) {
+        setTimeout(() => this.refreshStatuses(attempt + 1), STATUS_POLL_MS);
+      }
     }
     filterByStatus(matches) {
-      if (this.statusFilter === "online") return matches.filter((m) => {
-        var _a;
-        return ((_a = m.status) == null ? void 0 : _a.status) === "Online";
-      });
-      if (this.statusFilter === "active") return matches.filter((m) => m.status && m.status.status !== "Offline");
+      if (this.statusFilter === "online") {
+        return matches.filter((m) => {
+          var _a;
+          return ((_a = this.statusByPlayer[m.torn_id]) == null ? void 0 : _a.status) === "Online";
+        });
+      }
+      if (this.statusFilter === "active") {
+        return matches.filter((m) => {
+          const status = this.statusByPlayer[m.torn_id];
+          return status && status.status !== "Offline";
+        });
+      }
       return matches;
     }
     table(rows) {
@@ -1459,38 +1007,44 @@
       }
       table.appendChild(head);
       if (!rows.length) {
-        const empty = Dom.el("div", "rc-empty", "Nothing to show yet. Run the three updates above, top to bottom.");
-        table.appendChild(empty);
+        table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in Setup — the server refreshes data daily."));
         return table;
       }
-      for (const { player, company, stat, status } of rows) {
+      for (const match of rows) {
+        const status = this.statusByPlayer[match.torn_id];
         const row = Dom.el("div", "rc-trow");
         const who = Dom.el("div");
-        const playerLink = Dom.el("a", "rc-name rc-link", player.name);
-        playerLink.href = `https://www.torn.com/profiles.php?XID=${player.id}`;
+        const playerLink = Dom.el("a", "rc-name rc-link", match.name);
+        playerLink.href = `https://www.torn.com/profiles.php?XID=${match.torn_id}`;
         playerLink.target = "_blank";
         playerLink.rel = "noopener";
-        who.append(playerLink, Dom.el("div", "rc-dim", `Lv ${player.level} · ${player.id}`));
-        const ws = Dom.el("div", "rc-ws", stat.v.toLocaleString());
-        ws.appendChild(Dom.el("small", null, stat.t ? shortAge(stat.t) : ""));
+        const whoDetail = Dom.el("div", "rc-dim", `Lv ${match.level} · ${match.torn_id}`);
+        who.append(playerLink, whoDetail);
+        if (match.faction_mate_of_director) {
+          const badge = Dom.el("span", "rc-badge rc-badge--aging", "director's faction");
+          badge.title = "In the same faction as the company director — probably loyal";
+          who.appendChild(badge);
+        }
+        const ws = Dom.el("div", "rc-ws", (match.working_stats || 0).toLocaleString());
         const state = Dom.el("div", "rc-state");
         const dotClass = (status == null ? void 0 : status.status) === "Online" ? "rc-dot--on" : (status == null ? void 0 : status.status) === "Idle" ? "rc-dot--idle" : "rc-dot--off";
-        state.append(Dom.el("span", `rc-dot ${dotClass}`), Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown"));
+        state.append(
+          Dom.el("span", `rc-dot ${dotClass}`),
+          Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown")
+        );
         const co = Dom.el("div");
-        const coLink = Dom.el("a", "rc-name rc-name--co rc-link", (company == null ? void 0 : company.name) || "?");
-        if (player.companyId) {
-          coLink.href = `https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.companyId}`;
-          coLink.target = "_blank";
-          coLink.rel = "noopener";
-        }
-        coLink.appendChild(Dom.el("span", "rc-star", ` ★ ${(company == null ? void 0 : company.rating) ?? "?"}`));
-        const detail = [typeName(company == null ? void 0 : company.typeId), status == null ? void 0 : status.position, (status == null ? void 0 : status.days) != null ? `${status.days}d` : null].filter(Boolean).join(" · ");
+        const coLink = Dom.el("a", "rc-name rc-name--co rc-link", match.company.name || "?");
+        coLink.href = `https://www.torn.com/joblist.php#/p=corpinfo&ID=${match.company.torn_id}`;
+        coLink.target = "_blank";
+        coLink.rel = "noopener";
+        coLink.appendChild(Dom.el("span", "rc-star", ` ★ ${match.company.rating}`));
+        const detail = [typeName(match.company.company_type_id), status == null ? void 0 : status.position, (status == null ? void 0 : status.days_in_company) != null ? `${status.days_in_company}d` : null].filter(Boolean).join(" · ");
         co.append(coLink, Dom.el("div", "rc-dim", detail));
         const acts = Dom.el("div", "rc-acts");
         const chat = Dom.el("a", "rc-act");
         chat.title = "Start Torn chat";
         chat.innerHTML = '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.5c-4 0-7 2.6-7 5.8 0 1.8.9 3.4 2.4 4.5-.1 1-.5 1.9-1.2 2.7 1.5-.1 2.8-.6 3.8-1.3.6.2 1.3.2 2 .2 4 0 7-2.6 7-5.8s-3-6.1-7-6.1z"/></svg>';
-        chat.href = ChatOpener.chatUrl(player.id);
+        chat.href = ChatOpener.chatUrl(match.torn_id);
         chat.target = "_blank";
         chat.rel = "noopener";
         acts.appendChild(chat);
@@ -1499,12 +1053,6 @@
       }
       return table;
     }
-  }
-  function ageBadge(fetchedAt, staleAfterHours) {
-    if (!fetchedAt) return Dom.el("span", "rc-badge rc-badge--stale", "never");
-    const hours = (Date.now() - fetchedAt) / 36e5;
-    const cls = hours < staleAfterHours ? "rc-badge--fresh" : hours < staleAfterHours * 2 ? "rc-badge--aging" : "rc-badge--stale";
-    return Dom.el("span", `rc-badge ${cls}`, shortAge(fetchedAt));
   }
   function shortAge(fetchedAt) {
     if (!fetchedAt) return "";
@@ -1515,32 +1063,21 @@
     if (hours < 48) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
   }
-  function formatDuration(seconds) {
-    seconds = Math.round(seconds);
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor(seconds % 3600 / 60);
-    const secs = seconds % 60;
-    if (hours) return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
-    if (minutes) return `${minutes}m ${String(secs).padStart(2, "0")}s`;
-    return `${secs}s`;
-  }
+  const LEGACY_STORE_KEYS = ["keys", "roster", "stats", "status", "sweep_progress"];
   function boot() {
+    LEGACY_STORE_KEYS.forEach((key) => Store.remove(key));
     const auth = new Auth(Store);
-    const keys = new Keys();
-    const api = new Api(keys);
-    const roster = new Roster(api);
-    const stats = new Stats(api);
-    const status = new StatusRefresh(api);
+    const api = new RecruiterApi(auth);
     const overlay = new Overlay(auth);
-    overlay.register("auth", new AuthScreen(auth, overlay, keys, api));
+    overlay.register("auth", new AuthScreen(auth, overlay));
     overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-    overlay.register("keys", new KeysScreen(keys, api, overlay, auth));
+    overlay.register("keys", new KeysScreen(api, overlay, auth));
     overlay.register("setup", new SetupScreen(overlay));
-    overlay.register("overview", new OverviewScreen({ roster, stats, status, api, overlay }));
+    overlay.register("overview", new OverviewScreen(api, overlay));
     new Sidebar(overlay).init();
     new MenuEntry(overlay).init();
     new ChatOpener().init();
-    console.log(`%cRecruiter %cv${"0.4.3"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
+    console.log(`%cRecruiter %cv${"0.5.0"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
   }
   if (window.self === window.top) boot();
 
