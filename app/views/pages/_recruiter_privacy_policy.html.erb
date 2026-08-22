@@ -31,6 +31,7 @@
     <ul>
       <li>Your Torn ID, player name, and level</li>
       <li>Your Torn API key (as the sign-in credential)</li>
+      <li>API keys you contributed to the shared key pool, together with who contributed them</li>
       <li>Xanax payments sent for subscriptions, and subscription expiration dates</li>
     </ul>
     <p>
@@ -42,25 +43,26 @@
   <section class="content-section">
     <h2 id="rpp-key-pool">The Key Pool</h2>
     <p>
-      Recruiter can hold additional Torn API keys from other players to speed up data fetching. These pool keys
-      are stored <strong>only in your browser</strong> and are <strong>never sent to the TornManager
-      server</strong>; they are used exclusively for direct calls from your browser to the official Torn API.
+      Recruiter uses a shared pool of Torn API keys for its background fetching. Keys you add on the Keys screen
+      are <strong>sent to and stored on the TornManager server</strong>, together with who contributed them, and
+      are used exclusively for calls to the official Torn API on Recruiter's behalf.
     </p>
     <p>
-      Every Torn API call Recruiter makes carries the comment <code>tmrecruiter</code>, so the owner of any key can
-      see in their own Torn key log exactly what their key was used for. The pool accepts only Public access keys
-      and at most one key per player, matching how Torn's rate limit works. Only add keys that their owners gave
-      you willingly; a key owner can revoke access at any time by deleting or regenerating their key on Torn.com.
+      Every Torn API call carries the comment <code>tmrecruiter</code>, so the owner of any key can see in their
+      own Torn key log exactly what their key was used for. The pool accepts only Public access keys and at most
+      one key per player, matching how Torn's rate limit works. Only add keys that their owners gave you
+      willingly. You can revoke a key on the Keys screen at any time, which stops all use of it, and a key owner
+      can revoke access themselves by deleting or regenerating their key on Torn.com.
     </p>
   </section>
 
   <section class="content-section">
     <h2 id="rpp-torn-api">Calls to the Torn API</h2>
     <p>
-      Recruiter fetches publicly available game data directly from api.torn.com using the keys in your pool:
-      company listings and ratings, which players work where, Hall of Fame working stats, and the online status
-      of employees. This data is fetched from your browser and processed on your device. None of it is uploaded
-      to my server or anywhere else.
+      The TornManager server fetches publicly available game data from api.torn.com using the key pool: company
+      listings and ratings, which players work where, player factions, Hall of Fame working stats, and the online
+      status of employees. This data is refreshed daily, stored on the server, and served to every Recruiter
+      subscriber. Your browser no longer calls the Torn API itself.
     </p>
   </section>
 
@@ -69,25 +71,20 @@
     <p>Recruiter stores the following in your browser's localStorage on the torn.com domain:</p>
     <ul>
       <li><strong>User profile and session token</strong> (<code>rc_user</code>): your Torn ID, name, and the session token used for authentication. Cleared when you sign out.</li>
-      <li><strong>Key pool</strong> (<code>rc_keys</code>): the API keys you added, each with its owner's name and ID and a daily call counter.</li>
-      <li><strong>Roster data</strong> (<code>rc_roster</code>): the fetched list of companies and their employees.</li>
-      <li><strong>Working stats</strong> (<code>rc_stats</code>): the fetched working-stats values per player.</li>
-      <li><strong>Status data</strong> (<code>rc_status</code>): the fetched online state of matched players.</li>
-      <li><strong>Settings and subscription state</strong> (<code>rc_settings</code>, <code>rc_subscription</code>): your filter settings and the last known subscription status.</li>
+      <li><strong>Settings</strong> (<code>rc_settings</code>): your company type and star filters.</li>
+      <li><strong>Subscription state</strong> (<code>rc_subscription</code>): the last known subscription status.</li>
     </ul>
     <p>
-      You can remove pool keys individually on the Keys screen, and signing out clears your session. Clearing
-      localStorage for torn.com removes everything listed above.
+      Signing out clears your session. Clearing localStorage for torn.com removes everything listed above.
     </p>
   </section>
 
   <section class="content-section">
     <h2 id="rpp-backend">Backend Communication</h2>
     <p>
-      Recruiter talks to tornmanager.com using <code>GM.xmlHttpRequest</code> for exactly two things: signing in
-      through <code>/api/session</code> and checking your subscription through <code>/api/subscription</code>.
-      Requests after sign-in carry your session token. No recruiting data &mdash; rosters, working stats, status
-      data, or pool keys &mdash; is ever sent to my server, and nothing is shared with any third party.
+      Recruiter talks to tornmanager.com using <code>GM.xmlHttpRequest</code>: signing in, checking your
+      subscription, loading recruiting matches and employee statuses, and managing the key pool. Requests after
+      sign-in carry your session token. Nothing is shared with any third party.
     </p>
   </section>
 

@@ -16,15 +16,17 @@
     <h2 id="rtos-description">Description of Service</h2>
     <p>
       Recruiter runs on Torn.com via a userscript manager (such as Tampermonkey) or Torn PDA and surfaces
-      publicly available game data &mdash; company rosters, Hall of Fame working stats, and online status &mdash;
-      to help with company recruiting. It shows which high working-stat players are employed in the company types
-      you select, and whether they are online right now. Recruiter requires an active TornManager subscription.
+      publicly available game data &mdash; company rosters, Hall of Fame working stats, player factions, and
+      online status &mdash; to help with company recruiting. It shows which high working-stat players are
+      employed in the company types you select, and whether they are online right now. The data is fetched and
+      refreshed by the TornManager server; the userscript itself talks only to tornmanager.com. Recruiter
+      requires an active TornManager subscription.
     </p>
     <p>By installing and using Recruiter, you agree to:</p>
     <ul>
       <li>Allow the userscript to display its interface on Torn.com pages in your browser</li>
-      <li>Allow the userscript to communicate with tornmanager.com for sign-in and subscription checks</li>
-      <li>Allow the userscript to call the official Torn API with the keys in your pool and store the results, your keys, and your preferences in your browser's localStorage</li>
+      <li>Allow the userscript to communicate with tornmanager.com for sign-in, subscription checks, recruiting data, and key pool management</li>
+      <li>Allow the TornManager server to call the official Torn API with the keys in the shared pool on Recruiter's behalf</li>
     </ul>
   </section>
 
@@ -42,11 +44,12 @@
   <section class="content-section">
     <h2 id="rtos-key-pool">Key Pool Rules</h2>
     <p>
-      You may add other players' API keys to your key pool <strong>only if their owners handed them to you
-      voluntarily</strong>, knowing what they will be used for. Every call carries the comment
-      <code>tmrecruiter</code> so key owners can audit usage in their own Torn key log at any time. The pool
-      accepts only Public access keys and one key per player. Recruiter paces its Torn API usage to stay well
-      inside Torn's rate limits per key owner; do not attempt to modify the script to exceed those limits.
+      You may add other players' API keys to the shared pool <strong>only if their owners handed them to you
+      voluntarily</strong>, knowing what they will be used for. Pool keys are stored on the TornManager server
+      and used server-side for background fetching. Every call carries the comment <code>tmrecruiter</code> so
+      key owners can audit usage in their own Torn key log at any time. The pool accepts only Public access keys
+      and one key per player. The server paces its Torn API usage to stay well inside Torn's rate limits per key
+      owner.
     </p>
   </section>
 
