@@ -1,0 +1,127 @@
+<div class="admin-stats">
+  <div class="admin-stats-header">
+    <%= link_to "&larr; Admin".html_safe, admin_dashboard_path, class: "back-link" %>
+    <h1>Recruiter Pipeline</h1>
+    <span class="admin-stats-asof">as of <%= Time.current.strftime("%d %b %Y %H:%M") %> TCT</span>
+  </div>
+
+  <div class="admin-health">
+    <% if @pool_keys.any? || @service_key_present %>
+      <span class="admin-hpill ok"><span class="dot"></span><b>Key pool</b><span class="why"><%= @pool_keys.size %> consented <%= "key".pluralize(@pool_keys.size) %><%= " · service key configured" if @service_key_present %></span></span>
+    <% else %>
+      <span class="admin-hpill bad"><span class="dot"></span><b>Key pool</b><span class="why">pipeline idle — no consented keys and no service key, every job skips</span></span>
+    <% end %>
+
+    <% if @roster_synced_at %>
+      <span class="admin-hpill <%= @roster_synced_at > 26.hours.ago ? "ok" : "warn" %>"><span class="dot"></span><b>Roster</b><span class="why">synced <%= time_ago_in_words(@roster_synced_at) %> ago</span></span>
+    <% else %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Roster</b><span class="why">never synced</span></span>
+    <% end %>
+
+    <% if @swept_at %>
+      <span class="admin-hpill <%= @swept_at > 26.hours.ago ? "ok" : "warn" %>"><span class="dot"></span><b>Working stats</b><span class="why">swept <%= time_ago_in_words(@swept_at) %> ago</span></span>
+    <% else %>
+      <span class="admin-hpill warn"><span class="dot"></span><b>Working stats</b><span class="why">never swept</span></span>
+    <% end %>
+  </div>
+
+  <div class="admin-kpis">
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@companies_count) %></div>
+      <div class="k">Companies</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@employed_count) %></div>
+      <div class="k">Employed players</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@with_stats_count) %></div>
+      <div class="k">With working stats</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@backfill_pending) %></div>
+      <div class="k">Backfill queue</div>
+    </div>
+    <div class="admin-kpi">
+      <div class="v"><%= number_with_delimiter(@coverage_gap) %></div>
+      <div class="k">Missing stats (<%= Recruiter::BackfillMissingStatsJob::MIN_COMPANY_RATING %>★+ companies)</div>
+    </div>
+  </div>
+
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Jobs</h2><span class="admin-stats-hint">daily pipeline &middot; run now enqueues immediately</span></div>
+    <table class="admin-stats-table">
+      <thead>
+        <tr><th>Job</th><th>Last run</th><th>Next run</th><th>Countdown</th><th></th></tr>
+      </thead>
+      <tbody>
+        <% @jobs.each do |job| %>
+          <tr>
+            <td><%= job[:klass].name.demodulize.underscore.humanize %></td>
+            <td>
+              <% if job[:failed] %>
+                failed <%= time_ago_in_words(job[:last].created_at) %> ago
+              <% elsif job[:last]&.finished_at %>
+                <%= time_ago_in_words(job[:last].finished_at) %> ago
+              <% elsif job[:last] %>
+                queued
+              <% else %>
+                never
+              <% end %>
+            </td>
+            <td><%= job[:next_time] ? job[:next_time].strftime("%H:%M TCT") : "—" %></td>
+            <td>
+              <% if job[:next_time] %>
+                <span data-controller="countdown" data-countdown-target-value="<%= job[:next_time].iso8601 %>"><span data-countdown-target="display"></span></span>
+              <% else %>
+                —
+              <% end %>
+            </td>
+            <td><%= button_to "Run now", admin_recruiter_run_path(job: job[:slug]), class: "btn btn-secondary btn-sm" %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Key Pool</h2><span class="admin-stats-hint">consented keys used for background fetching &middot; tagged tmrecruiter</span></div>
+    <% if @pool_keys.any? %>
+      <table class="admin-stats-table">
+        <thead>
+          <tr><th>Key</th><th>Owner</th><th>Submitted by</th><th>Access</th><th>Calls today</th></tr>
+        </thead>
+        <tbody>
+          <% @pool_keys.each do |key| %>
+            <tr>
+              <td><code><%= key.key.first(4) %>…<%= key.key.last(4) %></code></td>
+              <td><%= key.user ? "#{key.user.name} [#{key.user.torn_id}]" : "faction ##{key.faction_id}" %></td>
+              <td><%= key.submitted_by ? "#{key.submitted_by.name} [#{key.submitted_by.torn_id}]" : "—" %></td>
+              <td><%= key.access_type %></td>
+              <td><%= number_with_delimiter(@calls_today.fetch(key.key, 0)) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="admin-stats-hint">No consented keys yet. Flip <code>recruiter_fetch_allowed</code> on an ApiKey or configure <code>recruiter.api_key</code> in credentials.</p>
+    <% end %>
+  </section>
+
+  <section class="admin-stats-section">
+    <div class="admin-stats-sechead"><h2>Companies by rating</h2><span class="admin-stats-hint">backfill covers <%= Recruiter::BackfillMissingStatsJob::MIN_COMPANY_RATING %>★ and up</span></div>
+    <table class="admin-stats-table">
+      <thead>
+        <tr><th>Rating</th><th>Companies</th></tr>
+      </thead>
+      <tbody>
+        <% @companies_by_rating.sort_by { |rating, _| -rating }.each do |rating, count| %>
+          <tr>
+            <td><%= rating %>★</td>
+            <td><%= number_with_delimiter(count) %></td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </section>
+</div>
