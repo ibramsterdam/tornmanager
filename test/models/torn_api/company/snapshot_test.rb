@@ -34,4 +34,11 @@ class TornApi::Company::SnapshotTest < ActiveSupport::TestCase
     assert_equal "id,name\n1,x\n", @service.send(:parse_body, "id,name\n1,x\n")
     assert_equal({ "error" => { "code" => 2 } }, @service.send(:parse_body, '{"error":{"code":2}}'))
   end
+
+  test "parse_body relabels binary bodies as utf-8" do
+    parsed = @service.send(:parse_body, "id,name\n1,Caf\u00e9 \u2605\n".b)
+
+    assert_equal Encoding::UTF_8, parsed.encoding
+    assert_includes parsed, "Café ★"
+  end
 end
