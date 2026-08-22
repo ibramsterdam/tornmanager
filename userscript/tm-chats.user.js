@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Chats
 // @namespace    tornmanager
-// @version      0.4.2
+// @version      0.4.3
 // @author       Bram [2728237]
 // @description  TornManager Chats userscript
 // @license      All rights reserved
@@ -86,7 +86,7 @@ Stack: ${e.stack}` : ""}`
           } catch {
             data = null;
           }
-          if (response.status >= 200 && response.status < 300 && data) {
+          if (response.status >= 200 && response.status < 300) {
             resolve(data);
           } else {
             const error = new Error((data == null ? void 0 : data.error) || "Request failed");
@@ -545,36 +545,45 @@ Stack: ${e.stack}` : ""}`
       return container;
     }
   }
+  class Dom {
+    static ready(selector, callback) {
+      const el = document.querySelector(selector);
+      if (el) return callback(el);
+      new MutationObserver((_, observer) => {
+        const el2 = document.querySelector(selector);
+        if (el2) {
+          observer.disconnect();
+          callback(el2);
+        }
+      }).observe(document.documentElement, { childList: true, subtree: true });
+    }
+    static el(tag, className, text) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (text !== void 0) node.textContent = text;
+      return node;
+    }
+  }
   class SubscriptionSection {
-    constructor(auth, onUpdate) {
+    constructor(auth, { classPrefix, note, onUpdate } = {}) {
       this.auth = auth;
+      this.prefix = classPrefix;
+      this.note = note;
       this.onUpdate = onUpdate;
       this.countdownInterval = null;
     }
     render() {
-      const section = document.createElement("div");
-      section.className = "tm-sub";
-      const title = document.createElement("h2");
-      title.className = "tm-sub-title";
-      title.textContent = "Subscription";
-      section.appendChild(title);
-      const note = document.createElement("p");
-      note.className = "tm-sub-note";
-      note.textContent = "A subscription is an optional extra. It only unlocks additional features like the Ranked War tab. Chats and the rest of the extension are free for everyone.";
-      section.appendChild(note);
-      this.statusEl = document.createElement("div");
-      this.statusEl.className = "tm-sub-status";
-      section.appendChild(this.statusEl);
-      this.countdownEl = document.createElement("p");
-      this.countdownEl.className = "tm-sub-countdown";
-      section.appendChild(this.countdownEl);
-      this.refreshBtn = document.createElement("button");
-      this.refreshBtn.className = "tm-sub-refresh";
-      this.refreshBtn.textContent = "Check for new payments";
+      const p = this.prefix;
+      const section = Dom.el("div", `${p}-sub`);
+      section.appendChild(Dom.el("h2", `${p}-sub-title`, "Subscription"));
+      section.appendChild(Dom.el("p", `${p}-sub-note`, this.note));
+      this.statusEl = Dom.el("div", `${p}-sub-status`);
+      this.countdownEl = Dom.el("p", `${p}-sub-countdown`);
+      section.append(this.statusEl, this.countdownEl);
+      this.refreshBtn = Dom.el("button", `${p}-sub-refresh`, "Check for new payments");
       this.refreshBtn.onclick = () => this.load(true);
       section.appendChild(this.refreshBtn);
-      const info = document.createElement("div");
-      info.className = "tm-sub-info";
+      const info = Dom.el("div", `${p}-sub-info`);
       info.innerHTML = 'Send <strong>Xanax</strong> to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">Bram [2728237]</a> to extend your subscription. Each Xanax adds <strong>1 week</strong>. Payments are checked automatically once a day.';
       section.appendChild(info);
       this.load(false);
@@ -593,13 +602,8 @@ Stack: ${e.stack}` : ""}`
         this.renderSubscription(sub);
         if (this.onUpdate) this.onUpdate(sub);
       }).catch((err) => {
-        if (err.rateLimited) {
-          this.statusEl.textContent = err.message;
-          this.statusEl.className = "tm-sub-status tm-sub-status--warn";
-        } else {
-          this.statusEl.textContent = err.message;
-          this.statusEl.className = "tm-sub-status tm-sub-status--error";
-        }
+        this.statusEl.textContent = err.message;
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--${err.rateLimited ? "warn" : "error"}`;
         this.countdownEl.textContent = "";
       }).finally(() => {
         this.refreshBtn.disabled = false;
@@ -609,17 +613,21 @@ Stack: ${e.stack}` : ""}`
     renderSubscription(sub) {
       if (sub.active && sub.expires_at) {
         this.statusEl.textContent = "Active";
-        this.statusEl.className = "tm-sub-status tm-sub-status--active";
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--active`;
         this.startCountdown(new Date(sub.expires_at));
       } else {
         this.statusEl.textContent = "Inactive";
-        this.statusEl.className = "tm-sub-status tm-sub-status--inactive";
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--inactive`;
         this.countdownEl.textContent = "No active subscription.";
       }
     }
     startCountdown(expiresAt) {
       this.stopCountdown();
       const tick = () => {
+        if (!this.countdownEl.isConnected) {
+          this.stopCountdown();
+          return;
+        }
         const diff = expiresAt - Date.now();
         if (diff <= 0) {
           this.countdownEl.textContent = "Expired";
@@ -632,9 +640,7 @@ Stack: ${e.stack}` : ""}`
         const seconds = Math.floor(diff % 6e4 / 1e3);
         const parts = [];
         if (days > 0) parts.push(`${days}d`);
-        parts.push(`${hours}h`);
-        parts.push(`${minutes}m`);
-        parts.push(`${seconds}s`);
+        parts.push(`${hours}h`, `${minutes}m`, `${seconds}s`);
         this.countdownEl.textContent = parts.join(" ") + " remaining";
       };
       tick();
@@ -2482,9 +2488,13 @@ Stack: ${e.stack}` : ""}`
     return a > b ? a : b;
   }
   class StorageViewer {
+    constructor({ storagePrefix, classPrefix }) {
+      this.storagePrefix = storagePrefix;
+      this.prefix = classPrefix;
+    }
     render() {
       this.element = document.createElement("div");
-      this.element.className = "tm-storage";
+      this.element.className = `${this.prefix}-storage`;
       this.renderList();
       return this.element;
     }
@@ -2492,20 +2502,21 @@ Stack: ${e.stack}` : ""}`
       const keys = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith("tm_")) keys.push(key);
+        if (key && key.startsWith(this.storagePrefix)) keys.push(key);
       }
       return keys.sort();
     }
     renderList() {
+      const p = this.prefix;
       this.element.innerHTML = "";
       const keys = this.keys();
       let total = 0;
       const head = document.createElement("div");
-      head.className = "tm-storage-head";
+      head.className = `${p}-storage-head`;
       this.element.appendChild(head);
       if (!keys.length) {
         const empty = document.createElement("p");
-        empty.className = "tm-storage-empty";
+        empty.className = `${p}-storage-empty`;
         empty.textContent = "No stored data.";
         this.element.appendChild(empty);
         head.textContent = "0 keys";
@@ -2515,18 +2526,18 @@ Stack: ${e.stack}` : ""}`
         const value = localStorage.getItem(key) || "";
         total += key.length + value.length;
         const item = document.createElement("details");
-        item.className = "tm-storage-item";
+        item.className = `${p}-storage-item`;
         const summary = document.createElement("summary");
-        summary.className = "tm-storage-summary";
+        summary.className = `${p}-storage-summary`;
         const name = document.createElement("code");
-        name.className = "tm-storage-key";
+        name.className = `${p}-storage-key`;
         name.textContent = key;
         const size = document.createElement("span");
-        size.className = "tm-storage-size";
+        size.className = `${p}-storage-size`;
         size.textContent = formatSize(value.length);
         const del = document.createElement("button");
         del.type = "button";
-        del.className = "tm-storage-delete";
+        del.className = `${p}-storage-delete`;
         del.textContent = "Delete";
         del.onclick = (e) => {
           e.preventDefault();
@@ -2541,7 +2552,7 @@ Stack: ${e.stack}` : ""}`
         summary.append(name, size, del);
         item.appendChild(summary);
         const pre = document.createElement("pre");
-        pre.className = "tm-storage-value";
+        pre.className = `${p}-storage-value`;
         pre.textContent = prettify(value);
         item.appendChild(pre);
         this.element.appendChild(item);
@@ -2560,7 +2571,7 @@ Stack: ${e.stack}` : ""}`
     if (chars < 1024) return `${chars} B`;
     return `${(chars / 1024).toFixed(1)} KB`;
   }
-  const CURRENT = "0.4.2";
+  const CURRENT = "0.4.3";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscripts/tm-chats/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-chats.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2882,7 +2893,11 @@ Stack: ${e.stack}` : ""}`
       if (this.warTab) this.updateTabState();
     }
     renderSettingsTab() {
-      this.subscriptionSection = new SubscriptionSection(this.auth, (sub) => this.setSubscription(sub));
+      this.subscriptionSection = new SubscriptionSection(this.auth, {
+        classPrefix: "tm",
+        note: "A subscription is an optional extra. It only unlocks additional features like the Ranked War tab. Chats and the rest of the extension are free for everyone.",
+        onUpdate: (sub) => this.setSubscription(sub)
+      });
       this.tabContent.appendChild(this.subscriptionSection.render());
       const actions = document.createElement("div");
       actions.className = "tm-settings-actions";
@@ -2909,7 +2924,7 @@ Stack: ${e.stack}` : ""}`
           storageBtn.textContent = "View stored data";
           return;
         }
-        viewer = new StorageViewer().render();
+        viewer = new StorageViewer({ storagePrefix: "tm_", classPrefix: "tm" }).render();
         this.tabContent.appendChild(viewer);
         storageBtn.textContent = "Hide stored data";
       };
@@ -2987,7 +3002,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.4.2"}`;
+      version.textContent = `v${"0.4.3"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -3036,7 +3051,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.4.2"}`,
+        `TornManager v${"0.4.3"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
@@ -3050,25 +3065,6 @@ Stack: ${e.stack}` : ""}`
         `Signed in: ${this.auth.isAuthenticated()}`,
         `Errors logged: ${this.logger.getAll().length}`
       ].join("\n");
-    }
-  }
-  class Dom {
-    static ready(selector, callback) {
-      const el = document.querySelector(selector);
-      if (el) return callback(el);
-      new MutationObserver((_, observer) => {
-        const el2 = document.querySelector(selector);
-        if (el2) {
-          observer.disconnect();
-          callback(el2);
-        }
-      }).observe(document.documentElement, { childList: true, subtree: true });
-    }
-    static el(tag, className, text) {
-      const node = document.createElement(tag);
-      if (className) node.className = className;
-      if (text !== void 0) node.textContent = text;
-      return node;
     }
   }
   class Sidebar {

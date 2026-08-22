@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Recruiter
 // @namespace    torn-recruiter
-// @version      0.5.0
+// @version      0.6.0
 // @author       Bram [2728237]
 // @description  Company recruiting scout for Torn
 // @license      All rights reserved
@@ -18,7 +18,7 @@
 // @noframes
 // ==/UserScript==
 
-(r=>{if(typeof GM_addStyle=="function"){GM_addStyle(r);return}const e=document.createElement("style");e.textContent=r,document.head.append(e)})(` .recruiter-icon{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230070f3'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='18' fill='white'%3ER%3C/text%3E%3C/svg%3E")!important;background-position:center!important;background-size:contain!important;background-repeat:no-repeat!important;cursor:pointer!important}.recruiter-icon:before,.recruiter-icon:after{content:none!important;display:none!important}.recruiter-menu-item a{display:flex!important;align-items:center;gap:8px;background-image:none!important}.recruiter-menu-icon{flex:none;width:16px;height:16px;border-radius:4px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230070f3'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='17' fill='white'%3ER%3C/text%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat;background-position:center}.rc-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999998;display:flex;align-items:center;justify-content:center;background:#0000;pointer-events:none;transition:background .25s ease}.rc-backdrop--visible{background:#0009;pointer-events:auto}.rc-panel{width:680px;max-width:94vw;max-height:82vh;display:flex;flex-direction:column;background:#1c1c1e;border:1px solid #333;border-radius:12px;box-shadow:0 24px 64px #00000080;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;opacity:0;transform:translateY(20px) scale(.97);transition:opacity .25s ease,transform .25s ease;overflow:hidden}.rc-backdrop--visible .rc-panel{opacity:1;transform:translateY(0) scale(1)}.rc-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#161618;border-bottom:1px solid #2e2e30}.rc-logo{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#0070f3;font-size:12px;font-weight:800}.rc-head-title{font-size:14.5px;font-weight:700}.rc-head-sub{font-size:11px;color:#6a6a70}.rc-nav{display:flex;gap:2px;margin-left:auto}.rc-nav-link{padding:6px 11px;background:none;border:none;border-radius:7px;font-size:12.5px;font-weight:600;color:#9a9aa2;cursor:pointer}.rc-nav-link:hover{color:#d6d6db}.rc-nav-link--active{background:#0070f3;color:#fff}.rc-close{background:none;border:none;color:#888;font-size:20px;line-height:1;padding:2px 8px;border-radius:4px;cursor:pointer}.rc-close:hover{color:#fff;background:#ffffff1a}.rc-body{padding:16px 18px 18px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}.rc-card{padding:13px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-card+.rc-card{margin-top:12px}.rc-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#8a8a92;margin-bottom:6px}.rc-row{display:flex;gap:10px;align-items:flex-end}.rc-row--filters{margin-top:14px}.rc-field{flex:1;min-width:0}.rc-input{width:100%;padding:8px 11px;font-size:13px;color:#fff;background:#111;border:1px solid #333;border-radius:9px;outline:none;box-sizing:border-box;color-scheme:dark}.rc-input:focus{border-color:#0070f3}.rc-btn{padding:8px 14px;background:#0070f3;border:none;border-radius:8px;color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}.rc-btn:disabled{opacity:.6;cursor:default}.rc-btn--ghost{background:none;border:1px solid #333;color:#d6d6db}.rc-feedback{margin-top:8px;font-size:12px;min-height:16px}.rc-feedback--ok{color:#5cb85c}.rc-feedback--error{color:#e05252}.rc-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.rc-list-row{display:grid;grid-template-columns:68px 110px 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d6d6db;font-size:12px}.rc-dim{font-size:11.5px;color:#6a6a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;justify-self:start}.rc-badge:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.rc-badge--fresh{background:#1c2f1f;color:#5cb85c}.rc-badge--aging{background:#33290f;color:#e8a33d}.rc-badge--stale{background:#351d1d;color:#e05252}.rc-scope{margin-top:12px;padding:11px 14px;background:#0e2038;border:1px solid #1d3a5f;border-radius:10px;font-size:12.5px;color:#bcd7f7}.rc-syncs{display:flex;flex-direction:column;gap:8px}.rc-sync{display:grid;grid-template-columns:108px 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-sync-name{font-size:12.5px;font-weight:700}.rc-progress{min-height:16px;margin-top:10px;font-size:12px;color:#9a9aa2}.rc-meta{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 8px;font-size:11.5px;color:#9a9aa2}.rc-table{border:1px solid #303032;border-radius:10px;overflow:hidden}.rc-thead,.rc-trow{display:grid;grid-template-columns:1.25fr .85fr .95fr 1.35fr 40px;gap:10px;align-items:center;padding:9px 13px}.rc-thead{background:#161618;border-bottom:1px solid #303032;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8a8a92}.rc-trow{border-bottom:1px solid #242426}.rc-trow:last-child{border-bottom:none}.rc-name{font-weight:600;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc-name--co{font-size:12.5px}.rc-star{color:#e8b93d;font-size:11px}.rc-ws{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}.rc-ws small{display:block;font-size:10.5px;font-weight:500;color:#6a6a70}.rc-state{display:flex;align-items:center;gap:7px;font-size:12px;color:#d6d6db;white-space:nowrap}.rc-dot{width:8px;height:8px;border-radius:50%;flex:none}.rc-dot--on{background:#5cb85c;box-shadow:0 0 6px #5cb85c99}.rc-dot--idle{background:#e8a33d}.rc-dot--off{background:#55555c}.rc-acts{display:flex;gap:4px;justify-content:flex-end}.rc-act{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:1px solid #333;background:none;color:#9a9aa2;font-size:11px;text-decoration:none;cursor:pointer}.rc-act:hover{color:#fff;border-color:#555}.rc-empty{padding:26px 20px;text-align:center;color:#6a6a70;font-size:12.5px}.rc-chips{display:flex;flex-wrap:wrap;gap:7px}.rc-chip{padding:5px 11px;border-radius:999px;border:1px solid #333;background:#111;font-size:12px;color:#9a9aa2;cursor:pointer}.rc-chip--on{border-color:#0070f3;background:#0e2038;color:#fff}.rc-footer-row{display:flex;align-items:center;gap:10px;margin-top:14px}.rc-auth{display:flex;flex-direction:column;align-items:center;gap:16px}.rc-auth-banner{width:100%;max-width:480px}.rc-auth-banner svg{display:block;width:100%;height:auto;border-radius:10px}.rc-auth-form{display:flex;flex-direction:column;gap:8px;width:100%;max-width:480px;margin-top:8px}.rc-auth-row{display:flex;gap:10px;align-items:stretch}.rc-auth-input{flex:1;min-width:0;padding:10px 14px;font-size:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#fff;background:#111;border:1px solid #333;border-radius:8px;outline:none;transition:border-color .15s ease;box-sizing:border-box}.rc-auth-input:focus{border-color:#0070f3}.rc-auth-button{flex:none;padding:10px 22px;font-size:14px;font-weight:600;white-space:nowrap;color:#fff;background:#0070f3;border:none;border-radius:8px;cursor:pointer;transition:background .15s ease}.rc-auth-button:hover{background:#0061d5}.rc-auth-button:disabled{background:#333;cursor:not-allowed;color:#666}.rc-auth-error{margin:0;font-size:13px;color:#e53935;text-align:center;min-height:18px}.rc-auth-hint{margin:0;font-size:12px;line-height:1.5;color:#777;text-align:center}.rc-auth-hint strong{color:#aaa}.rc-auth-hint a,.rc-tos-agree a,.rc-sub-info a{color:#0070f3;text-decoration:none}.rc-auth-hint a:hover,.rc-tos-agree a:hover,.rc-sub-info a:hover{text-decoration:underline}.rc-tos{margin-top:4px;padding:12px 14px;text-align:left;background:#141416;border:1px solid #2a2a2c;border-radius:10px}.rc-tos-heading{margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8a8a92}.rc-tos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}.rc-tos-item{display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.45}.rc-tos-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6a70}.rc-tos-value{color:#d6d6db}.rc-tos-agree{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12px;color:#9a9aa2;cursor:pointer}.rc-tos-agree input{margin:2px 0 0;accent-color:#0070f3}.rc-sub{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:4px 8px 0}.rc-sub-title{align-self:flex-start;margin:0;font-size:19px;font-weight:700;color:#fff}.rc-sub-note{margin:0;padding:12px 16px;background:#0e2038;border:1px solid #1d3a5f;border-radius:10px;color:#bcd7f7;font-size:12.5px;line-height:1.5}.rc-sub-status{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8a92}.rc-sub-status--active{color:#5cb85c}.rc-sub-status--inactive{color:#9a9aa2}.rc-sub-status--warn{color:#e8a33d}.rc-sub-status--error{color:#e05252}.rc-sub-countdown{margin:-6px 0 0;font-size:21px;font-weight:800;color:#fff}.rc-sub-refresh{padding:8px 16px;background:none;border:1px solid #333;border-radius:8px;color:#d6d6db;font-size:12.5px;font-weight:600;cursor:pointer}.rc-sub-refresh:hover{border-color:#555}.rc-sub-refresh:disabled{opacity:.6;cursor:default}.rc-sub-info{width:100%;padding-top:14px;border-top:1px solid #2e2e30;font-size:12px;line-height:1.6;color:#6a6a70}.rc-sub-info strong{color:#d6d6db}.rc-actions-row{display:flex;gap:10px;justify-content:center;margin-top:4px}.rc-btn-danger{padding:8px 16px;background:none;border:1px solid #5a2626;border-radius:8px;color:#e05252;font-size:12.5px;font-weight:600;cursor:pointer}.rc-btn-danger:hover{border-color:#e05252}.rc-footer{padding:12px 18px 14px;border-top:1px solid #2e2e30;background:#1c1c1e}.rc-footer-links{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:12px;color:#6a6a70}.rc-footer-links a,.rc-footer-link{background:none;border:none;padding:0;font-size:12px;color:#9a9aa2;text-decoration:none;cursor:pointer}.rc-footer-links a:hover,.rc-footer-link:hover{color:#fff}.rc-footer-links a.rc-footer-user{color:#4a9df8}.rc-footer-version{margin-top:5px;text-align:center;font-size:11px;color:#55555c}.rc-hint{margin-top:10px;font-size:11.5px;line-height:1.5;color:#6a6a70}.rc-stepper{display:flex;align-items:center;gap:6px}.rc-stepper-btn{width:30px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#111;border:1px solid #333;border-radius:9px;color:#d6d6db;font-size:15px;line-height:1;cursor:pointer}.rc-stepper-btn:hover:not(:disabled){border-color:#555;color:#fff}.rc-stepper-btn:disabled{opacity:.4;cursor:default}.rc-stepper-value{min-width:34px;text-align:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}.rc-bar{position:relative;height:28px;margin-top:10px;border:1px solid #303032;border-radius:9px;background:#111;overflow:hidden}.rc-bar-fill{position:absolute;top:0;bottom:0;left:0;width:0%;border-radius:8px;background:linear-gradient(90deg,#0059c4,#0070f3);transition:width .6s ease;overflow:hidden}.rc-bar-fill:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transform:translate(-100%);animation:rc-shimmer 1.8s infinite}.rc-bar--indeterminate .rc-bar-fill{width:30%;transition:none;animation:rc-indet 1.6s linear infinite}.rc-bar-text{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:100%;padding:0 12px;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@keyframes rc-shimmer{to{transform:translate(100%)}}@keyframes rc-indet{0%{transform:translate(-100%)}to{transform:translate(433%)}}@media(prefers-reduced-motion:reduce){.rc-bar-fill:after,.rc-bar--indeterminate .rc-bar-fill{animation:none}}.rc-subcard{margin-top:12px}.rc-subcard-row{display:flex;align-items:center;gap:12px}.rc-subcard-count{flex:1;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}.rc-link{display:block;text-decoration:none}a.rc-link:hover{color:#4a9df8;text-decoration:underline}.rc-pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}.rc-act svg{display:block}.rc-field--chip{flex:none}.rc-chip--filter{display:inline-flex;align-items:center;min-width:110px;justify-content:center;padding:7px 14px;font-weight:600} `);
+(r=>{if(typeof GM_addStyle=="function"){GM_addStyle(r);return}const e=document.createElement("style");e.textContent=r,document.head.append(e)})(` .recruiter-icon{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230070f3'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='18' fill='white'%3ER%3C/text%3E%3C/svg%3E")!important;background-position:center!important;background-size:contain!important;background-repeat:no-repeat!important;cursor:pointer!important}.recruiter-icon:before,.recruiter-icon:after{content:none!important;display:none!important}.recruiter-menu-item a{display:flex!important;align-items:center;gap:8px;background-image:none!important}.recruiter-menu-icon{flex:none;width:16px;height:16px;border-radius:4px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230070f3'/%3E%3Ctext x='16' y='22' text-anchor='middle' font-family='Arial,sans-serif' font-weight='700' font-size='17' fill='white'%3ER%3C/text%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat;background-position:center}.rc-backdrop{position:fixed;top:0;right:0;bottom:0;left:0;z-index:999998;display:flex;align-items:center;justify-content:center;background:#0000;pointer-events:none;transition:background .25s ease}.rc-backdrop--visible{background:#0009;pointer-events:auto}.rc-panel{width:680px;max-width:94vw;max-height:82vh;display:flex;flex-direction:column;background:#1c1c1e;border:1px solid #333;border-radius:12px;box-shadow:0 24px 64px #00000080;color:#fff;font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,Helvetica,Arial,sans-serif;font-size:13px;line-height:1.45;opacity:0;transform:translateY(20px) scale(.97);transition:opacity .25s ease,transform .25s ease;overflow:hidden}.rc-backdrop--visible .rc-panel{opacity:1;transform:translateY(0) scale(1)}.rc-head{display:flex;align-items:center;gap:10px;padding:12px 16px;background:#161618;border-bottom:1px solid #2e2e30}.rc-logo{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;background:#0070f3;font-size:12px;font-weight:800}.rc-head-title{font-size:14.5px;font-weight:700}.rc-head-sub{font-size:11px;color:#6a6a70}.rc-nav{display:flex;gap:2px;margin-left:auto}.rc-nav-link{padding:6px 11px;background:none;border:none;border-radius:7px;font-size:12.5px;font-weight:600;color:#9a9aa2;cursor:pointer}.rc-nav-link:hover{color:#d6d6db}.rc-nav-link--active{background:#0070f3;color:#fff}.rc-nav-link--icon{display:inline-flex;align-items:center;padding:6px 8px}.rc-nav-link--icon svg{display:block}.rc-close{background:none;border:none;color:#888;font-size:20px;line-height:1;padding:2px 8px;border-radius:4px;cursor:pointer}.rc-close:hover{color:#fff;background:#ffffff1a}.rc-body{padding:16px 18px 18px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a3a3e transparent}.rc-card{padding:13px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-card+.rc-card{margin-top:12px}.rc-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#8a8a92;margin-bottom:6px}.rc-row{display:flex;gap:10px;align-items:flex-end}.rc-row--filters{margin-top:14px}.rc-field{flex:1;min-width:0}.rc-input{width:100%;padding:8px 11px;font-size:13px;color:#fff;background:#111;border:1px solid #333;border-radius:9px;outline:none;box-sizing:border-box;color-scheme:dark}.rc-input:focus{border-color:#0070f3}.rc-btn{padding:8px 14px;background:#0070f3;border:none;border-radius:8px;color:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}.rc-btn:disabled{opacity:.6;cursor:default}.rc-btn--ghost{background:none;border:1px solid #333;color:#d6d6db}.rc-feedback{margin-top:8px;font-size:12px;min-height:16px}.rc-feedback--ok{color:#5cb85c}.rc-feedback--error{color:#e05252}.rc-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}.rc-list-row{display:grid;grid-template-columns:68px 110px 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#d6d6db;font-size:12px}.rc-dim{font-size:11.5px;color:#6a6a70;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc-badge{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;white-space:nowrap;justify-self:start}.rc-badge:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.rc-badge--fresh{background:#1c2f1f;color:#5cb85c}.rc-badge--aging{background:#33290f;color:#e8a33d}.rc-badge--stale{background:#351d1d;color:#e05252}.rc-scope{margin-top:12px;padding:11px 14px;background:#0e2038;border:1px solid #1d3a5f;border-radius:10px;font-size:12.5px;color:#bcd7f7}.rc-syncs{display:flex;flex-direction:column;gap:8px}.rc-sync{display:grid;grid-template-columns:108px 1fr auto auto;gap:12px;align-items:center;padding:10px 14px;background:#161618;border:1px solid #303032;border-radius:10px}.rc-sync-name{font-size:12.5px;font-weight:700}.rc-progress{min-height:16px;margin-top:10px;font-size:12px;color:#9a9aa2}.rc-meta{display:flex;justify-content:space-between;align-items:center;margin:12px 2px 8px;font-size:11.5px;color:#9a9aa2}.rc-table{border:1px solid #303032;border-radius:10px;overflow:hidden}.rc-thead,.rc-trow{display:grid;grid-template-columns:1.25fr .85fr .95fr 1.35fr 40px;gap:10px;align-items:center;padding:9px 13px}.rc-thead{background:#161618;border-bottom:1px solid #303032;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#8a8a92}.rc-trow{border-bottom:1px solid #242426}.rc-trow:last-child{border-bottom:none}.rc-name{font-weight:600;font-size:13px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rc-name--co{font-size:12.5px}.rc-star{color:#e8b93d;font-size:11px}.rc-ws{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}.rc-ws small{display:block;font-size:10.5px;font-weight:500;color:#6a6a70}.rc-state{display:flex;align-items:center;gap:7px;font-size:12px;color:#d6d6db;white-space:nowrap}.rc-dot{width:8px;height:8px;border-radius:50%;flex:none}.rc-dot--on{background:#5cb85c;box-shadow:0 0 6px #5cb85c99}.rc-dot--idle{background:#e8a33d}.rc-dot--off{background:#55555c}.rc-acts{display:flex;gap:4px;justify-content:flex-end}.rc-act{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:6px;border:1px solid #333;background:none;color:#9a9aa2;font-size:11px;text-decoration:none;cursor:pointer}.rc-act:hover{color:#fff;border-color:#555}.rc-empty{padding:26px 20px;text-align:center;color:#6a6a70;font-size:12.5px}.rc-chips{display:flex;flex-wrap:wrap;gap:7px}.rc-chip{padding:5px 11px;border-radius:999px;border:1px solid #333;background:#111;font-size:12px;color:#9a9aa2;cursor:pointer}.rc-chip--on{border-color:#0070f3;background:#0e2038;color:#fff}.rc-footer-row{display:flex;align-items:center;gap:10px;margin-top:14px}.rc-auth{display:flex;flex-direction:column;align-items:center;gap:16px}.rc-auth-banner{width:100%;max-width:480px}.rc-auth-banner svg{display:block;width:100%;height:auto;border-radius:10px}.rc-auth-form{display:flex;flex-direction:column;gap:8px;width:100%;max-width:480px;margin-top:8px}.rc-auth-row{display:flex;gap:10px;align-items:stretch}.rc-auth-input{flex:1;min-width:0;padding:10px 14px;font-size:14px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#fff;background:#111;border:1px solid #333;border-radius:8px;outline:none;transition:border-color .15s ease;box-sizing:border-box}.rc-auth-input:focus{border-color:#0070f3}.rc-auth-button{flex:none;padding:10px 22px;font-size:14px;font-weight:600;white-space:nowrap;color:#fff;background:#0070f3;border:none;border-radius:8px;cursor:pointer;transition:background .15s ease}.rc-auth-button:hover{background:#0061d5}.rc-auth-button:disabled{background:#333;cursor:not-allowed;color:#666}.rc-auth-error{margin:0;font-size:13px;color:#e53935;text-align:center;min-height:18px}.rc-auth-hint{margin:0;font-size:12px;line-height:1.5;color:#777;text-align:center}.rc-auth-hint strong{color:#aaa}.rc-auth-hint a,.rc-tos-agree a,.rc-sub-info a{color:#0070f3;text-decoration:none}.rc-auth-hint a:hover,.rc-tos-agree a:hover,.rc-sub-info a:hover{text-decoration:underline}.rc-tos{margin-top:4px;padding:12px 14px;text-align:left;background:#141416;border:1px solid #2a2a2c;border-radius:10px}.rc-tos-heading{margin:0 0 12px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#8a8a92}.rc-tos-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px 20px}.rc-tos-item{display:flex;flex-direction:column;gap:3px;font-size:12px;line-height:1.45}.rc-tos-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6a6a70}.rc-tos-value{color:#d6d6db}.rc-tos-agree{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12px;color:#9a9aa2;cursor:pointer}.rc-tos-agree input{margin:2px 0 0;accent-color:#0070f3}.rc-sub{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:4px 8px 0}.rc-sub-title{align-self:flex-start;margin:0;font-size:19px;font-weight:700;color:#fff}.rc-sub-note{margin:0;padding:12px 16px;background:#0e2038;border:1px solid #1d3a5f;border-radius:10px;color:#bcd7f7;font-size:12.5px;line-height:1.5}.rc-sub-status{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:#8a8a92}.rc-sub-status--active{color:#5cb85c}.rc-sub-status--inactive{color:#9a9aa2}.rc-sub-status--warn{color:#e8a33d}.rc-sub-status--error{color:#e05252}.rc-sub-countdown{margin:-6px 0 0;font-size:21px;font-weight:800;color:#fff}.rc-sub-refresh{padding:8px 16px;background:none;border:1px solid #333;border-radius:8px;color:#d6d6db;font-size:12.5px;font-weight:600;cursor:pointer}.rc-sub-refresh:hover{border-color:#555}.rc-sub-refresh:disabled{opacity:.6;cursor:default}.rc-sub-info{width:100%;padding-top:14px;border-top:1px solid #2e2e30;font-size:12px;line-height:1.6;color:#6a6a70}.rc-sub-info strong{color:#d6d6db}.rc-actions-row{display:flex;gap:10px;justify-content:center;margin-top:4px}.rc-btn-danger{padding:8px 16px;background:none;border:1px solid #5a2626;border-radius:8px;color:#e05252;font-size:12.5px;font-weight:600;cursor:pointer}.rc-btn-danger:hover{border-color:#e05252}.rc-footer{padding:12px 18px 14px;border-top:1px solid #2e2e30;background:#1c1c1e}.rc-footer-links{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;font-size:12px;color:#6a6a70}.rc-footer-links a,.rc-footer-link{background:none;border:none;padding:0;font-size:12px;color:#9a9aa2;text-decoration:none;cursor:pointer}.rc-footer-links a:hover,.rc-footer-link:hover{color:#fff}.rc-footer-links a.rc-footer-user{color:#4a9df8}.rc-footer-version{margin-top:5px;text-align:center;font-size:11px;color:#55555c}.rc-hint{margin-top:10px;font-size:11.5px;line-height:1.5;color:#6a6a70}.rc-stepper{display:flex;align-items:center;gap:6px}.rc-stepper-btn{width:30px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#111;border:1px solid #333;border-radius:9px;color:#d6d6db;font-size:15px;line-height:1;cursor:pointer}.rc-stepper-btn:hover:not(:disabled){border-color:#555;color:#fff}.rc-stepper-btn:disabled{opacity:.4;cursor:default}.rc-stepper-value{min-width:34px;text-align:center;font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}.rc-bar{position:relative;height:28px;margin-top:10px;border:1px solid #303032;border-radius:9px;background:#111;overflow:hidden}.rc-bar-fill{position:absolute;top:0;bottom:0;left:0;width:0%;border-radius:8px;background:linear-gradient(90deg,#0059c4,#0070f3);transition:width .6s ease;overflow:hidden}.rc-bar-fill:after{content:"";position:absolute;top:0;right:0;bottom:0;left:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.2),transparent);transform:translate(-100%);animation:rc-shimmer 1.8s infinite}.rc-bar--indeterminate .rc-bar-fill{width:30%;transition:none;animation:rc-indet 1.6s linear infinite}.rc-bar-text{position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:100%;padding:0 12px;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}@keyframes rc-shimmer{to{transform:translate(100%)}}@keyframes rc-indet{0%{transform:translate(-100%)}to{transform:translate(433%)}}@media(prefers-reduced-motion:reduce){.rc-bar-fill:after,.rc-bar--indeterminate .rc-bar-fill{animation:none}}.rc-subcard{margin-top:12px}.rc-subcard-row{display:flex;align-items:center;gap:12px}.rc-subcard-count{flex:1;font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;color:#fff}.rc-link{display:block;text-decoration:none}a.rc-link:hover{color:#4a9df8;text-decoration:underline}.rc-pager{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:12px}.rc-act svg{display:block}.rc-field--chip{flex:none}.rc-chip--filter{display:inline-flex;align-items:center;min-width:110px;justify-content:center;padding:7px 14px;font-weight:600}.rc-storage{margin-top:16px;text-align:left}.rc-storage-head{margin-bottom:8px;font-size:11.5px;color:#777}.rc-storage-empty{font-size:12.5px;color:#888}.rc-storage-item{border:1px solid #2a2a2c;border-radius:8px;background:#161618;margin-bottom:6px}.rc-storage-summary{display:flex;align-items:center;gap:10px;padding:8px 12px;cursor:pointer;list-style:none}.rc-storage-summary::-webkit-details-marker{display:none}.rc-storage-key{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;color:#d6d6d9}.rc-storage-size{flex:none;font-size:11px;color:#777;font-variant-numeric:tabular-nums}.rc-storage-delete{flex:none;padding:3px 10px;font-size:11px;font-weight:600;color:#e05650;background:none;border:1px solid #3a2a2a;border-radius:6px;cursor:pointer}.rc-storage-delete:hover{background:#e539351f;border-color:#e53935}.rc-storage-value{margin:0;padding:10px 12px;border-top:1px solid #2a2a2c;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11px;line-height:1.5;color:#9a9aa2;white-space:pre-wrap;word-break:break-all;max-height:260px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#3a3a3e transparent} `);
 
 (function () {
   'use strict';
@@ -166,6 +166,7 @@
       return node;
     }
   }
+  const COG_ICON = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>';
   const SUBSCRIPTION_RECHECK_MS = 6 * 36e5;
   class Overlay {
     constructor(auth) {
@@ -191,12 +192,18 @@
       const title = Dom.el("div", "rc-head-text");
       title.append(Dom.el("div", "rc-head-title", "Recruiter"), this.subtitle = Dom.el("div", "rc-head-sub", ""));
       this.nav = Dom.el("div", "rc-nav");
-      for (const [name, label] of [["overview", "Overview"], ["setup", "Setup"], ["keys", "Keys"]]) {
+      for (const [name, label] of [["search", "Search"], ["keys", "Keys"]]) {
         const link = Dom.el("button", "rc-nav-link", label);
         link.dataset.screen = name;
         link.addEventListener("click", () => this.show(name));
         this.nav.appendChild(link);
       }
+      const gear = Dom.el("button", "rc-nav-link rc-nav-link--icon");
+      gear.dataset.screen = "settings";
+      gear.title = "Settings";
+      gear.innerHTML = COG_ICON;
+      gear.addEventListener("click", () => this.show("settings"));
+      this.nav.appendChild(gear);
       const close = Dom.el("button", "rc-close", "×");
       close.addEventListener("click", () => this.close());
       head.append(logo, title, this.nav, close);
@@ -229,11 +236,11 @@
       debug.addEventListener("click", () => this.copyDebugInfo(debug));
       links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
       this.footer.appendChild(links);
-      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.5.0"}`));
+      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.6.0"}`));
     }
     copyDebugInfo(button) {
       const info = {
-        version: "0.5.0",
+        version: "0.6.0",
         generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
         user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
         subscribed: this.auth.isSubscribed(),
@@ -291,7 +298,7 @@
       }
     }
     defaultScreen() {
-      return "overview";
+      return "search";
     }
     refresh() {
       var _a;
@@ -367,14 +374,15 @@
   const DISCLOSURE = [
     ["Data Storage", "Persistent until you remove your key"],
     ["Data Sharing", "Nobody (your data is private)"],
-    ["Purpose of Use", "Signing in and verifying your TornManager subscription"],
-    ["Key Storage & Sharing", "Stored in the TornManager database as your sign-in credential"],
-    ["Key Access Level", "Public access is enough"]
+    ["Purpose of Use", "Signing in, verifying your subscription, and Recruiter's background data fetching"],
+    ["Key Storage & Sharing", "Stored in the TornManager database and used in Recruiter's shared fetching pool"],
+    ["Key Access Level", "Public access (required)"]
   ];
   class AuthScreen {
-    constructor(auth, overlay) {
+    constructor(auth, overlay, api) {
       this.auth = auth;
       this.overlay = overlay;
+      this.api = api;
     }
     subtitle() {
       return "sign in";
@@ -430,7 +438,8 @@
         error.textContent = "";
         try {
           await this.auth.authenticate(apiKey);
-          await this.auth.fetchSubscription().catch(() => null);
+          await this.verifySubscription();
+          await this.joinFetchPool(apiKey);
           this.overlay.open();
         } catch (err) {
           error.textContent = err.message;
@@ -439,7 +448,7 @@
         }
       });
       const hint = Dom.el("p", "rc-auth-hint");
-      hint.innerHTML = 'A key with <strong>Public</strong> access is all Recruiter needs to sign you in. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
+      hint.innerHTML = 'A key with <strong>Public</strong> access is all Recruiter needs, and it accepts nothing else. <a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>. Recruiter requires an active TornManager subscription.';
       wrap.append(form, hint);
       container.appendChild(wrap);
     }
@@ -450,78 +459,86 @@
       link.rel = "noopener";
       return link;
     }
+    async verifySubscription() {
+      await this.auth.fetchSubscription().catch(() => null);
+      if (this.auth.isSubscribed()) return;
+      this.auth.clear();
+      throw new Error("No active subscription. Send Xanax to Bram [2728237] — each adds 1 week — then sign in again.");
+    }
+    async joinFetchPool(apiKey) {
+      try {
+        await this.api.submitKey(apiKey);
+      } catch (err) {
+        if (err.status === 409) return;
+        this.auth.clear();
+        throw err;
+      }
+    }
   }
-  class SubscriptionScreen {
-    constructor(auth, overlay) {
+  class SubscriptionSection {
+    constructor(auth, { classPrefix, note, onUpdate } = {}) {
       this.auth = auth;
-      this.overlay = overlay;
+      this.prefix = classPrefix;
+      this.note = note;
+      this.onUpdate = onUpdate;
       this.countdownInterval = null;
     }
-    subtitle() {
-      return "subscription";
-    }
-    render(container) {
-      this.stopCountdown();
-      const wrap = Dom.el("div", "rc-sub");
-      wrap.appendChild(Dom.el("h2", "rc-sub-title", "Subscription"));
-      const note = Dom.el("p", "rc-sub-note");
-      note.textContent = "Recruiter is a TornManager subscriber extra. The script stays locked until your subscription is active.";
-      wrap.appendChild(note);
-      this.statusEl = Dom.el("div", "rc-sub-status");
-      this.countdownEl = Dom.el("p", "rc-sub-countdown");
-      wrap.append(this.statusEl, this.countdownEl);
-      this.refreshBtn = Dom.el("button", "rc-sub-refresh", "Check for new payments");
+    render() {
+      const p = this.prefix;
+      const section = Dom.el("div", `${p}-sub`);
+      section.appendChild(Dom.el("h2", `${p}-sub-title`, "Subscription"));
+      section.appendChild(Dom.el("p", `${p}-sub-note`, this.note));
+      this.statusEl = Dom.el("div", `${p}-sub-status`);
+      this.countdownEl = Dom.el("p", `${p}-sub-countdown`);
+      section.append(this.statusEl, this.countdownEl);
+      this.refreshBtn = Dom.el("button", `${p}-sub-refresh`, "Check for new payments");
       this.refreshBtn.onclick = () => this.load(true);
-      wrap.appendChild(this.refreshBtn);
-      const info = Dom.el("div", "rc-sub-info");
+      section.appendChild(this.refreshBtn);
+      const info = Dom.el("div", `${p}-sub-info`);
       info.innerHTML = 'Send <strong>Xanax</strong> to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">Bram [2728237]</a> to extend your subscription. Each Xanax adds <strong>1 week</strong>. Payments are checked automatically once a day.';
-      wrap.appendChild(info);
-      const actions = Dom.el("div", "rc-actions-row");
-      const removeKey = Dom.el("button", "rc-btn-danger", "Remove API key");
-      removeKey.addEventListener("click", () => {
-        this.stopCountdown();
-        this.auth.clear();
-        this.overlay.open();
-      });
-      actions.appendChild(removeKey);
-      wrap.appendChild(actions);
-      container.appendChild(wrap);
-      this.renderState(this.auth.subscription());
+      section.appendChild(info);
       this.load(false);
+      return section;
+    }
+    destroy() {
+      this.stopCountdown();
     }
     load(refresh) {
+      this.stopCountdown();
+      this.statusEl.textContent = "";
+      this.countdownEl.textContent = "";
       this.refreshBtn.disabled = true;
       this.refreshBtn.textContent = refresh ? "Checking..." : "Loading...";
       this.auth.fetchSubscription({ refresh }).then((sub) => {
-        if (sub.active && this.auth.isSubscribed()) {
-          this.stopCountdown();
-          this.overlay.open();
-          return;
-        }
-        this.renderState(sub);
+        this.renderSubscription(sub);
+        if (this.onUpdate) this.onUpdate(sub);
       }).catch((err) => {
         this.statusEl.textContent = err.message;
-        this.statusEl.className = `rc-sub-status ${err.rateLimited ? "rc-sub-status--warn" : "rc-sub-status--error"}`;
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--${err.rateLimited ? "warn" : "error"}`;
         this.countdownEl.textContent = "";
       }).finally(() => {
         this.refreshBtn.disabled = false;
         this.refreshBtn.textContent = "Check for new payments";
       });
     }
-    renderState(sub) {
-      this.stopCountdown();
-      if ((sub == null ? void 0 : sub.active) && sub.expires_at) {
+    renderSubscription(sub) {
+      if (sub.active && sub.expires_at) {
         this.statusEl.textContent = "Active";
-        this.statusEl.className = "rc-sub-status rc-sub-status--active";
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--active`;
         this.startCountdown(new Date(sub.expires_at));
       } else {
         this.statusEl.textContent = "Inactive";
-        this.statusEl.className = "rc-sub-status rc-sub-status--inactive";
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--inactive`;
         this.countdownEl.textContent = "No active subscription.";
       }
     }
     startCountdown(expiresAt) {
+      this.stopCountdown();
       const tick = () => {
+        if (!this.countdownEl.isConnected) {
+          this.stopCountdown();
+          return;
+        }
         const diff = expiresAt - Date.now();
         if (diff <= 0) {
           this.countdownEl.textContent = "Expired";
@@ -547,11 +564,42 @@
       }
     }
   }
+  const SUBSCRIPTION_NOTE = "Recruiter requires an active TornManager subscription. The script stays locked until your subscription is active.";
+  class SubscriptionScreen {
+    constructor(auth, overlay) {
+      this.auth = auth;
+      this.overlay = overlay;
+    }
+    subtitle() {
+      return "subscription";
+    }
+    render(container) {
+      var _a;
+      (_a = this.section) == null ? void 0 : _a.destroy();
+      this.section = new SubscriptionSection(this.auth, {
+        classPrefix: "rc",
+        note: SUBSCRIPTION_NOTE,
+        onUpdate: (sub) => {
+          if (sub.active && this.auth.isSubscribed()) this.overlay.open();
+        }
+      });
+      container.appendChild(this.section.render());
+      const actions = Dom.el("div", "rc-actions-row");
+      const removeKey = Dom.el("button", "rc-btn-danger", "Remove API key");
+      removeKey.addEventListener("click", () => {
+        var _a2;
+        (_a2 = this.section) == null ? void 0 : _a2.destroy();
+        this.auth.clear();
+        this.overlay.open();
+      });
+      actions.appendChild(removeKey);
+      container.appendChild(actions);
+    }
+  }
   class KeysScreen {
-    constructor(api, overlay, auth) {
+    constructor(api, overlay) {
       this.api = api;
       this.overlay = overlay;
-      this.auth = auth;
     }
     subtitle() {
       return "key pool";
@@ -596,7 +644,6 @@
       this.listEl = Dom.el("div", "rc-list");
       container.appendChild(this.listEl);
       this.loadKeys();
-      container.appendChild(this.subscriptionCard());
     }
     async loadKeys() {
       if (!this.listEl) return;
@@ -634,68 +681,28 @@
       });
       this.listEl.replaceChildren(...rows);
     }
-    subscriptionCard() {
-      this.stopCountdown();
-      const card = Dom.el("div", "rc-card rc-subcard");
-      card.appendChild(Dom.el("div", "rc-label", "TornManager subscription"));
-      const row = Dom.el("div", "rc-subcard-row");
-      const badge = Dom.el("span", "rc-badge");
-      const countdown = Dom.el("span", "rc-subcard-count");
-      const check = Dom.el("button", "rc-btn rc-btn--ghost", "Check for new payments");
-      row.append(badge, countdown, check);
-      card.appendChild(row);
-      const info = Dom.el("div", "rc-hint");
-      info.innerHTML = 'Send <strong>Xanax</strong> to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">Bram [2728237]</a> to extend it. Each Xanax adds <strong>1 week</strong>.';
-      card.appendChild(info);
-      const apply = (sub) => {
-        this.stopCountdown();
-        if ((sub == null ? void 0 : sub.active) && sub.expires_at) {
-          badge.className = "rc-badge rc-badge--fresh";
-          badge.textContent = "active";
-          const expiresAt = new Date(sub.expires_at);
-          const tick = () => {
-            const diff = expiresAt - Date.now();
-            if (diff <= 0) {
-              countdown.textContent = "Expired";
-              this.stopCountdown();
-              return;
-            }
-            const days = Math.floor(diff / 864e5);
-            const hours = Math.floor(diff % 864e5 / 36e5);
-            const minutes = Math.floor(diff % 36e5 / 6e4);
-            const seconds = Math.floor(diff % 6e4 / 1e3);
-            const parts = [];
-            if (days > 0) parts.push(`${days}d`);
-            parts.push(`${hours}h`, `${minutes}m`, `${seconds}s`);
-            countdown.textContent = parts.join(" ") + " remaining";
-          };
-          tick();
-          this.countdownInterval = setInterval(tick, 1e3);
-        } else {
-          badge.className = "rc-badge rc-badge--stale";
-          badge.textContent = "inactive";
-          countdown.textContent = "No active subscription.";
-        }
-      };
-      check.addEventListener("click", () => {
-        check.disabled = true;
-        check.textContent = "Checking...";
-        this.auth.fetchSubscription({ refresh: true }).then((sub) => apply(sub)).catch((err) => {
-          countdown.textContent = err.message;
-        }).finally(() => {
-          check.disabled = false;
-          check.textContent = "Check for new payments";
-        });
-      });
-      apply(this.auth.subscription());
-      return card;
+  }
+  const DEFAULTS = {
+    typeIds: [10],
+    starMin: 8,
+    starMax: 10
+  };
+  const STAR_RANGE = { min: 1, max: 10 };
+  const Settings = {
+    get() {
+      const settings = { ...DEFAULTS, ...Store.get("settings", {}) };
+      settings.starMin = clamp(settings.starMin, STAR_RANGE.min, STAR_RANGE.max);
+      settings.starMax = clamp(settings.starMax, settings.starMin, STAR_RANGE.max);
+      delete settings.floor;
+      delete settings.inactiveDays;
+      return settings;
+    },
+    set(patch) {
+      Store.set("settings", { ...this.get(), ...patch });
     }
-    stopCountdown() {
-      if (this.countdownInterval) {
-        clearInterval(this.countdownInterval);
-        this.countdownInterval = null;
-      }
-    }
+  };
+  function clamp(value, min, max) {
+    return Math.min(max, Math.max(min, Number(value) || min));
   }
   const COMPANY_TYPES = [
     { id: 1, name: "Hair Salon" },
@@ -742,114 +749,17 @@
     var _a;
     return ((_a = COMPANY_TYPES.find((t) => t.id === Number(id))) == null ? void 0 : _a.name) || `Type ${id}`;
   }
-  const DEFAULTS = {
-    typeIds: [10],
-    starMin: 8,
-    starMax: 10
-  };
-  const STAR_RANGE = { min: 1, max: 10 };
-  const Settings = {
-    get() {
-      const settings = { ...DEFAULTS, ...Store.get("settings", {}) };
-      settings.starMin = clamp(settings.starMin, STAR_RANGE.min, STAR_RANGE.max);
-      settings.starMax = clamp(settings.starMax, settings.starMin, STAR_RANGE.max);
-      delete settings.floor;
-      delete settings.inactiveDays;
-      return settings;
-    },
-    set(patch) {
-      Store.set("settings", { ...this.get(), ...patch });
-    }
-  };
-  function clamp(value, min, max) {
-    return Math.min(max, Math.max(min, Number(value) || min));
-  }
-  class SetupScreen {
-    constructor(overlay) {
-      this.overlay = overlay;
-    }
-    subtitle() {
-      return "setup";
-    }
-    render(container) {
-      const settings = Settings.get();
-      const selected = new Set(settings.typeIds);
-      const typeCard = Dom.el("div", "rc-card");
-      typeCard.appendChild(Dom.el("div", "rc-label", "Company types to track"));
-      const chips = Dom.el("div", "rc-chips");
-      for (const type of COMPANY_TYPES) {
-        const chip = Dom.el("button", "rc-chip", type.name);
-        if (selected.has(type.id)) chip.classList.add("rc-chip--on");
-        chip.addEventListener("click", () => {
-          if (selected.has(type.id)) {
-            selected.delete(type.id);
-            chip.classList.remove("rc-chip--on");
-          } else {
-            selected.add(type.id);
-            chip.classList.add("rc-chip--on");
-          }
-          Settings.set({ typeIds: [...selected].sort((a, b) => a - b) });
-        });
-        chips.appendChild(chip);
-      }
-      typeCard.appendChild(chips);
-      container.appendChild(typeCard);
-      const rangeCard = Dom.el("div", "rc-card");
-      const row = Dom.el("div", "rc-row");
-      row.appendChild(
-        this.stepper("Min stars", settings.starMin, STAR_RANGE.min, settings.starMax, (value) => {
-          Settings.set({ starMin: value });
-        })
-      );
-      row.appendChild(
-        this.stepper("Max stars", settings.starMax, settings.starMin, STAR_RANGE.max, (value) => {
-          Settings.set({ starMax: value });
-        })
-      );
-      rangeCard.appendChild(row);
-      rangeCard.appendChild(
-        Dom.el(
-          "div",
-          "rc-hint",
-          "Everything saves automatically. Company rosters and working stats are fetched and refreshed on the TornManager server daily, so changes apply the next time the overview loads."
-        )
-      );
-      container.appendChild(rangeCard);
-    }
-    stepper(labelText, value, min, max, onChange) {
-      const wrap = Dom.el("div", "rc-field");
-      wrap.appendChild(Dom.el("div", "rc-label", labelText));
-      const control = Dom.el("div", "rc-stepper");
-      const minus = Dom.el("button", "rc-stepper-btn", "−");
-      const display = Dom.el("span", "rc-stepper-value", String(value));
-      const plus = Dom.el("button", "rc-stepper-btn", "+");
-      const apply = (next) => {
-        onChange(next);
-        this.overlay.refresh();
-      };
-      minus.addEventListener("click", () => {
-        if (value > min) apply(value - 1);
-      });
-      plus.addEventListener("click", () => {
-        if (value < max) apply(value + 1);
-      });
-      minus.disabled = value <= min;
-      plus.disabled = value >= max;
-      control.append(minus, display, plus);
-      wrap.appendChild(control);
-      return wrap;
-    }
-  }
   const STATUS_POLL_MS = 4e3;
   const STATUS_POLL_ATTEMPTS = 5;
   const STATUS_COMPANIES_PER_REQUEST = 30;
-  class OverviewScreen {
+  class SearchScreen {
     constructor(api, overlay) {
       this.api = api;
       this.overlay = overlay;
       this.statusFilter = "any";
       this.page = 0;
       this.minStats = 0;
+      this.filtersOpen = false;
       this.statusByPlayer = {};
     }
     subtitle() {
@@ -860,9 +770,12 @@
     render(container) {
       this.container = container;
       container.appendChild(this.filterRow());
+      this.filtersCard = this.buildFiltersCard();
+      container.appendChild(this.filtersCard);
       this.metaEl = Dom.el("div", "rc-meta");
       this.resultsWrap = Dom.el("div");
       container.append(this.metaEl, this.resultsWrap);
+      this.syncFiltersChip();
       this.fetchMatches();
     }
     filterRow() {
@@ -899,12 +812,88 @@
       });
       statsField.appendChild(input);
       row.appendChild(statsField);
+      const filtersField = Dom.el("div", "rc-field rc-field--chip");
+      filtersField.appendChild(Dom.el("div", "rc-label", "Companies"));
+      this.filtersChip = Dom.el("button", "rc-chip rc-chip--filter");
+      this.filtersChip.addEventListener("click", () => {
+        this.filtersOpen = !this.filtersOpen;
+        this.syncFiltersChip();
+      });
+      filtersField.appendChild(this.filtersChip);
+      row.appendChild(filtersField);
       return row;
     }
     syncStatusChip() {
       const labels = { any: "Any", online: "Online", active: "Online + idle" };
       this.statusChip.textContent = labels[this.statusFilter];
       this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
+    }
+    syncFiltersChip() {
+      const settings = Settings.get();
+      const count = settings.typeIds.length;
+      this.filtersChip.textContent = `${count} ${count === 1 ? "type" : "types"} · ${settings.starMin}-${settings.starMax}★`;
+      this.filtersChip.classList.toggle("rc-chip--on", this.filtersOpen);
+      if (this.filtersCard) this.filtersCard.style.display = this.filtersOpen ? "" : "none";
+    }
+    buildFiltersCard() {
+      const settings = Settings.get();
+      const selected = new Set(settings.typeIds);
+      const card = Dom.el("div", "rc-card");
+      card.appendChild(Dom.el("div", "rc-label", "Company types to search"));
+      const chips = Dom.el("div", "rc-chips");
+      for (const type of COMPANY_TYPES) {
+        const chip = Dom.el("button", "rc-chip", type.name);
+        if (selected.has(type.id)) chip.classList.add("rc-chip--on");
+        chip.addEventListener("click", () => {
+          if (selected.has(type.id)) {
+            selected.delete(type.id);
+          } else {
+            selected.add(type.id);
+          }
+          Settings.set({ typeIds: [...selected].sort((a, b) => a - b) });
+          this.page = 0;
+          this.overlay.refresh();
+        });
+        chips.appendChild(chip);
+      }
+      card.appendChild(chips);
+      const row = Dom.el("div", "rc-row");
+      row.appendChild(
+        this.stepper("Min stars", settings.starMin, STAR_RANGE.min, settings.starMax, (value) => {
+          Settings.set({ starMin: value });
+        })
+      );
+      row.appendChild(
+        this.stepper("Max stars", settings.starMax, settings.starMin, STAR_RANGE.max, (value) => {
+          Settings.set({ starMax: value });
+        })
+      );
+      card.appendChild(row);
+      return card;
+    }
+    stepper(labelText, value, min, max, onChange) {
+      const wrap = Dom.el("div", "rc-field");
+      wrap.appendChild(Dom.el("div", "rc-label", labelText));
+      const control = Dom.el("div", "rc-stepper");
+      const minus = Dom.el("button", "rc-stepper-btn", "−");
+      const display = Dom.el("span", "rc-stepper-value", String(value));
+      const plus = Dom.el("button", "rc-stepper-btn", "+");
+      const apply = (next) => {
+        onChange(next);
+        this.page = 0;
+        this.overlay.refresh();
+      };
+      minus.addEventListener("click", () => {
+        if (value > min) apply(value - 1);
+      });
+      plus.addEventListener("click", () => {
+        if (value < max) apply(value + 1);
+      });
+      minus.disabled = value <= min;
+      plus.disabled = value >= max;
+      control.append(minus, display, plus);
+      wrap.appendChild(control);
+      return wrap;
     }
     async fetchMatches() {
       if (!this.resultsWrap) return;
@@ -1007,7 +996,7 @@
       }
       table.appendChild(head);
       if (!rows.length) {
-        table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in Setup — the server refreshes data daily."));
+        table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in the filters above — the server refreshes data daily."));
         return table;
       }
       for (const match of rows) {
@@ -1063,21 +1052,147 @@
     if (hours < 48) return `${hours}h ago`;
     return `${Math.floor(hours / 24)}d ago`;
   }
+  class StorageViewer {
+    constructor({ storagePrefix, classPrefix }) {
+      this.storagePrefix = storagePrefix;
+      this.prefix = classPrefix;
+    }
+    render() {
+      this.element = document.createElement("div");
+      this.element.className = `${this.prefix}-storage`;
+      this.renderList();
+      return this.element;
+    }
+    keys() {
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(this.storagePrefix)) keys.push(key);
+      }
+      return keys.sort();
+    }
+    renderList() {
+      const p = this.prefix;
+      this.element.innerHTML = "";
+      const keys = this.keys();
+      let total = 0;
+      const head = document.createElement("div");
+      head.className = `${p}-storage-head`;
+      this.element.appendChild(head);
+      if (!keys.length) {
+        const empty = document.createElement("p");
+        empty.className = `${p}-storage-empty`;
+        empty.textContent = "No stored data.";
+        this.element.appendChild(empty);
+        head.textContent = "0 keys";
+        return;
+      }
+      for (const key of keys) {
+        const value = localStorage.getItem(key) || "";
+        total += key.length + value.length;
+        const item = document.createElement("details");
+        item.className = `${p}-storage-item`;
+        const summary = document.createElement("summary");
+        summary.className = `${p}-storage-summary`;
+        const name = document.createElement("code");
+        name.className = `${p}-storage-key`;
+        name.textContent = key;
+        const size = document.createElement("span");
+        size.className = `${p}-storage-size`;
+        size.textContent = formatSize(value.length);
+        const del = document.createElement("button");
+        del.type = "button";
+        del.className = `${p}-storage-delete`;
+        del.textContent = "Delete";
+        del.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (del.textContent !== "Sure?") {
+            del.textContent = "Sure?";
+            return;
+          }
+          localStorage.removeItem(key);
+          this.renderList();
+        };
+        summary.append(name, size, del);
+        item.appendChild(summary);
+        const pre = document.createElement("pre");
+        pre.className = `${p}-storage-value`;
+        pre.textContent = prettify(value);
+        item.appendChild(pre);
+        this.element.appendChild(item);
+      }
+      head.textContent = `${keys.length} keys · ${formatSize(total)} total`;
+    }
+  }
+  function prettify(value) {
+    try {
+      return JSON.stringify(JSON.parse(value), null, 2);
+    } catch {
+      return value;
+    }
+  }
+  function formatSize(chars) {
+    if (chars < 1024) return `${chars} B`;
+    return `${(chars / 1024).toFixed(1)} KB`;
+  }
+  class SettingsScreen {
+    constructor(auth, overlay) {
+      this.auth = auth;
+      this.overlay = overlay;
+    }
+    subtitle() {
+      return "settings";
+    }
+    render(container) {
+      var _a;
+      (_a = this.section) == null ? void 0 : _a.destroy();
+      this.section = new SubscriptionSection(this.auth, {
+        classPrefix: "rc",
+        note: SUBSCRIPTION_NOTE
+      });
+      container.appendChild(this.section.render());
+      const actions = Dom.el("div", "rc-actions-row");
+      const removeKey = Dom.el("button", "rc-btn-danger", "Remove API key");
+      removeKey.addEventListener("click", () => {
+        var _a2;
+        (_a2 = this.section) == null ? void 0 : _a2.destroy();
+        this.auth.clear();
+        this.overlay.open();
+      });
+      actions.appendChild(removeKey);
+      const storageBtn = Dom.el("button", "rc-btn rc-btn--ghost", "View stored data");
+      let viewer = null;
+      storageBtn.addEventListener("click", () => {
+        if (viewer) {
+          viewer.remove();
+          viewer = null;
+          storageBtn.textContent = "View stored data";
+          return;
+        }
+        viewer = new StorageViewer({ storagePrefix: "rc_", classPrefix: "rc" }).render();
+        container.appendChild(viewer);
+        storageBtn.textContent = "Hide stored data";
+      });
+      actions.appendChild(storageBtn);
+      container.appendChild(actions);
+    }
+  }
   const LEGACY_STORE_KEYS = ["keys", "roster", "stats", "status", "sweep_progress"];
   function boot() {
     LEGACY_STORE_KEYS.forEach((key) => Store.remove(key));
     const auth = new Auth(Store);
     const api = new RecruiterApi(auth);
     const overlay = new Overlay(auth);
-    overlay.register("auth", new AuthScreen(auth, overlay));
+    overlay.register("auth", new AuthScreen(auth, overlay, api));
     overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-    overlay.register("keys", new KeysScreen(api, overlay, auth));
-    overlay.register("setup", new SetupScreen(overlay));
-    overlay.register("overview", new OverviewScreen(api, overlay));
+    overlay.register("keys", new KeysScreen(api, overlay));
+    overlay.register("search", new SearchScreen(api, overlay));
+    overlay.register("settings", new SettingsScreen(auth, overlay));
     new Sidebar(overlay).init();
     new MenuEntry(overlay).init();
     new ChatOpener().init();
-    console.log(`%cRecruiter %cv${"0.5.0"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
+    console.log(`%cRecruiter %cv${"0.6.0"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
   }
   if (window.self === window.top) boot();
 
