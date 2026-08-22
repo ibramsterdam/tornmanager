@@ -403,7 +403,9 @@ export class SearchScreen {
 
       const who = Dom.el("div");
       const playerLink = Dom.el("a", "rc-name rc-link", match.name);
-      playerLink.href = `/profiles.php?XID=${match.torn_id}`;
+      playerLink.href = `https://www.torn.com/profiles.php?XID=${match.torn_id}`;
+      playerLink.target = "_blank";
+      playerLink.rel = "noopener";
       const whoDetail = Dom.el("div", "rc-dim", `Lv ${match.level} · ${match.torn_id}`);
       who.append(playerLink, whoDetail);
       if (match.faction_mate_of_director) {

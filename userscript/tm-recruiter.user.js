@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Recruiter
 // @namespace    torn-recruiter
-// @version      0.8.1
+// @version      0.8.2
 // @author       Bram [2728237]
 // @description  Company recruiting scout for Torn
 // @license      All rights reserved
@@ -235,11 +235,11 @@
       debug.addEventListener("click", () => this.copyDebugInfo(debug));
       links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
       this.footer.appendChild(links);
-      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.8.1"}`));
+      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.8.2"}`));
     }
     copyDebugInfo(button) {
       const info = {
-        version: "0.8.1",
+        version: "0.8.2",
         generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
         user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
         subscribed: this.auth.isSubscribed(),
@@ -1025,7 +1025,9 @@
         const row = Dom.el("div", "rc-trow");
         const who = Dom.el("div");
         const playerLink = Dom.el("a", "rc-name rc-link", match.name);
-        playerLink.href = `/profiles.php?XID=${match.torn_id}`;
+        playerLink.href = `https://www.torn.com/profiles.php?XID=${match.torn_id}`;
+        playerLink.target = "_blank";
+        playerLink.rel = "noopener";
         const whoDetail = Dom.el("div", "rc-dim", `Lv ${match.level} · ${match.torn_id}`);
         who.append(playerLink, whoDetail);
         if (match.faction_mate_of_director) {
@@ -1216,7 +1218,7 @@
     new Sidebar(overlay).init();
     new MenuEntry(overlay).init();
     new ChatOpener().init();
-    console.log(`%cRecruiter %cv${"0.8.1"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
+    console.log(`%cRecruiter %cv${"0.8.2"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
   }
   if (window.self === window.top) boot();
 
