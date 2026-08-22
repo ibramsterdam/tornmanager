@@ -1,5 +1,5 @@
 import bannerSvg from "../../assets/recruit-banner.svg?raw";
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 
 const DISCLOSURE = [
   ["Data Storage", "Persistent until you remove your key"],

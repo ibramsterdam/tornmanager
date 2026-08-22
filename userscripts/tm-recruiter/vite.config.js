@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import monkey from "vite-plugin-monkey";
 import { readFileSync } from "fs";
+import { fileURLToPath, URL } from "node:url";
 
 const pkg = JSON.parse(readFileSync("package.json", "utf-8"));
 const isDev = process.env.NODE_ENV === "development";
@@ -13,6 +14,9 @@ const API_BASE = isDev ? "http://localhost:3000" : "https://tornmanager.com";
 const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-recruiter.user.js";
 
 export default defineConfig({
+  resolve: {
+    alias: { "@shared": fileURLToPath(new URL("../shared", import.meta.url)) },
+  },
   define: {
     __RC_VERSION__: JSON.stringify(pkg.version),
     __API_BASE__: JSON.stringify(API_BASE),

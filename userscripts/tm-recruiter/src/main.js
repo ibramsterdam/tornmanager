@@ -1,5 +1,6 @@
 import "./main.css";
-import { Auth } from "./core/Auth.js";
+import { Auth } from "@shared/core/Auth.js";
+import { Store } from "./core/Store.js";
 import { Keys } from "./core/Keys.js";
 import { Api } from "./core/Api.js";
 import { Roster } from "./core/Roster.js";
@@ -17,7 +18,7 @@ import { SetupScreen } from "./ui/SetupScreen.js";
 import { OverviewScreen } from "./ui/OverviewScreen.js";
 
 function boot() {
-  const auth = new Auth();
+  const auth = new Auth(Store);
   const keys = new Keys();
   const api = new Api(keys);
   const roster = new Roster(api);

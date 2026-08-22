@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 import { ChatBox } from "./ChatBox.js";
 import { showToast } from "../core/Clipboard.js";
 import { ChatCrypto } from "../core/ChatCrypto.js";

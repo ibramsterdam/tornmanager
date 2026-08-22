@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 import { MugKey } from "../core/MugKey.js";
 import { MugTargets } from "../core/MugTargets.js";
 import { parseMoney, formatMoney } from "../core/Money.js";

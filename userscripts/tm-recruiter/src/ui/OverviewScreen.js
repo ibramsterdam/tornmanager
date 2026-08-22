@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 import { Settings } from "../core/Settings.js";
 import { typeName } from "../core/CompanyTypes.js";
 import { ChatOpener } from "./ChatOpener.js";

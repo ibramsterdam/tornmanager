@@ -1,6 +1,7 @@
 import "./main.css";
 import { Logger } from "./core/Logger.js";
-import { Auth } from "./core/Auth.js";
+import { Auth } from "@shared/core/Auth.js";
+import { Store } from "./core/Store.js";
 import { ApiClient } from "./core/ApiClient.js";
 import { ChatClient } from "./core/ChatClient.js";
 import { Overlay } from "./ui/Overlay.js";
@@ -28,7 +29,7 @@ function opaqueCrossOriginError(e) {
 
 function boot() {
   const logger = new Logger();
-  const auth = new Auth();
+  const auth = new Auth(Store);
   const api = new ApiClient(auth);
 
   Preferences.applyChatFontSize();

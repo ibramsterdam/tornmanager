@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 
 const PRIVACY_HTML = `
 <h2 id="rc-privacy">Privacy Policy</h2>

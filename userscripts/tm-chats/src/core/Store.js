@@ -1,3 +1,3 @@
 import { createStore } from "@shared/core/Store.js";
 
-export const Store = createStore("rc_");
+export const Store = createStore("tm_");

@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 
 // Adds a "TornManager" item to Torn's account dropdown (the avatar menu).
 // Torn keeps this menu in the DOM and toggles it with a class, so a one-shot

@@ -1,4 +1,4 @@
-const API_BASE = __API_BASE__;
+import { post as apiPost } from "@shared/core/ServerApi.js";
 
 export class ChatClient {
   constructor(auth) {
@@ -67,38 +67,6 @@ export class ChatClient {
     const token = this.auth.getToken();
     if (!token) return Promise.reject(new Error("Not authenticated"));
 
-    return new Promise((resolve, reject) => {
-      GM.xmlHttpRequest({
-        method: "POST",
-        url: `${API_BASE}${path}`,
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        data: JSON.stringify(params),
-        onload(response) {
-          let data = null;
-          try {
-            data = JSON.parse(response.responseText);
-          } catch {
-            reject(new Error("Invalid response from server"));
-            return;
-          }
-
-          if (response.status >= 200 && response.status < 300) {
-            resolve(data);
-          } else {
-            const error = new Error(data.error || "Chat request failed");
-            error.status = response.status;
-            if (data.suspended) error.suspended = true;
-            reject(error);
-          }
-        },
-        onerror() {
-          reject(new Error("Network error. Could not reach Tornmanager."));
-        },
-      });
-    });
+    return apiPost(path, params, { token });
   }
 }

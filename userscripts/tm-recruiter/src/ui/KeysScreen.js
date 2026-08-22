@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 
 const CALLS_PER_KEY_PER_MINUTE = 75;
 

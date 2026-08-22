@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 import { Store } from "../core/Store.js";
 
 const SUBSCRIPTION_RECHECK_MS = 6 * 3_600_000;

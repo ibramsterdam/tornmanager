@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 import { COMPANY_TYPES } from "../core/CompanyTypes.js";
 import { Settings, STAR_RANGE, INACTIVE_RANGE } from "../core/Settings.js";
 

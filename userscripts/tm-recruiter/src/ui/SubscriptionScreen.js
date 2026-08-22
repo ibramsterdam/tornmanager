@@ -1,4 +1,4 @@
-import { Dom } from "../core/Dom.js";
+import { Dom } from "@shared/core/Dom.js";
 
 export class SubscriptionScreen {
   constructor(auth, overlay) {
