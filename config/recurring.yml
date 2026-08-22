@@ -46,6 +46,18 @@ production:
     class: MemberActivityPollJob
     queue: default
     schedule: every 15 minutes
+  recruiter_sync_roster:
+    class: Recruiter::SyncRosterJob
+    queue: torn_api
+    schedule: at 5:30am every day
+  recruiter_sweep_working_stats:
+    class: Recruiter::SweepWorkingStatsJob
+    queue: torn_api
+    schedule: at 6am every day
+  recruiter_backfill_missing_stats:
+    class: Recruiter::BackfillMissingStatsJob
+    queue: default
+    schedule: at 6:30am every day
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob

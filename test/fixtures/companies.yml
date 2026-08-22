@@ -11,3 +11,10 @@ television_network:
   company_type_id: 26
   rating: 10
   employees_hired: 12
+
+budget_shop:
+  torn_id: 91003
+  name: Dollar Dump
+  company_type_id: 15
+  rating: 3
+  employees_hired: 4
