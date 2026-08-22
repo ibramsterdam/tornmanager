@@ -12,7 +12,6 @@ import { MenuEntry } from "./ui/MenuEntry.js";
 import { ChatOpener } from "./ui/ChatOpener.js";
 import { AuthScreen } from "./ui/AuthScreen.js";
 import { SubscriptionScreen } from "./ui/SubscriptionScreen.js";
-import { LegalScreen } from "./ui/LegalScreen.js";
 import { KeysScreen } from "./ui/KeysScreen.js";
 import { SetupScreen } from "./ui/SetupScreen.js";
 import { OverviewScreen } from "./ui/OverviewScreen.js";
@@ -28,7 +27,6 @@ function boot() {
   const overlay = new Overlay(auth);
   overlay.register("auth", new AuthScreen(auth, overlay, keys, api));
   overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-  overlay.register("legal", new LegalScreen(overlay));
   overlay.register("keys", new KeysScreen(keys, api, overlay, auth));
   overlay.register("setup", new SetupScreen(overlay));
   overlay.register("overview", new OverviewScreen({ roster, stats, status, api, overlay }));

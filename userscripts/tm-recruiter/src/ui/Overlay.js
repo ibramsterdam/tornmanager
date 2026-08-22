@@ -64,22 +64,20 @@ export class Overlay {
       links.append(profile, Dom.el("span", null, "·"));
     }
 
-    const privacy = Dom.el("button", "rc-footer-link", "Privacy Policy");
-    privacy.addEventListener("click", () => this.openLegal("rc-privacy"));
-    const terms = Dom.el("button", "rc-footer-link", "Terms of Service");
-    terms.addEventListener("click", () => this.openLegal("rc-terms"));
+    const privacy = Dom.el("a", "rc-footer-link", "Privacy Policy");
+    privacy.href = "https://tornmanager.com/legal#recruiter-privacy-policy";
+    privacy.target = "_blank";
+    privacy.rel = "noopener";
+    const terms = Dom.el("a", "rc-footer-link", "Terms of Service");
+    terms.href = "https://tornmanager.com/legal#recruiter-terms-of-service";
+    terms.target = "_blank";
+    terms.rel = "noopener";
     const debug = Dom.el("button", "rc-footer-link", "Copy debug info");
     debug.addEventListener("click", () => this.copyDebugInfo(debug));
 
     links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
     this.footer.appendChild(links);
     this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${__RC_VERSION__}`));
-  }
-
-  openLegal(anchor) {
-    const legal = this.screens.legal;
-    if (legal) legal.anchor = anchor;
-    this.show("legal");
   }
 
   copyDebugInfo(button) {
@@ -120,10 +118,10 @@ export class Overlay {
   show(name) {
     this.mount();
     const gate = this.gateScreen();
-    if (gate && name !== "legal") name = gate;
+    if (gate) name = gate;
 
     this.current = name;
-    this.nav.style.display = gate || name === "legal" ? "none" : "flex";
+    this.nav.style.display = gate ? "none" : "flex";
     this.nav.querySelectorAll(".rc-nav-link").forEach((link) => {
       link.classList.toggle("rc-nav-link--active", link.dataset.screen === name);
     });

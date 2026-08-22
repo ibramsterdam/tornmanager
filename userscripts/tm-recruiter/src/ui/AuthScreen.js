@@ -63,7 +63,7 @@ export class AuthScreen {
       button.disabled = !checkbox.checked;
     });
     const agreeText = Dom.el("span");
-    agreeText.append("I agree to the ", this.legalLink("Privacy Policy", "rc-privacy"), " and ", this.legalLink("Terms of Service", "rc-terms"), ".");
+    agreeText.append("I agree to the ", this.legalLink("Privacy Policy", "recruiter-privacy-policy"), " and ", this.legalLink("Terms of Service", "recruiter-terms-of-service"), ".");
     agree.append(checkbox, agreeText);
     tos.appendChild(agree);
     form.appendChild(tos);
@@ -106,11 +106,9 @@ export class AuthScreen {
 
   legalLink(label, anchor) {
     const link = Dom.el("a", null, label);
-    link.href = "#";
-    link.addEventListener("click", (e) => {
-      e.preventDefault();
-      this.overlay.openLegal(anchor);
-    });
+    link.href = `https://tornmanager.com/legal#${anchor}`;
+    link.target = "_blank";
+    link.rel = "noopener";
     return link;
   }
 
