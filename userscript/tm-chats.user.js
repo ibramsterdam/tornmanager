@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Chats
 // @namespace    tornmanager
-// @version      0.4.1
+// @version      0.4.2
 // @author       Bram [2728237]
 // @description  TornManager Chats userscript
 // @license      All rights reserved
@@ -1872,7 +1872,7 @@ Stack: ${e.stack}` : ""}`
     },
     request(url, key) {
       const separator = url.includes("?") ? "&" : "?";
-      const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}&comment=tmanager`;
+      const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}&comment=tmchats`;
       return new Promise((resolve, reject) => {
         GM.xmlHttpRequest({
           method: "GET",
@@ -2560,7 +2560,7 @@ Stack: ${e.stack}` : ""}`
     if (chars < 1024) return `${chars} B`;
     return `${(chars / 1024).toFixed(1)} KB`;
   }
-  const CURRENT = "0.4.1";
+  const CURRENT = "0.4.2";
   const MANIFEST_URL = "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscripts/tm-chats/package.json";
   const DOWNLOAD_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-chats.user.js";
   const CACHE_KEY$1 = "tm_version_check";
@@ -2987,7 +2987,7 @@ Stack: ${e.stack}` : ""}`
       footer.appendChild(links);
       const version = document.createElement("div");
       version.className = "tm-footer-version";
-      version.textContent = `v${"0.4.1"}`;
+      version.textContent = `v${"0.4.2"}`;
       footer.appendChild(version);
       const errors = this.logger.getAll();
       if (errors.length > 0) {
@@ -3036,7 +3036,7 @@ Stack: ${e.stack}` : ""}`
     debugInfo() {
       var _a;
       return [
-        `TornManager v${"0.4.1"}`,
+        `TornManager v${"0.4.2"}`,
         `URL: ${window.location.href}`,
         `Viewport: ${window.innerWidth}x${window.innerHeight}`,
         `UA: ${navigator.userAgent}`,
