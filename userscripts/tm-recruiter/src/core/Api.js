@@ -22,7 +22,7 @@ export class Api {
 
     const url = new URL(BASE + path);
     for (const [k, v] of Object.entries(params)) url.searchParams.set(k, String(v));
-    url.searchParams.set("comment", "Recruiter");
+    url.searchParams.set("comment", "tmrecruiter");
 
     const res = await fetch(url, { headers: { Authorization: `ApiKey ${apiKey}` } });
     this.keys.recordCall(apiKey);

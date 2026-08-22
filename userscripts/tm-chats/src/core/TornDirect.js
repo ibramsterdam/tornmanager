@@ -16,7 +16,7 @@ export const TornDirect = {
 
   request(url, key) {
     const separator = url.includes("?") ? "&" : "?";
-    const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}&comment=tmanager`;
+    const fullUrl = `${url}${separator}key=${encodeURIComponent(key)}&comment=tmchats`;
 
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
