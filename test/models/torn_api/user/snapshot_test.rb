@@ -7,11 +7,11 @@ class TornApi::User::SnapshotTest < ActiveSupport::TestCase
 
   test "keeps only employed players" do
     csv = <<~CSV
-      id,name,level,company,job
-      1234567,Bert,50,91001,Employee
-      2728237,Bram,69,0,None
-      7777777,Boss,80,91001,Director
-      8888888,Drifter,12,,None
+      id,name,gender,level,rank,faction,company,job
+      1234567,Bert,Male,50,Elite,46166,91001,
+      2728237,Bram,Male,69,Elite,,0,
+      7777777,Boss,Female,80,Elite,9118,91001,Director
+      8888888,Drifter,Male,12,Amateur,,,Army
     CSV
     @service.expects(:get).with("v2/user/snapshot", { comment: "tmrecruiter" }).returns(csv)
 
@@ -22,8 +22,19 @@ class TornApi::User::SnapshotTest < ActiveSupport::TestCase
     assert_equal "Bert", bert.name
     assert_equal 50, bert.level
     assert_equal 91001, bert.company_id
+    assert_equal 46166, bert.faction_torn_id
     assert_not bert.director
     assert rows.last.director
+  end
+
+  test "leaves faction empty for factionless players" do
+    csv = <<~CSV
+      id,name,gender,level,rank,faction,company,job
+      1234567,Bert,Male,50,Elite,,91001,
+    CSV
+    @service.expects(:get).returns(csv)
+
+    assert_nil @service.fetch.first.faction_torn_id
   end
 
   test "raises when the response is not csv" do

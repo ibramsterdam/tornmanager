@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_22_130200) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_22_170000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -145,6 +145,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_130200) do
   create_table "companies", force: :cascade do |t|
     t.integer "company_type_id", null: false
     t.datetime "created_at", null: false
+    t.integer "director_faction_torn_id"
     t.integer "employees_hired"
     t.string "name"
     t.integer "rating", default: 0, null: false
@@ -431,6 +432,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_22_130200) do
     t.datetime "company_synced_at"
     t.datetime "created_at", null: false
     t.integer "faction_id"
+    t.integer "faction_torn_id"
     t.boolean "fallen", default: false, null: false
     t.boolean "hof_stats_user", default: false, null: false
     t.boolean "leadership_access", default: false, null: false

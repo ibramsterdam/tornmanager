@@ -16,7 +16,8 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
       company_row(95000, name: "Fresh Corp", type: 5, rating: 3, hired: 2)
     ])
     stub_user_snapshot([
-      player_row(1234567, name: "Bert", level: 51, company: 91001),
+      player_row(1234567, name: "Bert", level: 51, company: 91001, faction: 46166),
+      player_row(7777777, name: "Boss", level: 80, company: 91001, director: true, faction: 46166),
       player_row(5555555, name: "Newbie", level: 12, company: 95000, director: true)
     ])
 
@@ -31,13 +32,18 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     @bert.reload
     assert_equal 51, @bert.level
     assert_equal 91001, @bert.company_id
+    assert_equal 46166, @bert.faction_torn_id
     assert_equal factions(:with_api_key).id, @bert.faction_id
     assert_equal "1234567_api_token_fixture", @bert.api_token
+    assert_equal 46166, companies(:adult_novelties).reload.director_faction_torn_id
+    assert @bert.faction_mate_of_director?
 
     newbie = User.find_by(torn_id: 5555555)
     assert_equal "Newbie", newbie.name
     assert newbie.company_director
     assert_nil newbie.api_token
+    assert_not newbie.faction_mate_of_director?
+    assert_nil Company.find_by(torn_id: 95000).director_faction_torn_id
 
     assert_nil users(:kaneki).reload.company_id
   end
@@ -57,9 +63,9 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     )
   end
 
-  def player_row(torn_id, name:, level:, company:, director: false)
+  def player_row(torn_id, name:, level:, company:, director: false, faction: nil)
     TornApi::User::Snapshot::Row.new(
-      torn_id: torn_id, name: name, level: level, company_id: company, director: director
+      torn_id: torn_id, name: name, level: level, company_id: company, director: director, faction_torn_id: faction
     )
   end
 

@@ -11,7 +11,8 @@ module TornApi
         :name,
         :level,
         :company_id,
-        :director
+        :director,
+        :faction_torn_id
       )
 
       def endpoint
@@ -38,7 +39,8 @@ module TornApi
             name: row["name"],
             level: row["level"].to_i,
             company_id: company_id,
-            director: row["job"] == "Director"
+            director: row["job"] == "Director",
+            faction_torn_id: row["faction"].presence&.to_i
           )
         end
         rows

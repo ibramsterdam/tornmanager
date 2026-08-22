@@ -11,7 +11,8 @@ module Recruiter
 
       synced_at = Time.current
       sync_companies(api_key, synced_at)
-      sync_employment(api_key, synced_at)
+      players = sync_employment(api_key, synced_at)
+      sync_director_factions(players)
       disconnect_departed(synced_at)
     end
 
@@ -45,15 +46,27 @@ module Recruiter
             level: player.level,
             company_id: player.company_id,
             company_director: player.director,
-            company_synced_at: synced_at
+            company_synced_at: synced_at,
+            faction_torn_id: player.faction_torn_id
           }
         end
         User.upsert_all(
           rows,
           unique_by: :torn_id,
-          update_only: [ :name, :level, :company_id, :company_director, :company_synced_at ],
+          update_only: [ :name, :level, :company_id, :company_director, :company_synced_at, :faction_torn_id ],
           record_timestamps: true
         )
+      end
+      players
+    end
+
+    def sync_director_factions(players)
+      Company.transaction do
+        players.each do |player|
+          next unless player.director
+
+          Company.where(torn_id: player.company_id).update_all(director_faction_torn_id: player.faction_torn_id)
+        end
       end
     end
 
