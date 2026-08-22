@@ -1,0 +1,133 @@
+<div class="legal-document" id="recruiter-privacy-policy">
+  <h1 class="legal-document-title">Recruiter Userscript Privacy Policy</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
+
+  <section class="content-section">
+    <h2 id="rpp-introduction">Introduction</h2>
+    <p>
+      Hi, I'm Bram, the creator of TornManager. This Privacy Policy covers the <strong>TornManager Recruiter
+      userscript</strong>. That is the script you install in a userscript manager (such as Tampermonkey) or in
+      Torn PDA. It runs on Torn.com pages and helps you find recruitable players in Torn companies.
+    </p>
+    <p>
+      The TornManager web platform at tornmanager.com has its own <a href="#privacy-policy">Platform Privacy
+      Policy</a> and <a href="#terms-of-service">Platform Terms of Service</a>, and the TornManager Chats
+      userscript has its own <a href="#userscript-privacy-policy">Chats Userscript Privacy Policy</a> and
+      <a href="#userscript-terms-of-service">Chats Userscript Terms of Service</a>, above on this page. If you
+      only use Recruiter, this document and the
+      <a href="#recruiter-terms-of-service">Recruiter Terms of Service</a> are the ones that apply to you.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-information-i-collect">Information I Collect</h2>
+    <p>
+      When you sign in to Recruiter you provide your <strong>Torn API key</strong>, and only Public access keys
+      are accepted. The key is sent to my server once to check who you are with the official Torn API and to
+      verify your subscription. After that first check, your browser holds a <strong>session token</strong> and
+      uses it for every later request; your API key itself is not sent again.
+    </p>
+    <p>On the server, a Recruiter account consists of:</p>
+    <ul>
+      <li>Your Torn ID, player name, and level</li>
+      <li>Your Torn API key (as the sign-in credential)</li>
+      <li>Xanax payments sent for subscriptions, and subscription expiration dates</li>
+    </ul>
+    <p>
+      Recruiter shares this account with the TornManager Chats userscript: one account and one subscription cover
+      both scripts.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-key-pool">The Key Pool</h2>
+    <p>
+      Recruiter can hold additional Torn API keys from other players to speed up data fetching. These pool keys
+      are stored <strong>only in your browser</strong> and are <strong>never sent to the TornManager
+      server</strong>; they are used exclusively for direct calls from your browser to the official Torn API.
+    </p>
+    <p>
+      Every Torn API call Recruiter makes carries the comment <code>Recruiter</code>, so the owner of any key can
+      see in their own Torn key log exactly what their key was used for. The pool accepts only Public access keys
+      and at most one key per player, matching how Torn's rate limit works. Only add keys that their owners gave
+      you willingly; a key owner can revoke access at any time by deleting or regenerating their key on Torn.com.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-torn-api">Calls to the Torn API</h2>
+    <p>
+      Recruiter fetches publicly available game data directly from api.torn.com using the keys in your pool:
+      company listings and ratings, which players work where, Hall of Fame working stats, and the online status
+      of employees. This data is fetched from your browser and processed on your device. None of it is uploaded
+      to my server or anywhere else.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-local-storage">Data Stored in Your Browser</h2>
+    <p>Recruiter stores the following in your browser's localStorage on the torn.com domain:</p>
+    <ul>
+      <li><strong>User profile and session token</strong> (<code>rc_user</code>): your Torn ID, name, and the session token used for authentication. Cleared when you sign out.</li>
+      <li><strong>Key pool</strong> (<code>rc_keys</code>): the API keys you added, each with its owner's name and ID and a daily call counter.</li>
+      <li><strong>Roster data</strong> (<code>rc_roster</code>): the fetched list of companies and their employees.</li>
+      <li><strong>Working stats</strong> (<code>rc_stats</code>): the fetched working-stats values per player.</li>
+      <li><strong>Status data</strong> (<code>rc_status</code>): the fetched online state of matched players.</li>
+      <li><strong>Settings and subscription state</strong> (<code>rc_settings</code>, <code>rc_subscription</code>): your filter settings and the last known subscription status.</li>
+    </ul>
+    <p>
+      You can remove pool keys individually on the Keys screen, and signing out clears your session. Clearing
+      localStorage for torn.com removes everything listed above.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-backend">Backend Communication</h2>
+    <p>
+      Recruiter talks to tornmanager.com using <code>GM.xmlHttpRequest</code> for exactly two things: signing in
+      through <code>/api/session</code> and checking your subscription through <code>/api/subscription</code>.
+      Requests after sign-in carry your session token. No recruiting data &mdash; rosters, working stats, status
+      data, or pool keys &mdash; is ever sent to my server, and nothing is shared with any third party.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-data-security">Data Security &amp; Location</h2>
+    <p>
+      All communication with tornmanager.com uses secure HTTPS connections. Server data is stored in
+      <strong>Helsinki, Finland</strong> (EU) within the Hetzner datacenter, which means your data falls under
+      European Union data protection laws, including GDPR. No method of transmission or storage is 100% secure.
+      I work hard to protect your data, but I cannot guarantee absolute security.
+    </p>
+    <p>
+      To remove your account and API key from the TornManager server, contact me on Torn:
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-age-requirement">Age Requirement</h2>
+    <p>
+      In line with Torn's Terms of Service, you must be at least 13 years old to use Recruiter.
+      I do not knowingly collect information from children under 13.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-changes">Changes to This Privacy Policy</h2>
+    <p>
+      I may update this Privacy Policy from time to time. Material changes are shown by updating the
+      "Last updated" date at the top. If you keep using Recruiter after changes, you accept the updated policy.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rpp-contact">Contact Me</h2>
+    <p>
+      If you have questions about this Privacy Policy or how I handle your data, please reach out to me on Torn:
+    </p>
+    <p>
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
+    </p>
+  </section>
+</div>

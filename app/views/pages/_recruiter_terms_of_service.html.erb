@@ -1,0 +1,169 @@
+<div class="legal-document" id="recruiter-terms-of-service">
+  <h1 class="legal-document-title">Recruiter Userscript Terms of Service</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
+
+  <section class="content-section">
+    <h2 id="rtos-acceptance">Acceptance of Terms</h2>
+    <p>
+      By installing and using the TornManager Recruiter userscript, you accept and agree to be bound by these
+      Terms of Service and the <a href="#recruiter-privacy-policy">Recruiter Privacy Policy</a>. If you do not
+      agree to these terms, please uninstall the userscript. The tornmanager.com web platform and the TornManager
+      Chats userscript are governed separately by their own documents, above on this page.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-description">Description of Service</h2>
+    <p>
+      Recruiter runs on Torn.com via a userscript manager (such as Tampermonkey) or Torn PDA and surfaces
+      publicly available game data &mdash; company rosters, Hall of Fame working stats, and online status &mdash;
+      to help with company recruiting. It shows which high working-stat players are employed in the company types
+      you select, and whether they are online right now. Recruiter requires an active TornManager subscription.
+    </p>
+    <p>By installing and using Recruiter, you agree to:</p>
+    <ul>
+      <li>Allow the userscript to display its interface on Torn.com pages in your browser</li>
+      <li>Allow the userscript to communicate with tornmanager.com for sign-in and subscription checks</li>
+      <li>Allow the userscript to call the official Torn API with the keys in your pool and store the results, your keys, and your preferences in your browser's localStorage</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-api-key">API Key &amp; Authentication</h2>
+    <p>
+      <strong>Never share your Torn password with anyone, including me.</strong> Recruiter only requires a Torn
+      API key with Public access to sign in, and accepts nothing more powerful. You are responsible for creating
+      and managing your key, monitoring its usage through Torn.com ('key' &rarr; 'log' selection), and revoking
+      or regenerating it if you suspect misuse. By signing in you explicitly authorize TornManager to verify your
+      identity via the Torn API as documented in the Privacy Policy.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-key-pool">Key Pool Rules</h2>
+    <p>
+      You may add other players' API keys to your key pool <strong>only if their owners handed them to you
+      voluntarily</strong>, knowing what they will be used for. Every call carries the comment
+      <code>Recruiter</code> so key owners can audit usage in their own Torn key log at any time. The pool
+      accepts only Public access keys and one key per player. Recruiter paces its Torn API usage to stay well
+      inside Torn's rate limits per key owner; do not attempt to modify the script to exceed those limits.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-acceptable-use">Acceptable Use</h2>
+    <p>
+      Recruiter shows you public information about players; what you do with it is your responsibility. You must
+      not use Recruiter to:
+    </p>
+    <ul>
+      <li>harass, threaten, or spam players, whether or not they respond to a recruiting approach;</li>
+      <li>violate Torn's rules or Terms of Service, including its rules on unsolicited messaging; or</li>
+      <li>collect data with keys whose owners did not consent to their use.</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-subscription">Subscription Model</h2>
+    <p>
+      Recruiter requires an active subscription, obtained by sending Xanax to
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank" %>. Each
+      Xanax adds one week. Payments are processed automatically once a day. The subscription is tied to your Torn
+      ID and is the same subscription that unlocks the TornManager Chats extras; details and additional ways to
+      obtain subscription time are described in the <a href="#tos-subscription">Platform Terms</a>. Payments are
+      voluntary, non-refundable, and are not purchases of goods or services outside of Torn.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-no-unfair-advantage">No Unfair Advantage</h2>
+    <p>
+      Recruiter displays data; it does not automate gameplay actions, send messages on your behalf, perform any
+      actions on your Torn account, or bypass game mechanics. All game data it shows is sourced from the official
+      Torn API in accordance with Torn's scripting and fair play rules.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-availability">Service Availability</h2>
+    <p>
+      I strive to keep Recruiter and its backend available but do not guarantee uninterrupted service. I may
+      suspend service for maintenance, modify or discontinue features without notice, and experience downtime due
+      to technical issues or Torn API limitations. I may suspend accounts that abuse the service. If a suspension
+      or discontinuation happens with time left on your subscription, contact me and we will sort it out.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-intellectual-property">Intellectual Property</h2>
+    <p>
+      TornManager and its original content, features, and functionality are owned by me and protected by
+      international copyright, trademark, and other intellectual property laws. Torn, Torn.com, and all related
+      game data remain the property of Torn City Ltd. I use the Torn API under the terms provided by Torn.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-disclaimer">Disclaimer of Warranties</h2>
+    <p>
+      Recruiter is provided "as is" and "as available" without warranties of any kind, either express or implied,
+      including but not limited to warranties of merchantability, fitness for a particular purpose, or
+      non-infringement. I do not warrant that the service will be uninterrupted, timely, secure, or error-free,
+      or that displayed data will be accurate or reliable.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-limitation-of-liability">Limitation of Liability</h2>
+    <p>
+      To the maximum extent permitted by law, I shall not be liable for any indirect, incidental, special,
+      consequential, or punitive damages, or any loss of profits, revenues, data, use, goodwill, or other
+      intangible losses resulting from your use of or inability to use Recruiter, unauthorized access to your
+      data or API keys, any conduct or content of third parties, or errors or inaccuracies in displayed data.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-indemnification">Indemnification</h2>
+    <p>
+      You agree to indemnify and hold harmless me and TornManager from any claims, damages, obligations, losses,
+      liabilities, costs, or expenses arising from your use of Recruiter, your violation of these Terms,
+      your violation of Torn's Terms of Service or API guidelines, or your violation of any third-party rights.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-age-requirement">Age Requirement</h2>
+    <p>
+      You must be at least 13 years old to use Recruiter, in line with Torn.com's age requirement. By using it,
+      you confirm that you meet this requirement.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-changes">Changes to Terms</h2>
+    <p>
+      I reserve the right to modify these Terms of Service at any time. Material changes will be indicated by
+      updating the "Last updated" date at the top of this document. Your continued use of Recruiter after
+      changes constitutes acceptance of the modified terms.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-governing-law">Governing Law</h2>
+    <p>
+      These Terms of Service are governed by and construed in accordance with applicable laws, without regard to
+      conflict of law principles.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="rtos-contact">Contact Me</h2>
+    <p>
+      If you have questions about these Terms of Service, please reach out to me on Torn:
+    </p>
+    <p>
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
+    </p>
+  </section>
+</div>

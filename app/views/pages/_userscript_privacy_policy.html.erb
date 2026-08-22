@@ -1,5 +1,5 @@
 <div class="legal-document" id="userscript-privacy-policy">
-  <h1 class="legal-document-title">Userscript Privacy Policy</h1>
+  <h1 class="legal-document-title">Chats Userscript Privacy Policy</h1>
   <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
 
   <section class="content-section">
@@ -20,9 +20,10 @@
     <h2 id="upp-information-i-collect">Information I Collect</h2>
     <p>
       When you sign in to the userscript you provide your <strong>Torn API key</strong>. Public access level is
-      enough. The key is sent to my server once to check who you are with the official Torn API. After that, it is
-      stored as your sign-in credential, so the userscript can prove to tornmanager.com that requests come from you.
-      The chat features do not use your key to call the Torn API again after that first check.
+      enough, and Full Access keys are not accepted. The key is sent to my server once to check who you are with
+      the official Torn API and is stored there as your sign-in credential. Your browser then holds a
+      <strong>session token</strong> and uses it for every later request; your API key itself is not sent again,
+      and the chat features do not use your key to call the Torn API after that first check.
     </p>
     <p>On the server, a userscript account consists of:</p>
     <ul>
@@ -135,7 +136,7 @@
     <h2 id="upp-local-storage">Data Stored in Your Browser</h2>
     <p>The userscript stores the following in your browser's localStorage on the torn.com domain:</p>
     <ul>
-      <li><strong>User profile and API key</strong> (<code>tm_user</code>): your Torn ID, name, and API key for authentication. Cleared when you remove your API key from the userscript.</li>
+      <li><strong>User profile and session token</strong> (<code>tm_user</code>): your Torn ID, name, and the session token used for authentication. Your API key itself is not kept in the browser. Cleared when you sign out of the userscript.</li>
       <li><strong>Encryption keys</strong> (<code>tm_chat_keys</code>): the per-room end-to-end encryption keys for the private rooms you have joined. These never leave your browser.</li>
       <li><strong>House rules agreement</strong> (<code>tm_chat_house_rules</code>): the date you accepted the public room house rules. If you delete this entry, you will be asked to accept the rules again.</li>
       <li><strong>Error log</strong> (<code>tm_errors</code>): up to 50 error entries for debugging. You can copy or clear them from the userscript panel.</li>
@@ -154,7 +155,7 @@
       <code>/api/session</code> and uses the chat endpoints (<code>/api/chat/&hellip;</code>) for listing rooms,
       joining via invite token, viewing a private room's members, sending and fetching messages, uploading and
       downloading images, and host controls such as suspending a member. Requests are polled every few seconds while
-      a chat window is open. Every request includes your API key for authentication. No chat data is shared with
+      a chat window is open. Every request includes your session token for authentication; your API key itself is sent only once, at sign-in. No chat data is shared with
       any third party, other than the AWS image storage described above, which acts as a processor on my behalf.
     </p>
   </section>
