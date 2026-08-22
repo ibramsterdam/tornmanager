@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name         Torn Manager
+// @name         Torn Manager Chats
 // @namespace    tornmanager
 // @version      0.4.0
 // @author       Bram [2728237]
