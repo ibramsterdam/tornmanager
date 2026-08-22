@@ -1,11 +1,7 @@
 import "./main.css";
 import { Auth } from "@shared/core/Auth.js";
 import { Store } from "./core/Store.js";
-import { Keys } from "./core/Keys.js";
-import { Api } from "./core/Api.js";
-import { Roster } from "./core/Roster.js";
-import { Stats } from "./core/Stats.js";
-import { StatusRefresh } from "./core/StatusRefresh.js";
+import { RecruiterApi } from "./core/RecruiterApi.js";
 import { Overlay } from "./ui/Overlay.js";
 import { Sidebar } from "./ui/Sidebar.js";
 import { MenuEntry } from "./ui/MenuEntry.js";
@@ -16,20 +12,20 @@ import { KeysScreen } from "./ui/KeysScreen.js";
 import { SetupScreen } from "./ui/SetupScreen.js";
 import { OverviewScreen } from "./ui/OverviewScreen.js";
 
+const LEGACY_STORE_KEYS = ["keys", "roster", "stats", "status", "sweep_progress"];
+
 function boot() {
+  LEGACY_STORE_KEYS.forEach((key) => Store.remove(key));
+
   const auth = new Auth(Store);
-  const keys = new Keys();
-  const api = new Api(keys);
-  const roster = new Roster(api);
-  const stats = new Stats(api);
-  const status = new StatusRefresh(api);
+  const api = new RecruiterApi(auth);
 
   const overlay = new Overlay(auth);
-  overlay.register("auth", new AuthScreen(auth, overlay, keys, api));
+  overlay.register("auth", new AuthScreen(auth, overlay));
   overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-  overlay.register("keys", new KeysScreen(keys, api, overlay, auth));
+  overlay.register("keys", new KeysScreen(api, overlay, auth));
   overlay.register("setup", new SetupScreen(overlay));
-  overlay.register("overview", new OverviewScreen({ roster, stats, status, api, overlay }));
+  overlay.register("overview", new OverviewScreen(api, overlay));
 
   new Sidebar(overlay).init();
   new MenuEntry(overlay).init();

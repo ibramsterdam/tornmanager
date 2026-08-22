@@ -81,25 +81,12 @@ export class Overlay {
   }
 
   copyDebugInfo(button) {
-    const roster = Store.get("roster");
-    const stats = Store.get("stats");
-    const status = Store.get("status");
     const info = {
       version: __RC_VERSION__,
       generatedAt: new Date().toISOString(),
       user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
       subscribed: this.auth.isSubscribed(),
       settings: Store.get("settings"),
-      keys: (Store.get("keys", []) || []).map((k) => ({
-        key: `${k.key.slice(0, 4)}…${k.key.slice(-4)}`,
-        owner: `${k.ownerName} [${k.ownerId}]`,
-        accessType: k.accessType,
-        valid: k.valid,
-        callsToday: k.callsToday,
-      })),
-      roster: roster ? { companies: Object.keys(roster.companies).length, players: roster.players.length, fetchedAt: roster.fetchedAt } : null,
-      stats: stats?.fetchedAt ? { entries: Object.keys(stats.byId).length, floor: stats.floor, fetchedAt: stats.fetchedAt } : null,
-      status: status?.fetchedAt ? { entries: Object.keys(status.byId).length, fetchedAt: status.fetchedAt } : null,
       userAgent: navigator.userAgent,
     };
     navigator.clipboard
@@ -165,7 +152,7 @@ export class Overlay {
   }
 
   defaultScreen() {
-    return this.screens.keys?.hasKeys() ? "overview" : "keys";
+    return "overview";
   }
 
   refresh() {

@@ -22,7 +22,7 @@ export function post(path, body = {}, { token = null } = {}) {
         } catch {
           data = null;
         }
-        if (response.status >= 200 && response.status < 300 && data) {
+        if (response.status >= 200 && response.status < 300) {
           resolve(data);
         } else {
           const error = new Error(data?.error || "Request failed");

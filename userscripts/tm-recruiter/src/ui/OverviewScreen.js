@@ -3,19 +3,18 @@ import { Settings } from "../core/Settings.js";
 import { typeName } from "../core/CompanyTypes.js";
 import { ChatOpener } from "./ChatOpener.js";
 
-const PAGE_SIZE = 100;
+const STATUS_POLL_MS = 4_000;
+const STATUS_POLL_ATTEMPTS = 5;
+const STATUS_COMPANIES_PER_REQUEST = 30;
 
 export class OverviewScreen {
-  constructor({ roster, stats, status, api, overlay }) {
-    this.roster = roster;
-    this.stats = stats;
-    this.status = status;
+  constructor(api, overlay) {
     this.api = api;
     this.overlay = overlay;
-    this.running = null;
-    this.stopRequested = false;
     this.statusFilter = "any";
     this.page = 0;
+    this.minStats = 0;
+    this.statusByPlayer = {};
   }
 
   subtitle() {
@@ -26,18 +25,11 @@ export class OverviewScreen {
 
   render(container) {
     this.container = container;
-    const settings = Settings.get();
-    const matches = this.matches(settings);
-
-    container.appendChild(this.syncRows(matches));
-    this.progress = Dom.el("div", "rc-progress");
-    container.appendChild(this.progress);
-    if (this.barState) this.renderBar();
-
     container.appendChild(this.filterRow());
+    this.metaEl = Dom.el("div", "rc-meta");
     this.resultsWrap = Dom.el("div");
-    container.appendChild(this.resultsWrap);
-    this.renderResults();
+    container.append(this.metaEl, this.resultsWrap);
+    this.fetchMatches();
   }
 
   filterRow() {
@@ -49,7 +41,6 @@ export class OverviewScreen {
     this.statusChip.addEventListener("click", () => {
       const order = ["any", "online", "active"];
       this.statusFilter = order[(order.indexOf(this.statusFilter) + 1) % order.length];
-      this.page = 0;
       this.syncStatusChip();
       this.renderResults();
     });
@@ -69,7 +60,7 @@ export class OverviewScreen {
       if (value === (this.minStats || 0)) return;
       this.minStats = value;
       this.page = 0;
-      this.renderResults();
+      this.fetchMatches();
     };
     input.addEventListener("blur", apply);
     input.addEventListener("keydown", (e) => {
@@ -87,22 +78,41 @@ export class OverviewScreen {
     this.statusChip.classList.toggle("rc-chip--on", this.statusFilter !== "any");
   }
 
-  renderResults() {
+  async fetchMatches() {
     if (!this.resultsWrap) return;
-    const matches = this.matches(Settings.get());
-    const visible = this.filterByStatus(matches).filter((m) => m.stat.v >= (this.minStats || 0));
+    this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", "Loading matches…"));
 
-    const totalPages = Math.max(1, Math.ceil(visible.length / PAGE_SIZE));
-    this.page = Math.min(Math.max(0, this.page), totalPages - 1);
+    const settings = Settings.get();
+    try {
+      this.response = await this.api.matches({
+        type_ids: settings.typeIds,
+        star_min: settings.starMin,
+        star_max: settings.starMax,
+        min_stats: this.minStats || 0,
+        page: this.page,
+      });
+    } catch (error) {
+      this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", error.message));
+      return;
+    }
 
-    const meta = Dom.el("div", "rc-meta");
-    meta.append(
-      Dom.el("span", null, `${visible.length} of ${matches.length} matches shown`),
-      Dom.el("span", "rc-dim", "sorted by working stats")
+    this.renderResults();
+    this.refreshStatuses();
+  }
+
+  renderResults() {
+    if (!this.resultsWrap || !this.response) return;
+    const { matches, total, page_size: pageSize } = this.response;
+    const visible = this.filterByStatus(matches);
+    const totalPages = Math.max(1, Math.ceil(total / pageSize));
+    this.page = Math.min(this.page, totalPages - 1);
+
+    this.metaEl.replaceChildren(
+      Dom.el("span", null, `${total.toLocaleString()} matches · sorted by working stats`),
+      Dom.el("span", "rc-dim", this.freshness())
     );
 
-    const parts = [meta, this.table(visible.slice(this.page * PAGE_SIZE, (this.page + 1) * PAGE_SIZE))];
-
+    const parts = [this.table(visible)];
     if (totalPages > 1) {
       const pager = Dom.el("div", "rc-pager");
       const prev = Dom.el("button", "rc-btn rc-btn--ghost", "‹ Prev");
@@ -111,11 +121,11 @@ export class OverviewScreen {
       next.disabled = this.page >= totalPages - 1;
       prev.addEventListener("click", () => {
         this.page -= 1;
-        this.renderResults();
+        this.fetchMatches();
       });
       next.addEventListener("click", () => {
         this.page += 1;
-        this.renderResults();
+        this.fetchMatches();
       });
       pager.append(prev, Dom.el("span", "rc-dim", `page ${this.page + 1} of ${totalPages}`), next);
       parts.push(pager);
@@ -124,195 +134,48 @@ export class OverviewScreen {
     this.resultsWrap.replaceChildren(...parts);
   }
 
-  syncRows(matches) {
-    const wrap = Dom.el("div", "rc-syncs");
-    const companyCount = new Set(matches.map((m) => m.player.companyId)).size;
-    const capacity = Math.max(1, this.api.capacityPerWindow());
+  freshness() {
+    const meta = this.response?.meta || {};
+    const parts = [];
+    if (meta.roster_synced_at) parts.push(`roster ${shortAge(Date.parse(meta.roster_synced_at))}`);
+    if (meta.stats_swept_at) parts.push(`stats ${shortAge(Date.parse(meta.stats_swept_at))}`);
+    return parts.join(" · ") || "no data yet — the server syncs daily";
+  }
 
-    wrap.appendChild(this.syncRow({
-      name: "Roster",
-      desc: "who works where, ratings · 2 calls",
-      fetchedAt: this.roster.data?.fetchedAt,
-      staleAfterHours: 24,
-      action: () => this.updateRoster(),
-    }));
+  async refreshStatuses(attempt = 0) {
+    const matches = this.response?.matches || [];
+    const companyIds = [...new Set(matches.map((m) => m.company.torn_id))].slice(0, STATUS_COMPANIES_PER_REQUEST);
+    if (!companyIds.length) return;
 
-    let statsDesc = "needs a roster update first";
-    if (this.roster.data) {
-      const players = this.roster.data.players.filter((p) => !p.director);
-      const stale = this.stats.stalePlayers(players).length;
-      if (stale === 0) {
-        statsDesc = `all ${players.length.toLocaleString()} employees fresh (10 day cache)`;
-      } else {
-        const minutes = Math.max(1, Math.ceil(stale / capacity));
-        statsDesc = `${stale.toLocaleString()} of ${players.length.toLocaleString()} employees to fetch · ~${minutes} min`;
+    let data;
+    try {
+      data = await this.api.status(companyIds);
+    } catch {
+      return;
+    }
+
+    for (const employees of Object.values(data.statuses || {})) {
+      for (const employee of employees || []) {
+        this.statusByPlayer[employee.torn_id] = employee;
       }
     }
-    wrap.appendChild(this.syncRow({
-      name: "Working stats",
-      desc: statsDesc,
-      fetchedAt: this.stats.data?.fetchedAt,
-      staleAfterHours: 24 * 10,
-      action: () => this.updateStats(),
-    }));
+    this.renderResults();
 
-    wrap.appendChild(this.syncRow({
-      name: "Status",
-      desc: `online state of ${matches.length} matches · ${companyCount} calls`,
-      fetchedAt: this.status.data?.fetchedAt,
-      staleAfterHours: 1,
-      action: () => this.updateStatus(matches),
-    }));
-    return wrap;
-  }
-
-  syncRow({ name, desc, fetchedAt, staleAfterHours, action }) {
-    const row = Dom.el("div", "rc-sync");
-    const isRunning = this.running === name;
-    const button = Dom.el("button", "rc-btn rc-btn--ghost", isRunning ? "Pause" : "Update");
-    button.disabled = !!this.running && !isRunning;
-
-    button.addEventListener("click", async () => {
-      if (this.running === name) {
-        this.stopRequested = true;
-        button.textContent = "Pausing…";
-        button.disabled = true;
-        return;
-      }
-      if (this.running) return;
-
-      this.running = name;
-      this.stopRequested = false;
-      button.textContent = "Pause";
-
-      let message;
-      let paused;
-      try {
-        message = await action();
-      } catch (error) {
-        this.setProgress(`${name} failed: ${error.message}`);
-        return;
-      } finally {
-        paused = this.stopRequested;
-        this.running = null;
-        this.stopRequested = false;
-        this.stopTicker();
-        this.barState = null;
-      }
-      this.overlay.refresh();
-      this.setProgress(paused ? `${name} paused, progress so far is saved.` : message || "");
-    });
-
-    row.append(
-      Dom.el("span", "rc-sync-name", name),
-      Dom.el("span", "rc-dim", desc),
-      ageBadge(fetchedAt, staleAfterHours),
-      button
-    );
-    return row;
-  }
-
-  async updateRoster() {
-    await this.roster.update(Settings.get(), { onProgress: (text) => this.setProgress(text) });
-    return "Roster updated.";
-  }
-
-  async updateStats() {
-    const roster = this.roster.data;
-    if (!roster) return "Update the roster first, stats are fetched for the employees in your tracked companies.";
-
-    const players = roster.players.filter((p) => !p.director);
-    const staleCount = this.stats.stalePlayers(players).length;
-
-    await this.stats.run(players, {
-      shouldStop: () => this.stopRequested,
-      onProgress: (done, total) => this.setBar({ done, total, unit: "employees" }),
-    });
-    return staleCount
-      ? `Working stats fetched for ${staleCount.toLocaleString()} employees (${(players.length - staleCount).toLocaleString()} were still fresh).`
-      : "All employees were already fresh, nothing to fetch.";
-  }
-
-  async updateStatus(matches) {
-    const companyIds = [...new Set(matches.map((m) => m.player.companyId))];
-    if (!companyIds.length) return "No matches yet. Update the roster and working stats first.";
-
-    await this.status.refresh(companyIds, {
-      shouldStop: () => this.stopRequested,
-      onProgress: (done, total) => this.setBar({ done, total, unit: "companies" }),
-    });
-    return `Status refreshed for ${companyIds.length} companies.`;
-  }
-
-  setProgress(text) {
-    this.stopTicker();
-    this.barState = null;
-    if (this.progress) this.progress.textContent = text;
-  }
-
-  setBar({ done, total, unit }) {
-    this.barState = { done, total, unit, at: Date.now() };
-    if (!this.ticker) this.ticker = setInterval(() => this.renderBar(), 1000);
-    this.renderBar();
-  }
-
-  stopTicker() {
-    if (this.ticker) {
-      clearInterval(this.ticker);
-      this.ticker = null;
+    if (data.pending?.length && attempt < STATUS_POLL_ATTEMPTS && this.container?.isConnected) {
+      setTimeout(() => this.refreshStatuses(attempt + 1), STATUS_POLL_MS);
     }
-  }
-
-  renderBar() {
-    if (!this.progress || !this.barState) return;
-    const { done, total, unit, at } = this.barState;
-
-    if (!this.barEl?.isConnected || this.barEl.parentElement !== this.progress) {
-      this.barEl = Dom.el("div", "rc-bar");
-      this.barFill = Dom.el("div", "rc-bar-fill");
-      this.barText = Dom.el("span", "rc-bar-text");
-      this.barEl.append(this.barFill, this.barText);
-      this.progress.replaceChildren(this.barEl);
-    }
-
-    // Calls land in one burst per minute-window; between bursts the counter
-    // advances at the pool's average rate and snaps to the real number on
-    // every progress event.
-    const ratePerSecond = Math.max(1, this.api.capacityPerWindow()) / 60;
-    const elapsed = (Date.now() - at) / 1000;
-    const displayed = Math.min(total, Math.floor(done + ratePerSecond * elapsed));
-
-    const fraction = total ? displayed / total : 1;
-    this.barFill.style.width = `${Math.min(97, Math.max(3, fraction * 100)).toFixed(1)}%`;
-
-    const remaining = (total - displayed) / ratePerSecond;
-    const countdown = remaining < 1 ? "any moment now" : `~${formatDuration(remaining)} left`;
-    this.barText.textContent = `${countdown} · ${displayed.toLocaleString()} of ${total.toLocaleString()} ${unit} fetched`;
-  }
-
-  matches(settings) {
-    const roster = this.roster.data;
-    const stats = this.stats.data?.byId || {};
-    const statuses = this.status.data?.byId || {};
-    if (!roster) return [];
-
-    const cutoff = Date.now() / 1000 - settings.inactiveDays * 86_400;
-    const result = [];
-    for (const player of roster.players) {
-      if (player.director) continue;
-      const stat = stats[player.id];
-      if (!stat || !(stat.v > 0)) continue;
-      const status = statuses[player.id];
-      const lastAction = status?.timestamp || stat.la;
-      if (lastAction && lastAction < cutoff) continue;
-      result.push({ player, company: roster.companies[player.companyId], stat, status });
-    }
-    return result.sort((a, b) => b.stat.v - a.stat.v);
   }
 
   filterByStatus(matches) {
-    if (this.statusFilter === "online") return matches.filter((m) => m.status?.status === "Online");
-    if (this.statusFilter === "active") return matches.filter((m) => m.status && m.status.status !== "Offline");
+    if (this.statusFilter === "online") {
+      return matches.filter((m) => this.statusByPlayer[m.torn_id]?.status === "Online");
+    }
+    if (this.statusFilter === "active") {
+      return matches.filter((m) => {
+        const status = this.statusByPlayer[m.torn_id];
+        return status && status.status !== "Offline";
+      });
+    }
     return matches;
   }
 
@@ -325,37 +188,43 @@ export class OverviewScreen {
     table.appendChild(head);
 
     if (!rows.length) {
-      const empty = Dom.el("div", "rc-empty", "Nothing to show yet. Run the three updates above, top to bottom.");
-      table.appendChild(empty);
+      table.appendChild(Dom.el("div", "rc-empty", "No matches. Adjust the company types and stars in Setup — the server refreshes data daily."));
       return table;
     }
 
-    for (const { player, company, stat, status } of rows) {
+    for (const match of rows) {
+      const status = this.statusByPlayer[match.torn_id];
       const row = Dom.el("div", "rc-trow");
 
       const who = Dom.el("div");
-      const playerLink = Dom.el("a", "rc-name rc-link", player.name);
-      playerLink.href = `https://www.torn.com/profiles.php?XID=${player.id}`;
+      const playerLink = Dom.el("a", "rc-name rc-link", match.name);
+      playerLink.href = `https://www.torn.com/profiles.php?XID=${match.torn_id}`;
       playerLink.target = "_blank";
       playerLink.rel = "noopener";
-      who.append(playerLink, Dom.el("div", "rc-dim", `Lv ${player.level} · ${player.id}`));
+      const whoDetail = Dom.el("div", "rc-dim", `Lv ${match.level} · ${match.torn_id}`);
+      who.append(playerLink, whoDetail);
+      if (match.faction_mate_of_director) {
+        const badge = Dom.el("span", "rc-badge rc-badge--aging", "director's faction");
+        badge.title = "In the same faction as the company director — probably loyal";
+        who.appendChild(badge);
+      }
 
-      const ws = Dom.el("div", "rc-ws", stat.v.toLocaleString());
-      ws.appendChild(Dom.el("small", null, stat.t ? shortAge(stat.t) : ""));
+      const ws = Dom.el("div", "rc-ws", (match.working_stats || 0).toLocaleString());
 
       const state = Dom.el("div", "rc-state");
       const dotClass = status?.status === "Online" ? "rc-dot--on" : status?.status === "Idle" ? "rc-dot--idle" : "rc-dot--off";
-      state.append(Dom.el("span", `rc-dot ${dotClass}`), Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown"));
+      state.append(
+        Dom.el("span", `rc-dot ${dotClass}`),
+        Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown")
+      );
 
       const co = Dom.el("div");
-      const coLink = Dom.el("a", "rc-name rc-name--co rc-link", company?.name || "?");
-      if (player.companyId) {
-        coLink.href = `https://www.torn.com/joblist.php#/p=corpinfo&ID=${player.companyId}`;
-        coLink.target = "_blank";
-        coLink.rel = "noopener";
-      }
-      coLink.appendChild(Dom.el("span", "rc-star", ` ★ ${company?.rating ?? "?"}`));
-      const detail = [typeName(company?.typeId), status?.position, status?.days != null ? `${status.days}d` : null]
+      const coLink = Dom.el("a", "rc-name rc-name--co rc-link", match.company.name || "?");
+      coLink.href = `https://www.torn.com/joblist.php#/p=corpinfo&ID=${match.company.torn_id}`;
+      coLink.target = "_blank";
+      coLink.rel = "noopener";
+      coLink.appendChild(Dom.el("span", "rc-star", ` ★ ${match.company.rating}`));
+      const detail = [typeName(match.company.company_type_id), status?.position, status?.days_in_company != null ? `${status.days_in_company}d` : null]
         .filter(Boolean)
         .join(" · ");
       co.append(coLink, Dom.el("div", "rc-dim", detail));
@@ -365,7 +234,7 @@ export class OverviewScreen {
       chat.title = "Start Torn chat";
       chat.innerHTML =
         '<svg viewBox="0 0 16 16" width="12" height="12" fill="currentColor" aria-hidden="true"><path d="M8 1.5c-4 0-7 2.6-7 5.8 0 1.8.9 3.4 2.4 4.5-.1 1-.5 1.9-1.2 2.7 1.5-.1 2.8-.6 3.8-1.3.6.2 1.3.2 2 .2 4 0 7-2.6 7-5.8s-3-6.1-7-6.1z"/></svg>';
-      chat.href = ChatOpener.chatUrl(player.id);
+      chat.href = ChatOpener.chatUrl(match.torn_id);
       chat.target = "_blank";
       chat.rel = "noopener";
       acts.appendChild(chat);
@@ -377,13 +246,6 @@ export class OverviewScreen {
   }
 }
 
-function ageBadge(fetchedAt, staleAfterHours) {
-  if (!fetchedAt) return Dom.el("span", "rc-badge rc-badge--stale", "never");
-  const hours = (Date.now() - fetchedAt) / 3_600_000;
-  const cls = hours < staleAfterHours ? "rc-badge--fresh" : hours < staleAfterHours * 2 ? "rc-badge--aging" : "rc-badge--stale";
-  return Dom.el("span", `rc-badge ${cls}`, shortAge(fetchedAt));
-}
-
 function shortAge(fetchedAt) {
   if (!fetchedAt) return "";
   const minutes = Math.floor((Date.now() - fetchedAt) / 60_000);
@@ -392,14 +254,4 @@ function shortAge(fetchedAt) {
   const hours = Math.floor(minutes / 60);
   if (hours < 48) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
-}
-
-function formatDuration(seconds) {
-  seconds = Math.round(seconds);
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-  if (hours) return `${hours}h ${String(minutes).padStart(2, "0")}m ${String(secs).padStart(2, "0")}s`;
-  if (minutes) return `${minutes}m ${String(secs).padStart(2, "0")}s`;
-  return `${secs}s`;
 }

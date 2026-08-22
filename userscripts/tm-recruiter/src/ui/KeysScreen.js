@@ -1,26 +1,19 @@
 import { Dom } from "@shared/core/Dom.js";
 
-const CALLS_PER_KEY_PER_MINUTE = 75;
-
 export class KeysScreen {
-  constructor(keys, api, overlay, auth) {
-    this.keys = keys;
+  constructor(api, overlay, auth) {
     this.api = api;
     this.overlay = overlay;
     this.auth = auth;
   }
 
-  hasKeys() {
-    return this.keys.active().length > 0;
-  }
-
   subtitle() {
-    return "api keys";
+    return "key pool";
   }
 
   render(container) {
     const addCard = Dom.el("div", "rc-card");
-    const label = Dom.el("div", "rc-label", "Add a key (public access is enough)");
+    const label = Dom.el("div", "rc-label", "Add a key to the shared pool (Public access only)");
     const row = Dom.el("div", "rc-row");
     const input = Dom.el("input", "rc-input");
     input.type = "text";
@@ -34,11 +27,11 @@ export class KeysScreen {
       feedback.textContent = "";
       feedback.className = "rc-feedback";
       try {
-        const entry = await this.keys.add(input.value, this.api);
-        feedback.textContent = `Added ${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}`;
+        const data = await this.api.submitKey(input.value.trim());
+        feedback.textContent = `Added ${data.key.owner_name} [${data.key.owner_torn_id}] · ${data.key.access_type}`;
         feedback.classList.add("rc-feedback--ok");
         input.value = "";
-        this.overlay.refresh();
+        this.loadKeys();
       } catch (error) {
         feedback.textContent = error.message;
         feedback.classList.add("rc-feedback--error");
@@ -52,36 +45,59 @@ export class KeysScreen {
     addCard.append(label, row, feedback);
     container.appendChild(addCard);
 
-    const list = Dom.el("div", "rc-list");
-    for (const entry of this.keys.all()) {
-      const item = Dom.el("div", "rc-list-row");
-      const badge = Dom.el("span", `rc-badge ${entry.valid ? "rc-badge--fresh" : "rc-badge--stale"}`, entry.valid ? "valid" : "invalid");
-      const masked = Dom.el("span", "rc-mono", `${entry.key.slice(0, 4)}…${entry.key.slice(-4)}`);
-      const isSignIn = entry.ownerId === this.auth.getUser()?.torn_id;
-      const owner = Dom.el("span", "rc-dim", `${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}${isSignIn ? " · sign-in key" : ""}`);
-      const usage = Dom.el("span", "rc-dim", `${entry.callsToday.toLocaleString()} calls today`);
-      const remove = Dom.el("button", "rc-act", "✕");
-      remove.addEventListener("click", () => {
-        this.keys.remove(entry.key);
-        this.overlay.refresh();
-      });
-      item.append(badge, masked, owner, usage, remove);
-      list.appendChild(item);
-    }
-    container.appendChild(list);
-
-    const count = this.keys.active().length;
-    const budget = count * CALLS_PER_KEY_PER_MINUTE;
-    const summary = Dom.el(
+    const consent = Dom.el(
       "div",
       "rc-scope",
-      count
-        ? `${count} key${count === 1 ? "" : "s"}, ${count} player${count === 1 ? "" : "s"} · budget ~${budget} calls/min (${CALLS_PER_KEY_PER_MINUTE} per key, headroom kept)`
-        : "No keys yet. Every key must come from a different player, Torn's 100/min limit is per player."
+      "Pool keys are stored on the TornManager server and used for background fetching from the official Torn API. " +
+        "Every call carries the comment tmrecruiter, so any owner can audit usage in their own Torn key log. " +
+        "Only add keys their owners handed you willingly. Revoking a key stops all use of it."
     );
-    container.appendChild(summary);
+    container.appendChild(consent);
+
+    this.listEl = Dom.el("div", "rc-list");
+    container.appendChild(this.listEl);
+    this.loadKeys();
 
     container.appendChild(this.subscriptionCard());
+  }
+
+  async loadKeys() {
+    if (!this.listEl) return;
+    this.listEl.replaceChildren(Dom.el("div", "rc-dim", "Loading…"));
+    try {
+      const data = await this.api.listKeys();
+      this.renderList(data.keys || []);
+    } catch (error) {
+      this.listEl.replaceChildren(Dom.el("div", "rc-feedback rc-feedback--error", error.message));
+    }
+  }
+
+  renderList(keys) {
+    if (!keys.length) {
+      this.listEl.replaceChildren(Dom.el("div", "rc-dim", "No keys in your pool yet. More keys from different players means faster server-side fetching for everyone."));
+      return;
+    }
+
+    const rows = keys.map((key) => {
+      const item = Dom.el("div", "rc-list-row");
+      const badge = Dom.el("span", "rc-badge rc-badge--fresh", key.mine ? "your key" : "contributed");
+      const owner = Dom.el("span", "rc-dim", `${key.owner_name} [${key.owner_torn_id}] · ${key.access_type}`);
+      const added = Dom.el("span", "rc-dim", `added ${new Date(key.added_at).toLocaleDateString()}`);
+      const remove = Dom.el("button", "rc-act", "✕");
+      remove.title = "Revoke this key from the pool";
+      remove.addEventListener("click", async () => {
+        remove.disabled = true;
+        try {
+          await this.api.revokeKey(key.owner_torn_id);
+          this.loadKeys();
+        } catch {
+          remove.disabled = false;
+        }
+      });
+      item.append(badge, owner, added, remove);
+      return item;
+    });
+    this.listEl.replaceChildren(...rows);
   }
 
   subscriptionCard() {

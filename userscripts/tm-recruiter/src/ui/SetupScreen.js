@@ -1,6 +1,6 @@
 import { Dom } from "@shared/core/Dom.js";
 import { COMPANY_TYPES } from "../core/CompanyTypes.js";
-import { Settings, STAR_RANGE, INACTIVE_RANGE } from "../core/Settings.js";
+import { Settings, STAR_RANGE } from "../core/Settings.js";
 
 export class SetupScreen {
   constructor(overlay) {
@@ -49,23 +49,15 @@ export class SetupScreen {
         Settings.set({ starMax: value });
       })
     );
-    row.appendChild(
-      this.stepper("Ignore inactive over (days)", settings.inactiveDays, INACTIVE_RANGE.min, INACTIVE_RANGE.max, (value) => {
-        Settings.set({ inactiveDays: value });
-      })
-    );
-
     rangeCard.appendChild(row);
     rangeCard.appendChild(
       Dom.el(
         "div",
         "rc-hint",
-        "Everything saves automatically. Working stats are fetched once per employee of the tracked companies and cached for 10 days, so the cost scales with how many companies you track."
+        "Everything saves automatically. Company rosters and working stats are fetched and refreshed on the TornManager server daily, so changes apply the next time the overview loads."
       )
     );
     container.appendChild(rangeCard);
-
-    container.appendChild(Dom.el("div", "rc-hint", "Company type and star changes apply after the next roster update."));
   }
 
   stepper(labelText, value, min, max, onChange) {

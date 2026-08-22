@@ -5,16 +5,14 @@ const DISCLOSURE = [
   ["Data Storage", "Persistent until you remove your key"],
   ["Data Sharing", "Nobody (your data is private)"],
   ["Purpose of Use", "Signing in and verifying your TornManager subscription"],
-  ["Key Storage & Sharing", "Stored in the TornManager database, used only for verification"],
-  ["Key Access Level", "Public access (required)"],
+  ["Key Storage & Sharing", "Stored in the TornManager database as your sign-in credential"],
+  ["Key Access Level", "Public access is enough"],
 ];
 
 export class AuthScreen {
-  constructor(auth, overlay, keys, api) {
+  constructor(auth, overlay) {
     this.auth = auth;
     this.overlay = overlay;
-    this.keys = keys;
-    this.api = api;
   }
 
   subtitle() {
@@ -83,10 +81,8 @@ export class AuthScreen {
       error.textContent = "";
 
       try {
-        await this.requirePublicAccess(apiKey);
         await this.auth.authenticate(apiKey);
         await this.auth.fetchSubscription().catch(() => null);
-        await this.addToPool(apiKey);
         this.overlay.open();
       } catch (err) {
         error.textContent = err.message;
@@ -97,7 +93,7 @@ export class AuthScreen {
 
     const hint = Dom.el("p", "rc-auth-hint");
     hint.innerHTML =
-      'A key with <strong>Public</strong> access is all this script needs, and it accepts nothing else. ' +
+      'A key with <strong>Public</strong> access is all Recruiter needs to sign you in. ' +
       '<a href="https://www.torn.com/preferences.php#tab=api" target="_blank" rel="noopener">Create one here</a>.';
 
     wrap.append(form, hint);
@@ -112,25 +108,4 @@ export class AuthScreen {
     return link;
   }
 
-  async requirePublicAccess(apiKey) {
-    let access;
-    try {
-      const info = await this.api.call("/key/info", {}, apiKey);
-      access = info.info?.access || info.access || {};
-    } catch (err) {
-      throw new Error(err.message || "Could not validate the key with Torn", { cause: err });
-    }
-    const type = String(access.type || "");
-    if (!/public/i.test(type)) {
-      throw new Error(`This key has ${type || "unknown"} access. Recruiter only accepts Public access keys.`);
-    }
-  }
-
-  async addToPool(apiKey) {
-    const user = this.auth.getUser();
-    if (!user) return;
-    const pool = this.keys.all();
-    if (pool.some((k) => k.ownerId === user.torn_id || k.key === apiKey)) return;
-    await this.keys.add(apiKey, this.api).catch(() => null);
-  }
 }
