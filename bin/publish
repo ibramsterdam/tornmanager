@@ -3,23 +3,32 @@ set -euo pipefail
 
 # Builds a new public userscript release and stages it for commit.
 #
-#   bin/publish           # patch bump (0.3.1 -> 0.3.2)
-#   bin/publish minor     # 0.3.1 -> 0.4.0
-#   bin/publish major     # 0.3.1 -> 1.0.0
-#   bin/publish 1.2.3     # explicit version
+#   bin/publish                   # tornmanager, patch bump (0.3.1 -> 0.3.2)
+#   bin/publish minor             # tornmanager, 0.3.1 -> 0.4.0
+#   bin/publish 1.2.3             # tornmanager, explicit version
+#   bin/publish recruiter         # recruiter, patch bump
+#   bin/publish recruiter minor   # recruiter, minor bump
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-cd "$ROOT/userscript"
 
+SCRIPT="tornmanager"
+case "${1:-}" in
+  tornmanager|recruiter) SCRIPT="$1"; shift ;;
+esac
+
+SRC_DIR="userscripts/$SCRIPT"
+ARTIFACT="userscript/$SCRIPT.user.js"
+
+cd "$ROOT/$SRC_DIR"
 VERSION=$(npm version "${1:-patch}" --no-git-tag-version)
 npm run release --silent
 
 cd "$ROOT"
-git add userscript/package.json userscript/package-lock.json userscript/tornmanager.user.js
+git add "$SRC_DIR/package.json" "$SRC_DIR/package-lock.json" "$ARTIFACT"
 
 echo
-echo "Userscript $VERSION built and staged:"
-git diff --cached --stat -- userscript/ | sed 's/^/  /'
+echo "$SCRIPT userscript $VERSION built and staged:"
+git diff --cached --stat -- "$SRC_DIR" "$ARTIFACT" | sed 's/^/  /'
 echo
-echo "Install link: https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js"
+echo "Install link: https://github.com/ibramsterdam/tornmanager/raw/main/$ARTIFACT"
 echo "Next: commit and push. Deploy the Rails app first if this release needs new API endpoints."

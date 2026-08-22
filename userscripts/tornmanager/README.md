@@ -8,14 +8,14 @@ JSON API (`/api/session`, `/api/subscription`, `/api/current_war`) — against
 
 1. Install dependencies:
    ```bash
-   cd userscript && npm install
+   cd userscripts/tornmanager && npm install
    ```
 
 2. Create a development wrapper script in Tampermonkey:
    ```javascript
    // ==UserScript==
    // @name         Torn Manager Dev (Local)
-   // @require      file:///<path to repository>/userscript/dist/development.tornmanager.user.js
+   // @require      file:///<path to repository>/userscripts/tornmanager/dist/development.tornmanager.user.js
    // @match        https://www.torn.com/*
    // @grant        GM.notification
    // @grant        GM.xmlHttpRequest
@@ -42,8 +42,12 @@ install immediately — is the built script committed in this repo:
 Installed scripts auto-update from that same URL (`@updateURL`/`@downloadURL`)
 whenever the committed file's `@version` increases.
 
+The install URL is frozen: the source lives in `userscripts/tornmanager/`, but
+the built artifact is always copied to `userscript/tornmanager.user.js` because
+every installed script checks that exact path for updates. Do not move it.
+
 ```bash
-cd userscript
+cd userscripts/tornmanager
 npm run release   # production build + copies dist/ to userscript/tornmanager.user.js
 ```
 

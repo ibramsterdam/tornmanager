@@ -1,4 +1,4 @@
-import chatBannerSvg from "../../../assets/chat-banner.svg?raw";
+import chatBannerSvg from "../../../../assets/chat-banner.svg?raw";
 import { ApiDisclosure, MAIN_KEY_DISCLOSURE } from "./ApiDisclosure.js";
 
 const BANNER_URI = `data:image/svg+xml;utf8,${encodeURIComponent(chatBannerSvg)}`;

@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "NODE_ENV=development vite build --watch",
     "build": "vite build",
-    "release": "vite build && cp dist/tornmanager.user.js tornmanager.user.js"
+    "release": "vite build && cp dist/tornmanager.user.js ../../userscript/tornmanager.user.js"
   },
   "devDependencies": {
     "vite": "^6.3.5",

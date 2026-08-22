@@ -30,8 +30,9 @@
 /tmp/storage/*
 !/tmp/storage/.keep
 
-# Ignore the userscript (built and served via ScriptVersion, not from the image).
+# Ignore the userscripts (distributed via GitHub raw, not from the image).
 /userscript/
+/userscripts/
 
 # Ignore assets.
 /node_modules/
