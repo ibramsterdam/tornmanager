@@ -5,9 +5,10 @@ export const SUBSCRIPTION_NOTE =
   "Recruiter requires an active TornManager subscription. The script stays locked until your subscription is active.";
 
 export class SubscriptionScreen {
-  constructor(auth, overlay) {
+  constructor(auth, overlay, api) {
     this.auth = auth;
     this.overlay = overlay;
+    this.api = api;
   }
 
   subtitle() {
@@ -27,8 +28,10 @@ export class SubscriptionScreen {
 
     const actions = Dom.el("div", "rc-actions-row");
     const removeKey = Dom.el("button", "rc-btn-danger", "Remove API key");
-    removeKey.addEventListener("click", () => {
+    removeKey.addEventListener("click", async () => {
       this.section?.destroy();
+      const tornId = this.auth.getUser()?.torn_id;
+      if (tornId) await this.api.revokeKey(tornId).catch(() => null);
       this.auth.clear();
       this.overlay.open();
     });

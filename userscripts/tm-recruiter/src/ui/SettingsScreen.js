@@ -4,9 +4,10 @@ import { StorageViewer } from "@shared/ui/StorageViewer.js";
 import { SUBSCRIPTION_NOTE } from "./SubscriptionScreen.js";
 
 export class SettingsScreen {
-  constructor(auth, overlay) {
+  constructor(auth, overlay, api) {
     this.auth = auth;
     this.overlay = overlay;
+    this.api = api;
   }
 
   subtitle() {
@@ -23,8 +24,10 @@ export class SettingsScreen {
 
     const actions = Dom.el("div", "rc-actions-row");
     const removeKey = Dom.el("button", "rc-btn-danger", "Remove API key");
-    removeKey.addEventListener("click", () => {
+    removeKey.addEventListener("click", async () => {
       this.section?.destroy();
+      const tornId = this.auth.getUser()?.torn_id;
+      if (tornId) await this.api.revokeKey(tornId).catch(() => null);
       this.auth.clear();
       this.overlay.open();
     });

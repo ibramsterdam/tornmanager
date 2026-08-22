@@ -1,6 +1,6 @@
 module Api
   class RecruiterKeysController < BaseController
-    before_action :require_active_subscription
+    before_action :require_active_subscription, except: :destroy
     rate_limit to: 10, within: 1.minute
 
     def create

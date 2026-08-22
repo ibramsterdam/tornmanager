@@ -36,7 +36,7 @@ export class Overlay {
     title.append(Dom.el("div", "rc-head-title", "Recruiter"), (this.subtitle = Dom.el("div", "rc-head-sub", "")));
 
     this.nav = Dom.el("div", "rc-nav");
-    for (const [name, label] of [["search", "Search"], ["keys", "Keys"]]) {
+    for (const [name, label] of [["search", "Search"]]) {
       const link = Dom.el("button", "rc-nav-link", label);
       link.dataset.screen = name;
       link.addEventListener("click", () => this.show(name));

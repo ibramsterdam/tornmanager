@@ -8,7 +8,6 @@ import { MenuEntry } from "./ui/MenuEntry.js";
 import { ChatOpener } from "./ui/ChatOpener.js";
 import { AuthScreen } from "./ui/AuthScreen.js";
 import { SubscriptionScreen } from "./ui/SubscriptionScreen.js";
-import { KeysScreen } from "./ui/KeysScreen.js";
 import { SearchScreen } from "./ui/SearchScreen.js";
 import { SettingsScreen } from "./ui/SettingsScreen.js";
 
@@ -22,10 +21,9 @@ function boot() {
 
   const overlay = new Overlay(auth);
   overlay.register("auth", new AuthScreen(auth, overlay, api));
-  overlay.register("subscription", new SubscriptionScreen(auth, overlay));
-  overlay.register("keys", new KeysScreen(api, overlay));
+  overlay.register("subscription", new SubscriptionScreen(auth, overlay, api));
   overlay.register("search", new SearchScreen(api, overlay));
-  overlay.register("settings", new SettingsScreen(auth, overlay));
+  overlay.register("settings", new SettingsScreen(auth, overlay, api));
 
   new Sidebar(overlay).init();
   new MenuEntry(overlay).init();

@@ -91,6 +91,17 @@ class Api::RecruiterKeysControllerTest < ActionDispatch::IntegrationTest
     assert ApiKey.exists?(record.id)
   end
 
+  test "revoke works without an active subscription" do
+    bert = users(:bert)
+    bert_key = api_keys(:bert_personal_key)
+    bert_key.update!(recruiter_fetch_allowed: true)
+
+    post api_recruiter_revoke_key_path, params: { torn_id: bert.torn_id }, headers: api_auth(bert), as: :json
+
+    assert_response :no_content
+    assert_not bert_key.reload.recruiter_fetch_allowed
+  end
+
   test "revoke returns not found for keys outside your pool" do
     post api_recruiter_revoke_key_path, params: { torn_id: 999 }, headers: api_auth(@bram), as: :json
 

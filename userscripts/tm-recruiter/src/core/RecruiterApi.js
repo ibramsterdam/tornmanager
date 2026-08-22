@@ -19,10 +19,6 @@ export class RecruiterApi {
     return this.post("/api/recruiter/submit_key", { key });
   }
 
-  listKeys() {
-    return this.post("/api/recruiter/keys", {});
-  }
-
   revokeKey(tornId) {
     return this.post("/api/recruiter/revoke_key", { torn_id: tornId });
   }

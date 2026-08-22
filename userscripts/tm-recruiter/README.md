@@ -21,11 +21,12 @@ The script is locked behind a TornManager account and subscription, reusing the 
 
 ## API keys
 
-The Keys screen contributes keys to a shared pool stored on the TornManager
-server (`/api/recruiter/submit_key`, validated server-side: Public access only,
-one key per owner). The server uses the pool for its background fetching; every
-call carries `comment=tmrecruiter` so key owners can audit usage in their Torn
-key log. Revoking a key on the Keys screen stops all use of it.
+The shared pool holds the sign-in keys of Recruiter subscribers: signing in
+submits your key (`/api/recruiter/submit_key`, validated server-side: Public
+access only, one key per owner). The server uses the pool for its background
+fetching; every call carries `comment=tmrecruiter` so key owners can audit
+usage in their Torn key log. Removing your API key in the script's settings
+revokes it from the pool.
 
 ## Development
 
