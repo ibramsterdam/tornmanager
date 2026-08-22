@@ -398,7 +398,12 @@ export class Overlay {
 
   renderUnauthenticatedPanel() {
     const authScreen = new AuthScreen(this.auth);
-    this.panel.appendChild(authScreen.render(() => this.renderPanel()));
+    this.panel.appendChild(
+      authScreen.render(() => {
+        this.chatDock?.init();
+        this.renderPanel();
+      })
+    );
   }
 
   createFooter() {

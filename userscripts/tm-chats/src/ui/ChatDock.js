@@ -35,8 +35,11 @@ export class ChatDock {
     this.unreadInterval = null;
   }
 
+  // Idempotent: boot calls it before sign-in (no-op) and the overlay calls it
+  // again after a successful sign-in, so rooms open without a page reload.
   init() {
-    if (!this.auth.isAuthenticated()) return;
+    if (this.initialized || !this.auth.isAuthenticated()) return;
+    this.initialized = true;
 
     Dom.ready("body", () => {
       this.fab = document.createElement("button");
@@ -336,6 +339,8 @@ export class ChatDock {
   }
 
   mountBox(roomId) {
+    if (!this.boxesEl) return;
+
     const room = this.rooms.find((r) => r.id === roomId);
     if (!room) return;
 
