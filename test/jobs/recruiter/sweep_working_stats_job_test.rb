@@ -26,6 +26,17 @@ class Recruiter::SweepWorkingStatsJobTest < ActiveJob::TestCase
     assert_not_nil @bert.working_stats_at
   end
 
+  test "cools down and resumes the same page when the key budget is spent" do
+    below_floor_page = [ leaderboard_row(torn_id: @bert.torn_id, value: 480_000) ]
+    TornApi::Torn::HofLeaderboard.any_instance.expects(:fetch).twice
+      .raises(TornApi::RateLimitError, "Too many requests")
+      .then.returns(below_floor_page)
+
+    Recruiter::SweepWorkingStatsJob.perform_now
+
+    assert_equal 480_000, @bert.reload.working_stats
+  end
+
   test "skips when no key is available" do
     Recruiter::KeyPool.stubs(:next_key).returns(nil)
     TornApi::Torn::HofLeaderboard.any_instance.expects(:fetch).never
