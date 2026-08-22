@@ -42,7 +42,7 @@ module Daily
 
       members.each do |member|
         user = User.find_or_initialize_by(torn_id: member.id)
-        new_member = user.new_record?
+        newly_tracked = user.faction_id != faction.id
         user.assign_attributes(
           name: member.name,
           level: member.level,
@@ -52,7 +52,7 @@ module Daily
         )
         user.save!
 
-        schedule_backfill(user, api_key) if new_member
+        schedule_backfill(user, api_key) if newly_tracked
       end
     end
 

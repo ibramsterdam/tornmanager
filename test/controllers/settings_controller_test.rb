@@ -100,6 +100,15 @@ class SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @user.api_key
   end
 
+  test "purge_data rotates the api token so userscript sessions are revoked" do
+    old_token = @user.api_token
+
+    delete settings_purge_data_path
+
+    @user.reload
+    assert_not_equal old_token, @user.api_token
+  end
+
   test "purge_data preserves subscription" do
     expiration = 30.days.from_now
     grant_subscription(@user, expires_at: expiration)

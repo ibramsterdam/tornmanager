@@ -81,6 +81,7 @@ class SettingsController < ApplicationController
     Current.user.sessions.destroy_all
     Current.user.api_calls.destroy_all
     Current.user.set_api_key!(nil, nil)
+    Current.user.regenerate_api_token
 
     Rails.logger.info "Data purge completed for user #{Current.user.torn_id}"
 

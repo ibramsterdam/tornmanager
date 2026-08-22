@@ -150,4 +150,31 @@ class Daily::FactionMemberSyncJobTest < ActiveJob::TestCase
       Daily::FactionMemberSyncJob.perform_now
     end
   end
+
+  test "schedules backfill when an already known user joins the faction" do
+    bert = users(:bert)
+    bert.update!(faction_id: nil)
+
+    bert_member = TornApi::Faction::Members::Member.new(
+      bert.torn_id, "Bert", 50, 1,
+      "Online", 1708000000, "1 minute ago",
+      "Okay", "", "Okay", "green", 0, nil,
+      "Everyone", "Member", true, false, false, false
+    )
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data, bert_member ])
+
+    Daily::FactionMemberSyncJob.perform_now
+
+    backfills = enqueued_jobs.select { |j| j["job_class"] == "BackfillUserStatsJob" }
+    assert_equal 1, backfills.size
+    assert_equal bert.id, backfills.first["arguments"].first
+  end
+
+  test "does not schedule backfill for members already in the faction" do
+    TornApi::Faction::Members.any_instance.stubs(:fetch).returns([ @member_data ])
+
+    Daily::FactionMemberSyncJob.perform_now
+
+    assert_no_enqueued_jobs(only: BackfillUserStatsJob)
+  end
 end
