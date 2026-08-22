@@ -1,6 +1,8 @@
 # Recruiter
 
-A standalone Torn userscript for company recruiting. It finds high working-stat players employed in chosen company types and shows whether they are online right now. No server: all data and API keys stay in the browser, everything talks directly to `api.torn.com/v2`.
+A Torn userscript for company recruiting, part of the TornManager monorepo
+(it previously lived in the standalone `torn-recruiter` repo, merged here with
+history). It finds high working-stat players employed in chosen company types and shows whether they are online right now. No server: all data and API keys stay in the browser, everything talks directly to `api.torn.com/v2`.
 
 ## How it works
 
@@ -25,17 +27,28 @@ Torn's rate limit is 100 calls/min per player, not per key. The Keys screen ther
 ## Development
 
 ```
+cd userscripts/recruiter
 npm install
 npm run dev     # watch build, install dist/recruiter.user.js from disk in your userscript manager
 npm run build
-npm run release # build + copy to recruiter.user.js in the repo root
+npm run release # build + copy to userscript/recruiter.user.js at the repo root
 ```
+
+To cut a versioned release, use `bin/publish recruiter [patch|minor|major|x.y.z]`
+from the repo root — it bumps the version, rebuilds, and stages the artifact.
 
 The overlay is reachable from the injected sidebar icon (blue R) and the account dropdown menu entry, same pattern as TornManager.
 
 ## Distribution
 
-Private. Create a secret gist containing `recruiter.user.js`, point `RELEASE_URL` in `vite.config.js` at the gist's raw URL, and rebuild so installs auto-update.
+Public install link — the built script committed at `userscript/recruiter.user.js`:
+
+    https://github.com/ibramsterdam/tornmanager/raw/main/userscript/recruiter.user.js
+
+Installed scripts auto-update from that same URL (`@updateURL`/`@downloadURL`)
+whenever the committed file's `@version` increases. Access is gated by the
+TornManager subscription server-side, so a visible install link gives away
+nothing.
 
 ## Status
 

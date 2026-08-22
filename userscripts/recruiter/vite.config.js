@@ -7,9 +7,10 @@ const isDev = process.env.NODE_ENV === "development";
 
 const API_BASE = isDev ? "http://localhost:3000" : "https://tornmanager.com";
 
-// Distribution stays private: point this at a secret gist raw URL once one
-// exists, then uncomment downloadURL/updateURL below.
-const RELEASE_URL = null;
+// Public install + auto-update link: the built script committed in this repo.
+// Access is gated server-side by the TornManager subscription, not by hiding
+// the install link.
+const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/recruiter.user.js";
 
 export default defineConfig({
   define: {

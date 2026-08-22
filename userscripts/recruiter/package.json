@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "NODE_ENV=development vite build --watch",
     "build": "eslint src && vite build",
-    "release": "vite build && cp dist/recruiter.user.js recruiter.user.js",
+    "release": "vite build && cp dist/recruiter.user.js ../../userscript/recruiter.user.js",
     "lint": "eslint src"
   },
   "devDependencies": {
