@@ -1,5 +1,5 @@
 {
-  "name": "torn-recruiter",
+  "name": "tm-recruiter",
   "version": "0.3.5",
   "description": "Company recruiting scout for Torn",
   "private": true,
@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "NODE_ENV=development vite build --watch",
     "build": "eslint src && vite build",
-    "release": "vite build && cp dist/recruiter.user.js ../../userscript/recruiter.user.js",
+    "release": "vite build && cp dist/tm-recruiter.user.js ../../userscript/tm-recruiter.user.js",
     "lint": "eslint src"
   },
   "devDependencies": {

@@ -1,8 +1,8 @@
 const CURRENT = __TM_VERSION__;
 const MANIFEST_URL =
-  "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscript/package.json";
+  "https://raw.githubusercontent.com/ibramsterdam/tornmanager/main/userscripts/tm-chats/package.json";
 export const DOWNLOAD_URL =
-  "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tornmanager.user.js";
+  "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-chats.user.js";
 
 const CACHE_KEY = "tm_version_check";
 const CACHE_TTL_MS = 10 * 60 * 1000;

@@ -4,7 +4,7 @@
 
 A web-based tool for Torn.com players to track personal statistics, monitor progress, and manage subscriptions.
 
-The companion Tampermonkey userscripts live in [`userscripts/tornmanager/`](userscripts/tornmanager/README.md)
-and [`userscripts/recruiter/`](userscripts/recruiter/README.md); the built release
+The companion Tampermonkey userscripts live in [`userscripts/tm-chats/`](userscripts/tm-chats/README.md)
+and [`userscripts/tm-recruiter/`](userscripts/tm-recruiter/README.md); the built release
 artifacts stay in `userscript/` because installed scripts auto-update from that path.
 

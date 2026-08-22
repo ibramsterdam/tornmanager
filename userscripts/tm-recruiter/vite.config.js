@@ -10,7 +10,7 @@ const API_BASE = isDev ? "http://localhost:3000" : "https://tornmanager.com";
 // Public install + auto-update link: the built script committed in this repo.
 // Access is gated server-side by the TornManager subscription, not by hiding
 // the install link.
-const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/recruiter.user.js";
+const RELEASE_URL = "https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-recruiter.user.js";
 
 export default defineConfig({
   define: {
@@ -24,7 +24,7 @@ export default defineConfig({
     monkey({
       entry: "src/main.js",
       userscript: {
-        name: isDev ? "Recruiter (Dev)" : "Recruiter",
+        name: isDev ? "Torn Manager Recruiter (Dev)" : "Torn Manager Recruiter",
         namespace: "torn-recruiter",
         version: pkg.version,
         author: "Bram [2728237]",
@@ -39,7 +39,7 @@ export default defineConfig({
         "run-at": "document-start",
       },
       build: {
-        fileName: "recruiter.user.js",
+        fileName: "tm-recruiter.user.js",
       },
     }),
   ],

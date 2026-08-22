@@ -1,14 +1,14 @@
 {
-  "name": "tornmanager-userscript",
+  "name": "tm-chats",
   "version": "0.3.48",
   "minSupportedVersion": "0.3.45",
-  "description": "Torn Manager userscript",
+  "description": "TornManager Chats userscript",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "NODE_ENV=development vite build --watch",
     "build": "vite build",
-    "release": "vite build && cp dist/tornmanager.user.js ../../userscript/tornmanager.user.js"
+    "release": "vite build && cp dist/tm-chats.user.js ../../userscript/tm-chats.user.js"
   },
   "devDependencies": {
     "vite": "^6.3.5",
