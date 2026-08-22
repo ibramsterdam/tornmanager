@@ -47,6 +47,18 @@ class Api::RecruiterMatchesControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil json.dig("meta", "roster_synced_at")
   end
 
+  test "excludes faction mates of the director on request" do
+    post api_recruiter_matches_path,
+      params: { star_min: 0, star_max: 10, exclude_faction_mates: true },
+      headers: api_auth(@bram), as: :json
+
+    json = JSON.parse(response.body)
+    torn_ids = json["matches"].map { |m| m["torn_id"] }
+    assert_not_includes torn_ids, @bert.torn_id
+    assert_includes torn_ids, @kaneki.torn_id
+    assert_equal 2, json["total"]
+  end
+
   test "excludes directors" do
     post api_recruiter_matches_path,
       params: { star_min: 0, star_max: 10 },

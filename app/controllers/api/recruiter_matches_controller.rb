@@ -41,6 +41,11 @@ module Api
         .joins(:company)
         .merge(Company.where(rating: star_min..star_max))
       scope = scope.merge(Company.where(company_type_id: type_ids)) if type_ids.any?
+      if params[:exclude_faction_mates].present?
+        scope = scope.where(
+          "users.faction_torn_id IS NULL OR companies.director_faction_torn_id IS NULL OR users.faction_torn_id != companies.director_faction_torn_id"
+        )
+      end
       scope
     end
 

@@ -16,6 +16,7 @@ export class SearchScreen {
     this.page = 0;
     this.minStats = 0;
     this.filtersOpen = false;
+    this.excludeFactionMates = false;
     this.statusByPlayer = {};
     this.statusRefresh = null;
   }
@@ -85,7 +86,26 @@ export class SearchScreen {
     statsField.appendChild(input);
     row.appendChild(statsField);
 
+    const loyaltyField = Dom.el("div", "rc-field rc-field--chip");
+    loyaltyField.appendChild(Dom.el("div", "rc-label", "Faction mates"));
+    this.loyaltyChip = Dom.el("button", "rc-chip rc-chip--filter");
+    this.loyaltyChip.title = "Hide players who share a faction with their company director";
+    this.loyaltyChip.addEventListener("click", () => {
+      this.excludeFactionMates = !this.excludeFactionMates;
+      this.page = 0;
+      this.syncLoyaltyChip();
+      this.fetchMatches();
+    });
+    this.syncLoyaltyChip();
+    loyaltyField.appendChild(this.loyaltyChip);
+    row.appendChild(loyaltyField);
+
     return row;
+  }
+
+  syncLoyaltyChip() {
+    this.loyaltyChip.textContent = this.excludeFactionMates ? "Hidden" : "Shown";
+    this.loyaltyChip.classList.toggle("rc-chip--on", this.excludeFactionMates);
   }
 
   syncStatusChip() {
@@ -184,13 +204,15 @@ export class SearchScreen {
 
     const settings = Settings.get();
     try {
-      this.response = await this.api.matches({
+      const filters = {
         type_ids: settings.typeIds,
         star_min: settings.starMin,
         star_max: settings.starMax,
         min_stats: this.minStats || 0,
         page: this.page,
-      });
+      };
+      if (this.excludeFactionMates) filters.exclude_faction_mates = true;
+      this.response = await this.api.matches(filters);
     } catch (error) {
       this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", error.message));
       return;

@@ -1018,10 +1018,12 @@ a.rc-link:hover {
 .rc-chip--filter {
   display: inline-flex;
   align-items: center;
-  min-width: 110px;
   justify-content: center;
-  padding: 7px 14px;
+  min-width: 110px;
+  height: 38px;
+  padding: 0 14px;
   font-weight: 600;
+  box-sizing: border-box;
 }
 
 .rc-storage {
