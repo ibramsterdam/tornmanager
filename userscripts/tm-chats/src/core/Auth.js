@@ -11,13 +11,12 @@ export class Auth {
     }
   }
 
-  getApiKey() {
-    return this.getUser()?.api_key || null;
+  getToken() {
+    return this.getUser()?.token || null;
   }
 
   isAuthenticated() {
-    const user = this.getUser();
-    return user !== null && user.api_key != null;
+    return this.getToken() != null;
   }
 
   clear() {
@@ -40,7 +39,7 @@ export class Auth {
               const data = JSON.parse(response.responseText);
               localStorage.setItem(
                 STORAGE_KEY,
-                JSON.stringify({ ...data.user, api_key: apiKey })
+                JSON.stringify({ ...data.user, token: data.token })
               );
               resolve(data.user);
             } catch {
@@ -63,10 +62,10 @@ export class Auth {
   }
 
   fetchSubscription({ refresh = false } = {}) {
-    const apiKey = this.getApiKey();
-    if (!apiKey) return Promise.reject(new Error("Not authenticated"));
+    const token = this.getToken();
+    if (!token) return Promise.reject(new Error("Not authenticated"));
 
-    const body = { api_key: apiKey };
+    const body = {};
     if (refresh) body.refresh = true;
 
     return new Promise((resolve, reject) => {
@@ -76,6 +75,7 @@ export class Auth {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`,
         },
         data: JSON.stringify(body),
         onload(response) {

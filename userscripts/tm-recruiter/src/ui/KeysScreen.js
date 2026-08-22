@@ -57,7 +57,7 @@ export class KeysScreen {
       const item = Dom.el("div", "rc-list-row");
       const badge = Dom.el("span", `rc-badge ${entry.valid ? "rc-badge--fresh" : "rc-badge--stale"}`, entry.valid ? "valid" : "invalid");
       const masked = Dom.el("span", "rc-mono", `${entry.key.slice(0, 4)}…${entry.key.slice(-4)}`);
-      const isSignIn = entry.key === this.auth.getApiKey();
+      const isSignIn = entry.ownerId === this.auth.getUser()?.torn_id;
       const owner = Dom.el("span", "rc-dim", `${entry.ownerName} [${entry.ownerId}] · ${entry.accessType}${isSignIn ? " · sign-in key" : ""}`);
       const usage = Dom.el("span", "rc-dim", `${entry.callsToday.toLocaleString()} calls today`);
       const remove = Dom.el("button", "rc-act", "✕");

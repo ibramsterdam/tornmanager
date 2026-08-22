@@ -7,12 +7,12 @@ export class Auth {
     return Store.get("user");
   }
 
-  getApiKey() {
-    return this.getUser()?.api_key || null;
+  getToken() {
+    return this.getUser()?.token || null;
   }
 
   isAuthenticated() {
-    return this.getApiKey() != null;
+    return this.getToken() != null;
   }
 
   clear() {
@@ -22,19 +22,19 @@ export class Auth {
 
   authenticate(apiKey) {
     return this.post("/api/session", { api_key: apiKey }).then((data) => {
-      Store.set("user", { ...data.user, api_key: apiKey });
+      Store.set("user", { ...data.user, token: data.token });
       return data.user;
     });
   }
 
   fetchSubscription({ refresh = false } = {}) {
-    const apiKey = this.getApiKey();
-    if (!apiKey) return Promise.reject(new Error("Not signed in"));
+    const token = this.getToken();
+    if (!token) return Promise.reject(new Error("Not signed in"));
 
-    const body = { api_key: apiKey };
+    const body = {};
     if (refresh) body.refresh = true;
 
-    return this.post("/api/subscription", body).then((data) => {
+    return this.post("/api/subscription", body, { Authorization: `Bearer ${token}` }).then((data) => {
       const subscription = { ...data.subscription, checkedAt: Date.now() };
       Store.set("subscription", subscription);
       return subscription;
@@ -51,7 +51,7 @@ export class Auth {
     return !sub.expires_at || new Date(sub.expires_at) > new Date();
   }
 
-  post(path, body) {
+  post(path, body, headers = {}) {
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
         method: "POST",
@@ -59,6 +59,7 @@ export class Auth {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          ...headers,
         },
         data: JSON.stringify(body),
         onload(response) {

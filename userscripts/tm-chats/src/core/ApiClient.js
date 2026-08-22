@@ -6,8 +6,8 @@ export class ApiClient {
   }
 
   fetchCurrentWar() {
-    const apiKey = this.auth.getApiKey();
-    if (!apiKey) return Promise.reject(new Error("Not authenticated"));
+    const token = this.auth.getToken();
+    if (!token) return Promise.reject(new Error("Not authenticated"));
 
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
@@ -16,8 +16,9 @@ export class ApiClient {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        data: JSON.stringify({ api_key: apiKey }),
+        data: JSON.stringify({}),
         onload(response) {
           if (response.status === 200) {
             try {

@@ -64,8 +64,8 @@ export class ChatClient {
   }
 
   post(path, params = {}) {
-    const apiKey = this.auth.getApiKey();
-    if (!apiKey) return Promise.reject(new Error("Not authenticated"));
+    const token = this.auth.getToken();
+    if (!token) return Promise.reject(new Error("Not authenticated"));
 
     return new Promise((resolve, reject) => {
       GM.xmlHttpRequest({
@@ -74,8 +74,9 @@ export class ChatClient {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        data: JSON.stringify({ api_key: apiKey, ...params }),
+        data: JSON.stringify(params),
         onload(response) {
           let data = null;
           try {
