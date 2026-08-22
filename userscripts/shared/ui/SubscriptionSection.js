@@ -1,42 +1,29 @@
+import { Dom } from "../core/Dom.js";
+
 export class SubscriptionSection {
-  constructor(auth, onUpdate) {
+  constructor(auth, { classPrefix, note, onUpdate } = {}) {
     this.auth = auth;
+    this.prefix = classPrefix;
+    this.note = note;
     this.onUpdate = onUpdate;
     this.countdownInterval = null;
   }
 
   render() {
-    const section = document.createElement("div");
-    section.className = "tm-sub";
+    const p = this.prefix;
+    const section = Dom.el("div", `${p}-sub`);
+    section.appendChild(Dom.el("h2", `${p}-sub-title`, "Subscription"));
+    section.appendChild(Dom.el("p", `${p}-sub-note`, this.note));
 
-    const title = document.createElement("h2");
-    title.className = "tm-sub-title";
-    title.textContent = "Subscription";
-    section.appendChild(title);
+    this.statusEl = Dom.el("div", `${p}-sub-status`);
+    this.countdownEl = Dom.el("p", `${p}-sub-countdown`);
+    section.append(this.statusEl, this.countdownEl);
 
-    const note = document.createElement("p");
-    note.className = "tm-sub-note";
-    note.textContent =
-      "A subscription is an optional extra. It only unlocks additional features like the Ranked War tab. " +
-      "Chats and the rest of the extension are free for everyone.";
-    section.appendChild(note);
-
-    this.statusEl = document.createElement("div");
-    this.statusEl.className = "tm-sub-status";
-    section.appendChild(this.statusEl);
-
-    this.countdownEl = document.createElement("p");
-    this.countdownEl.className = "tm-sub-countdown";
-    section.appendChild(this.countdownEl);
-
-    this.refreshBtn = document.createElement("button");
-    this.refreshBtn.className = "tm-sub-refresh";
-    this.refreshBtn.textContent = "Check for new payments";
+    this.refreshBtn = Dom.el("button", `${p}-sub-refresh`, "Check for new payments");
     this.refreshBtn.onclick = () => this.load(true);
     section.appendChild(this.refreshBtn);
 
-    const info = document.createElement("div");
-    info.className = "tm-sub-info";
+    const info = Dom.el("div", `${p}-sub-info`);
     info.innerHTML =
       'Send <strong>Xanax</strong> to <a href="https://www.torn.com/profiles.php?XID=2728237" target="_blank" rel="noopener">Bram [2728237]</a> to extend your subscription. Each Xanax adds <strong>1 week</strong>. Payments are checked automatically once a day.';
     section.appendChild(info);
@@ -65,13 +52,8 @@ export class SubscriptionSection {
         if (this.onUpdate) this.onUpdate(sub);
       })
       .catch((err) => {
-        if (err.rateLimited) {
-          this.statusEl.textContent = err.message;
-          this.statusEl.className = "tm-sub-status tm-sub-status--warn";
-        } else {
-          this.statusEl.textContent = err.message;
-          this.statusEl.className = "tm-sub-status tm-sub-status--error";
-        }
+        this.statusEl.textContent = err.message;
+        this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--${err.rateLimited ? "warn" : "error"}`;
         this.countdownEl.textContent = "";
       })
       .finally(() => {
@@ -83,11 +65,11 @@ export class SubscriptionSection {
   renderSubscription(sub) {
     if (sub.active && sub.expires_at) {
       this.statusEl.textContent = "Active";
-      this.statusEl.className = "tm-sub-status tm-sub-status--active";
+      this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--active`;
       this.startCountdown(new Date(sub.expires_at));
     } else {
       this.statusEl.textContent = "Inactive";
-      this.statusEl.className = "tm-sub-status tm-sub-status--inactive";
+      this.statusEl.className = `${this.prefix}-sub-status ${this.prefix}-sub-status--inactive`;
       this.countdownEl.textContent = "No active subscription.";
     }
   }
@@ -96,6 +78,11 @@ export class SubscriptionSection {
     this.stopCountdown();
 
     const tick = () => {
+      if (!this.countdownEl.isConnected) {
+        this.stopCountdown();
+        return;
+      }
+
       const diff = expiresAt - Date.now();
       if (diff <= 0) {
         this.countdownEl.textContent = "Expired";
@@ -110,9 +97,7 @@ export class SubscriptionSection {
 
       const parts = [];
       if (days > 0) parts.push(`${days}d`);
-      parts.push(`${hours}h`);
-      parts.push(`${minutes}m`);
-      parts.push(`${seconds}s`);
+      parts.push(`${hours}h`, `${minutes}m`, `${seconds}s`);
 
       this.countdownEl.textContent = parts.join(" ") + " remaining";
     };

@@ -1,9 +1,9 @@
 import { AuthScreen } from "./AuthScreen.js";
-import { SubscriptionSection } from "./SubscriptionSection.js";
+import { SubscriptionSection } from "@shared/ui/SubscriptionSection.js";
 import { WarSection } from "./WarSection.js";
 import { ChatsSection } from "./ChatsSection.js";
 import { MuggingSection } from "./MuggingSection.js";
-import { StorageViewer } from "./StorageViewer.js";
+import { StorageViewer } from "@shared/ui/StorageViewer.js";
 import { copyText } from "../core/Clipboard.js";
 import { UpdateCheck, DOWNLOAD_URL } from "../core/UpdateCheck.js";
 
@@ -334,7 +334,13 @@ export class Overlay {
   }
 
   renderSettingsTab() {
-    this.subscriptionSection = new SubscriptionSection(this.auth, (sub) => this.setSubscription(sub));
+    this.subscriptionSection = new SubscriptionSection(this.auth, {
+      classPrefix: "tm",
+      note:
+        "A subscription is an optional extra. It only unlocks additional features like the Ranked War tab. " +
+        "Chats and the rest of the extension are free for everyone.",
+      onUpdate: (sub) => this.setSubscription(sub),
+    });
     this.tabContent.appendChild(this.subscriptionSection.render());
 
     const actions = document.createElement("div");
@@ -365,7 +371,7 @@ export class Overlay {
         storageBtn.textContent = "View stored data";
         return;
       }
-      viewer = new StorageViewer().render();
+      viewer = new StorageViewer({ storagePrefix: "tm_", classPrefix: "tm" }).render();
       this.tabContent.appendChild(viewer);
       storageBtn.textContent = "Hide stored data";
     };

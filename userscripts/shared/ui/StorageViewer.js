@@ -1,10 +1,12 @@
-// Debug view of everything the extension keeps in localStorage (tm_* keys).
-// Values are shown raw and can be deleted one by one — deleting tm_user logs
-// you out, deleting tm_chat_keys locks encrypted rooms on this device.
 export class StorageViewer {
+  constructor({ storagePrefix, classPrefix }) {
+    this.storagePrefix = storagePrefix;
+    this.prefix = classPrefix;
+  }
+
   render() {
     this.element = document.createElement("div");
-    this.element.className = "tm-storage";
+    this.element.className = `${this.prefix}-storage`;
     this.renderList();
     return this.element;
   }
@@ -13,24 +15,25 @@ export class StorageViewer {
     const keys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
-      if (key && key.startsWith("tm_")) keys.push(key);
+      if (key && key.startsWith(this.storagePrefix)) keys.push(key);
     }
     return keys.sort();
   }
 
   renderList() {
+    const p = this.prefix;
     this.element.innerHTML = "";
 
     const keys = this.keys();
     let total = 0;
 
     const head = document.createElement("div");
-    head.className = "tm-storage-head";
+    head.className = `${p}-storage-head`;
     this.element.appendChild(head);
 
     if (!keys.length) {
       const empty = document.createElement("p");
-      empty.className = "tm-storage-empty";
+      empty.className = `${p}-storage-empty`;
       empty.textContent = "No stored data.";
       this.element.appendChild(empty);
       head.textContent = "0 keys";
@@ -42,22 +45,22 @@ export class StorageViewer {
       total += key.length + value.length;
 
       const item = document.createElement("details");
-      item.className = "tm-storage-item";
+      item.className = `${p}-storage-item`;
 
       const summary = document.createElement("summary");
-      summary.className = "tm-storage-summary";
+      summary.className = `${p}-storage-summary`;
 
       const name = document.createElement("code");
-      name.className = "tm-storage-key";
+      name.className = `${p}-storage-key`;
       name.textContent = key;
 
       const size = document.createElement("span");
-      size.className = "tm-storage-size";
+      size.className = `${p}-storage-size`;
       size.textContent = formatSize(value.length);
 
       const del = document.createElement("button");
       del.type = "button";
-      del.className = "tm-storage-delete";
+      del.className = `${p}-storage-delete`;
       del.textContent = "Delete";
       del.onclick = (e) => {
         e.preventDefault();
@@ -74,7 +77,7 @@ export class StorageViewer {
       item.appendChild(summary);
 
       const pre = document.createElement("pre");
-      pre.className = "tm-storage-value";
+      pre.className = `${p}-storage-value`;
       pre.textContent = prettify(value);
       item.appendChild(pre);
 
