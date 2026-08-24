@@ -88,6 +88,43 @@ class KeyLogControllerTest < ActionDispatch::IntegrationTest
     assert_select ".api-key-inline", text: @valid_api_key
   end
 
+  test "show renders tool badges for torn log comments" do
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(@mock_key_info)
+    TornApi::Key::Log.any_instance.stubs(:fetch).returns(@mock_log_data)
+
+    post key_log_show_path, params: { api_key: @valid_api_key }
+
+    assert_response :success
+    assert_select ".log-table .tool-badge--tmanager", text: "TornManager"
+  end
+
+  test "show lists tornmanager server activity with source badges" do
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(@mock_key_info)
+    TornApi::Key::Log.any_instance.stubs(:fetch).returns(@mock_log_data)
+
+    ApiCall.create!(user: users(:bram), api_key: @valid_api_key, endpoint: "v2/user/12345/hof",
+                    selections: "{}", status: "success", response_time: 120, source: "tmrecruiter")
+    ApiCall.create!(user: users(:bram), api_key: @valid_api_key, endpoint: "v2/faction/basic",
+                    selections: "{}", status: "error", error_message: "boom", response_time: 80, source: nil)
+
+    post key_log_show_path, params: { api_key: @valid_api_key }
+
+    assert_response :success
+    assert_select "h2", "TornManager Server Activity"
+    assert_select ".tool-badge--tmrecruiter", text: "TM Recruiter"
+    assert_select ".server-call-status--error", text: "error"
+  end
+
+  test "show hides server activity when the key has no server calls" do
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(@mock_key_info)
+    TornApi::Key::Log.any_instance.stubs(:fetch).returns(@mock_log_data)
+
+    post key_log_show_path, params: { api_key: @valid_api_key }
+
+    assert_response :success
+    assert_select "h2", text: "TornManager Server Activity", count: 0
+  end
+
   test "show handles API errors gracefully" do
     TornApi::Key::Info.any_instance.stubs(:fetch).raises(StandardError.new("Connection error"))
 

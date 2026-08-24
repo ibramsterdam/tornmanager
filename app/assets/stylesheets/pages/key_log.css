@@ -314,3 +314,72 @@
   min-width: 80px;
   font-variant-numeric: tabular-nums;
 }
+
+.log-retention-note {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+  margin: var(--space-2) 0 0;
+}
+
+.tool-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tool-badge--tmanager {
+  background: rgba(0, 112, 243, 0.15);
+  color: #4a9df8;
+}
+
+.tool-badge--tmchats {
+  background: rgba(92, 184, 92, 0.15);
+  color: #5cb85c;
+}
+
+.tool-badge--tmrecruiter {
+  background: rgba(232, 163, 61, 0.15);
+  color: #e8a33d;
+}
+
+.tool-badge--other {
+  background: var(--gray-800);
+  color: var(--gray-400);
+}
+
+.server-source-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin: var(--space-4) 0 var(--space-6);
+}
+
+.server-source-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--gray-900);
+  border: 1px solid var(--gray-800);
+  border-radius: var(--radius-md);
+  color: var(--gray-200);
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.server-call-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.server-call-status--success {
+  color: #5cb85c;
+}
+
+.server-call-status--error {
+  color: #e05252;
+}

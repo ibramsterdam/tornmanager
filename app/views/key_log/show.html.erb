@@ -7,9 +7,10 @@
   <section class="content-section">
     <div class="log-summary">
       <p>
-        Showing <%= @log_data.log.size %> recent API requests with key: 
+        Showing the last <%= @log_data.log.size %> API requests for key:
         <code class="api-key-inline"><%= @api_key %></code>
       </p>
+      <p class="log-retention-note">Torn keeps at most 250 requests in a key's log; older calls age out.</p>
       <%= link_to "← Check Another Key", key_log_path, class: "back-link" %>
     </div>
 
@@ -145,7 +146,7 @@
           <div class="breakdown-list">
             <% by_comment.each do |comment, count| %>
               <div class="breakdown-item">
-                <span class="breakdown-label" title="<%= comment %>"><%= comment %></span>
+                <span class="breakdown-label"><%= tool_badge(comment) %></span>
                 <span class="breakdown-bar">
                   <span class="breakdown-bar-fill" style="width: <%= (count.to_f / logs.size * 100).round(1) %>%"></span>
                 </span>
@@ -182,7 +183,7 @@
             <th>Selections</th>
             <th>ID</th>
             <th>IP Address</th>
-            <th>Comment</th>
+            <th>Tool</th>
           </tr>
         </thead>
         <tbody>
@@ -193,7 +194,7 @@
               <td><code><%= entry.selections %></code></td>
               <td><%= entry.id || "-" %></td>
               <td><%= entry.ip %></td>
-              <td><%= entry.comment || "-" %></td>
+              <td><%= tool_badge(entry.comment) %></td>
             </tr>
           <% end %>
         </tbody>
@@ -206,6 +207,53 @@
       </div>
     <% end %>
   </section>
+
+  <% if @server_calls.any? %>
+    <section class="content-section">
+      <h2>TornManager Server Activity</h2>
+      <p class="log-retention-note">
+        Requests TornManager's own servers made with this key over the last 30 days, up to the most recent 500.
+        Calls made directly from your browser (like TM Chats) only appear in Torn's log above.
+      </p>
+
+      <%
+        by_source = @server_calls
+          .group_by { |call| call.source.presence || "tmanager" }
+          .transform_values(&:size)
+          .sort_by { |_, count| -count }
+      %>
+      <div class="server-source-chips">
+        <% by_source.each do |source, count| %>
+          <span class="server-source-chip"><%= tool_badge(source) %> <%= count %></span>
+        <% end %>
+      </div>
+
+      <div class="log-table-wrapper">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Tool</th>
+              <th>Endpoint</th>
+              <th>Status</th>
+              <th>Response Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @server_calls.each do |call| %>
+              <tr>
+                <td><%= call.created_at.utc.strftime("%d-%m-%Y %H:%M:%S") %></td>
+                <td><%= tool_badge(call.source.presence || "tmanager") %></td>
+                <td><code title="<%= call.selections %>"><%= call.endpoint %></code></td>
+                <td><span class="server-call-status server-call-status--<%= call.status %>"><%= call.status %></span></td>
+                <td><%= call.response_time %> ms</td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  <% end %>
 
   <section class="content-section">
     <h2>What Am I Looking At?</h2>

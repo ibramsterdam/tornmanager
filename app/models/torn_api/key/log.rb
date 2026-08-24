@@ -35,6 +35,8 @@ module TornApi
           end
 
           all_entries.concat(batch_entries)
+
+          break if batch_entries.size < 100
         end
 
         LogData.new(

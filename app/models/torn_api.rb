@@ -225,6 +225,7 @@ module TornApi
         api_key: api_key,
         endpoint: endpoint,
         selections: params.except(:comment, :striptags).to_json,
+        source: params[:comment]&.to_s,
         response_time: response_time,
         status: status,
         error_message: error_message,

@@ -20,6 +20,7 @@ class KeyLogController < ApplicationController
       log_fetcher = TornApi::Key::Log.new(api_key)
       @log_data = log_fetcher.fetch
       @api_key = api_key
+      @server_calls = ApiCall.where(api_key: api_key).recent.limit(500).to_a
     rescue TornApi::InvalidKeyError
       flash.now[:alert] = "Invalid API key provided. Please check your key and try again."
       render :index
