@@ -10,8 +10,9 @@ class Recruiter::BackfillMissingStatsJobTest < ActiveJob::TestCase
     fresh.update!(company_id: 91001, working_stats: 9000, working_stats_at: 1.day.ago)
     director = users(:user_hof_no_faction)
     director.update!(company_id: 91001, company_director: true, working_stats: nil)
-    low_rated = users(:user_with_keyed_faction)
-    low_rated.update!(company_id: 91003, working_stats: nil)
+    companies(:budget_shop).update!(rating: 0)
+    unrated = users(:user_with_keyed_faction)
+    unrated.update!(company_id: 91003, working_stats: nil)
 
     Recruiter::BackfillMissingStatsJob.perform_now
 

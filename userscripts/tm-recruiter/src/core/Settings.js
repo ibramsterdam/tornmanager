@@ -6,7 +6,7 @@ const DEFAULTS = {
   starMax: 10,
 };
 
-export const STAR_RANGE = { min: 7, max: 10 };
+export const STAR_RANGE = { min: 1, max: 10 };
 
 export const Settings = {
   get() {

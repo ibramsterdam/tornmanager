@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Torn Manager Recruiter
 // @namespace    torn-recruiter
-// @version      0.8.2
+// @version      0.8.3
 // @author       Bram [2728237]
 // @description  Company recruiting scout for Torn
 // @license      All rights reserved
@@ -235,11 +235,11 @@
       debug.addEventListener("click", () => this.copyDebugInfo(debug));
       links.append(privacy, Dom.el("span", null, "·"), terms, Dom.el("span", null, "·"), debug);
       this.footer.appendChild(links);
-      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.8.2"}`));
+      this.footer.appendChild(Dom.el("div", "rc-footer-version", `v${"0.8.3"}`));
     }
     copyDebugInfo(button) {
       const info = {
-        version: "0.8.2",
+        version: "0.8.3",
         generatedAt: (/* @__PURE__ */ new Date()).toISOString(),
         user: this.auth.getUser() ? { name: this.auth.getUser().name, tornId: this.auth.getUser().torn_id } : null,
         subscribed: this.auth.isSubscribed(),
@@ -603,7 +603,7 @@
     starMin: 8,
     starMax: 10
   };
-  const STAR_RANGE = { min: 7, max: 10 };
+  const STAR_RANGE = { min: 1, max: 10 };
   const Settings = {
     get() {
       const settings = { ...DEFAULTS, ...Store.get("settings", {}) };
@@ -1218,7 +1218,7 @@
     new Sidebar(overlay).init();
     new MenuEntry(overlay).init();
     new ChatOpener().init();
-    console.log(`%cRecruiter %cv${"0.8.2"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
+    console.log(`%cRecruiter %cv${"0.8.3"} is running.`, "font-weight: 700; color: #0070f3;", "color: inherit;");
   }
   if (window.self === window.top) boot();
 

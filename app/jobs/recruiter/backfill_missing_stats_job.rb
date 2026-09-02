@@ -5,7 +5,7 @@ module Recruiter
     NIGHTLY_CAP = 5_000
     STALE_AFTER = 14.days
     SECONDS_PER_API_CALL = 1.5
-    MIN_COMPANY_RATING = 7
+    MIN_COMPANY_RATING = 1
 
     def perform
       user_ids = User.employed
