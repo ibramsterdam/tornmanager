@@ -1,0 +1,81 @@
+<div class="elim-grid">
+  <div class="admin-stats-panel">
+    <h2>Tracker</h2>
+    <% if setting.polling_active? %>
+      <div class="elim-status"><span class="elim-dot live"></span> Live</div>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Poll interval</span>
+          <span class="admin-stat-value"><%= setting.poll_interval_seconds %>s</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Last poll</span>
+          <span class="admin-stat-value <%= "warning" if setting.last_polled_at.nil? || setting.last_polled_at < 1.minute.ago %>">
+            <%= setting.last_polled_at ? "#{time_ago_in_words(setting.last_polled_at)} ago" : "never" %>
+          </span>
+        </div>
+      </div>
+      <div class="elim-panel-actions">
+        <%= button_to "Stop polling", stop_path, method: :post, class: "btn-secondary" %>
+      </div>
+    <% else %>
+      <div class="elim-status"><span class="elim-dot"></span> Stopped</div>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Last poll</span>
+          <span class="admin-stat-value"><%= setting.last_polled_at ? "#{time_ago_in_words(setting.last_polled_at)} ago" : "never" %></span>
+        </div>
+      </div>
+      <div class="elim-panel-actions">
+        <%= button_to "Start polling", start_path, method: :post, class: "btn-primary" %>
+      </div>
+    <% end %>
+    <% if setting.last_error.present? %>
+      <div class="elim-error"><%= setting.last_error %></div>
+    <% end %>
+  </div>
+
+  <div class="admin-stats-panel">
+    <h2>Discord delivery</h2>
+    <div class="admin-stats-rows">
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Bot token (credentials)</span>
+        <span class="elim-check <%= bot_token_present ? "ok" : "missing" %>"><%= bot_token_present ? "✓ set" : "✗ missing" %></span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Alerts channel</span>
+        <span class="elim-check <%= setting.alerts_channel_id.present? ? "ok" : "missing" %>"><%= setting.alerts_channel_id.present? ? "✓ set" : "✗ missing" %></span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Torn API key</span>
+        <span class="elim-check <%= setting.api_key.present? ? "ok" : "fallback" %>"><%= setting.api_key.present? ? "✓ dedicated" : "→ admin key" %></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-stats-panel">
+    <h2>Alert rules</h2>
+    <div class="admin-stats-rows">
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Push</span>
+        <span class="admin-stat-value">≥<%= setting.push_ticket_threshold %> tickets / <%= setting.push_window_seconds %>s</span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Push over after</span>
+        <span class="admin-stat-value"><%= setting.push_resolve_seconds / 60 %> min quiet</span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Countdown</span>
+        <span class="admin-stat-value">bottom <%= setting.countdown_bottom_ranks %></span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Standings</span>
+        <span class="admin-stat-value">every <%= setting.standings_interval_minutes %> min</span>
+      </div>
+      <div class="admin-stat-row">
+        <span class="admin-stat-label">Life ticks from</span>
+        <span class="admin-stat-value"><%= setting.life_ticks_from.utc.strftime("%d %b %H:%M") %> TCT</span>
+      </div>
+    </div>
+  </div>
+</div>

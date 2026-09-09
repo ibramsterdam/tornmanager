@@ -222,23 +222,14 @@ module Elimination
     private
 
     def alerts
-      @alerts ||= transport(@setting.alerts_channel_id, @setting.alerts_webhook_url)
-    end
-
-    def standings_webhook
-      @standings_webhook ||= transport(
-        @setting.standings_channel_id.presence || @setting.alerts_channel_id,
-        @setting.standings_webhook_url.presence || @setting.alerts_webhook_url
+      @alerts ||= Discord::BotChannel.new(
+        Rails.application.credentials.dig(:cia_bot, :bot_token),
+        @setting.alerts_channel_id
       )
     end
 
-    def transport(channel_id, webhook_url)
-      token = Rails.application.credentials.dig(:cia_bot, :bot_token)
-      if token.present? && channel_id.present?
-        Discord::BotChannel.new(token, channel_id)
-      else
-        Discord::Webhook.new(webhook_url)
-      end
+    def standings_webhook
+      alerts
     end
 
     def footer

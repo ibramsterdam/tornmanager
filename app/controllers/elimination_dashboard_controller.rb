@@ -2,7 +2,23 @@ class EliminationDashboardController < ApplicationController
   allow_unauthenticated_access
 
   def show
-    render :login unless cia_admin?
+    return render :login unless cia_admin?
+
+    load_status
+  end
+
+  def start
+    return redirect_to elimination_dashboard_path unless cia_admin?
+
+    EliminationSetting.current.start_polling!
+    redirect_to elimination_dashboard_path, notice: "Polling started."
+  end
+
+  def stop
+    return redirect_to elimination_dashboard_path unless cia_admin?
+
+    EliminationSetting.current.stop_polling!
+    redirect_to elimination_dashboard_path, notice: "Polling stopped."
   end
 
   def login
@@ -21,6 +37,11 @@ class EliminationDashboardController < ApplicationController
   end
 
   private
+
+  def load_status
+    @setting = EliminationSetting.current
+    @bot_token_present = Rails.application.credentials.dig(:cia_bot, :bot_token).present?
+  end
 
   def cia_admin?
     session[:cia_admin] == true

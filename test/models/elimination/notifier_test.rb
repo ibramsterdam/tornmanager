@@ -2,15 +2,14 @@ require "test_helper"
 
 class Elimination::NotifierTest < ActiveSupport::TestCase
   setup do
-    @setting = EliminationSetting.create!(
-      alerts_webhook_url: "https://discord.com/api/webhooks/1/a"
-    )
+    @setting = EliminationSetting.create!(alerts_channel_id: "555")
+    Rails.application.credentials.stubs(:dig).with(:cia_bot, :bot_token).returns("bot_token")
     @notifier = Elimination::Notifier.new(@setting)
   end
 
   test "push on our team carries the alert text without any mention" do
     push = our_push
-    Discord::Webhook.any_instance.expects(:post).with do |args|
+    Discord::BotChannel.any_instance.expects(:post).with do |args|
       args[:content] == "we are getting pushed!" &&
         args[:embed][:title] == "🚨 Push on Conspiracy Theorists" &&
         args[:allowed_mentions].nil?
@@ -21,7 +20,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
 
   test "push on another team posts without a ping" do
     push = our_push.merge(ours: false, team_name: "Brain Surgeons")
-    Discord::Webhook.any_instance.expects(:post).with do |args|
+    Discord::BotChannel.any_instance.expects(:post).with do |args|
       args[:content].nil? && args[:embed][:title] == "🚨 Push on Brain Surgeons"
     end.returns("112")
 
@@ -48,7 +47,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
   end
 
   test "tick report for our loss carries the alert text" do
-    Discord::Webhook.any_instance.expects(:post).with do |args|
+    Discord::BotChannel.any_instance.expects(:post).with do |args|
       args[:content] == "we lost a life"
     end.returns("113")
 
@@ -92,25 +91,8 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert fields.key?("Next tick") || fields.key?("Life ticks from")
   end
 
-  test "posts through the bot when a token and channel are configured" do
-    @setting.update!(alerts_channel_id: "555")
-    Rails.application.credentials.stubs(:dig).with(:cia_bot, :bot_token).returns("bot_token")
-    Discord::BotChannel.any_instance.expects(:post).returns("221")
-    Discord::Webhook.any_instance.expects(:post).never
-
-    assert_equal "221", @notifier.push_started(our_push)
-  end
-
-  test "falls back to the webhook without a bot token" do
-    @setting.update!(alerts_channel_id: "555")
-    Rails.application.credentials.stubs(:dig).with(:cia_bot, :bot_token).returns(nil)
-    Discord::Webhook.any_instance.expects(:post).returns("222")
-
-    assert_equal "222", @notifier.push_started(our_push)
-  end
-
   test "resolving our push replaces the ping text" do
-    Discord::Webhook.any_instance.expects(:edit).with do |message_id, args|
+    Discord::BotChannel.any_instance.expects(:edit).with do |message_id, args|
       message_id == "111" && args[:content] == "we weathered the push ✅" &&
         args[:embed][:title] == "✅ Push on Conspiracy Theorists over"
     end.returns(true)

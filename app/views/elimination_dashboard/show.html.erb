@@ -8,8 +8,9 @@
     <%= button_to "Log out", elimination_dashboard_logout_path, method: :delete, class: "btn-secondary cia-logout" %>
   </div>
 
-  <div class="admin-stats-panel">
-    <h2>Coming soon</h2>
-    <p class="cia-placeholder">Nothing to configure here yet. Notification controls are on the way.</p>
-  </div>
+  <%= render "status_panels",
+    setting: @setting,
+    bot_token_present: @bot_token_present,
+    start_path: elimination_dashboard_start_path,
+    stop_path: elimination_dashboard_stop_path %>
 </div>
