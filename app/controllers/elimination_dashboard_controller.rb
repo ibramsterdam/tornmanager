@@ -21,6 +21,13 @@ class EliminationDashboardController < ApplicationController
     redirect_to elimination_dashboard_path, notice: "Polling stopped."
   end
 
+  def update_settings
+    return redirect_to elimination_dashboard_path unless cia_admin?
+
+    EliminationSetting.current.update!(params.require(:elimination_setting).permit(:alerts_channel_id))
+    redirect_to elimination_dashboard_path, notice: "Alerts channel saved."
+  end
+
   def toggle
     return redirect_to elimination_dashboard_path unless cia_admin?
 

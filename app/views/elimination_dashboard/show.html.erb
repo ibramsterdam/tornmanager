@@ -14,6 +14,15 @@
     start_path: elimination_dashboard_start_path,
     stop_path: elimination_dashboard_stop_path %>
 
+  <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
+    <h2>Alerts channel</h2>
+    <%= form_with model: @setting, url: elimination_dashboard_settings_path, method: :patch, class: "cia-channel-form" do |form| %>
+      <%= form.text_field :alerts_channel_id, class: "form-input", placeholder: "Right-click channel → Copy Channel ID" %>
+      <%= form.submit "Save", class: "btn-primary cia-btn-sm" %>
+    <% end %>
+    <p class="form-help">Every bot message goes to this channel.</p>
+  </div>
+
   <div class="admin-stats-panel">
     <h2>Notifications <span class="admin-stats-hint">Test sends mock data. Live sends real current data. Both work even when a notification is off.</span></h2>
     <% EliminationSetting::NOTIFICATIONS.each do |notification| %>
@@ -23,18 +32,20 @@
         <%= button_to enabled ? "On" : "Off",
           elimination_dashboard_toggle_path(key: notification[:key]),
           method: :post, class: "cia-toggle #{enabled ? "is-on" : "is-off"}" %>
-        <span class="cia-notify-actions">
+        <div class="cia-notify-tests">
           <% notification[:demos].each do |demo| %>
-            <%= button_to "Test #{demo.humanize.downcase}",
+            <%= button_to "Test #{demo.humanize.downcase.delete_prefix("push ").delete_prefix("tick ").delete_prefix("health ")}",
               elimination_dashboard_test_path(kind: demo),
               method: :post, class: "btn-secondary cia-btn-sm" %>
           <% end %>
+        </div>
+        <div class="cia-notify-live">
           <% if notification[:live] %>
             <%= button_to "Live",
               elimination_dashboard_trigger_path(kind: notification[:key]),
               method: :post, class: "btn-primary cia-btn-sm" %>
           <% end %>
-        </span>
+        </div>
       </div>
     <% end %>
   </div>

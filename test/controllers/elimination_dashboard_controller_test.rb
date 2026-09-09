@@ -62,6 +62,21 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to elimination_dashboard_path
   end
 
+  test "saves the alerts channel" do
+    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+
+    patch elimination_dashboard_settings_path, params: { elimination_setting: { alerts_channel_id: "1545186775515791524" } }
+
+    assert_redirected_to elimination_dashboard_path
+    assert_equal "1545186775515791524", EliminationSetting.current.alerts_channel_id
+  end
+
+  test "channel update is refused without a session" do
+    patch elimination_dashboard_settings_path, params: { elimination_setting: { alerts_channel_id: "123" } }
+
+    assert_nil EliminationSetting.current.alerts_channel_id
+  end
+
   test "toggle and test are refused without a session" do
     Elimination::Demo.any_instance.expects(:send!).never
 

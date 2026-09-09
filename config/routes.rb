@@ -163,6 +163,7 @@ Rails.application.routes.draw do
   post "elimination/toggle/:key", to: "elimination_dashboard#toggle", as: :elimination_dashboard_toggle
   post "elimination/test/:kind", to: "elimination_dashboard#test", as: :elimination_dashboard_test
   post "elimination/trigger/:kind", to: "elimination_dashboard#trigger", as: :elimination_dashboard_trigger
+  patch "elimination/settings", to: "elimination_dashboard#update_settings", as: :elimination_dashboard_settings
 
   get "key-log", to: "key_log#index", as: :key_log
   post "key-log/show", to: "key_log#show", as: :key_log_show
