@@ -24,8 +24,17 @@ class EliminationDashboardController < ApplicationController
   def update_settings
     return redirect_to elimination_dashboard_path unless cia_admin?
 
-    EliminationSetting.current.update!(params.require(:elimination_setting).permit(:alerts_channel_id))
-    redirect_to elimination_dashboard_path, notice: "Alerts channel saved."
+    setting = EliminationSetting.current
+    permitted = params.require(:elimination_setting).permit(
+      :alerts_channel_id, :push_ticket_threshold, :push_window_seconds,
+      :push_resolve_seconds, :countdown_bottom_ranks, :standings_interval_minutes
+    )
+
+    if setting.update(permitted)
+      redirect_to elimination_dashboard_path, notice: "Settings saved."
+    else
+      redirect_to elimination_dashboard_path, alert: setting.errors.full_messages.to_sentence
+    end
   end
 
   def toggle

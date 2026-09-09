@@ -62,13 +62,31 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to elimination_dashboard_path
   end
 
-  test "saves the alerts channel" do
+  test "saves the alerts channel and alert rules" do
     post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
 
-    patch elimination_dashboard_settings_path, params: { elimination_setting: { alerts_channel_id: "1545186775515791524" } }
+    patch elimination_dashboard_settings_path, params: { elimination_setting: {
+      alerts_channel_id: "1545186775515791524", push_ticket_threshold: 20,
+      push_window_seconds: 15, push_resolve_seconds: 600,
+      countdown_bottom_ranks: 3, standings_interval_minutes: 30
+    } }
 
     assert_redirected_to elimination_dashboard_path
-    assert_equal "1545186775515791524", EliminationSetting.current.alerts_channel_id
+    setting = EliminationSetting.current
+    assert_equal "1545186775515791524", setting.alerts_channel_id
+    assert_equal 20, setting.push_ticket_threshold
+    assert_equal 600, setting.push_resolve_seconds
+    assert_equal 3, setting.countdown_bottom_ranks
+    assert_equal 30, setting.standings_interval_minutes
+  end
+
+  test "invalid settings are rejected with a message" do
+    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+
+    patch elimination_dashboard_settings_path, params: { elimination_setting: { push_ticket_threshold: 0 } }
+
+    assert_redirected_to elimination_dashboard_path
+    assert_not_equal 0, EliminationSetting.current.push_ticket_threshold
   end
 
   test "channel update is refused without a session" do

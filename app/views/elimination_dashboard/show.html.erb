@@ -15,12 +15,40 @@
     stop_path: elimination_dashboard_stop_path %>
 
   <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
-    <h2>Alerts channel</h2>
-    <%= form_with model: @setting, url: elimination_dashboard_settings_path, method: :patch, class: "cia-channel-form" do |form| %>
-      <%= form.text_field :alerts_channel_id, class: "form-input", placeholder: "Right-click channel → Copy Channel ID" %>
-      <%= form.submit "Save", class: "btn-primary cia-btn-sm" %>
+    <h2>Settings</h2>
+    <%= form_with model: @setting, url: elimination_dashboard_settings_path, method: :patch do |form| %>
+      <div class="cia-settings-grid">
+        <div class="form-group">
+          <%= form.label :alerts_channel_id, "Alerts channel ID", class: "form-label" %>
+          <%= form.text_field :alerts_channel_id, class: "form-input", placeholder: "Right-click channel → Copy Channel ID" %>
+          <p class="form-help">Every bot message goes to this channel</p>
+        </div>
+        <div class="form-group">
+          <%= form.label :push_ticket_threshold, "Push threshold (tickets)", class: "form-label" %>
+          <%= form.number_field :push_ticket_threshold, min: 1, class: "form-input" %>
+          <p class="form-help">Tickets lost inside the window = push</p>
+        </div>
+        <div class="form-group">
+          <%= form.label :push_window_seconds, "Push window (seconds)", class: "form-label" %>
+          <%= form.number_field :push_window_seconds, min: 2, class: "form-input" %>
+        </div>
+        <div class="form-group">
+          <%= form.label :push_resolve_seconds, "Push over after (seconds quiet)", class: "form-label" %>
+          <%= form.number_field :push_resolve_seconds, min: 30, class: "form-input" %>
+          <p class="form-help">900 = 15 minutes; waves inside this window count as one push</p>
+        </div>
+        <div class="form-group">
+          <%= form.label :countdown_bottom_ranks, "Countdown when within bottom", class: "form-label" %>
+          <%= form.number_field :countdown_bottom_ranks, min: 1, class: "form-input" %>
+          <p class="form-help">2 = warn when last or second to last</p>
+        </div>
+        <div class="form-group">
+          <%= form.label :standings_interval_minutes, "Standings every (minutes)", class: "form-label" %>
+          <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
+        </div>
+      </div>
+      <%= form.submit "Save settings", class: "btn-primary cia-btn-sm" %>
     <% end %>
-    <p class="form-help">Every bot message goes to this channel.</p>
   </div>
 
   <div class="admin-stats-panel">

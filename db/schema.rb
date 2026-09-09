@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_09_165214) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_170509) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -174,7 +174,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_09_165214) do
     t.boolean "notify_ticks", default: true, null: false
     t.integer "poll_interval_seconds", default: 2, null: false
     t.boolean "polling_active", default: false, null: false
-    t.integer "push_resolve_seconds", default: 180, null: false
+    t.integer "push_resolve_seconds", default: 900, null: false
     t.integer "push_ticket_threshold", default: 10, null: false
     t.integer "push_window_seconds", default: 10, null: false
     t.integer "standings_interval_minutes", default: 60, null: false
