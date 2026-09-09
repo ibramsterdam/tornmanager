@@ -27,7 +27,7 @@ class EliminationDashboardController < ApplicationController
     setting = EliminationSetting.current
     permitted = params.require(:elimination_setting).permit(
       :alerts_channel_id, :push_ticket_threshold, :push_window_seconds,
-      :push_resolve_seconds, :countdown_bottom_ranks, :standings_interval_minutes
+      :push_resolve_seconds, :standings_interval_minutes
     )
 
     if setting.update(permitted)
@@ -69,14 +69,8 @@ class EliminationDashboardController < ApplicationController
       return redirect_to elimination_dashboard_path, alert: "No live trigger for that message."
     end
 
-    case Elimination::LiveTrigger.new(EliminationSetting.current).send!(kind)
-    when :sent
-      redirect_to elimination_dashboard_path, notice: "Sent live #{kind} message."
-    when :first_place
-      redirect_to elimination_dashboard_path, alert: "We are 1st, there is no countdown to show."
-    else
-      redirect_to elimination_dashboard_path, alert: "Our team was not found in the live data."
-    end
+    Elimination::LiveTrigger.new(EliminationSetting.current).send!(kind)
+    redirect_to elimination_dashboard_path, notice: "Sent live #{kind} message."
   rescue TornApi::ApiError, TornApi::InvalidKeyError => e
     redirect_to elimination_dashboard_path, alert: "Torn API error: #{e.message}"
   end

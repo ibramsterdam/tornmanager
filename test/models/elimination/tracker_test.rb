@@ -103,31 +103,6 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
     end
   end
 
-  test "starts a countdown when we are last and edits it after 30 seconds" do
-    with_memory_cache do
-      @tracker.process(teams(ours: 100), at: @base)
-      @tracker.process(teams(ours: 100), at: @base + 5)
-      @tracker.process(teams(ours: 100), at: @base + 35)
-
-      assert_equal 1, @notifier.names.count(:countdown_started)
-      assert_equal 1, @notifier.names.count(:countdown_updated)
-      data = @notifier.payload(:countdown_started)
-      assert_equal 3, data[:rank]
-      assert_equal "Brain Surgeons", data[:escape_team]
-      assert_equal 464, data[:gap]
-      assert_equal Time.utc(2026, 9, 12, 19, 45), data[:tick_at]
-    end
-  end
-
-  test "no countdown before life ticks begin" do
-    with_memory_cache do
-      early = Time.utc(2026, 9, 10, 19, 30)
-      @tracker.process(teams(ours: 100), at: early)
-
-      assert_not_includes @notifier.names, :countdown_started
-    end
-  end
-
   test "disabled push notifications stay silent but still track state" do
     @setting.update!(notify_push_ours: false)
 
@@ -141,12 +116,12 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
     end
   end
 
-  test "disabled toggles silence ticks, eliminations, countdowns, and standings" do
-    @setting.update!(notify_ticks: false, notify_eliminations: false, notify_countdown: false, notify_standings: false)
+  test "disabled toggles silence ticks, eliminations, and standings" do
+    @setting.update!(notify_ticks: false, notify_eliminations: false, notify_standings: false)
 
     with_memory_cache do
-      @tracker.process(teams(ours: 100), at: @base)
-      @tracker.process(teams(ours: 100, surgeons_lives: 43, surgeons_eliminated: true), at: @base + 2)
+      @tracker.process(teams, at: @base)
+      @tracker.process(teams(surgeons_lives: 43, surgeons_eliminated: true), at: @base + 2)
 
       assert_empty @notifier.events
     end

@@ -52,8 +52,8 @@ module Admin
       params.require(:elimination_setting).permit(
         :team_name, :api_key, :alerts_channel_id,
         :poll_interval_seconds, :push_window_seconds,
-        :push_ticket_threshold, :push_resolve_seconds, :countdown_bottom_ranks,
-        :standings_interval_minutes, :life_ticks_from
+        :push_ticket_threshold, :push_resolve_seconds,
+        :standings_interval_minutes
       )
     end
   end

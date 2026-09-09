@@ -64,7 +64,7 @@
         <div class="form-group">
           <%= form.label :alerts_channel_id, "Alerts channel ID", class: "form-label" %>
           <%= form.text_field :alerts_channel_id, class: "form-input", placeholder: "Right-click channel → Copy Channel ID" %>
-          <p class="form-help">Every bot message goes here: pushes, countdowns, tick reports, standings, eliminations, and health warnings. Needs the bot token in credentials.</p>
+          <p class="form-help">Every bot message goes here: pushes, tick reports, standings, eliminations, and health warnings. Needs the bot token in credentials.</p>
         </div>
       </div>
 
@@ -89,20 +89,8 @@
           </div>
 
           <div class="form-group">
-            <%= form.label :countdown_bottom_ranks, "Countdown when within bottom", class: "form-label" %>
-            <%= form.number_field :countdown_bottom_ranks, min: 1, class: "form-input" %>
-            <p class="form-help">2 = warn when we are last or second to last before a tick.</p>
-          </div>
-
-          <div class="form-group">
             <%= form.label :standings_interval_minutes, "Standings every (minutes)", class: "form-label" %>
             <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
-          </div>
-
-          <div class="form-group">
-            <%= form.label :life_ticks_from, "Life ticks start (TCT)", class: "form-label" %>
-            <%= form.datetime_field :life_ticks_from, class: "form-input" %>
-            <p class="form-help">No countdown alerts before this moment.</p>
           </div>
         </div>
 

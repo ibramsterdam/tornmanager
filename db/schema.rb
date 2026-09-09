@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_09_170509) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_172538) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -160,12 +160,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_09_170509) do
   create_table "elimination_settings", force: :cascade do |t|
     t.string "alerts_channel_id"
     t.string "api_key"
-    t.integer "countdown_bottom_ranks", default: 2, null: false
     t.datetime "created_at", null: false
     t.string "last_error"
     t.datetime "last_polled_at"
-    t.datetime "life_ticks_from", default: "2026-09-11 12:00:00", null: false
-    t.boolean "notify_countdown", default: true, null: false
     t.boolean "notify_eliminations", default: true, null: false
     t.boolean "notify_health", default: true, null: false
     t.boolean "notify_push_ours", default: true, null: false

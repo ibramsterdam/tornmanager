@@ -3,7 +3,6 @@ module Elimination
     STATE_CACHE_KEY = "elimination:state".freeze
     TICK_INTERVAL = 15.minutes
     PUSH_EDIT_EVERY = 10.seconds
-    COUNTDOWN_EDIT_EVERY = 30.seconds
 
     def initialize(setting, notifier: Notifier.new(setting))
       @setting = setting
@@ -21,7 +20,6 @@ module Elimination
       detect_pushes
       report_life_ticks
       report_eliminations
-      handle_countdown
       post_standings
 
       @state[:prev_teams] = @teams.to_h { |team| [ team.torn_id, { lives: team.lives, eliminated: team.eliminated } ] }
@@ -129,7 +127,6 @@ module Elimination
         next unless previous && team.lives < previous[:lives]
 
         @notifier.tick_report(tick_data(team)) if @setting.notify_ticks?
-        @state[:countdown] = nil if team.torn_id == @ours&.torn_id
       end
     end
 
@@ -155,38 +152,6 @@ module Elimination
 
         @notifier.team_eliminated(name: team.name, remaining: @alive.size) if @setting.notify_eliminations?
       end
-    end
-
-    def handle_countdown
-      return unless @setting.notify_countdown?
-      return unless @setting.life_ticks_active?(@at)
-      return unless @ours && !@ours.eliminated && @alive.size > 1
-      return if our_rank == 1
-      return unless our_rank > @alive.size - @setting.countdown_bottom_ranks
-
-      countdown = @state[:countdown]
-      tick_at = next_tick_at
-
-      if countdown.nil? || countdown[:tick_at] != tick_at.to_i
-        message_id = @notifier.countdown_started(countdown_data(tick_at))
-        @state[:countdown] = { tick_at: tick_at.to_i, message_id: message_id, last_edit_at: @at.to_i }
-      elsif @at.to_i - countdown[:last_edit_at] >= COUNTDOWN_EDIT_EVERY
-        @notifier.countdown_updated(countdown[:message_id], countdown_data(tick_at))
-        countdown[:last_edit_at] = @at.to_i
-      end
-    end
-
-    def countdown_data(tick_at)
-      above = @alive[our_rank - 2]
-      {
-        rank: our_rank,
-        total_alive: @alive.size,
-        gap: above.tickets - @ours.tickets,
-        escape_team: above.name,
-        escape_tickets: above.tickets,
-        our_tickets: @ours.tickets,
-        tick_at: tick_at
-      }
     end
 
     def post_standings

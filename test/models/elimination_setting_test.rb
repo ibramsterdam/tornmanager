@@ -13,14 +13,6 @@ class EliminationSettingTest < ActiveSupport::TestCase
     assert_same setting.id, EliminationSetting.current.id
   end
 
-  test "life ticks activate from the configured moment" do
-    setting = EliminationSetting.current
-    setting.update!(life_ticks_from: Time.utc(2026, 9, 11, 12))
-
-    assert_not setting.life_ticks_active?(Time.utc(2026, 9, 11, 11, 59))
-    assert setting.life_ticks_active?(Time.utc(2026, 9, 11, 12))
-  end
-
   test "polling_api_key falls back to the admin key" do
     setting = EliminationSetting.current
     AdminCredentials.stubs(:api_key).returns("admin_key")

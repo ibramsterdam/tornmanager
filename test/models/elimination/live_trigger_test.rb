@@ -14,22 +14,6 @@ class Elimination::LiveTriggerTest < ActiveSupport::TestCase
     assert_equal :sent, @trigger.send!("standings")
   end
 
-  test "countdown sends live rank and gap" do
-    TornApi::Torn::Elimination.any_instance.stubs(:fetch).returns(teams)
-    @notifier.expects(:countdown_started).with do |data|
-      data[:rank] == 2 && data[:escape_team] == "APEX" && data[:gap] == 820
-    end
-
-    assert_equal :sent, @trigger.send!("countdown")
-  end
-
-  test "countdown reports first place instead of sending" do
-    TornApi::Torn::Elimination.any_instance.stubs(:fetch).returns(teams(ours: 9999))
-    @notifier.expects(:countdown_started).never
-
-    assert_equal :first_place, @trigger.send!("countdown")
-  end
-
   test "rejects unknown kinds" do
     assert_raises(ArgumentError) { @trigger.send!("push_ours") }
   end

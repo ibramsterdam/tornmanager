@@ -65,16 +65,8 @@
         <span class="admin-stat-value"><%= setting.push_resolve_seconds / 60 %> min quiet</span>
       </div>
       <div class="admin-stat-row">
-        <span class="admin-stat-label">Countdown</span>
-        <span class="admin-stat-value">bottom <%= setting.countdown_bottom_ranks %></span>
-      </div>
-      <div class="admin-stat-row">
         <span class="admin-stat-label">Standings</span>
         <span class="admin-stat-value">every <%= setting.standings_interval_minutes %> min</span>
-      </div>
-      <div class="admin-stat-row">
-        <span class="admin-stat-label">Life ticks from</span>
-        <span class="admin-stat-value"><%= setting.life_ticks_from.utc.strftime("%d %b %H:%M") %> TCT</span>
       </div>
     </div>
   </div>

@@ -2,7 +2,6 @@ class EliminationSetting < ApplicationRecord
   NOTIFICATIONS = [
     { key: "push_ours", label: "Push on us", demos: %w[push_ours push_resolved] },
     { key: "push_rivals", label: "Push on other teams", demos: %w[push_rival] },
-    { key: "countdown", label: "Life tick countdown", demos: %w[countdown], live: true },
     { key: "ticks", label: "Life tick reports", demos: %w[tick_other tick_ours] },
     { key: "eliminations", label: "Eliminations", demos: %w[elimination] },
     { key: "standings", label: "Standings", demos: %w[standings], live: true },
@@ -11,7 +10,7 @@ class EliminationSetting < ApplicationRecord
 
   validates :team_name, presence: true
   validates :poll_interval_seconds, :push_window_seconds, :push_ticket_threshold,
-    :push_resolve_seconds, :countdown_bottom_ranks, :standings_interval_minutes,
+    :push_resolve_seconds, :standings_interval_minutes,
     numericality: { only_integer: true, greater_than: 0 }
 
   def self.current
@@ -30,9 +29,5 @@ class EliminationSetting < ApplicationRecord
 
   def stop_polling!
     update!(polling_active: false)
-  end
-
-  def life_ticks_active?(at = Time.current)
-    at >= life_ticks_from
   end
 end

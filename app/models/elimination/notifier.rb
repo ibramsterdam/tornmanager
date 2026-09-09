@@ -29,14 +29,6 @@ module Elimination
       alerts.edit(message_id, content: content, embed: push_resolved_embed(push))
     end
 
-    def countdown_started(data)
-      alerts.post(content: "attack NOW or we lose a life", embed: countdown_embed(data))
-    end
-
-    def countdown_updated(message_id, data)
-      alerts.edit(message_id, embed: countdown_embed(data))
-    end
-
     def tick_report(data)
       if data[:ours]
         alerts.post(content: "we lost a life", embed: tick_embed(data))
@@ -107,23 +99,6 @@ module Elimination
         fields: [
           { name: "Tickets", value: "#{fmt(push[:tickets_before])} → #{fmt(push[:tickets_now])} (net −#{fmt(push[:net_loss])})", inline: true },
           { name: "Cushion above last", value: "+#{fmt(push[:cushion])}", inline: true }
-        ],
-        footer: footer,
-        timestamp: Time.current.iso8601
-      }
-    end
-
-    def countdown_embed(data)
-      minutes = [ ((data[:tick_at] - Time.current) / 60).ceil, 0 ].max
-      position = data[:rank] == data[:total_alive] ? "we are LAST" : "we are #{data[:rank].ordinalize} of #{data[:total_alive]}"
-      {
-        title: "⏳ #{minutes} min to the #{tct(data[:tick_at])} tick and #{position}",
-        description: "We need **+#{fmt(data[:gap] + 1)} tickets** to pass **#{data[:escape_team]}** before the tick. Every won attack counts for one.",
-        color: RED,
-        fields: [
-          { name: "Us", value: fmt(data[:our_tickets]), inline: true },
-          { name: data[:escape_team], value: fmt(data[:escape_tickets]), inline: true },
-          { name: "Tick", value: tct(data[:tick_at]), inline: true }
         ],
         footer: footer,
         timestamp: Time.current.iso8601
@@ -206,17 +181,13 @@ module Elimination
         fields << { name: "Gap up (#{our_index.ordinalize})", value: fmt(above.tickets - ours.tickets), inline: true }
       end
 
-      fields << if @setting.life_ticks_active?
-        { name: "Next tick", value: tct(Time.at(((Time.current.to_i / 900) + 1) * 900)), inline: true }
-      else
-        { name: "Life ticks from", value: "#{@setting.life_ticks_from.utc.strftime("%d %b %H:%M")} TCT", inline: true }
-      end
+      fields << { name: "Next tick", value: tct(Time.at(((Time.current.to_i / 900) + 1) * 900)), inline: true }
 
       fields
     end
 
     def attacking_start
-      @setting.life_ticks_from - 1.day
+      Time.utc(2026, 9, 10, 12)
     end
 
     private

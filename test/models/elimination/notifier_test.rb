@@ -35,17 +35,6 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_includes attackers[:value], "Reptilians (wins +11)"
   end
 
-  test "countdown embed names the team to pass and the exact gap" do
-    embed = @notifier.countdown_embed(
-      rank: 11, total_alive: 11, gap: 55, escape_team: "Inanimate Objects",
-      escape_tickets: 1186, our_tickets: 1131, tick_at: Time.current + 12.minutes
-    )
-
-    assert_includes embed[:title], "we are LAST"
-    assert_includes embed[:description], "+56 tickets"
-    assert_includes embed[:description], "Inanimate Objects"
-  end
-
   test "tick report for our loss carries the alert text" do
     Discord::BotChannel.any_instance.expects(:post).with do |args|
       args[:content] == "we lost a life"

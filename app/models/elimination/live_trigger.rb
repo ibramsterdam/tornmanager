@@ -1,6 +1,6 @@
 module Elimination
   class LiveTrigger
-    KINDS = %w[standings countdown].freeze
+    KINDS = %w[standings].freeze
 
     def initialize(setting, notifier: Notifier.new(setting))
       @setting = setting
@@ -16,26 +16,6 @@ module Elimination
 
     def standings(teams)
       @notifier.standings(teams)
-      :sent
-    end
-
-    def countdown(teams)
-      alive = teams.reject(&:eliminated).sort_by { |team| [ -team.tickets, team.torn_id ] }
-      our_index = alive.index { |team| team.name == @setting.team_name }
-      return :no_team unless our_index
-      return :first_place if our_index.zero?
-
-      above = alive[our_index - 1]
-      ours = alive[our_index]
-      @notifier.countdown_started(
-        rank: our_index + 1,
-        total_alive: alive.size,
-        gap: above.tickets - ours.tickets,
-        escape_team: above.name,
-        escape_tickets: above.tickets,
-        our_tickets: ours.tickets,
-        tick_at: Time.at(((Time.current.to_i / 900) + 1) * 900)
-      )
       :sent
     end
   end

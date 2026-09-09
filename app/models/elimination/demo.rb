@@ -1,7 +1,7 @@
 module Elimination
   class Demo
     KINDS = %w[
-      push_ours push_rival push_resolved countdown
+      push_ours push_rival push_resolved
       tick_other tick_ours elimination standings
       health_down health_recovered
     ].freeze
@@ -39,14 +39,6 @@ module Elimination
         message_id,
         ours: true, team_name: @setting.team_name, started_at: 8.minutes.ago,
         tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810
-      )
-    end
-
-    def countdown
-      @notifier.countdown_started(
-        rank: 11, total_alive: 11, gap: 55,
-        escape_team: "Inanimate Objects", escape_tickets: 1186,
-        our_tickets: 1131, tick_at: next_tick
       )
     end
 

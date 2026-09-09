@@ -38,11 +38,6 @@
           <p class="form-help">900 = 15 minutes; waves inside this window count as one push</p>
         </div>
         <div class="form-group">
-          <%= form.label :countdown_bottom_ranks, "Countdown when within bottom", class: "form-label" %>
-          <%= form.number_field :countdown_bottom_ranks, min: 1, class: "form-input" %>
-          <p class="form-help">2 = warn when last or second to last</p>
-        </div>
-        <div class="form-group">
           <%= form.label :standings_interval_minutes, "Standings every (minutes)", class: "form-label" %>
           <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
         </div>
