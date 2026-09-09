@@ -1,0 +1,107 @@
+/* Public CIA bot admin panel (/elimination) */
+
+.cia-login {
+  min-height: 65vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4, 16px);
+}
+
+.cia-card {
+  width: 100%;
+  max-width: 360px;
+  background: var(--gray-900, #171717);
+  border: 1px solid var(--gray-800, #262626);
+  border-radius: var(--radius-lg, 8px);
+  padding: var(--space-8, 32px);
+  text-align: center;
+}
+
+.cia-logo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  margin-bottom: var(--space-4, 16px);
+}
+
+.cia-card h1 {
+  font-size: 1.125rem;
+  margin: 0 0 var(--space-1, 4px);
+  color: var(--gray-100, #f5f5f5);
+}
+
+.cia-subtitle {
+  font-size: 0.8125rem;
+  color: var(--gray-500, #737373);
+  margin: 0 0 var(--space-6, 24px);
+}
+
+.cia-card .form-input {
+  margin-bottom: var(--space-3, 12px);
+}
+
+.cia-submit {
+  width: 100%;
+}
+
+.cia-error {
+  margin-top: var(--space-4, 16px);
+  font-size: 0.8125rem;
+  color: #ef4444;
+}
+
+.cia-error a {
+  color: #f87171;
+  text-decoration: underline;
+}
+
+.cia-dashboard {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: var(--space-4, 16px);
+}
+
+.cia-dashboard-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4, 16px);
+  margin-bottom: var(--space-4, 16px);
+}
+
+.cia-dashboard-header h1 {
+  font-size: 1.125rem;
+  margin: 0;
+  color: var(--gray-100, #f5f5f5);
+}
+
+.cia-dashboard-header .cia-subtitle {
+  margin: 0;
+}
+
+.cia-logo-small {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cia-logout {
+  margin-left: auto;
+}
+
+.cia-placeholder {
+  color: var(--gray-400, #a3a3a3);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+@media (max-width: 480px) {
+  .cia-card {
+    padding: var(--space-6, 24px);
+  }
+
+  .cia-dashboard-header {
+    flex-wrap: wrap;
+  }
+}

@@ -155,6 +155,10 @@ Rails.application.routes.draw do
   get "privacy-policy", to: redirect("/legal#privacy-policy")
   get "terms-of-service", to: redirect("/legal#terms-of-service")
 
+  get "elimination", to: "elimination_dashboard#show", as: :elimination_dashboard
+  post "elimination/login", to: "elimination_dashboard#login", as: :elimination_dashboard_login
+  delete "elimination/logout", to: "elimination_dashboard#logout", as: :elimination_dashboard_logout
+
   get "key-log", to: "key_log#index", as: :key_log
   post "key-log/show", to: "key_log#show", as: :key_log_show
   get "key-log/show", to: redirect("/key-log")

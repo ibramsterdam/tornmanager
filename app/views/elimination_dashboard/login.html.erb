@@ -1,0 +1,19 @@
+<div class="cia-login">
+  <div class="cia-card">
+    <%= image_tag "cia-logo.png", alt: "Conspiracy Intelligence Agency", class: "cia-logo" %>
+    <h1>Conspiracy Intelligence Agency</h1>
+    <p class="cia-subtitle">Bot admin panel</p>
+
+    <%= form_with url: elimination_dashboard_login_path, method: :post do |form| %>
+      <%= form.password_field :password, class: "form-input", placeholder: "Password", autofocus: true, autocomplete: "current-password" %>
+      <%= form.submit "Enter", class: "btn-primary cia-submit" %>
+    <% end %>
+
+    <% if @wrong_password %>
+      <p class="cia-error">
+        Wrong password. Reach out to
+        <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", rel: "noopener" %>.
+      </p>
+    <% end %>
+  </div>
+</div>

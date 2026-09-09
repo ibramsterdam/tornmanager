@@ -1,0 +1,15 @@
+<div class="cia-dashboard">
+  <div class="cia-dashboard-header">
+    <%= image_tag "cia-logo.png", alt: "Conspiracy Intelligence Agency", class: "cia-logo-small" %>
+    <div>
+      <h1>Conspiracy Intelligence Agency</h1>
+      <p class="cia-subtitle">Bot admin panel</p>
+    </div>
+    <%= button_to "Log out", elimination_dashboard_logout_path, method: :delete, class: "btn-secondary cia-logout" %>
+  </div>
+
+  <div class="admin-stats-panel">
+    <h2>Coming soon</h2>
+    <p class="cia-placeholder">Nothing to configure here yet. Notification controls are on the way.</p>
+  </div>
+</div>
