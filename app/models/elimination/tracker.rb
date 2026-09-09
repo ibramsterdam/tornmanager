@@ -18,6 +18,7 @@ module Elimination
 
       record_sample
       detect_pushes
+      detect_escapes
       report_life_ticks
       report_eliminations
       post_standings
@@ -117,6 +118,34 @@ module Elimination
       end.max_by(2) { |_, gained| gained }
     end
 
+    def detect_escapes
+      @alive.each do |team|
+        state = escapes[team.torn_id]
+
+        if team.tickets <= @setting.escape_floor_tickets
+          escapes[team.torn_id] = { armed: true, low_at: @at.to_i }
+        elsif state&.dig(:armed) && team.tickets >= @setting.escape_threshold_tickets
+          @notifier.escape_report(escape_data(team, state)) if @setting.notify_escapes?
+          escapes[team.torn_id] = { armed: false }
+        end
+      end
+    end
+
+    def escape_data(team, state)
+      lowest = @alive.last
+      {
+        team_name: team.name,
+        tickets: team.tickets,
+        floor: @setting.escape_floor_tickets,
+        threshold: @setting.escape_threshold_tickets,
+        minutes: [ ((@at.to_i - state[:low_at]) / 60.0).round, 1 ].max,
+        last_name: lowest.name,
+        last_tickets: lowest.tickets,
+        cushion: @ours && !@ours.eliminated ? cushion_for(@ours) : nil,
+        next_tick_at: next_tick_at
+      }
+    end
+
     def report_life_ticks
       @teams.each do |team|
         previous = prev_team(team.torn_id)
@@ -190,6 +219,10 @@ module Elimination
 
     def pushes
       @state[:pushes] ||= {}
+    end
+
+    def escapes
+      @state[:escapes] ||= {}
     end
 
     def prev_team(torn_id)

@@ -29,6 +29,7 @@ class Elimination::DemoTest < ActiveSupport::TestCase
 
     assert_includes @notifier.events, :push_started
     assert_includes @notifier.events, :push_resolved
+    assert_includes @notifier.events, :escape_report
     assert_includes @notifier.events, :tick_report
     assert_includes @notifier.events, :team_eliminated
     assert_includes @notifier.events, :standings

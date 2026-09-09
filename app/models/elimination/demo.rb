@@ -1,7 +1,7 @@
 module Elimination
   class Demo
     KINDS = %w[
-      push_ours push_resolved
+      push_ours push_resolved escape
       tick_other tick_ours elimination standings
       health_down health_recovered
     ].freeze
@@ -29,6 +29,15 @@ module Elimination
         message_id,
         team_name: @setting.team_name, started_at: 8.minutes.ago,
         tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810
+      )
+    end
+
+    def escape
+      @notifier.escape_report(
+        team_name: "Reptilians", tickets: 63,
+        floor: @setting.escape_floor_tickets, threshold: @setting.escape_threshold_tickets,
+        minutes: 4, last_name: "Brain Surgeons", last_tickets: 12,
+        cushion: 540, next_tick_at: next_tick
       )
     end
 

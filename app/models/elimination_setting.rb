@@ -1,6 +1,7 @@
 class EliminationSetting < ApplicationRecord
   NOTIFICATIONS = [
     { key: "push_ours", label: "Push on us", demos: %w[push_ours push_resolved] },
+    { key: "escapes", label: "Escape from 0 tickets", demos: %w[escape] },
     { key: "ticks", label: "Life tick reports", demos: %w[tick_other tick_ours] },
     { key: "eliminations", label: "Eliminations", demos: %w[elimination] },
     { key: "standings", label: "Standings", demos: %w[standings], live: true },
@@ -9,8 +10,10 @@ class EliminationSetting < ApplicationRecord
 
   validates :team_name, presence: true
   validates :poll_interval_seconds, :push_window_seconds, :push_ticket_threshold,
-    :push_resolve_seconds, :standings_interval_minutes,
+    :push_resolve_seconds, :standings_interval_minutes, :escape_threshold_tickets,
     numericality: { only_integer: true, greater_than: 0 }
+  validates :escape_floor_tickets,
+    numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
   def self.current
     first || create!

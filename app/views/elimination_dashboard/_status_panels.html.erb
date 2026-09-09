@@ -65,6 +65,10 @@
         <span class="admin-stat-value"><%= setting.push_resolve_seconds / 60 %> min quiet</span>
       </div>
       <div class="admin-stat-row">
+        <span class="admin-stat-label">Escape alert</span>
+        <span class="admin-stat-value">≤<%= setting.escape_floor_tickets %> → ≥<%= setting.escape_threshold_tickets %></span>
+      </div>
+      <div class="admin-stat-row">
         <span class="admin-stat-label">Standings</span>
         <span class="admin-stat-value">every <%= setting.standings_interval_minutes %> min</span>
       </div>

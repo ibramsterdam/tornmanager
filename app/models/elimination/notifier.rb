@@ -24,6 +24,29 @@ module Elimination
       alerts.edit(message_id, content: "we weathered the push ✅", embed: push_resolved_embed(push))
     end
 
+    def escape_report(data)
+      alerts.post(embed: escape_embed(data))
+    end
+
+    def escape_embed(data)
+      fields = [
+        { name: "Current last", value: "#{data[:last_name]} (#{fmt(data[:last_tickets])})", inline: true },
+        { name: "Next tick", value: tct(data[:next_tick_at]), inline: true }
+      ]
+      if data[:cushion]
+        fields << { name: "Our cushion", value: signed(data[:cushion]), inline: true }
+      end
+
+      {
+        title: "🪜 #{data[:team_name]} is climbing out — #{fmt(data[:tickets])} tickets",
+        description: "They sat at **#{data[:floor]} or fewer** tickets and just passed **#{data[:threshold]}** in ~#{data[:minutes]} min. The bottom of the table is moving.",
+        color: ORANGE,
+        fields: fields,
+        footer: footer,
+        timestamp: Time.current.iso8601
+      }
+    end
+
     def tick_report(data)
       if data[:ours]
         alerts.post(content: "we lost a life", embed: tick_embed(data))

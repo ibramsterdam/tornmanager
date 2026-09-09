@@ -27,7 +27,8 @@ class EliminationDashboardController < ApplicationController
     setting = EliminationSetting.current
     permitted = params.require(:elimination_setting).permit(
       :alerts_channel_id, :push_ticket_threshold, :push_window_seconds,
-      :push_resolve_seconds, :standings_interval_minutes
+      :push_resolve_seconds, :standings_interval_minutes,
+      :escape_floor_tickets, :escape_threshold_tickets
     )
 
     if setting.update(permitted)

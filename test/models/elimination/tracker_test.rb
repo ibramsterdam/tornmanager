@@ -126,6 +126,43 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
     end
   end
 
+  test "alerts once when a stuck team escapes the floor" do
+    with_memory_cache do
+      @tracker.process(teams(surgeons: 5), at: @base)
+      @tracker.process(teams(surgeons: 30), at: @base + 60)
+      @tracker.process(teams(surgeons: 62), at: @base + 240)
+      @tracker.process(teams(surgeons: 70), at: @base + 300)
+
+      assert_equal 1, @notifier.names.count(:escape_report)
+      escape = @notifier.payload(:escape_report)
+      assert_equal "Brain Surgeons", escape[:team_name]
+      assert_equal 62, escape[:tickets]
+      assert_equal 4, escape[:minutes]
+    end
+  end
+
+  test "escape re-arms after falling back to the floor" do
+    with_memory_cache do
+      @tracker.process(teams(surgeons: 5), at: @base)
+      @tracker.process(teams(surgeons: 60), at: @base + 60)
+      @tracker.process(teams(surgeons: 3), at: @base + 120)
+      @tracker.process(teams(surgeons: 55), at: @base + 180)
+
+      assert_equal 2, @notifier.names.count(:escape_report)
+    end
+  end
+
+  test "disabled escape notifications stay silent" do
+    @setting.update!(notify_escapes: false)
+
+    with_memory_cache do
+      @tracker.process(teams(surgeons: 5), at: @base)
+      @tracker.process(teams(surgeons: 60), at: @base + 60)
+
+      assert_not_includes @notifier.names, :escape_report
+    end
+  end
+
   test "posts standings on start and then per interval" do
     with_memory_cache do
       @tracker.process(teams, at: @base)
@@ -138,11 +175,11 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
 
   private
 
-  def teams(ours: 1298, apex_wins: 8600, surgeons_lives: 44, surgeons_eliminated: false)
+  def teams(ours: 1298, apex_wins: 8600, surgeons: 564, surgeons_lives: 44, surgeons_eliminated: false)
     [
       team(80, "Conspiracy Theorists", tickets: ours, lives: 48, wins: 7900),
       team(86, "APEX", tickets: 2118, lives: 50, wins: apex_wins),
-      team(89, "Brain Surgeons", tickets: 564, lives: surgeons_lives, wins: 5100, eliminated: surgeons_eliminated),
+      team(89, "Brain Surgeons", tickets: surgeons, lives: surgeons_lives, wins: 5100, eliminated: surgeons_eliminated),
       team(82, "Gold Dust", tickets: 0, lives: 0, wins: 4100, eliminated: true)
     ]
   end

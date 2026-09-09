@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_09_173544) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_174438) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -161,9 +161,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_09_173544) do
     t.string "alerts_channel_id"
     t.string "api_key"
     t.datetime "created_at", null: false
+    t.integer "escape_floor_tickets", default: 10, null: false
+    t.integer "escape_threshold_tickets", default: 50, null: false
     t.string "last_error"
     t.datetime "last_polled_at"
     t.boolean "notify_eliminations", default: true, null: false
+    t.boolean "notify_escapes", default: true, null: false
     t.boolean "notify_health", default: true, null: false
     t.boolean "notify_push_ours", default: true, null: false
     t.boolean "notify_standings", default: true, null: false

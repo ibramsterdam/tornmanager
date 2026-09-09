@@ -53,7 +53,7 @@ module Admin
         :team_name, :api_key, :alerts_channel_id,
         :poll_interval_seconds, :push_window_seconds,
         :push_ticket_threshold, :push_resolve_seconds,
-        :standings_interval_minutes
+        :standings_interval_minutes, :escape_floor_tickets, :escape_threshold_tickets
       )
     end
   end

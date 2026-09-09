@@ -41,6 +41,16 @@
           <%= form.label :standings_interval_minutes, "Standings every (minutes)", class: "form-label" %>
           <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
         </div>
+        <div class="form-group">
+          <%= form.label :escape_floor_tickets, "Escape floor (tickets)", class: "form-label" %>
+          <%= form.number_field :escape_floor_tickets, min: 0, class: "form-input" %>
+          <p class="form-help">A team at or under this counts as stuck at the bottom</p>
+        </div>
+        <div class="form-group">
+          <%= form.label :escape_threshold_tickets, "Escape alert above (tickets)", class: "form-label" %>
+          <%= form.number_field :escape_threshold_tickets, min: 1, class: "form-input" %>
+          <p class="form-help">Alert when a stuck team climbs past this</p>
+        </div>
       </div>
       <%= form.submit "Save settings", class: "btn-primary cia-btn-sm" %>
     <% end %>
@@ -55,6 +65,7 @@
       <li>While the push goes on, the bot does not post again. It updates that same message with fresh numbers. A push can last for hours and it stays one single message, so there is no spam.</li>
       <li>The push is over when we lose no big amount of tickets for <%= @setting.push_resolve_seconds / 60 %> minutes. The bot then turns the message green: "push over".</li>
       <li>If the attackers stop and come back later than that, it counts as a new push and gets a new message.</li>
+      <li>Extra: when a team that was stuck at <%= @setting.escape_floor_tickets %> or fewer tickets climbs above <%= @setting.escape_threshold_tickets %>, the bot posts one message. That team is trying to escape last place, so another team will eat the next life tick.</li>
       <li>Discord only sends a notification for the first message. The updates are silent.</li>
     </ul>
   </div>

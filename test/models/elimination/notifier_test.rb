@@ -26,6 +26,19 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_includes attackers[:value], "Reptilians (wins +11)"
   end
 
+  test "escape embed names the climber and the current last place" do
+    embed = @notifier.escape_embed(
+      team_name: "Reptilians", tickets: 63, floor: 10, threshold: 50, minutes: 4,
+      last_name: "Brain Surgeons", last_tickets: 12, cushion: 540,
+      next_tick_at: Time.current + 9.minutes
+    )
+
+    assert_includes embed[:title], "Reptilians is climbing out"
+    fields = embed[:fields].index_by { |field| field[:name] }
+    assert_equal "Brain Surgeons (12)", fields["Current last"][:value]
+    assert_equal "+540", fields["Our cushion"][:value]
+  end
+
   test "tick report for our loss carries the alert text" do
     Discord::BotChannel.any_instance.expects(:post).with do |args|
       args[:content] == "we lost a life"
