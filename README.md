@@ -44,10 +44,10 @@ Elimination event. The server polls the public elimination endpoint every two
 seconds during the attacking period and reports to Discord through webhooks:
 push alerts when a team loses a significant number of tickets inside a rolling
 ten-second window (with likely attackers inferred from wins deltas), a life
-tick countdown with a ping when the team is last or second to last, a report
-every fifteen minutes on who lost a life, hourly standings, elimination
-announcements, and a warning when the Torn API goes down. Thresholds, webhooks,
-and the role to ping are configured at `admin/eliminations`.
+tick countdown when the team is last or second to last, a report every fifteen
+minutes on who lost a life, hourly standings, elimination announcements, and a
+warning when the Torn API goes down. Thresholds and channels are configured at
+`admin/eliminations`.
 
 ## Why open source
 

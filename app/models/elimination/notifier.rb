@@ -14,7 +14,7 @@ module Elimination
 
     def push_started(push)
       if push[:ours]
-        alerts.post(content: ping("we are getting pushed!"), embed: push_embed(push), allowed_mentions: role_mentions)
+        alerts.post(content: "we are getting pushed!", embed: push_embed(push))
       else
         alerts.post(embed: push_embed(push))
       end
@@ -30,7 +30,7 @@ module Elimination
     end
 
     def countdown_started(data)
-      alerts.post(content: ping("attack NOW or we lose a life"), embed: countdown_embed(data), allowed_mentions: role_mentions)
+      alerts.post(content: "attack NOW or we lose a life", embed: countdown_embed(data))
     end
 
     def countdown_updated(message_id, data)
@@ -39,7 +39,7 @@ module Elimination
 
     def tick_report(data)
       if data[:ours]
-        alerts.post(content: ping("we lost a life"), embed: tick_embed(data), allowed_mentions: role_mentions)
+        alerts.post(content: "we lost a life", embed: tick_embed(data))
       else
         alerts.post(embed: tick_embed(data))
       end
@@ -239,16 +239,6 @@ module Elimination
       else
         Discord::Webhook.new(webhook_url)
       end
-    end
-
-    def ping(message)
-      return message unless @setting.role_id.present?
-      "<@&#{@setting.role_id}> #{message}"
-    end
-
-    def role_mentions
-      return nil unless @setting.role_id.present?
-      { parse: [], roles: [ @setting.role_id ] }
     end
 
     def footer

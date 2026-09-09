@@ -3,18 +3,17 @@ require "test_helper"
 class Elimination::NotifierTest < ActiveSupport::TestCase
   setup do
     @setting = EliminationSetting.create!(
-      alerts_webhook_url: "https://discord.com/api/webhooks/1/a",
-      role_id: "424242"
+      alerts_webhook_url: "https://discord.com/api/webhooks/1/a"
     )
     @notifier = Elimination::Notifier.new(@setting)
   end
 
-  test "push on our team pings the role" do
+  test "push on our team carries the alert text without any mention" do
     push = our_push
     Discord::Webhook.any_instance.expects(:post).with do |args|
-      args[:content] == "<@&424242> we are getting pushed!" &&
+      args[:content] == "we are getting pushed!" &&
         args[:embed][:title] == "🚨 Push on Conspiracy Theorists" &&
-        args[:allowed_mentions] == { parse: [], roles: [ "424242" ] }
+        args[:allowed_mentions].nil?
     end.returns("111")
 
     assert_equal "111", @notifier.push_started(push)
@@ -48,9 +47,9 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_includes embed[:description], "Inanimate Objects"
   end
 
-  test "tick report for our loss uses the ping" do
+  test "tick report for our loss carries the alert text" do
     Discord::Webhook.any_instance.expects(:post).with do |args|
-      args[:content] == "<@&424242> we lost a life"
+      args[:content] == "we lost a life"
     end.returns("113")
 
     @notifier.tick_report(
@@ -119,15 +118,6 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     @notifier.push_resolved("111",
       ours: true, team_name: "Conspiracy Theorists", started_at: 8.minutes.ago,
       tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810)
-  end
-
-  test "no ping without a configured role" do
-    @setting.update!(role_id: nil)
-    Discord::Webhook.any_instance.expects(:post).with do |args|
-      args[:content] == "we are getting pushed!" && args[:allowed_mentions].nil?
-    end.returns("114")
-
-    @notifier.push_started(our_push)
   end
 
   private

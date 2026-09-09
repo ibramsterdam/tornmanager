@@ -58,10 +58,6 @@
           <span class="elim-check <%= @setting.standings_channel_id.present? ? "ok" : "fallback" %>"><%= @setting.standings_channel_id.present? ? "✓ set" : "→ alerts channel" %></span>
         </div>
         <div class="admin-stat-row">
-          <span class="admin-stat-label">Role ping</span>
-          <span class="elim-check <%= @setting.role_id.present? ? "ok" : "missing" %>"><%= @setting.role_id.present? ? "✓ set" : "✗ no pings" %></span>
-        </div>
-        <div class="admin-stat-row">
           <span class="admin-stat-label">Torn API key</span>
           <span class="elim-check <%= @setting.api_key.present? ? "ok" : "fallback" %>"><%= @setting.api_key.present? ? "✓ dedicated" : "→ admin key" %></span>
         </div>
@@ -122,7 +118,7 @@
   <% end %>
 
   <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
-    <h2>Test notifications <span class="admin-stats-hint">sends mock data to the configured channels, ping included</span></h2>
+    <h2>Test notifications <span class="admin-stats-hint">sends mock data to the configured channels</span></h2>
     <div class="elim-test-buttons">
       <% Elimination::Demo::KINDS.each do |kind| %>
         <%= button_to kind.humanize, test_admin_eliminations_path(kind: kind), method: :post, class: "btn-secondary" %>
@@ -154,12 +150,6 @@
         <div class="form-group">
           <%= form.label :standings_channel_id, "Standings channel ID", class: "form-label" %>
           <%= form.text_field :standings_channel_id, class: "form-input", placeholder: "Empty = alerts channel" %>
-        </div>
-
-        <div class="form-group">
-          <%= form.label :role_id, "Role ID to ping", class: "form-label" %>
-          <%= form.text_field :role_id, class: "form-input", placeholder: "Right-click role → Copy Role ID" %>
-          <p class="form-help">Pinged when we get pushed, during countdowns, and when we lose a life. Empty = no pings.</p>
         </div>
 
         <div class="form-group">
