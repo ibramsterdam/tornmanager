@@ -1,7 +1,7 @@
 module Elimination
   class Demo
     KINDS = %w[
-      push_ours push_rival push_resolved
+      push_ours push_resolved
       tick_other tick_ours elimination standings
       health_down health_recovered
     ].freeze
@@ -23,21 +23,11 @@ module Elimination
       @notifier.push_started(our_push)
     end
 
-    def push_rival
-      @notifier.push_started(
-        ours: false, team_name: "Brain Surgeons", lost: 11,
-        window_seconds: @setting.push_window_seconds,
-        tickets_before: 575, tickets_now: 564, pace_per_minute: 66,
-        cushion: 76, next_tick_at: next_tick,
-        attackers: [ [ "High Voltage", 9 ] ]
-      )
-    end
-
     def push_resolved
       message_id = @notifier.push_started(our_push)
       @notifier.push_resolved(
         message_id,
-        ours: true, team_name: @setting.team_name, started_at: 8.minutes.ago,
+        team_name: @setting.team_name, started_at: 8.minutes.ago,
         tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810
       )
     end
@@ -70,7 +60,7 @@ module Elimination
 
     def our_push
       {
-        ours: true, team_name: @setting.team_name, lost: 14,
+        team_name: @setting.team_name, lost: 14,
         window_seconds: @setting.push_window_seconds,
         tickets_before: 1384, tickets_now: 1370, pace_per_minute: 84,
         cushion: 806, next_tick_at: next_tick,

@@ -18,15 +18,6 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_equal "111", @notifier.push_started(push)
   end
 
-  test "push on another team posts without a ping" do
-    push = our_push.merge(ours: false, team_name: "Brain Surgeons")
-    Discord::BotChannel.any_instance.expects(:post).with do |args|
-      args[:content].nil? && args[:embed][:title] == "🚨 Push on Brain Surgeons"
-    end.returns("112")
-
-    @notifier.push_started(push)
-  end
-
   test "push embed reports the window loss and attackers" do
     embed = @notifier.push_embed(our_push)
 
@@ -87,7 +78,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     end.returns(true)
 
     @notifier.push_resolved("111",
-      ours: true, team_name: "Conspiracy Theorists", started_at: 8.minutes.ago,
+      team_name: "Conspiracy Theorists", started_at: 8.minutes.ago,
       tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810)
   end
 
@@ -95,7 +86,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
 
   def our_push
     {
-      ours: true, team_name: "Conspiracy Theorists", lost: 14, window_seconds: 10,
+      team_name: "Conspiracy Theorists", lost: 14, window_seconds: 10,
       tickets_before: 1384, tickets_now: 1370, pace_per_minute: 84, cushion: 806,
       next_tick_at: Time.current + 7.minutes, attackers: [ [ "Reptilians", 11 ], [ "APEX", 3 ] ]
     }

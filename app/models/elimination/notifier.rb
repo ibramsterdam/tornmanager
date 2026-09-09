@@ -13,11 +13,7 @@ module Elimination
     end
 
     def push_started(push)
-      if push[:ours]
-        alerts.post(content: "we are getting pushed!", embed: push_embed(push))
-      else
-        alerts.post(embed: push_embed(push))
-      end
+      alerts.post(content: "we are getting pushed!", embed: push_embed(push))
     end
 
     def push_updated(message_id, push)
@@ -25,8 +21,7 @@ module Elimination
     end
 
     def push_resolved(message_id, push)
-      content = push[:ours] ? "we weathered the push ✅" : ""
-      alerts.edit(message_id, content: content, embed: push_resolved_embed(push))
+      alerts.edit(message_id, content: "we weathered the push ✅", embed: push_resolved_embed(push))
     end
 
     def tick_report(data)
@@ -70,11 +65,9 @@ module Elimination
       fields = [
         { name: "Tickets", value: "#{fmt(push[:tickets_before])} → #{fmt(push[:tickets_now])}", inline: true },
         { name: "Pace", value: "−#{push[:pace_per_minute]} / min", inline: true },
-        { name: "Next tick", value: "#{tct(push[:next_tick_at])} (#{minutes} min)", inline: true }
+        { name: "Next tick", value: "#{tct(push[:next_tick_at])} (#{minutes} min)", inline: true },
+        { name: "Cushion above last", value: signed(push[:cushion]), inline: true }
       ]
-      if push[:ours]
-        fields << { name: "Cushion above last", value: "+#{fmt(push[:cushion])}", inline: true }
-      end
       if push[:attackers].present?
         value = push[:attackers].map { |name, wins| "#{name} (wins +#{wins})" }.join("\n")
         fields << { name: "Likely attackers", value: value, inline: true }
@@ -83,7 +76,7 @@ module Elimination
       {
         title: "🚨 Push on #{push[:team_name]}",
         description: "Lost **#{push[:lost]} tickets in #{push[:window_seconds]} seconds**.",
-        color: push[:ours] ? RED : ORANGE,
+        color: RED,
         fields: fields,
         footer: footer,
         timestamp: Time.current.iso8601

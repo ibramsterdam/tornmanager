@@ -1,7 +1,6 @@
 class EliminationSetting < ApplicationRecord
   NOTIFICATIONS = [
     { key: "push_ours", label: "Push on us", demos: %w[push_ours push_resolved] },
-    { key: "push_rivals", label: "Push on other teams", demos: %w[push_rival] },
     { key: "ticks", label: "Life tick reports", demos: %w[tick_other tick_ours] },
     { key: "eliminations", label: "Eliminations", demos: %w[elimination] },
     { key: "standings", label: "Standings", demos: %w[standings], live: true },

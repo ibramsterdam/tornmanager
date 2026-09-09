@@ -40,7 +40,6 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
 
       assert_includes @notifier.names, :push_started
       push = @notifier.payload(:push_started)
-      assert push[:ours]
       assert_equal "Conspiracy Theorists", push[:team_name]
       assert_equal 14, push[:lost]
       assert_equal [ [ "APEX", 11 ] ], push[:attackers]

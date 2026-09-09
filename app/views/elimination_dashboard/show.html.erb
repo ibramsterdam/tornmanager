@@ -50,10 +50,10 @@
     <h2>How push alerts work</h2>
     <ul class="cia-explainer">
       <li>The bot checks all ticket scores every <%= @setting.poll_interval_seconds %> seconds.</li>
-      <li>A push means: a team loses <%= @setting.push_ticket_threshold %> or more tickets within <%= @setting.push_window_seconds %> seconds.</li>
+      <li>A push means: our team loses <%= @setting.push_ticket_threshold %> or more tickets within <%= @setting.push_window_seconds %> seconds. Other teams getting pushed does not trigger a message.</li>
       <li>When a push starts, the bot posts <b>one message</b>.</li>
       <li>While the push goes on, the bot does not post again. It updates that same message with fresh numbers. A push can last for hours and it stays one single message, so there is no spam.</li>
-      <li>The push is over when the team loses no big amount of tickets for <%= @setting.push_resolve_seconds / 60 %> minutes. The bot then turns the message green: "push over".</li>
+      <li>The push is over when we lose no big amount of tickets for <%= @setting.push_resolve_seconds / 60 %> minutes. The bot then turns the message green: "push over".</li>
       <li>If the attackers stop and come back later than that, it counts as a new push and gets a new message.</li>
       <li>Discord only sends a notification for the first message. The updates are silent.</li>
     </ul>

@@ -42,31 +42,29 @@ module Elimination
     end
 
     def detect_pushes
-      baseline = window_baseline
-      @alive.each do |team|
-        push = pushes[team.torn_id]
-        lost = baseline ? baseline[:tickets].fetch(team.torn_id, team.tickets) - team.tickets : 0
-        over = lost >= @setting.push_ticket_threshold
+      return unless @ours && !@ours.eliminated
 
-        if push
-          continue_push(team, push, lost, baseline, over)
-        elsif over
-          start_push(team, lost, baseline)
-        end
+      baseline = window_baseline
+      push = pushes[@ours.torn_id]
+      lost = baseline ? baseline[:tickets].fetch(@ours.torn_id, @ours.tickets) - @ours.tickets : 0
+      over = lost >= @setting.push_ticket_threshold
+
+      if push
+        continue_push(@ours, push, lost, baseline, over)
+      elsif over
+        start_push(@ours, lost, baseline)
       end
     end
 
     def start_push(team, lost, baseline)
       report = push_report(team, lost, baseline, start_tickets: baseline[:tickets][team.torn_id])
-      wanted = report[:ours] ? @setting.notify_push_ours? : @setting.notify_push_rivals?
-      message_id = wanted ? @notifier.push_started(report) : nil
+      message_id = @setting.notify_push_ours? ? @notifier.push_started(report) : nil
       pushes[team.torn_id] = {
         message_id: message_id,
         started_at: @at.to_i,
         start_tickets: baseline[:tickets][team.torn_id],
         last_over_at: @at.to_i,
-        last_edit_at: @at.to_i,
-        ours: report[:ours]
+        last_edit_at: @at.to_i
       }
     end
 
@@ -85,7 +83,6 @@ module Elimination
     def push_report(team, lost, baseline, start_tickets:)
       window = @setting.push_window_seconds
       {
-        ours: team.torn_id == @ours&.torn_id,
         team_name: team.name,
         lost: lost,
         window_seconds: window,
@@ -100,7 +97,6 @@ module Elimination
 
     def resolved_report(team, push)
       {
-        ours: push[:ours],
         team_name: team.name,
         started_at: Time.at(push[:started_at]),
         tickets_before: push[:start_tickets],
