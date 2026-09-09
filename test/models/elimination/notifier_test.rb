@@ -78,7 +78,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
 
   test "posts through the bot when a token and channel are configured" do
     @setting.update!(alerts_channel_id: "555")
-    Rails.application.credentials.stubs(:dig).with(:discord, :cia_bot_token).returns("bot_token")
+    Rails.application.credentials.stubs(:dig).with(:cia_bot, :bot_token).returns("bot_token")
     Discord::BotChannel.any_instance.expects(:post).returns("221")
     Discord::Webhook.any_instance.expects(:post).never
 
@@ -87,7 +87,7 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
 
   test "falls back to the webhook without a bot token" do
     @setting.update!(alerts_channel_id: "555")
-    Rails.application.credentials.stubs(:dig).with(:discord, :cia_bot_token).returns(nil)
+    Rails.application.credentials.stubs(:dig).with(:cia_bot, :bot_token).returns(nil)
     Discord::Webhook.any_instance.expects(:post).returns("222")
 
     assert_equal "222", @notifier.push_started(our_push)

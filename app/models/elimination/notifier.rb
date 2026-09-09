@@ -190,7 +190,7 @@ module Elimination
     end
 
     def transport(channel_id, webhook_url)
-      token = Rails.application.credentials.dig(:discord, :cia_bot_token)
+      token = Rails.application.credentials.dig(:cia_bot, :bot_token)
       if token.present? && channel_id.present?
         Discord::BotChannel.new(token, channel_id)
       else
