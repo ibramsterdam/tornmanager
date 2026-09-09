@@ -131,6 +131,10 @@ Rails.application.routes.draw do
         post :backfill_armory_news
       end
     end
+    resource :eliminations, only: [ :show, :update ], controller: "eliminations" do
+      post :start
+      post :stop
+    end
     resources :api_logs, only: [ :index ]
     resources :snapshot_management, only: [ :index ] do
       member do
