@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_24_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_09_080424) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -155,6 +155,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_24_090000) do
     t.datetime "updated_at", null: false
     t.index ["company_type_id", "rating"], name: "index_companies_on_company_type_id_and_rating"
     t.index ["torn_id"], name: "index_companies_on_torn_id", unique: true
+  end
+
+  create_table "elimination_settings", force: :cascade do |t|
+    t.string "alerts_webhook_url"
+    t.string "api_key"
+    t.integer "countdown_bottom_ranks", default: 2, null: false
+    t.datetime "created_at", null: false
+    t.string "last_error"
+    t.datetime "last_polled_at"
+    t.datetime "life_ticks_from", default: "2026-09-11 12:00:00", null: false
+    t.integer "poll_interval_seconds", default: 2, null: false
+    t.boolean "polling_active", default: false, null: false
+    t.integer "push_resolve_seconds", default: 180, null: false
+    t.integer "push_ticket_threshold", default: 10, null: false
+    t.integer "push_window_seconds", default: 10, null: false
+    t.string "role_id"
+    t.integer "standings_interval_minutes", default: 60, null: false
+    t.string "standings_webhook_url"
+    t.string "team_name", default: "Conspiracy Theorists", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "elimination_snapshots", force: :cascade do |t|
+    t.datetime "captured_at", null: false
+    t.datetime "created_at", null: false
+    t.boolean "eliminated", default: false, null: false
+    t.integer "lives", null: false
+    t.integer "losses", null: false
+    t.string "name", null: false
+    t.integer "position"
+    t.integer "team_torn_id", null: false
+    t.integer "tickets", null: false
+    t.datetime "updated_at", null: false
+    t.integer "wins", null: false
+    t.index ["captured_at"], name: "index_elimination_snapshots_on_captured_at"
+    t.index ["team_torn_id", "captured_at"], name: "index_elimination_snapshots_on_team_torn_id_and_captured_at"
   end
 
   create_table "faction_settings", force: :cascade do |t|
