@@ -35,6 +35,7 @@ module Admin
     def load_status
       @latest_snapshots = EliminationSnapshot.latest_batch.order(tickets: :desc)
       @snapshot_count = EliminationSnapshot.count
+      @bot_token_present = Rails.application.credentials.dig(:cia_bot, :bot_token).present?
     end
 
     def setting_params

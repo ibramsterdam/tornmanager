@@ -1,55 +1,125 @@
-<div class="page-header">
-  <%= link_to "← Back to Admin", admin_dashboard_path, class: "back-link" %>
-  <h1>Conspiracy Intelligence Agency</h1>
-  <p class="page-subtitle">Elimination tracker: pushes, life ticks, standings, and endpoint health for team <%= @setting.team_name %></p>
-</div>
-
-<div class="settings-section">
-  <div class="section-header">
-    <h2>Status</h2>
+<div class="admin-stats">
+  <div class="admin-stats-header">
+    <%= link_to "← Admin", admin_dashboard_path, class: "back-link" %>
+    <h1>Conspiracy Intelligence Agency</h1>
+    <span class="admin-stats-asof">Elimination tracker for <%= @setting.team_name %></span>
   </div>
 
-  <div class="form-field">
-    <% if @setting.polling_active? %>
-      <p>🟢 Polling every <%= @setting.poll_interval_seconds %>s.
-        Last poll: <%= @setting.last_polled_at ? "#{time_ago_in_words(@setting.last_polled_at)} ago" : "never" %>.</p>
-      <%= button_to "Stop polling", stop_admin_eliminations_path, method: :post, class: "btn-secondary" %>
-    <% else %>
-      <p>⚪ Polling stopped.</p>
-      <%= button_to "Start polling", start_admin_eliminations_path, method: :post, class: "btn-primary" %>
-    <% end %>
+  <div class="elim-grid">
+    <div class="admin-stats-panel">
+      <h2>Tracker</h2>
+      <% if @setting.polling_active? %>
+        <div class="elim-status"><span class="elim-dot live"></span> Live</div>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Poll interval</span>
+            <span class="admin-stat-value"><%= @setting.poll_interval_seconds %>s</span>
+          </div>
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Last poll</span>
+            <span class="admin-stat-value <%= "warning" if @setting.last_polled_at.nil? || @setting.last_polled_at < 1.minute.ago %>">
+              <%= @setting.last_polled_at ? "#{time_ago_in_words(@setting.last_polled_at)} ago" : "never" %>
+            </span>
+          </div>
+        </div>
+        <div class="elim-panel-actions">
+          <%= button_to "Stop polling", stop_admin_eliminations_path, method: :post, class: "btn-secondary" %>
+        </div>
+      <% else %>
+        <div class="elim-status"><span class="elim-dot"></span> Stopped</div>
+        <div class="admin-stats-rows">
+          <div class="admin-stat-row">
+            <span class="admin-stat-label">Last poll</span>
+            <span class="admin-stat-value"><%= @setting.last_polled_at ? "#{time_ago_in_words(@setting.last_polled_at)} ago" : "never" %></span>
+          </div>
+        </div>
+        <div class="elim-panel-actions">
+          <%= button_to "Start polling", start_admin_eliminations_path, method: :post, class: "btn-primary" %>
+        </div>
+      <% end %>
+      <% if @setting.last_error.present? %>
+        <div class="elim-error"><%= @setting.last_error %></div>
+      <% end %>
+    </div>
 
-    <% if @setting.last_error.present? %>
-      <div class="flash flash-alert">Last error: <%= @setting.last_error %></div>
-    <% end %>
+    <div class="admin-stats-panel">
+      <h2>Discord delivery</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Bot token (credentials)</span>
+          <span class="elim-check <%= @bot_token_present ? "ok" : "missing" %>"><%= @bot_token_present ? "✓ set" : "✗ missing" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Alerts channel</span>
+          <span class="elim-check <%= @setting.alerts_channel_id.present? ? "ok" : "missing" %>"><%= @setting.alerts_channel_id.present? ? "✓ set" : "✗ missing" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Standings channel</span>
+          <span class="elim-check <%= @setting.standings_channel_id.present? ? "ok" : "fallback" %>"><%= @setting.standings_channel_id.present? ? "✓ set" : "→ alerts channel" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Role ping</span>
+          <span class="elim-check <%= @setting.role_id.present? ? "ok" : "missing" %>"><%= @setting.role_id.present? ? "✓ set" : "✗ no pings" %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Torn API key</span>
+          <span class="elim-check <%= @setting.api_key.present? ? "ok" : "fallback" %>"><%= @setting.api_key.present? ? "✓ dedicated" : "→ admin key" %></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-stats-panel">
+      <h2>Alert rules</h2>
+      <div class="admin-stats-rows">
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Push</span>
+          <span class="admin-stat-value">≥<%= @setting.push_ticket_threshold %> tickets / <%= @setting.push_window_seconds %>s</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Push over after</span>
+          <span class="admin-stat-value"><%= @setting.push_resolve_seconds / 60 %> min quiet</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Countdown</span>
+          <span class="admin-stat-value">bottom <%= @setting.countdown_bottom_ranks %></span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Standings</span>
+          <span class="admin-stat-value">every <%= @setting.standings_interval_minutes %> min</span>
+        </div>
+        <div class="admin-stat-row">
+          <span class="admin-stat-label">Life ticks from</span>
+          <span class="admin-stat-value"><%= @setting.life_ticks_from.utc.strftime("%d %b %H:%M") %> TCT</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <% if @latest_snapshots.any? %>
-    <table class="admin-table">
-      <thead>
-        <tr><th>Team</th><th>Tickets</th><th>Lives</th><th>Wins</th><th>Losses</th><th></th></tr>
-      </thead>
-      <tbody>
-        <% @latest_snapshots.each do |snapshot| %>
+    <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
+      <h2>Standings <span class="admin-stats-hint">captured <%= @latest_snapshots.first.captured_at.utc.strftime("%d %b %H:%M:%S") %> TCT · <%= number_with_delimiter(@snapshot_count) %> rows stored</span></h2>
+      <table class="admin-stats-table elim-table">
+        <thead>
           <tr>
-            <td><%= snapshot.name %><%= " ▸" if snapshot.name == @setting.team_name %></td>
-            <td><%= number_with_delimiter(snapshot.tickets) %></td>
-            <td><%= snapshot.lives %></td>
-            <td><%= number_with_delimiter(snapshot.wins) %></td>
-            <td><%= number_with_delimiter(snapshot.losses) %></td>
-            <td><%= "eliminated" if snapshot.eliminated? %></td>
+            <th>#</th><th>Team</th>
+            <th class="num">Tickets</th><th class="num">Lives</th><th class="num">Wins</th><th class="num">Losses</th>
           </tr>
-        <% end %>
-      </tbody>
-    </table>
-    <small class="form-hint"><%= number_with_delimiter(@snapshot_count) %> snapshot rows stored, latest at <%= @latest_snapshots.first.captured_at.utc.strftime("%d %b %H:%M:%S") %> TCT</small>
+        </thead>
+        <tbody>
+          <% @latest_snapshots.each_with_index do |snapshot, index| %>
+            <tr class="<%= "ours" if snapshot.name == @setting.team_name %> <%= "eliminated" if snapshot.eliminated? %>">
+              <td><%= snapshot.eliminated? ? "—" : index + 1 %></td>
+              <td><%= snapshot.name %><%= " ◂ us" if snapshot.name == @setting.team_name %><%= " · eliminated" if snapshot.eliminated? %></td>
+              <td class="num"><%= number_with_delimiter(snapshot.tickets) %></td>
+              <td class="num"><%= snapshot.lives %></td>
+              <td class="num"><%= number_with_delimiter(snapshot.wins) %></td>
+              <td class="num"><%= number_with_delimiter(snapshot.losses) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
   <% end %>
-</div>
-
-<div class="settings-section">
-  <div class="section-header">
-    <h2>Settings</h2>
-  </div>
 
   <%= form_with model: @setting, url: admin_eliminations_path, method: :patch do |form| %>
     <% if @setting.errors.any? %>
@@ -62,89 +132,100 @@
       </div>
     <% end %>
 
-    <div class="form-field">
-      <%= form.label :team_name, "Our team" %>
-      <%= form.text_field :team_name, class: "form-input" %>
-      <small class="form-hint">Exact team name as returned by the elimination endpoint</small>
+    <div class="elim-form-columns">
+      <div class="admin-stats-panel">
+        <h2>Discord</h2>
+
+        <div class="form-group">
+          <%= form.label :alerts_channel_id, "Alerts channel ID", class: "form-label" %>
+          <%= form.text_field :alerts_channel_id, class: "form-input", placeholder: "Right-click channel → Copy Channel ID" %>
+          <p class="form-help">Where pushes, countdowns, tick reports, eliminations, and health warnings go. Needs the bot token in credentials.</p>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :standings_channel_id, "Standings channel ID", class: "form-label" %>
+          <%= form.text_field :standings_channel_id, class: "form-input", placeholder: "Empty = alerts channel" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :role_id, "Role ID to ping", class: "form-label" %>
+          <%= form.text_field :role_id, class: "form-input", placeholder: "Right-click role → Copy Role ID" %>
+          <p class="form-help">Pinged when we get pushed, during countdowns, and when we lose a life. Empty = no pings.</p>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :alerts_webhook_url, "Alerts webhook URL (fallback)", class: "form-label" %>
+          <%= form.text_field :alerts_webhook_url, class: "form-input", autocomplete: "off", placeholder: "Only used without a bot token" %>
+        </div>
+
+        <div class="form-group">
+          <%= form.label :standings_webhook_url, "Standings webhook URL (fallback)", class: "form-label" %>
+          <%= form.text_field :standings_webhook_url, class: "form-input", autocomplete: "off", placeholder: "Empty = alerts webhook" %>
+        </div>
+      </div>
+
+      <div>
+        <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
+          <h2>Alerts</h2>
+
+          <div class="form-group">
+            <%= form.label :push_ticket_threshold, "Push threshold (tickets lost)", class: "form-label" %>
+            <%= form.number_field :push_ticket_threshold, min: 1, class: "form-input" %>
+            <p class="form-help">A push = losing this many tickets inside the window below.</p>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :push_window_seconds, "Push window (seconds)", class: "form-label" %>
+            <%= form.number_field :push_window_seconds, min: 2, class: "form-input" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :push_resolve_seconds, "Push over after (seconds quiet)", class: "form-label" %>
+            <%= form.number_field :push_resolve_seconds, min: 30, class: "form-input" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :countdown_bottom_ranks, "Countdown when within bottom", class: "form-label" %>
+            <%= form.number_field :countdown_bottom_ranks, min: 1, class: "form-input" %>
+            <p class="form-help">2 = warn when we are last or second to last before a tick.</p>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :standings_interval_minutes, "Standings every (minutes)", class: "form-label" %>
+            <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :life_ticks_from, "Life ticks start (TCT)", class: "form-label" %>
+            <%= form.datetime_field :life_ticks_from, class: "form-input" %>
+            <p class="form-help">No countdown alerts before this moment.</p>
+          </div>
+        </div>
+
+        <div class="admin-stats-panel">
+          <h2>Polling</h2>
+
+          <div class="form-group">
+            <%= form.label :team_name, "Our team", class: "form-label" %>
+            <%= form.text_field :team_name, class: "form-input" %>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :api_key, "Torn API key", class: "form-label" %>
+            <%= form.text_field :api_key, class: "form-input", autocomplete: "off" %>
+            <p class="form-help">Public access is enough. Use a key without a TornManager account so polls skip the api_calls log. Empty = admin key.</p>
+          </div>
+
+          <div class="form-group">
+            <%= form.label :poll_interval_seconds, "Poll every (seconds)", class: "form-label" %>
+            <%= form.number_field :poll_interval_seconds, min: 2, class: "form-input" %>
+            <p class="form-help">2s = 30 calls/min, inside the 50/min per-key budget.</p>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="form-field">
-      <%= form.label :api_key, "Torn API key" %>
-      <%= form.text_field :api_key, class: "form-input", autocomplete: "off" %>
-      <small class="form-hint">Public access is enough. Use a key that is not linked to a TornManager account so polls skip the api_calls log. Empty falls back to the admin key.</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :alerts_channel_id, "Alerts channel ID" %>
-      <%= form.text_field :alerts_channel_id, class: "form-input" %>
-      <small class="form-hint">Used when the CIA bot is invited to the server and cia_bot.bot_token is set in credentials. Takes priority over the webhook.</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :standings_channel_id, "Standings channel ID" %>
-      <%= form.text_field :standings_channel_id, class: "form-input" %>
-      <small class="form-hint">Optional separate channel for standings. Empty uses the alerts channel.</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :alerts_webhook_url, "Alerts webhook URL" %>
-      <%= form.text_field :alerts_webhook_url, class: "form-input", autocomplete: "off" %>
-      <small class="form-hint">Webhook fallback for pushes, countdowns, tick reports, eliminations, and health warnings when no bot is configured</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :standings_webhook_url, "Standings webhook URL" %>
-      <%= form.text_field :standings_webhook_url, class: "form-input", autocomplete: "off" %>
-      <small class="form-hint">Optional separate channel for the hourly standings table. Empty uses the alerts webhook.</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :role_id, "Role ID to ping" %>
-      <%= form.text_field :role_id, class: "form-input" %>
-      <small class="form-hint">Discord role ID pinged for pushes on us, countdowns, and our life losses</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :push_ticket_threshold, "Push threshold (tickets)" %>
-      <%= form.number_field :push_ticket_threshold, min: 1, class: "form-input" %>
-      <small class="form-hint">Tickets a team must lose inside the window to count as a push</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :push_window_seconds, "Push window (seconds)" %>
-      <%= form.number_field :push_window_seconds, min: 2, class: "form-input" %>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :push_resolve_seconds, "Push resolve after (seconds)" %>
-      <%= form.number_field :push_resolve_seconds, min: 30, class: "form-input" %>
-      <small class="form-hint">Quiet time before a push is marked as over</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :countdown_bottom_ranks, "Countdown when within bottom" %>
-      <%= form.number_field :countdown_bottom_ranks, min: 1, class: "form-input" %>
-      <small class="form-hint">2 = alert when we are last or second to last</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :standings_interval_minutes, "Standings interval (minutes)" %>
-      <%= form.number_field :standings_interval_minutes, min: 5, class: "form-input" %>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :poll_interval_seconds, "Poll interval (seconds)" %>
-      <%= form.number_field :poll_interval_seconds, min: 2, class: "form-input" %>
-      <small class="form-hint">2s = 30 calls/min, inside the 50/min per-key budget</small>
-    </div>
-
-    <div class="form-field">
-      <%= form.label :life_ticks_from, "Life ticks start (TCT)" %>
-      <%= form.datetime_field :life_ticks_from, class: "form-input" %>
-      <small class="form-hint">Countdown alerts stay silent before this moment</small>
-    </div>
-
-    <div class="form-actions">
+    <div class="elim-save">
       <%= form.submit "Save settings", class: "btn-primary" %>
     </div>
   <% end %>
