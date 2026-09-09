@@ -25,7 +25,8 @@ module Elimination
     end
 
     def push_resolved(message_id, push)
-      alerts.edit(message_id, embed: push_resolved_embed(push))
+      content = push[:ours] ? "we weathered the push ✅" : ""
+      alerts.edit(message_id, content: content, embed: push_resolved_embed(push))
     end
 
     def countdown_started(data)

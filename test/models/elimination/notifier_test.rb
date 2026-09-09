@@ -110,6 +110,17 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_equal "222", @notifier.push_started(our_push)
   end
 
+  test "resolving our push replaces the ping text" do
+    Discord::Webhook.any_instance.expects(:edit).with do |message_id, args|
+      message_id == "111" && args[:content] == "we weathered the push ✅" &&
+        args[:embed][:title] == "✅ Push on Conspiracy Theorists over"
+    end.returns(true)
+
+    @notifier.push_resolved("111",
+      ours: true, team_name: "Conspiracy Theorists", started_at: 8.minutes.ago,
+      tickets_before: 1384, tickets_now: 1298, net_loss: 86, cushion: 810)
+  end
+
   test "no ping without a configured role" do
     @setting.update!(role_id: nil)
     Discord::Webhook.any_instance.expects(:post).with do |args|
