@@ -71,13 +71,21 @@ class EliminationPollingJobTest < ActiveJob::TestCase
     end
   end
 
-  test "persists snapshots at most once per minute" do
-    TornApi::Torn::Elimination.any_instance.stubs(:fetch).returns(@teams)
+  test "persists a snapshot row only when a team's numbers change" do
+    changed_teams = [
+      TornApi::Torn::Elimination::Team.new(80, "Conspiracy Theorists", 2027, 3, 1284, 48, 7900, 7514, false, nil)
+    ]
     Elimination::Tracker.any_instance.stubs(:process)
 
     with_memory_cache do
+      TornApi::Torn::Elimination.any_instance.stubs(:fetch).returns(@teams)
       assert_difference "EliminationSnapshot.count", 1 do
         EliminationPollingJob.perform_now
+        EliminationPollingJob.perform_now
+      end
+
+      TornApi::Torn::Elimination.any_instance.stubs(:fetch).returns(changed_teams)
+      assert_difference "EliminationSnapshot.count", 1 do
         EliminationPollingJob.perform_now
       end
     end

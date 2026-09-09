@@ -1,6 +1,5 @@
 class EliminationPollingJob < ApplicationJob
-  SNAPSHOT_EVERY = 60.seconds
-  SNAPSHOT_CACHE_KEY = "elimination:last_snapshot_at".freeze
+  SNAPSHOT_CACHE_KEY = "elimination:last_snapshot_values".freeze
   HEALTH_CACHE_KEY = "elimination:health".freeze
   FAILURES_BEFORE_WARNING = 5
 
@@ -30,11 +29,17 @@ class EliminationPollingJob < ApplicationJob
   private
 
   def persist_snapshot(teams)
-    last_at = Rails.cache.read(SNAPSHOT_CACHE_KEY)
-    return if last_at && Time.current - last_at < SNAPSHOT_EVERY
+    stored = Rails.cache.read(SNAPSHOT_CACHE_KEY) || {}
+    changed = teams.reject { |team| stored[team.torn_id] == snapshot_values(team) }
+    return if changed.empty?
 
-    EliminationSnapshot.record_teams(teams)
-    Rails.cache.write(SNAPSHOT_CACHE_KEY, Time.current)
+    EliminationSnapshot.record_teams(changed)
+    changed.each { |team| stored[team.torn_id] = snapshot_values(team) }
+    Rails.cache.write(SNAPSHOT_CACHE_KEY, stored, expires_in: 12.hours)
+  end
+
+  def snapshot_values(team)
+    [ team.tickets, team.lives, team.wins, team.losses, team.eliminated ]
   end
 
   def record_success(setting)
