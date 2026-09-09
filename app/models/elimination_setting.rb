@@ -12,6 +12,16 @@ class EliminationSetting < ApplicationRecord
     api_key.presence || AdminCredentials.api_key
   end
 
+  def start_polling!
+    update!(polling_active: true, last_error: nil)
+    Elimination::Tracker.reset!
+    EliminationPollingJob.perform_later
+  end
+
+  def stop_polling!
+    update!(polling_active: false)
+  end
+
   def life_ticks_active?(at = Time.current)
     at >= life_ticks_from
   end
