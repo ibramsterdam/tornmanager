@@ -137,6 +137,7 @@ module Elimination
         loser_name: loser.name,
         loser_lives: loser.lives,
         tick_at: Time.at((@at.to_i / TICK_INTERVAL.to_i) * TICK_INTERVAL.to_i),
+        total_alive: @alive.size,
         our_rank: our_rank,
         our_tickets: @ours&.tickets,
         our_lives: @ours&.lives,

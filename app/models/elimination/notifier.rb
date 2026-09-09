@@ -107,19 +107,28 @@ module Elimination
 
     def tick_embed(data)
       title = if data[:ours]
-        "💔 #{tct(data[:tick_at])} tick: we lost a life (#{data[:loser_lives]} left)"
+        "💔 We lost a life — #{data[:loser_lives]} left"
       else
-        "🕒 #{tct(data[:tick_at])} tick: #{data[:loser_name]} lost a life (#{data[:loser_lives]} left)"
+        "🕒 #{data[:loser_name]} lost a life — #{data[:loser_lives]} left"
+      end
+
+      bottom = data[:bottom].map { |name, tickets| "#{name} (#{fmt(tickets)})" }.join(" · ")
+      description = "**#{tct(data[:tick_at])}** tick, next at **#{tct(data[:tick_at] + 15.minutes)}**.\nLowest tickets: #{bottom}"
+
+      fields = []
+      if data[:our_rank]
+        position = data[:total_alive] ? "#{data[:our_rank].ordinalize} of #{data[:total_alive]}" : data[:our_rank].ordinalize
+        fields << { name: "Our position", value: position, inline: true }
+        fields << { name: "Our tickets", value: fmt(data[:our_tickets]), inline: true }
+        fields << { name: "Our lives", value: data[:our_lives].to_s, inline: true }
+        fields << { name: "Cushion above last", value: signed(data[:cushion]), inline: true }
       end
 
       {
         title: title,
+        description: description,
         color: data[:ours] ? RED : GREY,
-        fields: [
-          { name: "Us", value: data[:our_rank] ? "#{data[:our_rank].ordinalize} · #{fmt(data[:our_tickets])} tickets · #{data[:our_lives]} lives" : "—", inline: true },
-          { name: "Bottom two", value: data[:bottom].map { |name, tickets| "#{name} #{fmt(tickets)}" }.join("\n"), inline: true },
-          { name: "Cushion", value: "+#{fmt(data[:cushion])}", inline: true }
-        ],
+        fields: fields,
         footer: footer,
         timestamp: Time.current.iso8601
       }
@@ -170,9 +179,8 @@ module Elimination
       return [] unless ours && alive.size > 1
 
       lowest_other = alive.reject { |team| team.torn_id == ours.torn_id }.map(&:tickets).min
-      cushion = ours.tickets - lowest_other
       fields = [
-        { name: "Cushion (last)", value: cushion >= 0 ? "+#{fmt(cushion)}" : "−#{fmt(cushion.abs)}", inline: true }
+        { name: "Cushion (last)", value: signed(ours.tickets - lowest_other), inline: true }
       ]
 
       our_index = alive.index { |team| team.torn_id == ours.torn_id }
@@ -213,6 +221,10 @@ module Elimination
 
     def fmt(number)
       ActiveSupport::NumberHelper.number_to_delimited(number)
+    end
+
+    def signed(number)
+      number >= 0 ? "+#{fmt(number)}" : "−#{fmt(number.abs)}"
     end
 
     def compact(number)

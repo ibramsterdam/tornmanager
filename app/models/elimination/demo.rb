@@ -81,6 +81,7 @@ module Elimination
     def tick_data
       {
         tick_at: previous_tick,
+        total_alive: 11,
         our_rank: 3, our_tickets: 1298, our_lives: 48,
         bottom: [ [ "Inanimate Objects", 488 ], [ "Brain Surgeons", 564 ] ],
         cushion: 810
