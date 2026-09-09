@@ -132,6 +132,23 @@
   width: 100%;
 }
 
+.cia-explainer {
+  margin: 0;
+  padding-left: 1.1rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--gray-300, #d4d4d4);
+  max-width: 70ch;
+}
+
+.cia-explainer li + li {
+  margin-top: 4px;
+}
+
+.cia-explainer b {
+  color: var(--gray-100, #f5f5f5);
+}
+
 .cia-settings-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
