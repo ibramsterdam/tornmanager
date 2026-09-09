@@ -140,7 +140,7 @@ module Elimination
         title: title,
         color: data[:ours] ? RED : GREY,
         fields: [
-          { name: "Us", value: "#{data[:our_rank].ordinalize} · #{fmt(data[:our_tickets])} tickets · #{data[:our_lives]} lives", inline: true },
+          { name: "Us", value: data[:our_rank] ? "#{data[:our_rank].ordinalize} · #{fmt(data[:our_tickets])} tickets · #{data[:our_lives]} lives" : "—", inline: true },
           { name: "Bottom two", value: data[:bottom].map { |name, tickets| "#{name} #{fmt(tickets)}" }.join("\n"), inline: true },
           { name: "Cushion", value: "+#{fmt(data[:cushion])}", inline: true }
         ],
