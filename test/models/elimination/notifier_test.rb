@@ -76,6 +76,23 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     assert_includes lines[3], "eliminated"
   end
 
+  test "posts through the bot when a token and channel are configured" do
+    @setting.update!(alerts_channel_id: "555")
+    Rails.application.credentials.stubs(:dig).with(:discord, :cia_bot_token).returns("bot_token")
+    Discord::BotChannel.any_instance.expects(:post).returns("221")
+    Discord::Webhook.any_instance.expects(:post).never
+
+    assert_equal "221", @notifier.push_started(our_push)
+  end
+
+  test "falls back to the webhook without a bot token" do
+    @setting.update!(alerts_channel_id: "555")
+    Rails.application.credentials.stubs(:dig).with(:discord, :cia_bot_token).returns(nil)
+    Discord::Webhook.any_instance.expects(:post).returns("222")
+
+    assert_equal "222", @notifier.push_started(our_push)
+  end
+
   test "no ping without a configured role" do
     @setting.update!(role_id: nil)
     Discord::Webhook.any_instance.expects(:post).with do |args|

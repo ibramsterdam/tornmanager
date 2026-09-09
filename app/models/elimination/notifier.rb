@@ -179,11 +179,23 @@ module Elimination
     private
 
     def alerts
-      @alerts ||= Discord::Webhook.new(@setting.alerts_webhook_url)
+      @alerts ||= transport(@setting.alerts_channel_id, @setting.alerts_webhook_url)
     end
 
     def standings_webhook
-      @standings_webhook ||= Discord::Webhook.new(@setting.standings_webhook_url.presence || @setting.alerts_webhook_url)
+      @standings_webhook ||= transport(
+        @setting.standings_channel_id.presence || @setting.alerts_channel_id,
+        @setting.standings_webhook_url.presence || @setting.alerts_webhook_url
+      )
+    end
+
+    def transport(channel_id, webhook_url)
+      token = Rails.application.credentials.dig(:discord, :cia_bot_token)
+      if token.present? && channel_id.present?
+        Discord::BotChannel.new(token, channel_id)
+      else
+        Discord::Webhook.new(webhook_url)
+      end
     end
 
     def ping(message)

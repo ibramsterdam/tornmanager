@@ -40,6 +40,7 @@ module Admin
     def setting_params
       params.require(:elimination_setting).permit(
         :team_name, :api_key, :alerts_webhook_url, :standings_webhook_url,
+        :alerts_channel_id, :standings_channel_id,
         :role_id, :poll_interval_seconds, :push_window_seconds,
         :push_ticket_threshold, :push_resolve_seconds, :countdown_bottom_ranks,
         :standings_interval_minutes, :life_ticks_from

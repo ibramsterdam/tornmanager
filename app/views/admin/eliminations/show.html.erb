@@ -75,9 +75,21 @@
     </div>
 
     <div class="form-field">
+      <%= form.label :alerts_channel_id, "Alerts channel ID" %>
+      <%= form.text_field :alerts_channel_id, class: "form-input" %>
+      <small class="form-hint">Used when the CIA bot is invited to the server and discord.cia_bot_token is set in credentials. Takes priority over the webhook.</small>
+    </div>
+
+    <div class="form-field">
+      <%= form.label :standings_channel_id, "Standings channel ID" %>
+      <%= form.text_field :standings_channel_id, class: "form-input" %>
+      <small class="form-hint">Optional separate channel for standings. Empty uses the alerts channel.</small>
+    </div>
+
+    <div class="form-field">
       <%= form.label :alerts_webhook_url, "Alerts webhook URL" %>
       <%= form.text_field :alerts_webhook_url, class: "form-input", autocomplete: "off" %>
-      <small class="form-hint">Discord webhook for pushes, countdowns, tick reports, eliminations, and health warnings</small>
+      <small class="form-hint">Webhook fallback for pushes, countdowns, tick reports, eliminations, and health warnings when no bot is configured</small>
     </div>
 
     <div class="form-field">
