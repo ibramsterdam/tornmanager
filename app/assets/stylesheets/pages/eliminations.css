@@ -81,6 +81,12 @@
   font-family: "Geist Mono", monospace;
 }
 
+.elim-test-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2, 8px);
+}
+
 .elim-form-columns {
   display: grid;
   grid-template-columns: 1fr 1fr;

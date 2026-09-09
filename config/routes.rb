@@ -134,6 +134,7 @@ Rails.application.routes.draw do
     resource :eliminations, only: [ :show, :update ], controller: "eliminations" do
       post :start
       post :stop
+      post "test/:kind", action: :test, as: :test
     end
     resources :api_logs, only: [ :index ]
     resources :snapshot_management, only: [ :index ] do

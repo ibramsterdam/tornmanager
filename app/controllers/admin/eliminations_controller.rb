@@ -26,6 +26,16 @@ module Admin
       redirect_to admin_eliminations_path, notice: "Polling stopped."
     end
 
+    def test
+      kind = params[:kind]
+      unless Elimination::Demo::KINDS.include?(kind)
+        return redirect_to admin_eliminations_path, alert: "Unknown test message."
+      end
+
+      Elimination::Demo.new(@setting).send!(kind)
+      redirect_to admin_eliminations_path, notice: "Sent #{kind.humanize.downcase} test message."
+    end
+
     private
 
     def set_setting

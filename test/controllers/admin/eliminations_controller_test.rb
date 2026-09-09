@@ -40,6 +40,22 @@ class Admin::EliminationsControllerTest < ActionDispatch::IntegrationTest
     assert_not EliminationSetting.current.polling_active?
   end
 
+  test "sends a test notification" do
+    Elimination::Demo.any_instance.expects(:send!).with("standings")
+
+    post test_admin_eliminations_path(kind: "standings")
+
+    assert_redirected_to admin_eliminations_path
+  end
+
+  test "rejects unknown test kinds" do
+    Elimination::Demo.any_instance.expects(:send!).never
+
+    post test_admin_eliminations_path(kind: "everything")
+
+    assert_redirected_to admin_eliminations_path
+  end
+
   test "denies non-admins" do
     sign_in_as(users(:bert))
 

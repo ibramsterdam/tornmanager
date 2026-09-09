@@ -121,6 +121,15 @@
     </div>
   <% end %>
 
+  <div class="admin-stats-panel" style="margin-bottom: var(--space-3, 12px);">
+    <h2>Test notifications <span class="admin-stats-hint">sends mock data to the configured channels, ping included</span></h2>
+    <div class="elim-test-buttons">
+      <% Elimination::Demo::KINDS.each do |kind| %>
+        <%= button_to kind.humanize, test_admin_eliminations_path(kind: kind), method: :post, class: "btn-secondary" %>
+      <% end %>
+    </div>
+  </div>
+
   <%= form_with model: @setting, url: admin_eliminations_path, method: :patch do |form| %>
     <% if @setting.errors.any? %>
       <div class="flash flash-alert">
