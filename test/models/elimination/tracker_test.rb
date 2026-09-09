@@ -128,6 +128,30 @@ class Elimination::TrackerTest < ActiveSupport::TestCase
     end
   end
 
+  test "disabled push notifications stay silent but still track state" do
+    @setting.update!(notify_push_ours: false)
+
+    with_memory_cache do
+      @tracker.process(teams(ours: 1384), at: @base)
+      @tracker.process(teams(ours: 1370), at: @base + 10)
+      @tracker.process(teams(ours: 1370), at: @base + 10 + @setting.push_resolve_seconds)
+
+      assert_not_includes @notifier.names, :push_started
+      assert_not_includes @notifier.names, :push_resolved
+    end
+  end
+
+  test "disabled toggles silence ticks, eliminations, countdowns, and standings" do
+    @setting.update!(notify_ticks: false, notify_eliminations: false, notify_countdown: false, notify_standings: false)
+
+    with_memory_cache do
+      @tracker.process(teams(ours: 100), at: @base)
+      @tracker.process(teams(ours: 100, surgeons_lives: 43, surgeons_eliminated: true), at: @base + 2)
+
+      assert_empty @notifier.events
+    end
+  end
+
   test "posts standings on start and then per interval" do
     with_memory_cache do
       @tracker.process(teams, at: @base)

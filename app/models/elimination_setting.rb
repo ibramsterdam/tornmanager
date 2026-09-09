@@ -1,4 +1,14 @@
 class EliminationSetting < ApplicationRecord
+  NOTIFICATIONS = [
+    { key: "push_ours", label: "Push on us", demos: %w[push_ours push_resolved] },
+    { key: "push_rivals", label: "Push on other teams", demos: %w[push_rival] },
+    { key: "countdown", label: "Life tick countdown", demos: %w[countdown], live: true },
+    { key: "ticks", label: "Life tick reports", demos: %w[tick_other tick_ours] },
+    { key: "eliminations", label: "Eliminations", demos: %w[elimination] },
+    { key: "standings", label: "Standings", demos: %w[standings], live: true },
+    { key: "health", label: "API health", demos: %w[health_down health_recovered] }
+  ].freeze
+
   validates :team_name, presence: true
   validates :poll_interval_seconds, :push_window_seconds, :push_ticket_threshold,
     :push_resolve_seconds, :countdown_bottom_ranks, :standings_interval_minutes,

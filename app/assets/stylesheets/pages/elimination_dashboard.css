@@ -96,6 +96,54 @@
   margin: 0;
 }
 
+.cia-notify-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3, 12px);
+  padding: var(--space-2, 8px) 0;
+  border-top: 1px solid var(--gray-800, #262626);
+  flex-wrap: wrap;
+}
+
+.cia-notify-row:first-of-type {
+  border-top: none;
+}
+
+.cia-notify-label {
+  flex: 1;
+  min-width: 140px;
+  font-size: 0.875rem;
+  color: var(--gray-200, #e5e5e5);
+}
+
+.cia-notify-actions {
+  display: flex;
+  gap: var(--space-2, 8px);
+  flex-wrap: wrap;
+}
+
+.cia-btn-sm {
+  font-size: 0.75rem;
+  padding: 4px 10px;
+}
+
+.cia-toggle {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--gray-700, #404040);
+  background: var(--gray-800, #262626);
+  color: var(--gray-400, #a3a3a3);
+  cursor: pointer;
+}
+
+.cia-toggle.is-on {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
 @media (max-width: 480px) {
   .cia-card {
     padding: var(--space-6, 24px);

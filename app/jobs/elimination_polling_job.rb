@@ -48,7 +48,7 @@ class EliminationPollingJob < ApplicationJob
     health = Rails.cache.read(HEALTH_CACHE_KEY)
     return unless health
 
-    Elimination::Notifier.new(setting).health_recovered if health[:warned]
+    Elimination::Notifier.new(setting).health_recovered if health[:warned] && setting.notify_health?
     Rails.cache.delete(HEALTH_CACHE_KEY)
   end
 
@@ -59,7 +59,7 @@ class EliminationPollingJob < ApplicationJob
     health[:failures] += 1
 
     if health[:failures] >= FAILURES_BEFORE_WARNING && !health[:warned]
-      Elimination::Notifier.new(setting).health_down(failing_since: health[:failing_since])
+      Elimination::Notifier.new(setting).health_down(failing_since: health[:failing_since]) if setting.notify_health?
       health[:warned] = true
     end
 

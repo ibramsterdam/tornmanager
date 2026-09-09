@@ -36,6 +36,42 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
     assert_not EliminationSetting.current.polling_active?
   end
 
+  test "toggles a notification" do
+    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+
+    assert EliminationSetting.current.notify_standings?
+    post elimination_dashboard_toggle_path(key: "standings")
+    assert_not EliminationSetting.current.notify_standings?
+  end
+
+  test "sends a mock test message" do
+    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    Elimination::Demo.any_instance.expects(:send!).with("standings")
+
+    post elimination_dashboard_test_path(kind: "standings")
+
+    assert_redirected_to elimination_dashboard_path
+  end
+
+  test "sends a live trigger" do
+    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    Elimination::LiveTrigger.any_instance.expects(:send!).with("standings").returns(:sent)
+
+    post elimination_dashboard_trigger_path(kind: "standings")
+
+    assert_redirected_to elimination_dashboard_path
+  end
+
+  test "toggle and test are refused without a session" do
+    Elimination::Demo.any_instance.expects(:send!).never
+
+    post elimination_dashboard_toggle_path(key: "standings")
+    assert EliminationSetting.current.notify_standings?
+
+    post elimination_dashboard_test_path(kind: "standings")
+    assert_redirected_to elimination_dashboard_path
+  end
+
   test "start is refused without a session" do
     post elimination_dashboard_start_path
 

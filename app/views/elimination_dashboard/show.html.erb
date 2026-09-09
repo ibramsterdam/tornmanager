@@ -13,4 +13,29 @@
     bot_token_present: @bot_token_present,
     start_path: elimination_dashboard_start_path,
     stop_path: elimination_dashboard_stop_path %>
+
+  <div class="admin-stats-panel">
+    <h2>Notifications <span class="admin-stats-hint">Test sends mock data. Live sends real current data. Both work even when a notification is off.</span></h2>
+    <% EliminationSetting::NOTIFICATIONS.each do |notification| %>
+      <% enabled = @setting.public_send("notify_#{notification[:key]}?") %>
+      <div class="cia-notify-row">
+        <span class="cia-notify-label"><%= notification[:label] %></span>
+        <%= button_to enabled ? "On" : "Off",
+          elimination_dashboard_toggle_path(key: notification[:key]),
+          method: :post, class: "cia-toggle #{enabled ? "is-on" : "is-off"}" %>
+        <span class="cia-notify-actions">
+          <% notification[:demos].each do |demo| %>
+            <%= button_to "Test #{demo.humanize.downcase}",
+              elimination_dashboard_test_path(kind: demo),
+              method: :post, class: "btn-secondary cia-btn-sm" %>
+          <% end %>
+          <% if notification[:live] %>
+            <%= button_to "Live",
+              elimination_dashboard_trigger_path(kind: notification[:key]),
+              method: :post, class: "btn-primary cia-btn-sm" %>
+          <% end %>
+        </span>
+      </div>
+    <% end %>
+  </div>
 </div>

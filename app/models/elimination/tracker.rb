@@ -60,7 +60,8 @@ module Elimination
 
     def start_push(team, lost, baseline)
       report = push_report(team, lost, baseline, start_tickets: baseline[:tickets][team.torn_id])
-      message_id = @notifier.push_started(report)
+      wanted = report[:ours] ? @setting.notify_push_ours? : @setting.notify_push_rivals?
+      message_id = wanted ? @notifier.push_started(report) : nil
       pushes[team.torn_id] = {
         message_id: message_id,
         started_at: @at.to_i,
@@ -75,9 +76,9 @@ module Elimination
       push[:last_over_at] = @at.to_i if over
 
       if @at.to_i - push[:last_over_at] >= @setting.push_resolve_seconds
-        @notifier.push_resolved(push[:message_id], resolved_report(team, push))
+        @notifier.push_resolved(push[:message_id], resolved_report(team, push)) if push[:message_id]
         pushes.delete(team.torn_id)
-      elsif @at.to_i - push[:last_edit_at] >= PUSH_EDIT_EVERY
+      elsif push[:message_id] && @at.to_i - push[:last_edit_at] >= PUSH_EDIT_EVERY
         @notifier.push_updated(push[:message_id], push_report(team, lost, baseline, start_tickets: push[:start_tickets]))
         push[:last_edit_at] = @at.to_i
       end
@@ -127,7 +128,7 @@ module Elimination
         previous = prev_team(team.torn_id)
         next unless previous && team.lives < previous[:lives]
 
-        @notifier.tick_report(tick_data(team))
+        @notifier.tick_report(tick_data(team)) if @setting.notify_ticks?
         @state[:countdown] = nil if team.torn_id == @ours&.torn_id
       end
     end
@@ -152,11 +153,12 @@ module Elimination
         previous = prev_team(team.torn_id)
         next unless previous && team.eliminated && !previous[:eliminated]
 
-        @notifier.team_eliminated(name: team.name, remaining: @alive.size)
+        @notifier.team_eliminated(name: team.name, remaining: @alive.size) if @setting.notify_eliminations?
       end
     end
 
     def handle_countdown
+      return unless @setting.notify_countdown?
       return unless @setting.life_ticks_active?(@at)
       return unless @ours && !@ours.eliminated && @alive.size > 1
       return if our_rank == 1
@@ -188,6 +190,8 @@ module Elimination
     end
 
     def post_standings
+      return unless @setting.notify_standings?
+
       interval = @setting.standings_interval_minutes * 60
       return if @state[:last_standings_at] && @at.to_i - @state[:last_standings_at] < interval
 

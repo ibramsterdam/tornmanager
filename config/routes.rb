@@ -160,6 +160,9 @@ Rails.application.routes.draw do
   delete "elimination/logout", to: "elimination_dashboard#logout", as: :elimination_dashboard_logout
   post "elimination/start", to: "elimination_dashboard#start", as: :elimination_dashboard_start
   post "elimination/stop", to: "elimination_dashboard#stop", as: :elimination_dashboard_stop
+  post "elimination/toggle/:key", to: "elimination_dashboard#toggle", as: :elimination_dashboard_toggle
+  post "elimination/test/:kind", to: "elimination_dashboard#test", as: :elimination_dashboard_test
+  post "elimination/trigger/:kind", to: "elimination_dashboard#trigger", as: :elimination_dashboard_trigger
 
   get "key-log", to: "key_log#index", as: :key_log
   post "key-log/show", to: "key_log#show", as: :key_log_show
