@@ -3,7 +3,7 @@ require "test_helper"
 class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   setup do
     Rails.application.credentials.stubs(:dig)
-      .with(:cia_bot, :admin_dashboard_password).returns("thecakeisalie")
+      .with(:cia_bot, :admin_dashboard_password).returns("test-panel-password")
     Rails.application.credentials.stubs(:dig)
       .with(:cia_bot, :bot_token).returns("bot_token")
   end
@@ -17,7 +17,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "correct password unlocks the dashboard" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
     assert_redirected_to elimination_dashboard_path
 
     get elimination_dashboard_path
@@ -27,7 +27,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "start and stop polling from the dashboard" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
 
     post elimination_dashboard_start_path
     assert EliminationSetting.current.polling_active?
@@ -37,7 +37,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "toggles a notification" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
 
     assert EliminationSetting.current.notify_standings?
     post elimination_dashboard_toggle_path(key: "standings")
@@ -45,7 +45,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sends a mock test message" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
     Elimination::Demo.any_instance.expects(:send!).with("standings")
 
     post elimination_dashboard_test_path(kind: "standings")
@@ -54,7 +54,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "sends a live trigger" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
     Elimination::LiveTrigger.any_instance.expects(:send!).with("standings").returns(:sent)
 
     post elimination_dashboard_trigger_path(kind: "standings")
@@ -63,7 +63,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "saves the alerts channel and alert rules" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
 
     patch elimination_dashboard_settings_path, params: { elimination_setting: {
       alerts_channel_id: "1545186775515791524", push_ticket_threshold: 20,
@@ -81,7 +81,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid settings are rejected with a message" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
 
     patch elimination_dashboard_settings_path, params: { elimination_setting: { push_ticket_threshold: 0 } }
 
@@ -113,7 +113,7 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "wrong password points to Bram" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisnotalie" }
+    post elimination_dashboard_login_path, params: { password: "wrong-password" }
 
     assert_response :unauthorized
     assert_select "a[href=?]", "https://www.torn.com/profiles.php?XID=2728237", text: "Bram [2728237]"
@@ -129,10 +129,16 @@ class EliminationDashboardControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "logout locks the dashboard again" do
-    post elimination_dashboard_login_path, params: { password: "thecakeisalie" }
+    sign_in_to_panel
     delete elimination_dashboard_logout_path
 
     get elimination_dashboard_path
     assert_select "input[type=password]"
+  end
+
+  private
+
+  def sign_in_to_panel
+    post elimination_dashboard_login_path, params: { password: "test-panel-password" }
   end
 end
