@@ -161,19 +161,61 @@ module Elimination
 
     def standings_embed(teams)
       alive, dead = teams.sort_by { |t| -t.tickets }.partition { |t| !t.eliminated }
+      bottom = alive.last
       rows = alive.each_with_index.map do |team, index|
-        marker = team.name == @setting.team_name ? "▸" : " "
-        format("%s%2d  %-21s %7s %6d  %s/%s", marker, index + 1, team.name.truncate(21), fmt(team.tickets), team.lives, compact(team.wins), compact(team.losses))
+        prefix = if team.name == @setting.team_name
+          "+"
+        elsif team.torn_id == bottom.torn_id && alive.size > 1
+          "-"
+        else
+          " "
+        end
+        format("%s%2d  %-21s %7s %6d  %s/%s", prefix, index + 1, team.name.truncate(21), fmt(team.tickets), team.lives, compact(team.wins), compact(team.losses))
       end
-      rows += dead.map { |team| format("  --  %-21s eliminated", team.name.truncate(21)) }
+      rows += dead.map { |team| format(" --  %-21s eliminated", team.name.truncate(21)) }
 
       {
-        title: "📊 Elimination standings",
-        description: "```  #  team                  tickets  lives  W/L\n#{rows.join("\n")}```",
+        title: standings_title,
+        description: "```diff\n  #  team                  tickets  lives   W/L\n#{rows.join("\n")}```",
         color: BLURPLE,
+        fields: standings_fields(alive),
         footer: footer,
         timestamp: Time.current.iso8601
       }
+    end
+
+    def standings_title
+      day = ((Time.current - attacking_start) / 1.day).floor + 1
+      day >= 1 ? "📊 Elimination standings — day #{day}" : "📊 Elimination standings"
+    end
+
+    def standings_fields(alive)
+      ours = alive.find { |team| team.name == @setting.team_name }
+      return [] unless ours && alive.size > 1
+
+      lowest_other = alive.reject { |team| team.torn_id == ours.torn_id }.map(&:tickets).min
+      cushion = ours.tickets - lowest_other
+      fields = [
+        { name: "Cushion (last)", value: cushion >= 0 ? "+#{fmt(cushion)}" : "−#{fmt(cushion.abs)}", inline: true }
+      ]
+
+      our_index = alive.index { |team| team.torn_id == ours.torn_id }
+      if our_index.positive?
+        above = alive[our_index - 1]
+        fields << { name: "Gap up (#{our_index.ordinalize})", value: fmt(above.tickets - ours.tickets), inline: true }
+      end
+
+      fields << if @setting.life_ticks_active?
+        { name: "Next tick", value: tct(Time.at(((Time.current.to_i / 900) + 1) * 900)), inline: true }
+      else
+        { name: "Life ticks from", value: "#{@setting.life_ticks_from.utc.strftime("%d %b %H:%M")} TCT", inline: true }
+      end
+
+      fields
+    end
+
+    def attacking_start
+      @setting.life_ticks_from - 1.day
     end
 
     private

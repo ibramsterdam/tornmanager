@@ -60,20 +60,37 @@ class Elimination::NotifierTest < ActiveSupport::TestCase
     )
   end
 
-  test "standings embed sorts by tickets and marks our team" do
+  test "standings embed colors our row green and the bottom row red" do
     teams = [
       team(86, "APEX", tickets: 2118),
       team(80, "Conspiracy Theorists", tickets: 1298),
+      team(89, "Brain Surgeons", tickets: 488),
       team(82, "Gold Dust", tickets: 0, eliminated: true)
     ]
 
     embed = @notifier.standings_embed(teams)
 
+    assert embed[:description].start_with?("```diff")
     lines = embed[:description].lines
-    assert_includes lines[1], "APEX"
-    assert_includes lines[2], "▸ 2  Conspiracy Theorists"
-    assert_includes lines[3], "Gold Dust"
-    assert_includes lines[3], "eliminated"
+    assert lines[2].start_with?("  1"), lines[2]
+    assert lines[3].start_with?("+ 2  Conspiracy Theorists"), lines[3]
+    assert lines[4].start_with?("- 3  Brain Surgeons"), lines[4]
+    assert_includes lines[5], "eliminated"
+  end
+
+  test "standings embed carries cushion, gap up, and next tick" do
+    teams = [
+      team(86, "APEX", tickets: 2118),
+      team(80, "Conspiracy Theorists", tickets: 1298),
+      team(89, "Brain Surgeons", tickets: 488)
+    ]
+
+    embed = @notifier.standings_embed(teams)
+
+    fields = embed[:fields].index_by { |field| field[:name] }
+    assert_equal "+810", fields["Cushion (last)"][:value]
+    assert_equal "820", fields["Gap up (1st)"][:value]
+    assert fields.key?("Next tick") || fields.key?("Life ticks from")
   end
 
   test "posts through the bot when a token and channel are configured" do
