@@ -26,10 +26,11 @@ class BannableTest < ActiveSupport::TestCase
   end
 
   test "ban! accepts a specific end time and a reason" do
-    @user.ban!(Time.utc(2026, 9, 1), reason: "Scamming in The Lounge")
+    ends_at = 3.weeks.from_now.change(usec: 0)
+    @user.ban!(ends_at, reason: "Scamming in The Lounge")
 
     assert @user.banned?
-    assert_equal Time.utc(2026, 9, 1), @user.banned_until
+    assert_equal ends_at, @user.banned_until
     assert_equal "Scamming in The Lounge", @user.banned_reason
   end
 
