@@ -474,4 +474,68 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :see_other
   end
+
+  test "new shows the closed notice instead of the form when sign ins are closed" do
+    with_sign_ins_closed do
+      get new_session_path
+    end
+
+    assert_response :success
+    assert_select "h1", "Sign ins are closed"
+    assert_select "form.login-form", count: 0
+  end
+
+  test "new still shows the form with the admin param when sign ins are closed" do
+    with_sign_ins_closed do
+      get new_session_path(admin: 1)
+    end
+
+    assert_select "form.login-form"
+  end
+
+  test "create rejects non admins when sign ins are closed" do
+    stub_login(torn_id: 9999999)
+
+    with_sign_ins_closed do
+      assert_no_difference [ "User.count", "Session.count" ] do
+        post session_path, params: { api_key: @valid_api_key }
+      end
+    end
+
+    assert_redirected_to new_session_path
+    assert_equal SessionsController::CLOSED_MESSAGE, flash[:alert]
+  end
+
+  test "create still signs in the admin when sign ins are closed" do
+    stub_login(torn_id: User::ADMIN_TORN_ID)
+
+    with_sign_ins_closed do
+      assert_difference "Session.count", 1 do
+        post session_path, params: { api_key: @valid_api_key }
+      end
+    end
+
+    assert_redirected_to root_url
+  end
+
+  private
+
+  def with_sign_ins_closed
+    Rails.configuration.x.sign_ins_closed = true
+    yield
+  ensure
+    Rails.configuration.x.sign_ins_closed = nil
+  end
+
+  def stub_login(torn_id:)
+    TornApi::Key::Info.any_instance.stubs(:fetch).returns(
+      TornApi::Key::Info::InfoData.new(
+        access: TornApi::Key::Info::AccessData.new(level: 1, type: "Limited Access", faction: false, company: false),
+        user: TornApi::Key::Info::UserData.new(id: torn_id, faction_id: nil, company_id: nil)
+      )
+    )
+    TornApi::User::Profile.any_instance.stubs(:fetch).returns(
+      TornApi::User::Profile::ProfileData.new(id: torn_id, name: "Someone", level: 10, image: "https://example.com/image.jpg")
+    )
+  end
 end

@@ -2,6 +2,10 @@ class SessionsController < ApplicationController
   allow_unauthenticated_access only: %i[ new create ]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_session_path, alert: "Try again later." }
 
+  CLOSED_MESSAGE = "TornManager is no longer being worked on, so sign ins are closed."
+
+  helper_method :sign_ins_closed?
+
   def new
     redirect_to root_path if authenticated?
   end
@@ -15,6 +19,10 @@ class SessionsController < ApplicationController
 
       if profile.nil?
         return redirect_to new_session_path, alert: "Could not fetch profile from Torn API."
+      end
+
+      if sign_ins_closed? && profile.id != User::ADMIN_TORN_ID
+        return redirect_to new_session_path, alert: CLOSED_MESSAGE
       end
 
       user = User.find_by(torn_id: profile.id) || User.new
@@ -72,6 +80,10 @@ class SessionsController < ApplicationController
   end
 
   private
+
+  def sign_ins_closed?
+    Rails.configuration.x.sign_ins_closed == true
+  end
 
   def notify_sign_in(user)
     Discord::Notifier.notify(
