@@ -11,7 +11,7 @@
     "release": "vite build && cp dist/tm-chats.user.js ../../userscript/tm-chats.user.js"
   },
   "devDependencies": {
-    "vite": "^8.3.5",
+    "vite": "^8.3.6",
     "vite-plugin-monkey": "^8.1.1"
   }
 }
