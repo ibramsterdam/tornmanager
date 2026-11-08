@@ -48,6 +48,22 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     assert_nil users(:kaneki).reload.company_id
   end
 
+  test "keeps a daily snapshot of every company" do
+    stub_company_snapshot([ company_row(91001, name: "Pleasure Palace", type: 10, rating: 9, hired: 9, income: 5_000_000) ])
+    stub_user_snapshot([])
+
+    Recruiter::SyncRosterJob.perform_now
+
+    snapshot = CompanySnapshot.find_by!(company_torn_id: 91001, date: Date.current)
+    assert_equal 5_000_000, snapshot.daily_income
+    assert_equal 10, snapshot.company_type_id
+    assert_equal 9, snapshot.rating
+
+    Recruiter::SyncRosterJob.perform_now
+
+    assert_equal 1, CompanySnapshot.where(company_torn_id: 91001).count
+  end
+
   test "skips when no key is available" do
     Recruiter::KeyPool.stubs(:next_key).returns(nil)
     TornApi::Company::Snapshot.any_instance.expects(:fetch).never
@@ -57,9 +73,10 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
 
   private
 
-  def company_row(torn_id, name:, type:, rating:, hired:)
+  def company_row(torn_id, name:, type:, rating:, hired:, income: nil)
     TornApi::Company::Snapshot::Row.new(
-      torn_id: torn_id, name: name, company_type_id: type, rating: rating, employees_hired: hired
+      torn_id: torn_id, name: name, company_type_id: type, rating: rating, employees_hired: hired,
+      employees_capacity: hired, daily_income: income, daily_customers: nil, weekly_income: nil, weekly_customers: nil
     )
   end
 

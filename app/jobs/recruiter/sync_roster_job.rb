@@ -34,6 +34,7 @@ module Recruiter
         Company.upsert_all(rows, unique_by: :torn_id, record_timestamps: true)
       end
       Company.where("synced_at IS NULL OR synced_at < ?", synced_at).delete_all
+      CompanySnapshot.record!(companies, synced_at.to_date)
     end
 
     def sync_employment(api_key, synced_at)

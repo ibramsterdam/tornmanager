@@ -10,6 +10,7 @@ module Daily
       cleanup_old_sessions
       cleanup_old_api_calls
       cleanup_old_armory_news
+      cleanup_old_company_snapshots
       cleanup_abandoned_chat_rooms
       cleanup_public_chat_messages
       cleanup_stale_factions
@@ -36,6 +37,12 @@ module Daily
       deleted_count = ArmoryNewsEntry.where("occurred_at < ?", cutoff).delete_all
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} armory news entries older than #{ARMORY_NEWS_RETENTION_DAYS} days"
+    end
+
+    def cleanup_old_company_snapshots
+      deleted_count = CompanySnapshot.where("date < ?", CompanySnapshot::RETENTION.ago.to_date).delete_all
+
+      Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} company snapshots older than #{CompanySnapshot::RETENTION.inspect}"
     end
 
     def cleanup_abandoned_chat_rooms

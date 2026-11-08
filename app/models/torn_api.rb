@@ -153,6 +153,7 @@ module TornApi
       when 27     then raise ApiError, "Must be migrated to organized crimes 2.0"
       when 28     then raise ApiError, "Incorrect log ID"
       when 29     then raise ApiError, "Category selection not available for interaction logs"
+      when 30     then raise NotFoundError, "File does not exist"
 
       else
         raise ApiError, "API error #{error_code}: #{error_msg}"

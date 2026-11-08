@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_09_174438) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_082928) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -155,6 +155,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_09_174438) do
     t.datetime "updated_at", null: false
     t.index ["company_type_id", "rating"], name: "index_companies_on_company_type_id_and_rating"
     t.index ["torn_id"], name: "index_companies_on_torn_id", unique: true
+  end
+
+  create_table "company_snapshots", force: :cascade do |t|
+    t.integer "company_torn_id", null: false
+    t.integer "company_type_id", null: false
+    t.integer "daily_customers"
+    t.bigint "daily_income"
+    t.date "date", null: false
+    t.integer "employees_capacity"
+    t.integer "employees_hired"
+    t.integer "rating", default: 0, null: false
+    t.integer "weekly_customers"
+    t.bigint "weekly_income"
+    t.index ["company_torn_id", "date"], name: "index_company_snapshots_on_company_torn_id_and_date", unique: true
+    t.index ["company_type_id", "rating", "date"], name: "index_company_snapshots_on_company_type_id_and_rating_and_date"
+    t.index ["date"], name: "index_company_snapshots_on_date"
   end
 
   create_table "elimination_settings", force: :cascade do |t|

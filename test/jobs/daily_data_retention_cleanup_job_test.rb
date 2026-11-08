@@ -16,6 +16,16 @@ class DailyDataRetentionCleanupJobTest < ActiveJob::TestCase
     assert Session.exists?(recent_session.id), "Recent session should be kept"
   end
 
+  test "deletes company snapshots older than 90 days" do
+    old = CompanySnapshot.create!(company_torn_id: 91001, date: 91.days.ago.to_date, company_type_id: 10, rating: 9)
+    recent = CompanySnapshot.create!(company_torn_id: 91001, date: 89.days.ago.to_date, company_type_id: 10, rating: 9)
+
+    Daily::DataRetentionCleanupJob.perform_now
+
+    assert_not CompanySnapshot.exists?(old.id)
+    assert CompanySnapshot.exists?(recent.id)
+  end
+
   test "deletes api calls older than 30 days" do
     bram = users(:bram)
 

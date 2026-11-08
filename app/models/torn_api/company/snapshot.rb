@@ -11,15 +11,28 @@ module TornApi
         :name,
         :company_type_id,
         :rating,
-        :employees_hired
+        :employees_hired,
+        :employees_capacity,
+        :daily_income,
+        :daily_customers,
+        :weekly_income,
+        :weekly_customers
       )
+
+      def initialize(api_key, timestamp: nil, comment: "tmrecruiter")
+        super(api_key)
+        @timestamp = timestamp
+        @comment = comment
+      end
 
       def endpoint
         ENDPOINT
       end
 
       def fetch
-        body = get(endpoint, { comment: "tmrecruiter" })
+        params = { comment: @comment }
+        params[:timestamp] = @timestamp.to_i if @timestamp
+        body = get(endpoint, params)
         raise ApiError, "No company snapshot returned: #{body}" unless body.is_a?(String)
 
         parse(body)
@@ -34,7 +47,12 @@ module TornApi
             name: row["name"],
             company_type_id: row["type"].to_i,
             rating: row["rating"].to_i,
-            employees_hired: row["employees_hired"].to_i
+            employees_hired: row["employees_hired"].to_i,
+            employees_capacity: row["employees_capacity"]&.to_i,
+            daily_income: row["daily_income"]&.to_i,
+            daily_customers: row["daily_customers"]&.to_i,
+            weekly_income: row["weekly_income"]&.to_i,
+            weekly_customers: row["weekly_customers"]&.to_i
           )
         end
       end
