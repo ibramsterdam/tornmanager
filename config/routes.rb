@@ -122,6 +122,9 @@ Rails.application.routes.draw do
     get "recruiter", to: "recruiter#show"
     get "recruiter/section/:name", to: "recruiter#section", as: :recruiter_section
     post "recruiter/run/:job", to: "recruiter#run", as: :recruiter_run
+    get "company", to: "tm_company#show", as: :tm_company
+    post "company/run/:job", to: "tm_company#run", as: :tm_company_run
+    patch "company/users/:id/access", to: "tm_company#toggle_access", as: :tm_company_toggle_access
     resources :stats, only: [ :index ]
     get "stats/section/:name", to: "stats#section", as: :stats_section
     resources :subscriptions, only: [ :index ] do

@@ -1,0 +1,53 @@
+<div class="page-header">
+  <%= link_to "&larr; Admin".html_safe, admin_dashboard_path, class: "back-link" %>
+  <h1>TM Company</h1>
+  <p class="page-subtitle">
+    <%= pluralize(@users.size, "director") %> with a key &middot;
+    company history for <%= pluralize(@snapshot_days, "day") %><%= " since #{@first_snapshot.strftime('%d %b %Y')}" if @first_snapshot %>
+  </p>
+</div>
+
+<div class="admin-sub-grant">
+  <%= button_to "Capture all now", admin_tm_company_run_path(job: "capture_all"), class: "btn btn-sm btn-primary" %>
+  <%= button_to "Backfill company history", admin_tm_company_run_path(job: "backfill_snapshots"), class: "btn btn-sm" %>
+</div>
+
+<div class="admin-sub-sections">
+  <div class="admin-sub-section">
+    <h2 class="admin-sub-heading">Directors (<%= @users.size %>)</h2>
+    <% if @users.any? %>
+      <table class="admin-sub-table">
+        <thead>
+          <tr><th>Player</th><th>Company</th><th>Key</th><th>Last capture</th><th>Access</th><th></th></tr>
+        </thead>
+        <tbody>
+          <% @users.each do |user| %>
+            <tr>
+              <td><%= user.name %> [<%= user.torn_id %>]</td>
+              <td><%= user.company_id %></td>
+              <td><%= user.company_api_key.access_type %></td>
+              <td><%= @last_captures[user.id] ? "#{time_ago_in_words(@last_captures[user.id])} ago" : "never" %></td>
+              <td class="<%= user.company_access? ? 'success' : 'error' %>">
+                <% if user.company_access_disabled? %>
+                  turned off
+                <% elsif !user.company_director? %>
+                  not a director
+                <% elsif !user.company_access? %>
+                  no subscription
+                <% else %>
+                  active
+                <% end %>
+              </td>
+              <td>
+                <%= button_to user.company_access_disabled? ? "Turn on" : "Turn off",
+                      admin_tm_company_toggle_access_path(user), method: :patch, class: "btn btn-sm" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <p class="admin-sub-empty">No directors have signed in yet.</p>
+    <% end %>
+  </div>
+</div>
