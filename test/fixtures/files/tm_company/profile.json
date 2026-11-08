@@ -1,0 +1,41 @@
+{
+  "id": 127301,
+  "name": "Test Oil Co",
+  "created_at": 1783361714,
+  "days_old": 124,
+  "image": null,
+  "type": {
+    "id": 28,
+    "name": "Oil Rig"
+  },
+  "rating": 7,
+  "director": {
+    "id": 8800001,
+    "name": "Joe",
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1794083958,
+      "relative": "1 hour ago"
+    }
+  },
+  "employees": {
+    "hired": 18,
+    "capacity": 18
+  },
+  "income": {
+    "daily": 92671990,
+    "weekly": 666855894
+  },
+  "customers": {
+    "daily": 3,
+    "weekly": 21
+  },
+  "applications_allowed": true
+}

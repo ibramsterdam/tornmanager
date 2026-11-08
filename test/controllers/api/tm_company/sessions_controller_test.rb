@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Api::TmCompany::SessionsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @profile = TornApi::User::Profile::ProfileData.new(id: 8800001, name: "Joe", level: 93, image: "https://profileimages.torn.com/joe.png")
     TornApi::User::Profile.any_instance.stubs(:fetch).returns(@profile)
@@ -19,7 +21,7 @@ class Api::TmCompany::SessionsControllerTest < ActionDispatch::IntegrationTest
     user = User.find_by!(torn_id: 8800001)
     assert_equal user.api_token, json["token"]
     assert_equal 127301, json.dig("company", "id")
-    assert_equal "Crude Awakening", json.dig("company", "name")
+    assert_equal "Test Oil Co", json.dig("company", "name")
     assert_equal 28, json.dig("company", "type_id")
     assert_equal 127301, user.company_id
     assert user.company_director?
@@ -28,6 +30,7 @@ class Api::TmCompany::SessionsControllerTest < ActionDispatch::IntegrationTest
     stored = ApiKey.connection.select_value("SELECT key FROM api_keys WHERE id = #{user.company_api_key.id}")
     assert_not_equal "LIMITED_KEY", stored
     assert_nil user.torn_api_key
+    assert_enqueued_with(job: TmCompany::CaptureJob, args: [ user.id ])
   end
 
   test "accepts a custom key with company access" do
@@ -149,9 +152,5 @@ class Api::TmCompany::SessionsControllerTest < ActionDispatch::IntegrationTest
 
   def stub_job(job)
     TornApi::User::Job.any_instance.stubs(:fetch).returns(job)
-  end
-
-  def director_job
-    TornApi::User::Job::JobData.new(type: "company", company_id: 127301, company_type_id: 28, company_name: "Crude Awakening", rating: 7, position: "Director")
   end
 end

@@ -1,0 +1,17 @@
+{
+  "ID": 127301,
+  "company_funds": 2500000000,
+  "company_bank": 0,
+  "popularity": 78,
+  "efficiency": 96,
+  "environment": 84,
+  "trains_available": 12,
+  "advertising_budget": 0,
+  "upgrades": {
+    "company_size": 18,
+    "staffroom_size": "Standard",
+    "storage_size": "Small Room",
+    "storage_space": 10000
+  },
+  "value": 10500000000
+}

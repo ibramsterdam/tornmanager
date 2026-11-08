@@ -38,6 +38,7 @@ module Api
         user.save!
         user.set_company_api_key!(api_key, info.access.type)
         user.regenerate_api_token if user.api_token.blank?
+        ::TmCompany::CaptureJob.perform_later(user.id)
 
         render json: {
           token: user.api_token,

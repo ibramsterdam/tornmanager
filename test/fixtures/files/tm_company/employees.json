@@ -1,0 +1,248 @@
+[
+  {
+    "id": 9000001,
+    "name": "Employee1",
+    "position": {
+      "id": 235,
+      "name": "Driller"
+    },
+    "days_in_company": 120,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1794087312,
+      "relative": "32 minutes ago"
+    },
+    "stats": {
+      "manual_labor": 195000,
+      "intelligence": 97500,
+      "endurance": 0
+    },
+    "effectiveness": {
+      "working_stats": 100,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": 0,
+      "inactivity": 0,
+      "total": 120
+    },
+    "wage": 4000000,
+    "value": null,
+    "joined_at": 1783361714
+  },
+  {
+    "id": 9000002,
+    "name": "Employee2",
+    "position": {
+      "id": 366,
+      "name": "Sales Executive"
+    },
+    "days_in_company": 94,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1793926000,
+      "relative": "1 day ago"
+    },
+    "stats": {
+      "manual_labor": 0,
+      "intelligence": 170950,
+      "endurance": 85475
+    },
+    "effectiveness": {
+      "working_stats": 100,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": 0,
+      "inactivity": 0,
+      "total": 120
+    },
+    "wage": 4250000,
+    "value": null,
+    "joined_at": 1783448114
+  },
+  {
+    "id": 9000003,
+    "name": "Employee3",
+    "position": {
+      "id": 235,
+      "name": "Driller"
+    },
+    "days_in_company": 47,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1794070473,
+      "relative": "5 hours ago"
+    },
+    "stats": {
+      "manual_labor": 90000,
+      "intelligence": 45000,
+      "endurance": 0
+    },
+    "effectiveness": {
+      "working_stats": 62,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": 0,
+      "inactivity": 0,
+      "total": 82
+    },
+    "wage": 4500000,
+    "value": null,
+    "joined_at": 1783534514
+  },
+  {
+    "id": 9000004,
+    "name": "Employee4",
+    "position": {
+      "id": 366,
+      "name": "Sales Executive"
+    },
+    "days_in_company": 117,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1794057675,
+      "relative": "8 hours ago"
+    },
+    "stats": {
+      "manual_labor": 0,
+      "intelligence": 170950,
+      "endurance": 85475
+    },
+    "effectiveness": {
+      "working_stats": 100,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": -8,
+      "inactivity": 0,
+      "total": 112
+    },
+    "wage": 4750000,
+    "value": null,
+    "joined_at": 1783620914
+  },
+  {
+    "id": 9000005,
+    "name": "Employee5",
+    "position": {
+      "id": 235,
+      "name": "Driller"
+    },
+    "days_in_company": 2,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Offline",
+      "timestamp": 1794052329,
+      "relative": "10 hours ago"
+    },
+    "stats": {
+      "manual_labor": 195000,
+      "intelligence": 97500,
+      "endurance": 0
+    },
+    "effectiveness": {
+      "working_stats": 100,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": 0,
+      "inactivity": -12,
+      "total": 108
+    },
+    "wage": 5000000,
+    "value": null,
+    "joined_at": 1783707314
+  },
+  {
+    "id": 9000006,
+    "name": "Employee6",
+    "position": {
+      "id": 235,
+      "name": "Driller"
+    },
+    "days_in_company": 94,
+    "status": {
+      "description": "Okay",
+      "details": null,
+      "state": "Okay",
+      "color": "green",
+      "until": null
+    },
+    "last_action": {
+      "status": "Online",
+      "timestamp": 1794089231,
+      "relative": "0 minutes ago"
+    },
+    "stats": {
+      "manual_labor": 195000,
+      "intelligence": 97500,
+      "endurance": 0
+    },
+    "effectiveness": {
+      "working_stats": 100,
+      "settled_in": 10,
+      "book": 0,
+      "merits": 5,
+      "director_education": 5,
+      "management": 0,
+      "wrong_gender": 0,
+      "addiction": 0,
+      "inactivity": 0,
+      "total": 120
+    },
+    "wage": 5250000,
+    "value": null,
+    "joined_at": 1783793714
+  }
+]

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_083157) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_083610) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -155,6 +155,32 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_083157) do
     t.datetime "updated_at", null: false
     t.index ["company_type_id", "rating"], name: "index_companies_on_company_type_id_and_rating"
     t.index ["torn_id"], name: "index_companies_on_torn_id", unique: true
+  end
+
+  create_table "company_days", force: :cascade do |t|
+    t.datetime "captured_at", null: false
+    t.integer "company_torn_id", null: false
+    t.datetime "created_at", null: false
+    t.date "date", null: false
+    t.json "detailed"
+    t.json "employees"
+    t.json "profile"
+    t.json "stock"
+    t.datetime "updated_at", null: false
+    t.integer "user_id"
+    t.index ["company_torn_id", "date"], name: "index_company_days_on_company_torn_id_and_date", unique: true
+    t.index ["user_id"], name: "index_company_days_on_user_id"
+  end
+
+  create_table "company_news_entries", force: :cascade do |t|
+    t.integer "company_torn_id", null: false
+    t.datetime "created_at", null: false
+    t.string "news_id", null: false
+    t.datetime "occurred_at", null: false
+    t.text "text", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_torn_id", "news_id"], name: "index_company_news_entries_on_company_torn_id_and_news_id", unique: true
+    t.index ["company_torn_id", "occurred_at"], name: "index_company_news_entries_on_company_torn_id_and_occurred_at"
   end
 
   create_table "company_snapshots", force: :cascade do |t|
@@ -540,6 +566,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_083157) do
   add_foreign_key "chat_rooms", "users", column: "host_user_id"
   add_foreign_key "chat_suspensions", "chat_rooms"
   add_foreign_key "chat_suspensions", "users"
+  add_foreign_key "company_days", "users", on_delete: :nullify
   add_foreign_key "faction_subscription_grants", "factions"
   add_foreign_key "faction_subscription_grants", "users", column: "granted_by_id"
   add_foreign_key "member_activity_snapshots", "factions"

@@ -1,0 +1,13 @@
+[
+  {
+    "name": "Oil (Barrel)",
+    "id": 173,
+    "cost": 0,
+    "rrp": 100,
+    "price": 100,
+    "in_stock": 5400,
+    "on_order": 0,
+    "sold_amount": 2200,
+    "sold_worth": 92671990
+  }
+]

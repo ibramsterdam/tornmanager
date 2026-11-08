@@ -59,6 +59,10 @@ production:
     class: Recruiter::BackfillMissingStatsJob
     queue: default
     schedule: at 6:30am every day
+  tm_company_capture:
+    class: TmCompany::CaptureAllJob
+    queue: default
+    schedule: at 6:30pm every day
 # development:
 #   daily_stock_dividend_job:
 #     class: Daily::StockDividendJob
