@@ -26,6 +26,17 @@ class DailyDataRetentionCleanupJobTest < ActiveJob::TestCase
     assert CompanySnapshot.exists?(recent.id)
   end
 
+  test "keeps old snapshots of companies tracked by tm company" do
+    bram = users(:bram)
+    bram.update!(company_id: 127301, company_director: true)
+    bram.set_company_api_key!("COMPANY_KEY", "Limited Access")
+    tracked = CompanySnapshot.create!(company_torn_id: 127301, date: 400.days.ago.to_date, company_type_id: 28, rating: 7)
+
+    Daily::DataRetentionCleanupJob.perform_now
+
+    assert CompanySnapshot.exists?(tracked.id)
+  end
+
   test "deletes api calls older than 30 days" do
     bram = users(:bram)
 

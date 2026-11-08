@@ -17,6 +17,15 @@ class TornApi::BaseInvalidateKeyTest < ActiveSupport::TestCase
     assert_not @faction.reload.setup_completed?, "Faction setup should be reset"
   end
 
+  test "destroys an invalid tm company key" do
+    record = users(:bram).set_company_api_key!("COMPANY_KEY_123", "Limited Access")
+
+    TornApi::Base.new("COMPANY_KEY_123").send(:invalidate_api_key!)
+
+    assert_not ApiKey.exists?(record.id)
+    assert_equal "ABCDEF", users(:bram).reload.torn_api_key.key
+  end
+
   test "does not invalidate admin api key" do
     admin_key = "ADMIN_KEY_SECRET"
     AdminCredentials.stubs(:api_key).returns(admin_key)

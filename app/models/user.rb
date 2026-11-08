@@ -17,6 +17,7 @@ class User < ApplicationRecord
   has_many :chat_rooms, through: :chat_memberships
   has_many :hosted_chat_rooms, class_name: "ChatRoom", foreign_key: :host_user_id, dependent: :destroy
   has_one :torn_api_key, class_name: "ApiKey::Torn", foreign_key: :user_id, dependent: :destroy
+  has_one :company_api_key, class_name: "ApiKey::TmCompany", foreign_key: :user_id, dependent: :destroy
   has_one :subscription, as: :subscribable, dependent: :destroy
 
   validates :torn_id, presence: true, uniqueness: true
@@ -139,6 +140,18 @@ class User < ApplicationRecord
     else
       create_torn_api_key!(key: key, access_type: access_type)
     end
+  end
+
+  def set_company_api_key!(key, access_type)
+    if company_api_key
+      company_api_key.update!(key: key, access_type: access_type)
+    else
+      create_company_api_key!(key: key, access_type: access_type)
+    end
+  end
+
+  def company_access?
+    (admin? || subscribed?) && !company_access_disabled? && company_director? && company_api_key.present?
   end
 
   def backfill_in_progress?

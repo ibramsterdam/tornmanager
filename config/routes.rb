@@ -30,6 +30,11 @@ Rails.application.routes.draw do
       post :keys, to: "recruiter_keys#index", as: :recruiter_keys
       post :revoke_key, to: "recruiter_keys#destroy", as: :recruiter_revoke_key
     end
+
+    scope :company, module: :tm_company, as: :company do
+      post :session, to: "sessions#create"
+      post :revoke_key, to: "keys#destroy"
+    end
   end
 
   resource :session

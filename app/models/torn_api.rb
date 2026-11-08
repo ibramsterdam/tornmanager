@@ -304,7 +304,7 @@ module TornApi
     def invalidate_api_key!
       return if api_key == AdminCredentials.api_key
 
-      record = ::ApiKey.find_by(key: api_key)
+      record = ::ApiKey.find_by(key: api_key) || ::ApiKey::TmCompany.find_by(key: api_key)
       return unless record
 
       if record.faction_id?

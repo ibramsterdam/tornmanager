@@ -40,7 +40,11 @@ module Daily
     end
 
     def cleanup_old_company_snapshots
-      deleted_count = CompanySnapshot.where("date < ?", CompanySnapshot::RETENTION.ago.to_date).delete_all
+      tracked = User.joins(:company_api_key).where.not(company_id: nil).select(:company_id)
+      deleted_count = CompanySnapshot
+        .where("date < ?", CompanySnapshot::RETENTION.ago.to_date)
+        .where.not(company_torn_id: tracked)
+        .delete_all
 
       Rails.logger.info "DataRetentionCleanupJob: Deleted #{deleted_count} company snapshots older than #{CompanySnapshot::RETENTION.inspect}"
     end
