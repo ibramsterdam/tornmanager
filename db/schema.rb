@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_083610) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -197,46 +197,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_083610) do
     t.index ["company_torn_id", "date"], name: "index_company_snapshots_on_company_torn_id_and_date", unique: true
     t.index ["company_type_id", "rating", "date"], name: "index_company_snapshots_on_company_type_id_and_rating_and_date"
     t.index ["date"], name: "index_company_snapshots_on_date"
-  end
-
-  create_table "elimination_settings", force: :cascade do |t|
-    t.string "alerts_channel_id"
-    t.string "api_key"
-    t.datetime "created_at", null: false
-    t.integer "escape_floor_tickets", default: 10, null: false
-    t.integer "escape_threshold_tickets", default: 50, null: false
-    t.string "last_error"
-    t.datetime "last_polled_at"
-    t.boolean "notify_eliminations", default: true, null: false
-    t.boolean "notify_escapes", default: true, null: false
-    t.boolean "notify_health", default: true, null: false
-    t.boolean "notify_push_ours", default: true, null: false
-    t.boolean "notify_standings", default: true, null: false
-    t.boolean "notify_ticks", default: true, null: false
-    t.integer "poll_interval_seconds", default: 2, null: false
-    t.boolean "polling_active", default: false, null: false
-    t.integer "push_resolve_seconds", default: 900, null: false
-    t.integer "push_ticket_threshold", default: 10, null: false
-    t.integer "push_window_seconds", default: 10, null: false
-    t.integer "standings_interval_minutes", default: 60, null: false
-    t.string "team_name", default: "Conspiracy Theorists", null: false
-    t.datetime "updated_at", null: false
-  end
-
-  create_table "elimination_snapshots", force: :cascade do |t|
-    t.datetime "captured_at", null: false
-    t.datetime "created_at", null: false
-    t.boolean "eliminated", default: false, null: false
-    t.integer "lives", null: false
-    t.integer "losses", null: false
-    t.string "name", null: false
-    t.integer "position"
-    t.integer "team_torn_id", null: false
-    t.integer "tickets", null: false
-    t.datetime "updated_at", null: false
-    t.integer "wins", null: false
-    t.index ["captured_at"], name: "index_elimination_snapshots_on_captured_at"
-    t.index ["team_torn_id", "captured_at"], name: "index_elimination_snapshots_on_team_torn_id_and_captured_at"
   end
 
   create_table "faction_settings", force: :cascade do |t|

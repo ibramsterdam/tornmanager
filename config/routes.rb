@@ -143,11 +143,6 @@ Rails.application.routes.draw do
         post :backfill_armory_news
       end
     end
-    resource :eliminations, only: [ :show, :update ], controller: "eliminations" do
-      post :start
-      post :stop
-      post "test/:kind", action: :test, as: :test
-    end
     resources :api_logs, only: [ :index ]
     resources :snapshot_management, only: [ :index ] do
       member do
@@ -166,16 +161,6 @@ Rails.application.routes.draw do
   get "legal", to: "pages#legal", as: :legal
   get "privacy-policy", to: redirect("/legal#privacy-policy")
   get "terms-of-service", to: redirect("/legal#terms-of-service")
-
-  get "elimination", to: "elimination_dashboard#show", as: :elimination_dashboard
-  post "elimination/login", to: "elimination_dashboard#login", as: :elimination_dashboard_login
-  delete "elimination/logout", to: "elimination_dashboard#logout", as: :elimination_dashboard_logout
-  post "elimination/start", to: "elimination_dashboard#start", as: :elimination_dashboard_start
-  post "elimination/stop", to: "elimination_dashboard#stop", as: :elimination_dashboard_stop
-  post "elimination/toggle/:key", to: "elimination_dashboard#toggle", as: :elimination_dashboard_toggle
-  post "elimination/test/:kind", to: "elimination_dashboard#test", as: :elimination_dashboard_test
-  post "elimination/trigger/:kind", to: "elimination_dashboard#trigger", as: :elimination_dashboard_trigger
-  patch "elimination/settings", to: "elimination_dashboard#update_settings", as: :elimination_dashboard_settings
 
   get "key-log", to: "key_log#index", as: :key_log
   post "key-log/show", to: "key_log#show", as: :key_log_show
