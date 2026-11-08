@@ -26,6 +26,22 @@ class TmCompany::CaptureJobTest < ActiveJob::TestCase
     assert_equal [ "n1" ], CompanyNewsEntry.where(company_torn_id: 127301).pluck(:news_id)
   end
 
+  test "starts the snapshot backfill when the income history has gaps" do
+    assert_enqueued_with(job: TmCompany::BackfillSnapshotsJob) do
+      TmCompany::CaptureJob.perform_now(@user.id)
+    end
+  end
+
+  test "skips the snapshot backfill when the income history is complete" do
+    (1..TmCompany::BackfillSnapshotsJob::MAX_DAYS).each do |days_ago|
+      CompanySnapshot.create!(company_torn_id: 1, date: Date.current - days_ago, company_type_id: 28, rating: 7)
+    end
+
+    TmCompany::CaptureJob.perform_now(@user.id)
+
+    assert_no_enqueued_jobs only: TmCompany::BackfillSnapshotsJob
+  end
+
   test "overwrites today's row when it runs again" do
     TmCompany::CaptureJob.perform_now(@user.id)
     TmCompany::CaptureJob.perform_now(@user.id)

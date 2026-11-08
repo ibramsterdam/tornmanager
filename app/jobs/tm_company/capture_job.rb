@@ -16,6 +16,7 @@ module TmCompany
 
       user.update!(company_id: job.company_id) if user.company_id != job.company_id
       capture(user, TornApi::Company::Director.new(api_key), job.company_id)
+      BackfillSnapshotsJob.perform_later if BackfillSnapshotsJob.needed?
     rescue TornApi::InvalidKeyError => e
       Rails.logger.warn("TmCompany::CaptureJob: key for user #{user_id} no longer works: #{e.message}")
     end

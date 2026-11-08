@@ -5,6 +5,10 @@ module TmCompany
 
     MAX_DAYS = 60
 
+    def self.needed?
+      CompanySnapshot.where(date: (Date.current - MAX_DAYS)...Date.current).distinct.count(:date) < MAX_DAYS
+    end
+
     def perform(days = MAX_DAYS)
       api_key = Recruiter::KeyPool.next_key
       return Rails.logger.warn("TmCompany::BackfillSnapshotsJob: no api key, skipping") unless api_key

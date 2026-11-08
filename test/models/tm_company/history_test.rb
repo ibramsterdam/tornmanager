@@ -20,4 +20,14 @@ class TmCompany::HistoryTest < ActiveSupport::TestCase
     assert json[:series][:effectiveness][index].positive?
     assert_nil json[:series][:income][json[:dates].index(Date.current)]
   end
+
+  test "falls back to the captured profile when there is no snapshot for a day" do
+    captured_day(date: Date.current)
+
+    json = TmCompany::History.new(127301, days: 7).as_json
+
+    assert_equal 92_671_990, json[:series][:income].last
+    assert_equal 3, json[:series][:customers].last
+    assert json[:series][:income_per_employee].last.positive?
+  end
 end

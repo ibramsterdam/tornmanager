@@ -13,9 +13,9 @@ module TmCompany
       {
         dates: @dates,
         series: {
-          income: @dates.map { |date| own[date]&.daily_income },
-          customers: @dates.map { |date| own[date]&.daily_customers },
-          income_per_employee: @dates.map { |date| per_employee(own[date]) },
+          income: @dates.map { |date| own[date]&.daily_income || captured[date]&.profile&.dig("income", "daily") },
+          customers: @dates.map { |date| own[date]&.daily_customers || captured[date]&.profile&.dig("customers", "daily") },
+          income_per_employee: @dates.map { |date| per_employee(own[date]) || captured_per_employee(captured[date]) },
           peer_median_per_employee: @dates.map { |date| peers.dig(date, :median) },
           peer_top_per_employee: @dates.map { |date| peers.dig(date, :top) },
           wages: @dates.map { |date| wages(captured[date]) },
@@ -34,6 +34,12 @@ module TmCompany
       return unless snapshot&.daily_income && snapshot.employees_hired.to_i.positive?
 
       snapshot.daily_income / snapshot.employees_hired
+    end
+
+    def captured_per_employee(day)
+      income = day&.profile&.dig("income", "daily")
+      hired = day&.profile&.dig("employees", "hired").to_i
+      income / hired if income && hired.positive?
     end
 
     def peer_per_employee(own)
