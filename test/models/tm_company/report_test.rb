@@ -26,6 +26,19 @@ class TmCompany::ReportTest < ActiveSupport::TestCase
     assert_equal({ "intelligence" => 75000, "manual_labor" => 150000, "endurance" => 0 }, rows["Employee1"][:required])
   end
 
+  test "only compares wage with value when Torn reports a value" do
+    employees = tm_company_fixture("employees")
+    employees[0]["value"] = 0
+    employees[1]["value"] = 3_000_000
+    @day.update!(employees: employees)
+
+    rows = report.employee_rows.index_by { |row| row[:name] }
+
+    assert_nil rows["Employee1"][:value]
+    assert_not_includes rows["Employee1"][:flags], "costs_more_than_value"
+    assert_includes rows["Employee2"][:flags], "costs_more_than_value"
+  end
+
   test "counts staff per position and finds missing abilities" do
     balance = report.balance
 

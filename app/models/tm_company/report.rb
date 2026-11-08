@@ -93,7 +93,7 @@ module TmCompany
           required: required,
           effectiveness: effectiveness,
           wage: employee["wage"],
-          value: employee["value"],
+          value: worth(employee),
           flags: flags_for(employee, required, stats, effectiveness)
         }
       end
@@ -186,8 +186,12 @@ module TmCompany
       flags << "below_requirement" if STATS.any? { |stat| required[stat].to_i.positive? && stats.key?(stat) && stats[stat].to_i < required[stat].to_i }
       flags << "low_effectiveness" if effectiveness.key?("total") && effectiveness["total"].to_i < LOW_EFFECTIVENESS
       flags << "settling_in" if employee["days_in_company"].to_i < SETTLING_DAYS
-      flags << "costs_more_than_value" if employee["value"] && employee["wage"] && employee["wage"] > employee["value"]
+      flags << "costs_more_than_value" if worth(employee) && employee["wage"].to_i > worth(employee)
       flags
+    end
+
+    def worth(employee)
+      employee["value"] if employee["value"].to_i.positive?
     end
 
     def inactive?(employee)
