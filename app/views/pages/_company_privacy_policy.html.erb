@@ -1,0 +1,132 @@
+<div class="legal-document" id="company-privacy-policy">
+  <h1 class="legal-document-title">Company Userscript Privacy Policy</h1>
+  <p class="legal-document-subtitle">Last updated: <%= Date.today.strftime("%d %B %Y") %></p>
+
+  <section class="content-section">
+    <h2 id="cpp-introduction">Introduction</h2>
+    <p>
+      Hi, I'm Bram, the creator of TornManager. This Privacy Policy covers the <strong>TornManager Company
+      userscript</strong>. That is the script you install in a userscript manager (such as Tampermonkey) or in
+      Torn PDA. It runs on Torn.com pages and helps company directors see how their company is doing over time.
+    </p>
+    <p>
+      The web platform, the Chats userscript and the Recruiter userscript have their own documents above on this
+      page. If you only use the Company userscript, this document and the
+      <a href="#company-terms-of-service">Company Terms of Service</a> are the ones that apply to you.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-information-i-collect">Information I Collect</h2>
+    <p>
+      When you sign in you provide a <strong>Torn API key with Limited access</strong>. Only Limited keys, or
+      Custom keys with company access, are accepted, and only from players who are the director of a company.
+      The key is checked with the official Torn API and then <strong>stored on the TornManager server, encrypted</strong>.
+      After sign in your browser holds a session token and uses it for every later request. Your API key is not
+      sent again by the browser.
+    </p>
+    <p>On the server, a Company account consists of:</p>
+    <ul>
+      <li>Your Torn ID, player name, level and the ID of the company you direct</li>
+      <li>Your Torn API key, encrypted</li>
+      <li>A daily copy of your company data: the company profile (income, customers, staff, stars), your
+        employees (positions, working stats, wages, effectiveness, last action), stock and sales, and company
+        details such as funds, popularity, efficiency, environment and trains</li>
+      <li>Your company news</li>
+      <li>Xanax payments sent for subscriptions, and subscription expiration dates</li>
+    </ul>
+    <p>
+      Your company data includes information about your employees, such as their names, working stats and
+      wages. This is the same information Torn shows you as their director. It is only shown to you.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-torn-api">Calls to the Torn API</h2>
+    <p>
+      Once a day, and when you ask for a refresh (at most every 15 minutes), the TornManager server uses your
+      key to read your own company from the official Torn API. It never uses your key for anything else, never
+      shares it, and never adds it to any shared key pool. Every call carries the comment <code>tmcompany</code>,
+      so you can see exactly what your key was used for in your own Torn key log.
+    </p>
+    <p>
+      To compare your company with others, the server also stores the public daily company listing that Torn
+      publishes for every company. That listing is fetched with TornManager's own keys, not yours.
+    </p>
+    <p>
+      If your key stops working, or you are no longer a director, the server stops using it. A key that Torn
+      reports as invalid is deleted.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-local-storage">Data Stored in Your Browser</h2>
+    <p>The Company userscript stores the following in your browser's localStorage on the torn.com domain:</p>
+    <ul>
+      <li><strong>User profile and session token</strong> (<code>tc_user</code>): your Torn ID, name and the session token. Cleared when you sign out.</li>
+      <li><strong>Company</strong> (<code>tc_company</code>): the name, type and ID of your company.</li>
+      <li><strong>Subscription state</strong> (<code>tc_subscription</code>): the last known subscription status.</li>
+    </ul>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-backend">Backend Communication</h2>
+    <p>
+      The Company userscript only talks to tornmanager.com, using <code>GM.xmlHttpRequest</code>: signing in,
+      checking your subscription, and loading your company overview, history and news. Nothing is shared with any
+      third party.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-retention">Data Retention &amp; Removal</h2>
+    <p>
+      Your company history is kept while you use the script, so you can see how your company does over months.
+      The public company listing of companies nobody tracks is kept for 90 days.
+    </p>
+    <p>
+      <strong>Remove API key</strong> in the script's settings deletes your key from the server right away and
+      stops all daily reads. Deleting or regenerating the key on Torn.com does the same. To also delete your
+      stored company history, contact me on Torn:
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-data-security">Data Security &amp; Location</h2>
+    <p>
+      All communication with tornmanager.com uses secure HTTPS connections. API keys are encrypted in the
+      database. Server data is stored in <strong>Helsinki, Finland</strong> (EU) within the Hetzner datacenter,
+      which means your data falls under European Union data protection laws, including GDPR. No method of
+      transmission or storage is 100% secure. I work hard to protect your data, but I cannot guarantee absolute
+      security.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-age-requirement">Age Requirement</h2>
+    <p>
+      In line with Torn's Terms of Service, you must be at least 13 years old to use the Company userscript.
+      I do not knowingly collect information from children under 13.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-changes">Changes to This Privacy Policy</h2>
+    <p>
+      I may update this Privacy Policy from time to time. Material changes are shown by updating the
+      "Last updated" date at the top. If you keep using the Company userscript after changes, you accept the
+      updated policy.
+    </p>
+  </section>
+
+  <section class="content-section">
+    <h2 id="cpp-contact">Contact Me</h2>
+    <p>
+      If you have questions about this Privacy Policy or how I handle your data, please reach out to me on Torn:
+    </p>
+    <p>
+      <%= link_to "Bram [2728237]", "https://www.torn.com/profiles.php?XID=2728237", target: "_blank", class: "player-link" %>
+    </p>
+  </section>
+</div>
