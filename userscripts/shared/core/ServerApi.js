@@ -27,6 +27,7 @@ export function post(path, body = {}, { token = null } = {}) {
         } else {
           const error = new Error(data?.error || "Request failed");
           error.status = response.status;
+          error.data = data;
           if (response.status === 429) error.rateLimited = true;
           if (data?.suspended) error.suspended = true;
           reject(error);
