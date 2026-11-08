@@ -34,19 +34,18 @@ target, who is online right now, and who is faction-loyal to their director.
 Requires a subscription.
 [Install](https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-recruiter.user.js)
 
-Both scripts share one account, one subscription, and one common core
+<img src="userscripts/tm-company/assets/company-banner.svg" alt="TM Company" width="1000">
+
+**TM Company** ([`userscripts/tm-company/`](userscripts/tm-company/README.md)):
+a dashboard for company directors. The director signs in with a Limited key,
+and the server reads the company every evening to build a daily history. The
+script shows income, profit, wages and stock, ranks the company against others
+of the same type and stars, flags employees who hold it back, and gives advice
+to earn more. Only directors are accepted. Requires a subscription.
+[Install](https://github.com/ibramsterdam/tornmanager/raw/main/userscript/tm-company.user.js)
+
+All scripts share one account, one subscription, and one common core
 ([`userscripts/shared/`](userscripts/shared/)).
-
-<img src="assets/cia-logo.png" alt="Conspiracy Intelligence Agency" width="180">
-
-**Conspiracy Intelligence Agency** — a Discord intel bot for Torn's yearly
-Elimination event. The server polls the public elimination endpoint every two
-seconds during the attacking period and reports to Discord through webhooks:
-push alerts when a team loses a significant number of tickets inside a rolling
-ten-second window (with likely attackers inferred from wins deltas), a report
-every fifteen minutes on who lost a life, hourly standings, elimination
-announcements, and a warning when the Torn API goes down. Thresholds and the
-channel are configured at `admin/eliminations`.
 
 ## Why open source
 
@@ -54,7 +53,7 @@ Torn tools ask players to paste in API keys, and userscripts run inside the
 game's own pages. The only honest answer to "what does this thing do with my
 key?" is code you can read. Everything is here: what travels to the server,
 what stays in your browser, and what every background job fetches — each Torn
-API call is tagged (`tmanager`, `tmchats`, `tmrecruiter`) so key owners can
+API call is tagged (`tmanager`, `tmchats`, `tmrecruiter`, `tmcompany`) so key owners can
 audit usage in their own Torn key log. Nothing about the product depends on
 secrecy; paid features are gated server-side by the subscription, not by hiding
 the source. The policies live at
@@ -67,8 +66,9 @@ the source. The policies live at
 | `app/`, `config/`, `db/` | The Rails 8 platform (SQLite, Solid Queue/Cache/Cable, Hotwire, Kamal deploys) |
 | `userscripts/tm-chats/` | TM Chats source (Vite + vite-plugin-monkey, vanilla JS) |
 | `userscripts/tm-recruiter/` | TM Recruiter source |
-| `userscripts/shared/` | Auth, storage, and API plumbing shared by both scripts |
+| `userscripts/tm-company/` | TM Company source |
+| `userscripts/shared/` | Auth, storage, and API plumbing shared by all scripts |
 | `userscript/` | Built release artifacts — installed scripts auto-update from these exact paths, so they never move |
 
-Userscript releases are cut with `bin/publish [tm-chats|tm-recruiter]`; see the
+Userscript releases are cut with `bin/publish [tm-chats|tm-recruiter|tm-company]`; see the
 per-script READMEs for development setup.

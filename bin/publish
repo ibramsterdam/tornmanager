@@ -13,7 +13,7 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 SCRIPT="tm-chats"
 case "${1:-}" in
-  tm-chats|tm-recruiter) SCRIPT="$1"; shift ;;
+  tm-chats|tm-recruiter|tm-company) SCRIPT="$1"; shift ;;
 esac
 
 SRC_DIR="userscripts/$SCRIPT"
