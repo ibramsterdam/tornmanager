@@ -34,6 +34,10 @@ Rails.application.routes.draw do
     scope :company, module: :tm_company, as: :company do
       post :session, to: "sessions#create"
       post :revoke_key, to: "keys#destroy"
+      post :overview, to: "company#overview"
+      post :history, to: "company#history"
+      post :news, to: "company#news"
+      post :refresh, to: "company#refresh"
     end
   end
 

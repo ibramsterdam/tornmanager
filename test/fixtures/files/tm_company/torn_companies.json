@@ -1,0 +1,181 @@
+[
+  {
+    "id": 28,
+    "name": "Oil Rig",
+    "cost": 10500000000,
+    "employees": 12,
+    "positions": [
+      {
+        "id": 235,
+        "name": "Driller",
+        "description": "This position is required to supervise the crews working on the rig, ensuring they follow the company&#39;s policies and safety legislation. Drills will not function without a driller onsite.",
+        "ability": "None",
+        "working_stats": {
+          "required": {
+            "intelligence": 75000,
+            "manual_labor": 150000,
+            "endurance": 0
+          },
+          "daily_gains": {
+            "intelligence": 35,
+            "manual_labor": 70,
+            "endurance": 0
+          }
+        }
+      },
+      {
+        "id": 236,
+        "name": "Roughneck",
+        "description": "This position will allow the specialists to do their jobs better, enduring the hardest of conditions and long schedules. Moving and assembling equipment, cleaning and dealing with rust are just a few of the tasks required of them.",
+        "ability": "Cleaner",
+        "working_stats": {
+          "required": {
+            "intelligence": 0,
+            "manual_labor": 75000,
+            "endurance": 37500
+          },
+          "daily_gains": {
+            "intelligence": 0,
+            "manual_labor": 65,
+            "endurance": 33
+          }
+        }
+      },
+      {
+        "id": 237,
+        "name": "Derrick Hand",
+        "description": "This position works high above on the drilling platform, helping to steady pipes being inserted into the well. They work in conjunction with the drillers to ensure the process goes smoothly from start to finish.",
+        "ability": "None",
+        "working_stats": {
+          "required": {
+            "intelligence": 0,
+            "manual_labor": 94000,
+            "endurance": 47000
+          },
+          "daily_gains": {
+            "intelligence": 0,
+            "manual_labor": 67,
+            "endurance": 34
+          }
+        }
+      },
+      {
+        "id": 240,
+        "name": "Secretary",
+        "description": "This position will answer phone calls at the company office and work with the sales executives on finalizing potentially billion-dollar deals. They&#39;ll also provide insight in to what the sales staff at the office are contributing.",
+        "ability": "Secretary",
+        "working_stats": {
+          "required": {
+            "intelligence": 56250,
+            "manual_labor": 0,
+            "endurance": 112500
+          },
+          "daily_gains": {
+            "intelligence": 34,
+            "manual_labor": 0,
+            "endurance": 68
+          }
+        }
+      },
+      {
+        "id": 243,
+        "name": "Inspector",
+        "description": "This position will train employees and ensure health and safety standards are met.",
+        "ability": "Trainer",
+        "working_stats": {
+          "required": {
+            "intelligence": 225000,
+            "manual_labor": 0,
+            "endurance": 112500
+          },
+          "daily_gains": {
+            "intelligence": 74,
+            "manual_labor": 0,
+            "endurance": 37
+          }
+        }
+      },
+      {
+        "id": 366,
+        "name": "Sales Executive",
+        "description": "This position works back at the office, handling the sale of crude oil to refineries. They&#39;re needed to clear the company&#39;s oil barrel stock in return for millions of dollars.",
+        "ability": "None",
+        "working_stats": {
+          "required": {
+            "intelligence": 131500,
+            "manual_labor": 0,
+            "endurance": 65750
+          },
+          "daily_gains": {
+            "intelligence": 69,
+            "manual_labor": 0,
+            "endurance": 35
+          }
+        }
+      },
+      {
+        "id": 367,
+        "name": "Motor Hand",
+        "description": "This position maintains and repairs the engines of drilling machines and other equipment on the rig.",
+        "ability": "None",
+        "working_stats": {
+          "required": {
+            "intelligence": 56250,
+            "manual_labor": 112500,
+            "endurance": 0
+          },
+          "daily_gains": {
+            "intelligence": 34,
+            "manual_labor": 68,
+            "endurance": 0
+          }
+        }
+      }
+    ],
+    "specials": [
+      {
+        "id": 131,
+        "name": "Danger Money",
+        "effect": "Money",
+        "cost": 1,
+        "rating": 1
+      },
+      {
+        "id": 132,
+        "name": "Embargo",
+        "effect": "Halve a target's happiness",
+        "cost": 50,
+        "rating": 3
+      },
+      {
+        "id": 133,
+        "name": "Oil Mogul",
+        "effect": "Reduce bank investment time by 1 hour",
+        "cost": 3,
+        "rating": 5
+      },
+      {
+        "id": 134,
+        "name": "Tax Haven",
+        "effect": "10% offshore bank interest",
+        "cost": 0,
+        "rating": 7
+      },
+      {
+        "id": 135,
+        "name": "Fat Cat",
+        "effect": "50% investment banking limit",
+        "cost": 0,
+        "rating": 10
+      }
+    ],
+    "stock": [
+      {
+        "id": 173,
+        "name": "Oil (Barrel)",
+        "cost": 0,
+        "rrp": 100
+      }
+    ]
+  }
+]
