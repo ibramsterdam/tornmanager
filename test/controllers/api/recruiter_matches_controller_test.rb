@@ -86,7 +86,7 @@ class Api::RecruiterMatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @bert.torn_id ], json["matches"].map { |m| m["torn_id"] }
   end
 
-  test "filters by director inactivity and keeps unknown directors" do
+  test "filters by director inactivity and leaves out unknown directors" do
     users(:user_hof_no_faction).update!(last_action_at: 10.days.ago)
     companies(:adult_novelties).update!(director_torn_id: users(:user_hof_no_faction).torn_id)
     @bram.update!(last_action_at: 1.hour.ago)
@@ -98,10 +98,9 @@ class Api::RecruiterMatchesControllerTest < ActionDispatch::IntegrationTest
 
     json = JSON.parse(response.body)
     matches = json["matches"].index_by { |m| m["torn_id"] }
-    assert_equal [ @bert.torn_id, users(:user_no_faction).torn_id ].sort, matches.keys.sort
-    assert_equal 2, json["total"]
+    assert_equal [ @bert.torn_id ], matches.keys
+    assert_equal 1, json["total"]
     assert_not_nil matches[@bert.torn_id].dig("company", "director_last_action_at")
-    assert_nil matches[users(:user_no_faction).torn_id].dig("company", "director_last_action_at")
   end
 
   test "ignores director inactivity when no days are given" do

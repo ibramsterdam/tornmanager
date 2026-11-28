@@ -50,8 +50,8 @@ module Api
       director_inactive_days = params[:director_inactive_days].to_i.clamp(0, MAX_DIRECTOR_INACTIVE_DAYS)
       if director_inactive_days.positive?
         scope = scope
-          .joins("LEFT JOIN users directors ON directors.torn_id = companies.director_torn_id")
-          .where("directors.last_action_at IS NULL OR directors.last_action_at < ?", director_inactive_days.days.ago)
+          .joins("INNER JOIN users directors ON directors.torn_id = companies.director_torn_id")
+          .where("directors.last_action_at < ?", director_inactive_days.days.ago)
       end
       scope
     end

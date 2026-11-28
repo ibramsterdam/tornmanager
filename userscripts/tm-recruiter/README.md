@@ -15,8 +15,8 @@ companies (served from a 5-minute server cache). Player factions come along in
 the roster, so matches flag employees who share a faction with their company
 director. The working stats sweep also stores each player's last action, so
 matches can be filtered to companies whose director has been inactive for a
-number of days. Directors below the sweep floor have no known activity; they
-stay in the results and show as unknown. The admin pipeline overview lives at
+number of days. Directors below the sweep floor have no known activity, so
+the filter leaves their companies out. The admin pipeline overview lives at
 `/admin/recruiter`.
 
 ## Sign in and subscription

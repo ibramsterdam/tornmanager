@@ -377,7 +377,7 @@
 .rc-thead,
 .rc-trow {
   display: grid;
-  grid-template-columns: 1.25fr 0.85fr 0.95fr 1.35fr 40px;
+  grid-template-columns: minmax(0, 1fr) 96px minmax(0, 1.3fr) minmax(0, 1.6fr) 40px;
   gap: 10px;
   align-items: center;
   padding: 9px 13px;
@@ -397,11 +397,23 @@
   border-bottom: 1px solid #242426;
 }
 
+.rc-trow > * {
+  min-width: 0;
+}
+
+.rc-trow .rc-dim,
+.rc-state > span:last-child {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .rc-trow:last-child {
   border-bottom: none;
 }
 
 .rc-name {
+  display: block;
   font-weight: 600;
   font-size: 13px;
   color: #fff;

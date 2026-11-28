@@ -69,7 +69,7 @@ export class SearchScreen {
 
     row.appendChild(this.numberField("Min working stats", "minStats"));
     const directorField = this.numberField("Director inactive (days)", "directorInactiveDays");
-    directorField.title = "Only show companies whose director has not been active for at least this many days. Directors without known activity are included.";
+    directorField.title = "Only show companies whose director has not been active for at least this many days. Directors without known activity are left out.";
     row.appendChild(directorField);
 
     const loyaltyField = Dom.el("div", "rc-field rc-field--chip");
@@ -435,10 +435,10 @@ export class SearchScreen {
 
       const state = Dom.el("div", "rc-state");
       const dotClass = status?.status === "Online" ? "rc-dot--on" : status?.status === "Idle" ? "rc-dot--idle" : "rc-dot--off";
-      state.append(
-        Dom.el("span", `rc-dot ${dotClass}`),
-        Dom.el("span", null, status ? `${status.status} · ${status.relative}` : "unknown")
-      );
+      const stateText = status ? `${status.status} · ${status.relative}` : "unknown";
+      const stateLabel = Dom.el("span", null, stateText);
+      stateLabel.title = stateText;
+      state.append(Dom.el("span", `rc-dot ${dotClass}`), stateLabel);
 
       const co = Dom.el("div");
       const coLink = Dom.el("a", "rc-name rc-name--co rc-link", match.company.name || "?");
@@ -449,7 +449,11 @@ export class SearchScreen {
       const detail = [typeName(match.company.company_type_id), status?.position, status?.days_in_company != null ? `${status.days_in_company}d` : null]
         .filter(Boolean)
         .join(" · ");
-      co.append(coLink, Dom.el("div", "rc-dim", detail), Dom.el("div", "rc-dim", directorActivity(match.company.director_last_action_at)));
+      coLink.title = match.company.name || "";
+      const detailLine = Dom.el("div", "rc-dim", detail);
+      detailLine.title = detail;
+      const directorLine = Dom.el("div", "rc-dim", directorActivity(match.company.director_last_action_at));
+      co.append(coLink, detailLine, directorLine);
 
       const acts = Dom.el("div", "rc-acts");
       const chat = Dom.el("a", "rc-act");
