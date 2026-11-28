@@ -2,6 +2,7 @@ require "test_helper"
 
 class TmCompany::ReportTest < ActiveSupport::TestCase
   setup do
+    travel_to Time.utc(2026, 11, 8, 12)
     stub_company_types
     @day = captured_day
   end
