@@ -37,6 +37,7 @@ export class SearchScreen {
     this.resultsWrap = Dom.el("div");
     container.append(this.metaEl, this.resultsWrap);
     this.syncFiltersChip();
+    if (this.response) this.renderResults();
     this.fetchMatches();
   }
 
@@ -208,7 +209,11 @@ export class SearchScreen {
 
   async fetchMatches() {
     if (!this.resultsWrap) return;
-    this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", "Loading matches…"));
+    if (this.response) {
+      this.resultsWrap.classList.add("rc-loading");
+    } else {
+      this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", "Loading matches…"));
+    }
 
     const settings = Settings.get();
     try {
@@ -223,9 +228,12 @@ export class SearchScreen {
       if (this.directorInactiveDays > 0) filters.director_inactive_days = this.directorInactiveDays;
       this.response = await this.api.matches(filters);
     } catch (error) {
+      this.resultsWrap.classList.remove("rc-loading");
       this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", error.message));
       return;
     }
+
+    this.resultsWrap.classList.remove("rc-loading");
 
     this.renderResults();
     this.refreshStatuses();

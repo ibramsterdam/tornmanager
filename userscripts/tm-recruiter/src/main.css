@@ -50,7 +50,7 @@
 .rc-panel {
   width: 680px;
   max-width: 94vw;
-  max-height: 82vh;
+  height: 82vh;
   display: flex;
   flex-direction: column;
   background: #1c1c1e;
@@ -156,6 +156,8 @@
 }
 
 .rc-body {
+  flex: 1;
+  min-height: 0;
   padding: 16px 18px 18px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -483,6 +485,12 @@
 .rc-act:hover {
   color: #fff;
   border-color: #555;
+}
+
+.rc-loading {
+  opacity: 0.45;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
 }
 
 .rc-empty {
