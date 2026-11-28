@@ -24,6 +24,7 @@ class Recruiter::SweepWorkingStatsJobTest < ActiveJob::TestCase
     @bert.reload
     assert_equal 480_000, @bert.working_stats
     assert_not_nil @bert.working_stats_at
+    assert_equal Time.zone.at(1_755_800_000), @bert.last_action_at
   end
 
   test "cools down and resumes the same page when the key budget is spent" do

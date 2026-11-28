@@ -36,6 +36,7 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     assert_equal factions(:with_api_key).id, @bert.faction_id
     assert_equal "1234567_api_token_fixture", @bert.api_token
     assert_equal 46166, companies(:adult_novelties).reload.director_faction_torn_id
+    assert_equal 7777777, companies(:adult_novelties).director_torn_id
     assert @bert.faction_mate_of_director?
 
     newbie = User.find_by(torn_id: 5555555)

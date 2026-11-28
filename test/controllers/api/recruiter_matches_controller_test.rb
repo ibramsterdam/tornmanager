@@ -86,6 +86,35 @@ class Api::RecruiterMatchesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @bert.torn_id ], json["matches"].map { |m| m["torn_id"] }
   end
 
+  test "filters by director inactivity and keeps unknown directors" do
+    users(:user_hof_no_faction).update!(last_action_at: 10.days.ago)
+    companies(:adult_novelties).update!(director_torn_id: users(:user_hof_no_faction).torn_id)
+    @bram.update!(last_action_at: 1.hour.ago)
+    companies(:television_network).update!(director_torn_id: @bram.torn_id)
+
+    post api_recruiter_matches_path,
+      params: { star_min: 0, star_max: 10, director_inactive_days: 7 },
+      headers: api_auth(@bram), as: :json
+
+    json = JSON.parse(response.body)
+    matches = json["matches"].index_by { |m| m["torn_id"] }
+    assert_equal [ @bert.torn_id, users(:user_no_faction).torn_id ].sort, matches.keys.sort
+    assert_equal 2, json["total"]
+    assert_not_nil matches[@bert.torn_id].dig("company", "director_last_action_at")
+    assert_nil matches[users(:user_no_faction).torn_id].dig("company", "director_last_action_at")
+  end
+
+  test "ignores director inactivity when no days are given" do
+    @bram.update!(last_action_at: 1.hour.ago)
+    companies(:television_network).update!(director_torn_id: @bram.torn_id)
+
+    post api_recruiter_matches_path,
+      params: { star_min: 0, star_max: 10, director_inactive_days: 0 },
+      headers: api_auth(@bram), as: :json
+
+    assert_equal 3, JSON.parse(response.body)["total"]
+  end
+
   test "paginates past the results" do
     post api_recruiter_matches_path,
       params: { star_min: 0, star_max: 10, page: 5 },

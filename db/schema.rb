@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_28_120000) do
   create_table "active_storage_attachments", force: :cascade do |t|
     t.bigint "blob_id", null: false
     t.datetime "created_at", null: false
@@ -147,6 +147,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
     t.integer "company_type_id", null: false
     t.datetime "created_at", null: false
     t.integer "director_faction_torn_id"
+    t.integer "director_torn_id"
     t.integer "employees_hired"
     t.string "name"
     t.integer "rating", default: 0, null: false
@@ -154,6 +155,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
     t.integer "torn_id", null: false
     t.datetime "updated_at", null: false
     t.index ["company_type_id", "rating"], name: "index_companies_on_company_type_id_and_rating"
+    t.index ["director_torn_id"], name: "index_companies_on_director_torn_id"
     t.index ["torn_id"], name: "index_companies_on_torn_id", unique: true
   end
 
@@ -480,6 +482,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_08_120000) do
     t.boolean "fallen", default: false, null: false
     t.boolean "hof_stats_user", default: false, null: false
     t.boolean "leadership_access", default: false, null: false
+    t.datetime "last_action_at"
     t.integer "level", null: false
     t.string "name", null: false
     t.string "position"

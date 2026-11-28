@@ -48,7 +48,11 @@ module Recruiter
     def apply(rows, swept_at)
       User.transaction do
         rows.count do |row|
-          User.where(torn_id: row.torn_id).update_all(working_stats: row.value, working_stats_at: swept_at) == 1
+          User.where(torn_id: row.torn_id).update_all(
+            working_stats: row.value,
+            working_stats_at: swept_at,
+            last_action_at: row.last_action && Time.zone.at(row.last_action)
+          ) == 1
         end
       end
     end

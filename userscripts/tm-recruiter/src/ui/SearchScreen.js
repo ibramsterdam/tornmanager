@@ -15,6 +15,7 @@ export class SearchScreen {
     this.statusFilter = "any";
     this.page = 0;
     this.minStats = 0;
+    this.directorInactiveDays = 0;
     this.filtersOpen = false;
     this.excludeFactionMates = false;
     this.statusByPlayer = {};
@@ -65,26 +66,10 @@ export class SearchScreen {
     statusField.appendChild(this.statusChip);
     row.appendChild(statusField);
 
-    const statsField = Dom.el("div", "rc-field");
-    statsField.appendChild(Dom.el("div", "rc-label", "Min working stats"));
-    const input = Dom.el("input", "rc-input");
-    input.type = "number";
-    input.min = 0;
-    input.placeholder = "0";
-    if (this.minStats > 0) input.value = this.minStats;
-    const apply = () => {
-      const value = Math.max(0, Number(input.value) || 0);
-      if (value === (this.minStats || 0)) return;
-      this.minStats = value;
-      this.page = 0;
-      this.fetchMatches();
-    };
-    input.addEventListener("blur", apply);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") input.blur();
-    });
-    statsField.appendChild(input);
-    row.appendChild(statsField);
+    row.appendChild(this.numberField("Min working stats", "minStats"));
+    const directorField = this.numberField("Director inactive (days)", "directorInactiveDays");
+    directorField.title = "Only show companies whose director has not been active for at least this many days. Directors without known activity are included.";
+    row.appendChild(directorField);
 
     const loyaltyField = Dom.el("div", "rc-field rc-field--chip");
     loyaltyField.appendChild(Dom.el("div", "rc-label", "Faction mates"));
@@ -101,6 +86,29 @@ export class SearchScreen {
     row.appendChild(loyaltyField);
 
     return row;
+  }
+
+  numberField(labelText, key) {
+    const field = Dom.el("div", "rc-field");
+    field.appendChild(Dom.el("div", "rc-label", labelText));
+    const input = Dom.el("input", "rc-input");
+    input.type = "number";
+    input.min = 0;
+    input.placeholder = "0";
+    if (this[key] > 0) input.value = this[key];
+    const apply = () => {
+      const value = Math.max(0, Number(input.value) || 0);
+      if (value === (this[key] || 0)) return;
+      this[key] = value;
+      this.page = 0;
+      this.fetchMatches();
+    };
+    input.addEventListener("blur", apply);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") input.blur();
+    });
+    field.appendChild(input);
+    return field;
   }
 
   syncLoyaltyChip() {
@@ -212,6 +220,7 @@ export class SearchScreen {
         page: this.page,
       };
       if (this.excludeFactionMates) filters.exclude_faction_mates = true;
+      if (this.directorInactiveDays > 0) filters.director_inactive_days = this.directorInactiveDays;
       this.response = await this.api.matches(filters);
     } catch (error) {
       this.resultsWrap.replaceChildren(Dom.el("div", "rc-empty", error.message));
@@ -432,7 +441,7 @@ export class SearchScreen {
       const detail = [typeName(match.company.company_type_id), status?.position, status?.days_in_company != null ? `${status.days_in_company}d` : null]
         .filter(Boolean)
         .join(" · ");
-      co.append(coLink, Dom.el("div", "rc-dim", detail));
+      co.append(coLink, Dom.el("div", "rc-dim", detail), Dom.el("div", "rc-dim", directorActivity(match.company.director_last_action_at)));
 
       const acts = Dom.el("div", "rc-acts");
       const chat = Dom.el("a", "rc-act");
@@ -459,6 +468,11 @@ function shortAge(fetchedAt) {
   const hours = Math.floor(minutes / 60);
   if (hours < 48) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+function directorActivity(lastActionAt) {
+  if (!lastActionAt) return "Director activity unknown";
+  return `Director active ${shortAge(Date.parse(lastActionAt))}`;
 }
 
 function sleep(ms) {

@@ -5,6 +5,7 @@ module Api
 
     PAGE_SIZE = 100
     MAX_PAGE = 10_000
+    MAX_DIRECTOR_INACTIVE_DAYS = 365
 
     def index
       scope = matches_scope
@@ -13,7 +14,7 @@ module Api
         .order(working_stats: :desc, torn_id: :asc)
         .offset(page * PAGE_SIZE)
         .limit(PAGE_SIZE)
-        .includes(:company)
+        .includes(company: :director)
 
       render json: {
         matches: players.map { |player| match_json(player) },
@@ -46,6 +47,12 @@ module Api
           "users.faction_torn_id IS NULL OR companies.director_faction_torn_id IS NULL OR users.faction_torn_id != companies.director_faction_torn_id"
         )
       end
+      director_inactive_days = params[:director_inactive_days].to_i.clamp(0, MAX_DIRECTOR_INACTIVE_DAYS)
+      if director_inactive_days.positive?
+        scope = scope
+          .joins("LEFT JOIN users directors ON directors.torn_id = companies.director_torn_id")
+          .where("directors.last_action_at IS NULL OR directors.last_action_at < ?", director_inactive_days.days.ago)
+      end
       scope
     end
 
@@ -61,7 +68,8 @@ module Api
           torn_id: player.company.torn_id,
           name: player.company.name,
           company_type_id: player.company.company_type_id,
-          rating: player.company.rating
+          rating: player.company.rating,
+          director_last_action_at: player.company.director&.last_action_at&.iso8601
         }
       }
     end

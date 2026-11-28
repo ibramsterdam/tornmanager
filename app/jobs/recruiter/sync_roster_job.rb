@@ -66,7 +66,7 @@ module Recruiter
         players.each do |player|
           next unless player.director
 
-          Company.where(torn_id: player.company_id).update_all(director_faction_torn_id: player.faction_torn_id)
+          Company.where(torn_id: player.company_id).update_all(director_torn_id: player.torn_id, director_faction_torn_id: player.faction_torn_id)
         end
       end
     end
