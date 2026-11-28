@@ -103,6 +103,17 @@ class Api::RecruiterMatchesControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil matches[@bert.torn_id].dig("company", "director_last_action_at")
   end
 
+  test "treats directors in the latest roster as active" do
+    users(:user_hof_no_faction).update!(last_action_at: 10.days.ago, company_synced_at: 2.hours.ago)
+    companies(:adult_novelties).update!(director_torn_id: users(:user_hof_no_faction).torn_id)
+
+    post api_recruiter_matches_path,
+      params: { star_min: 0, star_max: 10, director_inactive_days: 7 },
+      headers: api_auth(@bram), as: :json
+
+    assert_equal 0, JSON.parse(response.body)["total"]
+  end
+
   test "ignores director inactivity when no days are given" do
     @bram.update!(last_action_at: 1.hour.ago)
     companies(:television_network).update!(director_torn_id: @bram.torn_id)

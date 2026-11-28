@@ -32,7 +32,7 @@ class TmCompany::BackfillSnapshotsJobTest < ActiveJob::TestCase
 
   def row(torn_id)
     TornApi::Company::Snapshot::Row.new(
-      torn_id: torn_id, name: "Co", company_type_id: 10, rating: 9, employees_hired: 5,
+      torn_id: torn_id, name: "Co", company_type_id: 10, rating: 9, director_torn_id: nil, employees_hired: 5,
       employees_capacity: 5, daily_income: 1_000, daily_customers: 1, weekly_income: 7_000, weekly_customers: 7
     )
   end

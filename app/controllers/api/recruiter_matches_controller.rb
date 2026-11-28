@@ -51,7 +51,7 @@ module Api
       if director_inactive_days.positive?
         scope = scope
           .joins("INNER JOIN users directors ON directors.torn_id = companies.director_torn_id")
-          .where("directors.last_action_at < ?", director_inactive_days.days.ago)
+          .where("directors.last_action_at < :cutoff AND (directors.company_synced_at IS NULL OR directors.company_synced_at < :cutoff)", cutoff: director_inactive_days.days.ago)
       end
       scope
     end

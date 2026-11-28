@@ -12,7 +12,7 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     @bert.update!(faction: factions(:with_api_key))
 
     stub_company_snapshot([
-      company_row(91001, name: "Pleasure Palace", type: 10, rating: 9, hired: 9),
+      company_row(91001, name: "Pleasure Palace", type: 10, rating: 9, hired: 9, director: 7777777),
       company_row(95000, name: "Fresh Corp", type: 5, rating: 3, hired: 2)
     ])
     stub_user_snapshot([
@@ -37,6 +37,7 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
     assert_equal "1234567_api_token_fixture", @bert.api_token
     assert_equal 46166, companies(:adult_novelties).reload.director_faction_torn_id
     assert_equal 7777777, companies(:adult_novelties).director_torn_id
+    assert_nil Company.find_by(torn_id: 95000).director_torn_id
     assert @bert.faction_mate_of_director?
 
     newbie = User.find_by(torn_id: 5555555)
@@ -74,9 +75,9 @@ class Recruiter::SyncRosterJobTest < ActiveJob::TestCase
 
   private
 
-  def company_row(torn_id, name:, type:, rating:, hired:, income: nil)
+  def company_row(torn_id, name:, type:, rating:, hired:, income: nil, director: nil)
     TornApi::Company::Snapshot::Row.new(
-      torn_id: torn_id, name: name, company_type_id: type, rating: rating, employees_hired: hired,
+      torn_id: torn_id, name: name, company_type_id: type, rating: rating, director_torn_id: director, employees_hired: hired,
       employees_capacity: hired, daily_income: income, daily_customers: nil, weekly_income: nil, weekly_customers: nil
     )
   end

@@ -38,6 +38,7 @@ class TornApi::Company::SnapshotTest < ActiveSupport::TestCase
     assert_equal 3, row.daily_customers
     assert_equal 666_855_894, row.weekly_income
     assert_equal 21, row.weekly_customers
+    assert_equal 3152867, row.director_torn_id
   end
 
   test "asks for an earlier day with a timestamp" do

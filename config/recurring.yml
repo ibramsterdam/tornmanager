@@ -59,6 +59,10 @@ production:
     class: Recruiter::BackfillMissingStatsJob
     queue: default
     schedule: at 6:30am every day
+  recruiter_refresh_director_activity:
+    class: Recruiter::RefreshDirectorActivityJob
+    queue: default
+    schedule: at 6:45am every day
   tm_company_capture:
     class: TmCompany::CaptureAllJob
     queue: default
